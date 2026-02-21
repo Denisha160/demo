@@ -1,0 +1,271 @@
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
+import {
+  LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
+  Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List,
+  UserCheck, Truck, Clock
+} from "lucide-react";
+
+interface CompanyLayoutProps {
+  title?: string;
+}
+
+const navItems = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "dashboard" },
+  { label: "Leads", icon: Kanban, path: "leads" },
+  { label: "Salesmen", icon: UserCheck, path: "salesmen" },
+  { label: "Employees", icon: Users, path: "employees" },
+  { label: "Attendance", icon: Clock, path: "attendance" },
+  { label: "Suppliers", icon: Truck, path: "suppliers" },
+  { label: "Parties", icon: Users, path: "parties" },
+  { label: "Products", icon: Box, path: "products" },
+  { label: "Users", icon: Users, path: "users" },
+  { label: "Roles", icon: ShieldCheck, path: "roles" },
+];
+
+const companies = [
+  {
+    id: "basalt-amenities",
+    name: "Basalt Amenities ",
+    initials: "BA",
+    theme: {
+      primary: "142.1 76.2% 36.3%",
+      ring: "142.1 76.2% 36.3%",
+    },
+  },
+  {
+    id: "smart-home",
+    name: "Smart Home Automation",
+    initials: "SHA",
+    theme: {
+      primary: "262.1 83.3% 57.8%",
+      ring: "262.1 83.3% 57.8%",
+    },
+  },
+];
+
+const CompanyLayout = ({ title }: CompanyLayoutProps) => {
+  const { companyId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const initialCompany = companies.find(c => c.id === companyId) ||
+    companies.find(c => c.id === localStorage.getItem("currentCompanyId")) ||
+    companies[0];
+
+  const [currentCompany, setCurrentCompany] = useState(initialCompany);
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (companyId && companyId !== currentCompany.id) {
+      const found = companies.find(c => c.id === companyId);
+      if (found) setCurrentCompany(found);
+    }
+  }, [companyId]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--primary", currentCompany.theme.primary);
+    root.style.setProperty("--ring", currentCompany.theme.ring);
+    root.style.setProperty("--sidebar-primary", currentCompany.theme.primary);
+    root.style.setProperty("--sidebar-ring", currentCompany.theme.ring);
+    localStorage.setItem("currentCompanyId", currentCompany.id);
+  }, [currentCompany, currentCompany.id]);
+
+  const toggleCompany = (company: typeof companies[0]) => {
+    setCurrentCompany(company);
+    setIsCompanyDropdownOpen(false);
+    // When switching company, navigate to the new company's dashboard
+    const currentPath = location.pathname.split("/").slice(2).join("/");
+    navigate(`/${company.id}/${currentPath || 'dashboard'}`);
+  };
+
+  const activeNavItem = navItems.find(item => {
+    const fullPath = `/${currentCompany.id}/${item.path}`;
+    return location.pathname === fullPath || location.pathname.startsWith(fullPath + "/");
+  });
+
+  const pageTitle = title || activeNavItem?.label || "CRM";
+
+  return (
+    <div className="flex h-screen bg-secondary/30">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-foreground/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 z-50 bg-card border-r border-border
+        flex flex-col transition-all duration-300 ease-in-out
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        ${sidebarCollapsed ? "lg:w-0 lg:border-r-0 lg:overflow-hidden lg:-translate-x-full" : "lg:w-56 lg:translate-x-0"}
+        w-56
+      `}>
+        <div className="p-2 border-b lg:border-b-0">
+          <div className="flex items-center gap-1">
+            {/* Company Selector */}
+            <div className="relative flex-1 min-w-0">
+              <button
+                onClick={() => setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
+                className="flex items-center gap-2 w-full h-9 px-2 rounded-md hover:bg-accent transition-colors text-left overflow-hidden"
+              >
+                <div className="h-6 w-6 bg-primary text-primary-foreground flex items-center justify-center rounded-sm shrink-0">
+                  <span className="text-[10px] font-bold">{currentCompany.initials}</span>
+                </div>
+                <span className="flex-1 text-sm font-semibold truncate leading-none text-foreground">
+                  {currentCompany.name}
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isCompanyDropdownOpen && (
+                <div className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-md shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-1">
+                    <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Switch Company</div>
+                    {companies.map((company) => (
+                      <button
+                        key={company.id}
+                        onClick={() => toggleCompany(company)}
+                        className={`flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm transition-colors text-left
+                          ${currentCompany.id === company.id ? 'bg-accent text-accent-foreground' : 'text-popover-foreground hover:bg-accent hover:text-accent-foreground'}
+                        `}
+                      >
+                        <div className={`h-5 w-5 rounded-sm flex items-center justify-center shrink-0 border ${currentCompany.id === company.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted'}`}>
+                          <span className="text-[10px] font-bold">{company.initials}</span>
+                        </div>
+                        <span className="truncate flex-1">{company.name}</span>
+                        {currentCompany.id === company.id && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar Hide Button */}
+            <button
+              onClick={() => { setSidebarCollapsed(true); setSidebarOpen(false); }}
+              className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
+              title="Hide sidebar"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+          {navItems.map((item) => {
+            const itemPath = `/${currentCompany.id}/${item.path}`;
+            const active = location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
+            return (
+              <Link
+                key={item.path}
+                to={itemPath}
+                onClick={() => setSidebarOpen(false)}
+                className={`
+                  flex items-center gap-2 px-2 py-2 text-sm rounded-md transition-all duration-200 group
+                  ${active
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  }
+                `}
+              >
+                <item.icon className={`h-4 w-4 transition-colors ${active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="p-2 border-t border-border">
+          <Link
+            to="/admin/tasks"
+            onClick={() => setSidebarOpen(false)}
+            className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-foreground w-full rounded-md hover:bg-accent transition-colors"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Admin Panel
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 transition-colors duration-300">
+        <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-2 lg:px-4 shrink-0 sticky top-0 z-10">
+          <div className="flex items-center gap-2">
+            {/* Show Sidebar Button - Size matches Hide Button */}
+            {sidebarCollapsed && (
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="hidden lg:flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-all"
+                title="Show sidebar"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </button>
+            )}
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md hover:bg-accent text-muted-foreground"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            <h1 className="text-sm md:text-base font-semibold text-foreground tracking-tight ml-1">{pageTitle}</h1>
+          </div>
+
+          <div className="flex items-center gap-1 sm:gap-3">
+            <button className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-2 right-2 h-2 w-2 bg-destructive rounded-full ring-2 ring-card" />
+            </button>
+
+            <div className="h-6 w-px bg-border hidden sm:block mx-1" />
+
+            <div className="relative">
+              <button
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors"
+              >
+                <div className="h-7 w-7 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-sm text-primary-foreground">
+                  <span className="text-[10px] font-bold">JD</span>
+                </div>
+                <div className="hidden md:block text-left mr-1">
+                  <span className="block text-[11px] font-semibold leading-none">John Doe</span>
+                </div>
+                <ChevronDown className={`h-3 w-3 text-muted-foreground hidden sm:block transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isUserDropdownOpen && (
+                <div className="absolute top-full right-0 mt-1 w-48 bg-popover border border-border rounded-md shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-1">
+                    <button
+                      onClick={() => { navigate("/login"); setIsUserDropdownOpen(false); }}
+                      className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm text-destructive hover:bg-destructive/10 transition-colors text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto p-2 space-y-2">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default CompanyLayout;

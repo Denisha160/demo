@@ -1,0 +1,135 @@
+import { useState } from "react";
+import DataTable, { Column } from "@/components/DataTable";
+import StatusBadge from "@/components/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Search, Edit, Eye, Trash2, Shield } from "lucide-react";
+import RoleModal from "./RoleModal";
+import { useNavigate } from "react-router-dom";
+
+import { Role, initialRoles } from "@/data/rolesData";
+
+const RolesPage = () => {
+    const navigate = useNavigate();
+    const [roles, setRoles] = useState<Role[]>(initialRoles);
+    const [search, setSearch] = useState("");
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
+    const filtered = roles.filter((r) =>
+        r.name.toLowerCase().includes(search.toLowerCase()) ||
+        r.description.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const handleSave = (roleData: Omit<Role, 'id' | 'userCount'>) => {
+        if (selectedRole) {
+            setRoles(roles.map((r) => (r.id === selectedRole.id ? { ...r, ...roleData } : r)));
+        } else {
+            const newRole: Role = {
+                ...roleData,
+                id: Date.now(),
+                userCount: 0
+            };
+            setRoles([...roles, newRole]);
+        }
+    };
+
+    const handleEdit = (role: Role) => {
+        setSelectedRole(role);
+        setModalOpen(true);
+    };
+
+    const handleDelete = (id: number) => {
+        if (confirm("Are you sure you want to delete this role? This might affect users assigned to it.")) {
+            setRoles(roles.filter((r) => r.id !== id));
+        }
+    };
+
+    const columns: Column<Role>[] = [
+        {
+            key: "name",
+            header: "Role Name",
+            render: (item) => (
+                <div
+                    className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => navigate(`${item.id}`)}
+                >
+                    <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center border border-primary/20 shrink-0">
+                        <Shield className="h-4 w-4" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-bold text-foreground leading-none">{item.name}</p>
+                        <p className="text-[11px] text-muted-foreground mt-1 truncate max-w-[200px]">{item.description}</p>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: "userCount",
+            header: "Members",
+            render: (item) => (
+                <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold text-foreground">{item.userCount}</span>
+                    <span className="text-[11px] text-muted-foreground">users</span>
+                </div>
+            )
+        },
+        {
+            key: "status",
+            header: "Status",
+            render: (item) => <StatusBadge status={item.status} variant="success" />
+        },
+        {
+            key: "actions",
+            header: "Actions",
+            className: "w-[120px] text-right",
+            render: (item) => (
+                <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`${item.id}`)} title="Manage Permissions">
+                        <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(item)} title="Edit Role">
+                        <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(item.id)} title="Delete Role">
+                        <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+            ),
+        },
+    ];
+
+    return (
+        <div className="w-full mx-auto space-y-2 animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-4">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-initial">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                            placeholder="Search roles..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="h-8 pl-7 text-sm rounded-sm w-full sm:w-64"
+                        />
+                    </div>
+                </div>
+                <Button size="sm" className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none" onClick={() => { setSelectedRole(null); setModalOpen(true); }}>
+                    <Plus className="h-3.5 w-3.5" /> Add Role
+                </Button>
+            </div>
+
+            <div className="border border-border rounded-sm overflow-hidden bg-card shadow-sm">
+                <DataTable data={filtered} columns={columns} />
+            </div>
+
+            <RoleModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onSave={handleSave}
+                role={selectedRole}
+            />
+        </div>
+    );
+};
+
+export default RolesPage;

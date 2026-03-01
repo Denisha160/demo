@@ -3,8 +3,10 @@ import { Link, useLocation, useNavigate, Outlet, useParams } from "react-router-
 import {
   LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
   Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List,
-  UserCheck, Truck, Clock
+  UserCheck, Truck, Clock, Tags
 } from "lucide-react";
+import { useLogout, useCurrentUser } from "@/hooks/useAuth";
+import { createPortal } from "react-dom";
 
 interface CompanyLayoutProps {
   title?: string;
@@ -19,8 +21,7 @@ const navItems = [
   { label: "Suppliers", icon: Truck, path: "suppliers" },
   { label: "Parties", icon: Users, path: "parties" },
   { label: "Products", icon: Box, path: "products" },
-  { label: "Users", icon: Users, path: "users" },
-  { label: "Roles", icon: ShieldCheck, path: "roles" },
+  { label: "Product Categories", icon: Tags, path: "product-categories" },
 ];
 
 const companies = [
@@ -51,6 +52,14 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const user = useCurrentUser();
+
+  // Derive initials from user name (e.g. "John Doe" → "JD")
+  const initials = user?.name
+    ? user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
+    : 'ME';
+
   const initialCompany = companies.find(c => c.id === companyId) ||
     companies.find(c => c.id === localStorage.getItem("currentCompanyId")) ||
     companies[0];
@@ -64,7 +73,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
       const found = companies.find(c => c.id === companyId);
       if (found) setCurrentCompany(found);
     }
-  }, [companyId]);
+  }, [companyId, currentCompany.id]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -235,27 +244,45 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                 className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors"
               >
                 <div className="h-7 w-7 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-sm text-primary-foreground">
-                  <span className="text-[10px] font-bold">JD</span>
+                  <span className="text-[10px] font-bold">{initials}</span>
                 </div>
                 <div className="hidden md:block text-left mr-1">
-                  <span className="block text-[11px] font-semibold leading-none">John Doe</span>
+                  <span className="block text-[11px] font-semibold leading-none">{user?.name || 'User'}</span>
                 </div>
                 <ChevronDown className={`h-3 w-3 text-muted-foreground hidden sm:block transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {isUserDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1 w-48 bg-popover border border-border rounded-md shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="p-1">
-                    <button
-                      onClick={() => { navigate("/login"); setIsUserDropdownOpen(false); }}
-                      className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm text-destructive hover:bg-destructive/10 transition-colors text-left"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Sign out</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+
+              {isUserDropdownOpen &&
+                createPortal(
+                  <div
+                    className="fixed top-14 right-4 w-56 bg-popover border border-border rounded-md shadow-lg z-[9999] animate-in fade-in zoom-in-95 duration-200"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-1">
+                      <div className="px-2 py-2 border-b border-border mb-1">
+                        <p className="text-xs font-semibold truncate">
+                          {user?.name || "User"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {user?.email || ""}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsUserDropdownOpen(false);
+                        }}
+                        disabled={isLoggingOut}
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm text-destructive hover:bg-destructive/10"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>{isLoggingOut ? "Signing out…" : "Sign out"}</span>
+                      </button>
+                    </div>
+                  </div>,
+                  document.body
+                )}
             </div>
           </div>
         </header>

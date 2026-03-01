@@ -1,13 +1,7 @@
 import { useState } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { TrendingUp, Wallet } from "lucide-react";
 
 interface SalaryModalProps {
@@ -64,25 +58,23 @@ const SalaryModal = ({ open, onClose, employeeName, employeeId }: SalaryModalPro
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase text-muted-foreground">Select Month</label>
-                        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                            <SelectTrigger className="h-9 text-xs rounded-sm">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                        <Combobox
+                            options={months.map(m => ({ value: m, label: m }))}
+                            value={selectedMonth}
+                            onValueChange={setSelectedMonth}
+                            placeholder="Select month"
+                            searchPlaceholder="Search month..."
+                        />
                     </div>
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase text-muted-foreground">Select Year</label>
-                        <Select value={selectedYear} onValueChange={setSelectedYear}>
-                            <SelectTrigger className="h-9 text-xs rounded-sm">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {years.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                        <Combobox
+                            options={years.map(y => ({ value: y, label: y }))}
+                            value={selectedYear}
+                            onValueChange={setSelectedYear}
+                            placeholder="Select year"
+                            searchPlaceholder="Search year..."
+                        />
                     </div>
                 </div>
 

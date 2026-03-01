@@ -1,0 +1,28 @@
+export const queryKeys = {
+    auth: {
+        all: ['auth'] as const,
+        user: () => [...queryKeys.auth.all, 'user'] as const,
+        sessions: () => [...queryKeys.auth.all, 'sessions'] as const,
+        permissions: () => [...queryKeys.auth.all, 'permissions'] as const,
+    },
+    parties: {
+        all: ['parties'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.parties.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.parties.all, 'detail', id] as const,
+    },
+    products: {
+        all: ['products'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.products.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.products.all, 'detail', id] as const,
+    },
+    orders: {
+        all: ['orders'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.orders.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.orders.all, 'detail', id] as const,
+    },
+    categories: {
+        all: ['categories'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.categories.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.categories.all, 'detail', id] as const,
+    },
+} as const;

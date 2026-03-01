@@ -1,18 +1,12 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, Calendar as CalendarIcon, User } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 
 interface AttendanceRecord {
@@ -115,18 +109,17 @@ const AttendancePage = () => {
                         />
                     </div>
 
-                    <Select value={userFilter} onValueChange={setUserFilter}>
-                        <SelectTrigger className="w-full sm:w-[180px] h-9 rounded-sm">
-                            <User className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all-users">All Users</SelectItem>
-                            {users.map(u => (
-                                <SelectItem key={u} value={u}>{u}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Combobox
+                        options={[
+                            { value: "all-users", label: "All Users" },
+                            ...users.map(u => ({ value: u, label: u }))
+                        ]}
+                        value={userFilter}
+                        onValueChange={setUserFilter}
+                        placeholder="All Users"
+                        searchPlaceholder="Search employee..."
+                        className="w-full sm:w-[200px] h-9"
+                    />
 
                     <div className="flex-1 sm:flex-none min-w-[260px]">
                         <DatePickerWithRange date={dateRange} setDate={setDateRange} />

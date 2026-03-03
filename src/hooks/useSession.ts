@@ -3,13 +3,6 @@ import { toast } from '@/hooks/use-toast';
 import { logoutSession } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
 
-export interface Session {
-    id: string;
-    user_agent: string;
-    created_at: string;
-}
-
-// Hook to logout a specific session
 export function useLogoutSession() {
     const queryClient = useQueryClient();
 
@@ -17,7 +10,6 @@ export function useLogoutSession() {
         mutationFn: ({ sessionId, token }: { sessionId: string; token?: string }) =>
             logoutSession(sessionId, token),
         onSuccess: () => {
-            // Invalidate sessions query if logged in
             queryClient.invalidateQueries({ queryKey: queryKeys.auth.sessions() });
         },
         onError: (error: { message?: string }) => {

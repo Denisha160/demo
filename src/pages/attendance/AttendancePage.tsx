@@ -8,17 +8,7 @@ import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Combobox } from "@/components/ui/combobox";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-
-interface AttendanceRecord {
-    id: number;
-    userName: string;
-    userEmail: string;
-    date: string;
-    clockIn: string;
-    clockOut: string;
-    duration: string;
-    status: string;
-}
+import { AttendanceRecord } from "@/types/attendance";
 
 const mockAttendance: AttendanceRecord[] = [
     { id: 1, userName: "John Doe", userEmail: "john@company.com", date: "2024-02-21", clockIn: "09:00 AM", clockOut: "06:00 PM", duration: "9h 00m", status: "Present" },

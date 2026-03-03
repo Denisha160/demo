@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Tags } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Plus, Search, Tags, Edit, X } from "lucide-react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CategoryModal from "./CategoryModal";
-import { useCategories, useCreateCategory, useUpdateCategory, Category } from "@/hooks/useProductCategories";
-import type { ProductCategory } from "./types";
+import { useCategories, useCategoriesCombobox, useCreateCategory, useUpdateCategory, Category } from "@/hooks/useProductCategories";
+import type { ProductCategory } from "../../types/productCategories";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 
 function toDisplay(c: Category): ProductCategory {
     return {
@@ -18,21 +19,81 @@ function toDisplay(c: Category): ProductCategory {
         type: c.parent_id ? "sub" : "main",
         mainCategoryId: c.parent_id ?? undefined,
         parent_id: c.parent_id,
+        parent_name: c.parent_name,
     };
 }
 
 const ProductCategoriesPage = () => {
     const navigate = useNavigate();
     const { companyId } = useParams();
-    const [search, setSearch] = useState("");
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const [search, setSearch] = useState(searchParams.get("search") || "");
     const debouncedSearch = useDebounce(search, 500);
-    const [filterType, setFilterType] = useState<"All" | "main" | "sub">("All");
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
+    const [filterType, setFilterType] = useState<"All" | "main" | "sub">(
+        (searchParams.get("type") as "All" | "main" | "sub") || "All"
+    );
+    const [mainCategoryIdFilter, setMainCategoryIdFilter] = useState<string>(
+        searchParams.get("mainCategory") || ""
+    );
+    const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+    const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+    const [sortKey, setSortKey] = useState<string | null>(searchParams.get("sortKey"));
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
+        (searchParams.get("sortDirection") as "asc" | "desc") || null
+    );
+
+    const hasFilters = Boolean(
+        search || filterType !== "All" || mainCategoryIdFilter || sortKey
+    );
+
+    const handleClearFilters = () => {
+        setSearch("");
+        setFilterType("All");
+        setMainCategoryIdFilter("");
+        setSortKey(null);
+        setSortDirection(null);
+        setPage(1);
+    };
+
+    // Synchronize states to URL
+    useEffect(() => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+
+            if (debouncedSearch) next.set("search", debouncedSearch);
+            else next.delete("search");
+
+            if (filterType !== "All") next.set("type", filterType);
+            else next.delete("type");
+
+            if (mainCategoryIdFilter) next.set("mainCategory", mainCategoryIdFilter);
+            else next.delete("mainCategory");
+
+            if (page > 1) next.set("page", page.toString());
+            else next.delete("page");
+
+            if (limit !== 10) next.set("limit", limit.toString());
+            else next.delete("limit");
+
+            if (sortKey) next.set("sortKey", sortKey);
+            else next.delete("sortKey");
+
+            if (sortDirection) next.set("sortDirection", sortDirection);
+            else next.delete("sortDirection");
+
+            return next;
+        }, { replace: true });
+    }, [debouncedSearch, filterType, mainCategoryIdFilter, page, limit, sortKey, sortDirection, setSearchParams]);
+
+    const { data: mainCategories = [], isLoading: isLoadingCombobox } = useCategoriesCombobox({ type: "main" });
 
     const { data: listResponse, isLoading } = useCategories({
         search: debouncedSearch.trim() || undefined,
         type: filterType === "All" ? undefined : filterType,
+        parent_id: mainCategoryIdFilter || undefined,
+        sort_by: sortKey || undefined,
+        sort_direction: sortDirection || undefined,
         combobox: false,
         offset: (page - 1) * limit,
         limit,
@@ -87,6 +148,7 @@ const ProductCategoriesPage = () => {
         {
             key: "name",
             header: "Category Name",
+            sortable: true,
             render: (item) => (
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-muted rounded-md">
@@ -111,8 +173,7 @@ const ProductCategoriesPage = () => {
             header: "Parent Category",
             render: (item) => {
                 if (item.type === "main") return <span className="text-muted-foreground">-</span>;
-                const parent = categories.find((c) => c.id === item.mainCategoryId);
-                return <span className="text-sm">{parent ? parent.name : "—"}</span>;
+                return <span className="text-sm">{item.parent_name || "—"}</span>;
             },
         },
         {
@@ -123,10 +184,10 @@ const ProductCategoriesPage = () => {
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 text-primary hover:text-primary hover:bg-primary/10"
+                        className="h-7 w-7"
                         onClick={() => handleEdit(item)}
                     >
-                        Edit
+                        <Edit className="h-3.5 w-3.5" />
                     </Button>
                 </div>
             )
@@ -167,6 +228,38 @@ const ProductCategoriesPage = () => {
                             <SelectItem value="sub">Sub Categories</SelectItem>
                         </SelectContent>
                     </Select>
+
+                    {/* Main Category Filter Combobox (shows only when applicable) */}
+                    {(filterType === "All" || filterType === "sub") && (
+                        <div className="w-[200px] animate-in fade-in slide-in-from-left-2 duration-300">
+                            <Combobox
+                                options={mainCategories.map((c) => ({ value: c.id, label: c.name }))}
+                                value={mainCategoryIdFilter}
+                                onValueChange={(val) => {
+                                    setMainCategoryIdFilter(val);
+                                    setPage(1);
+                                }}
+                                placeholder={isLoadingCombobox ? "Loading..." : "Filter by Main Category"}
+                                searchPlaceholder="Search main categories..."
+                                clearable
+                                disabled={isLoadingCombobox}
+                            />
+                        </div>
+                    )}
+
+                    {hasFilters && (
+                        <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleClearFilters}
+                                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
+                            >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                Clear
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 <Button size="sm" className="h-8 text-sm rounded-sm" onClick={handleCreateNew}>
@@ -184,9 +277,16 @@ const ProductCategoriesPage = () => {
                 serverSide={true}
                 serverTotal={totalItems}
                 serverPage={page}
+                serverSortKey={sortKey || undefined}
+                serverSortDirection={sortDirection}
                 onServerPageChange={setPage}
                 onServerPageSizeChange={(newSize) => {
                     setLimit(newSize);
+                    setPage(1);
+                }}
+                onServerSortChange={(key, direction) => {
+                    setSortKey(key);
+                    setSortDirection(direction);
                     setPage(1);
                 }}
             />

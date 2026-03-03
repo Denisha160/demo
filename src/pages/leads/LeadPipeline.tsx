@@ -1,7 +1,7 @@
 import { Droppable, Draggable, DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { GripVertical } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
-import { PipelineColumn } from "./types";
+import { PipelineColumn } from "../../types/leads";
 
 interface LeadPipelineProps {
     displayedColumns: PipelineColumn[];

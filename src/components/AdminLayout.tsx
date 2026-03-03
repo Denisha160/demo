@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import {
-    Settings, LogOut, Menu, ChevronDown,
-    Bell, PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2, ShieldCheck, Users, Tags
+    LogOut, Menu, ChevronDown,
+    PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2, ShieldCheck, Users, Tags
 } from "lucide-react";
 import { useLogout, useCurrentUser } from "@/hooks/useAuth";
 import { createPortal } from 'react-dom';
+
 interface AdminLayoutProps {
     title?: string;
 }
@@ -16,9 +17,11 @@ const navItems = [
     { label: "Tasks", icon: CheckSquare, path: "/admin/tasks" },
     { label: "Users", icon: Users, path: "/admin/users" },
     { label: "Roles", icon: ShieldCheck, path: "/admin/roles" },
-    { label: "Product Categories", icon: Tags, path: "/admin/product-categories" },
-    { label: "Settings", icon: Settings, path: "/admin/settings" },
+    { label: "Categories", icon: Tags, path: "/admin/product-categories" },
 ];
+
+// Admin theme - single consistent color
+const ADMIN_PRIMARY = "221.2 83.2% 53.3%"; // Blue
 
 const AdminLayout = ({ title }: AdminLayoutProps) => {
     const location = useLocation();
@@ -29,13 +32,37 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
     const { mutate: logout, isPending: isLoggingOut } = useLogout();
     const user = useCurrentUser();
 
+    // Set admin theme on mount
+    useEffect(() => {
+        const root = document.documentElement;
+        root.style.setProperty("--primary", ADMIN_PRIMARY);
+        root.style.setProperty("--ring", ADMIN_PRIMARY);
+    }, []);
+
     // Derive initials from user name (e.g. "Admin" → "AD", "John Doe" → "JD")
     const initials = user?.name
         ? user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
         : 'AD';
 
-    const activeNavItem = navItems.find(item => location.pathname === item.path);
+    const activeNavItem = navItems.find(item =>
+        location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+    );
     const pageTitle = title || activeNavItem?.label || "Admin";
+
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+                !buttonRef.current?.contains(event.target as Node)) {
+                setIsUserDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
         <div className="flex h-screen bg-secondary/30">
@@ -56,7 +83,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                     <div className="flex items-center gap-1">
                         <div className="flex items-center gap-2 p-1.5 flex-1 min-w-0">
                             <div className="h-7 w-7 bg-primary rounded flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">
-                                <ShieldCheck className="h-4 w-4 text-white" />
+                                <ShieldCheck className="h-4 w-4 text-primary-foreground" />
                             </div>
                             <span className="font-bold text-foreground tracking-tight text-sm truncate">Admin Portal</span>
                         </div>
@@ -75,21 +102,25 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                 {/* Navigation */}
                 <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
                     {navItems.map((item) => {
-                        const active = location.pathname === item.path;
+                        const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
                         return (
                             <Link
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => setSidebarOpen(false)}
                                 className={`
-                                    flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
-                                    ${active
-                                        ? "bg-primary/10 text-primary font-medium"
+                                        flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
+                                        ${active
+                                        ? "bg-primary/10 text-primary font-bold"
                                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
                                     }
                                 `}
+                                style={active ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
                             >
-                                <item.icon className={`h-4 w-4 transition-colors ${active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                                <item.icon
+                                    className="h-4 w-4 transition-colors"
+                                    style={active ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
+                                />
                                 {item.label}
                             </Link>
                         );
@@ -133,16 +164,17 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                     </div>
 
                     <div className="flex items-center gap-1 sm:gap-3">
-                        <div className="flex items-center gap-2 pr-2 border-r border-border hidden sm:flex">
-                            <span className="text-[10px] bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-border">System Admin</span>
-                        </div>
+                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-primary/20">
+                            System Admin
+                        </span>
 
                         <div className="relative">
                             <button
+                                ref={buttonRef}
                                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                                 className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors"
                             >
-                                <div className="h-7 w-7 bg-gradient-to-br from-slate-900 to-slate-800 rounded-full flex items-center justify-center shadow-sm text-white">
+                                <div className="h-7 w-7 bg-primary rounded-full flex items-center justify-center shadow-sm text-primary-foreground">
                                     <span className="text-[10px] font-bold">{initials}</span>
                                 </div>
                                 <ChevronDown className={`h-3 w-3 text-muted-foreground hidden sm:block transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
@@ -151,6 +183,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                             {isUserDropdownOpen &&
                                 createPortal(
                                     <div
+                                        ref={dropdownRef}
                                         className="fixed top-14 right-4 w-56 bg-popover border border-border rounded-md shadow-lg z-[9999] animate-in fade-in zoom-in-95 duration-200"
                                         onClick={(e) => e.stopPropagation()}
                                     >

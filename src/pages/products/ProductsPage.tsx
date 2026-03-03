@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Layers, Package, Filter } from "lucide-react";
 import ProductModal from "./ProductModal";
-import { Product, ProductType, Variant } from "./types";
+import { Product, ProductType, Variant } from "../../types/products";
 
 const ProductsPage = () => {
     const [products, setProducts] = useState<Product[]>([]);

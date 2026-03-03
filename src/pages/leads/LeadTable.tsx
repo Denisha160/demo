@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
-import { Deal, PipelineColumn } from "./types";
+import { Deal, PipelineColumn } from "../../types/leads";
 
 interface LeadTableProps {
     displayedColumns: PipelineColumn[];

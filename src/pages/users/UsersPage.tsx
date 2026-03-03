@@ -6,50 +6,39 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Edit, Eye, Trash2 } from "lucide-react";
 import UserModal from "./UserModal";
 import { useNavigate } from "react-router-dom";
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    status: string;
-    lastLogin: string;
-    department: string;
-}
-
-const initialUsers: User[] = [
-    { id: 1, name: "John Doe", email: "john@company.com", role: "Admin", status: "Active", lastLogin: "Today, 10:45 AM", department: "IT" },
-    { id: 2, name: "Jane Smith", email: "jane@company.com", role: "Manager", status: "Active", lastLogin: "Yesterday, 3:20 PM", department: "Sales" },
-    { id: 3, name: "Robert Wilson", email: "robert@company.com", role: "User", status: "Inactive", lastLogin: "3 days ago", department: "Marketing" },
-    { id: 4, name: "Alice Brown", email: "alice@company.com", role: "User", status: "Pending", lastLogin: "Never", department: "Support" },
-    { id: 5, name: "Michael Taylor", email: "michael@company.com", role: "Manager", status: "Active", lastLogin: "Today, 9:15 AM", department: "Operations" },
-];
+import { useUsers, useDeleteUser } from "@/hooks/useUsers";
+import { User, UserUpdatePayload } from "@/types/user";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const Users = () => {
     const navigate = useNavigate();
-    const [users, setUsers] = useState<User[]>(initialUsers);
     const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500);
+
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [sortKey, setSortKey] = useState<string | null>(null);
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
+
+    const { data: usersResponse, isLoading } = useUsers({
+        search: debouncedSearch || undefined,
+        sort_by: sortKey || undefined,
+        sort_direction: sortDirection || undefined,
+        offset: (page - 1) * limit,
+        limit,
+    });
+
+    const { mutate: deleteUser } = useDeleteUser();
+    const users = usersResponse?.items || [];
+    const totalItems = usersResponse?.pagination?.total || 0;
+
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-    const filtered = users.filter((u) =>
-        u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase()) ||
-        u.role.toLowerCase().includes(search.toLowerCase())
-    );
-
-    const handleSave = (userData: Omit<User, 'id' | 'lastLogin' | 'department'>) => {
-        if (selectedUser) {
-            setUsers(users.map((u) => (u.id === selectedUser.id ? { ...u, ...userData } : u)));
-        } else {
-            const newUser: User = {
-                ...userData,
-                id: Date.now(),
-                lastLogin: "Never",
-                department: "Operations"
-            };
-            setUsers([...users, newUser]);
-        }
+    const handleSave = () => {
+        // Form logic is handled within the modal using the dedicated hooks
+        setModalOpen(false);
+        setSelectedUser(null);
     };
 
     const handleEdit = (user: User) => {
@@ -57,9 +46,10 @@ const Users = () => {
         setModalOpen(true);
     };
 
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: string | undefined) => {
+        if (!id) return;
         if (confirm("Are you sure you want to delete this user?")) {
-            setUsers(users.filter((u) => u.id !== id));
+            deleteUser(id);
         }
     };
 
@@ -67,37 +57,58 @@ const Users = () => {
         {
             key: "name",
             header: "User",
+            sortable: true,
+            className: "w-[300px]",
             render: (item) => (
                 <div
-                    className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => navigate(`${item.id}`)} // Navigation on click
+                    className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        // Assuming companyId might not always be present based on previous route structures
+                        navigate(`${item.id}`);
+                    }}
                 >
-                    <div className="h-7 w-7 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[10px] font-bold">
-                        {item.name.split(" ").map((n) => n[0]).join("")}
+                    <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
+                        {item.name ? item.name.split(" ").map((n) => n[0]).join("") : "?"}
                     </div>
-                    <div>
-                        <p className="text-sm font-medium text-foreground leading-none">{item.name}</p>
-                        <p className="text-[11px] text-muted-foreground">{item.email}</p>
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{item.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{item.email}</p>
                     </div>
                 </div>
             ),
         },
-        { key: "role", header: "Role", render: (item) => <StatusBadge status={item.role} variant={item.role === "Admin" ? "success" : item.role === "Manager" ? "info" : "default"} /> },
-        { key: "status", header: "Status", render: (item) => <StatusBadge status={item.status} variant={item.status === "Active" ? "success" : item.status === "Pending" ? "warning" : "destructive"} /> },
-        { key: "lastLogin", header: "Last Login", className: "hidden md:table-cell" },
+        {
+            key: "role",
+            header: "Role",
+            sortable: true,
+            render: (item) => <StatusBadge status={item.role || "User"} variant={item.role === "Admin" ? "success" : item.role === "Manager" ? "info" : "default"} />
+        },
+        {
+            key: "is_active",
+            header: "Status",
+            sortable: true,
+            render: (item) => <StatusBadge status={item.is_active ? "Active" : "Inactive"} variant={item.is_active ? "success" : "destructive"} />
+        },
+        {
+            key: "department_id",
+            header: "Department",
+            className: "hidden md:table-cell",
+            render: (item) => <p className="text-sm text-foreground/80">{item.department_id || "—"}</p>
+        },
         {
             key: "actions",
             header: "Actions",
-            className: "w-[100px] text-right",
+            className: "w-[120px]",
             render: (item) => (
-                <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`${item.id}`)}>
+                <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => navigate(`${item.id}`)}>
                         <Eye className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(item)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleEdit(item)}>
                         <Edit className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(item.id)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(item.id)}>
                         <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                 </div>
@@ -124,8 +135,29 @@ const Users = () => {
                 </Button>
             </div>
 
-            <div className="border border-border rounded-sm overflow-hidden">
-                <DataTable data={filtered} columns={columns} />
+            <div className="border border-border/60 rounded-sm shadow-sm">
+                <DataTable
+                    data={users}
+                    columns={columns}
+                    isLoading={isLoading}
+                    pageSize={limit}
+                    serverSide={true}
+                    serverTotal={totalItems}
+                    serverPage={page}
+                    serverSortKey={sortKey || undefined}
+                    serverSortDirection={sortDirection}
+                    onServerPageChange={setPage}
+                    onServerPageSizeChange={(newSize) => {
+                        setLimit(newSize);
+                        setPage(1);
+                    }}
+                    onServerSortChange={(key, direction) => {
+                        setSortKey(key);
+                        setSortDirection(direction);
+                        setPage(1);
+                    }}
+                    onRowClick={(item) => navigate(`${item.id}`)}
+                />
             </div>
 
             <UserModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} user={selectedUser} />

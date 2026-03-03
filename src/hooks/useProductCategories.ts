@@ -7,7 +7,7 @@ import {
     updateProductCategory,
 } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
-import type { Category, CategoryPayload, UpdateCategoryPayload, CategoryListResponse } from '@/pages/product-categories/types';
+import type { Category, CategoryPayload, UpdateCategoryPayload, CategoryListResponse } from '@/types/productCategories';
 export type { Category, CategoryPayload, UpdateCategoryPayload };
 
 export function useCategories(filters?: Record<string, unknown>) {

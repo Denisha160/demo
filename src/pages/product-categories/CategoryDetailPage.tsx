@@ -1,20 +1,20 @@
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Box, Search, Loader2 } from "lucide-react";
+import { ArrowLeft, Box, Search, Loader2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Combobox } from "@/components/ui/combobox";
-import { ProductCategory } from "./types";
-import { Product } from "@/pages/products/types";
-import { useCategoryDetails } from "@/hooks/useProductCategories";
+import { ProductCategory } from "../../types/productCategories";
+import { Product } from "@/types/products";
+import { useCategoryDetails, useUpdateCategory } from "@/hooks/useProductCategories";
+import CategoryModal from "./CategoryModal";
 
 const CategoryDetailPage = () => {
     const { id, companyId } = useParams<{ id: string; companyId?: string }>();
     const navigate = useNavigate();
-
     const { data: detailsData, isLoading } = useCategoryDetails(id);
 
     // Derived state from API response
@@ -31,6 +31,39 @@ const CategoryDetailPage = () => {
     const [selectedSubCategory, setSelectedSubCategory] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editFormData, setEditFormData] = useState<Partial<ProductCategory>>({});
+
+    const { mutate: updateCategory, isPending: isUpdating } = useUpdateCategory();
+
+    const handleEditClick = () => {
+        if (category) {
+            setEditFormData({
+                id: category.id,
+                name: category.name,
+                type: category.type as "main" | "sub",
+                mainCategoryId: category.mainCategoryId
+            });
+            setIsEditModalOpen(true);
+        }
+    };
+
+    const handleSaveCategory = () => {
+        if (!editFormData.name?.trim() || !editFormData.type || !category) return;
+
+        const payload = {
+            id: category.id,
+            name: editFormData.name.trim(),
+            parent_id: editFormData.type === "sub" ? (editFormData.mainCategoryId ?? null) : null,
+        };
+
+        updateCategory(payload as ProductCategory, {
+            onSuccess: () => {
+                setIsEditModalOpen(false);
+            }
+        });
+    };
 
     const filteredProducts = useMemo(() => {
         if (!category) return [];
@@ -69,7 +102,7 @@ const CategoryDetailPage = () => {
         return (
             <div className="flex flex-col items-center justify-center h-full space-y-4 pt-10">
                 <p className="text-muted-foreground">Category not found</p>
-                <Button onClick={() => navigate(companyId ? `/${companyId}/product-categories` : `/admin/product-categories`)}>
+                <Button onClick={() => navigate(-1)}>
                     Go Back
                 </Button>
             </div>
@@ -116,7 +149,7 @@ const CategoryDetailPage = () => {
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => navigate(companyId ? `/${companyId}/product-categories` : `/admin/product-categories`)}
+                        onClick={() => navigate(-1)}
                         className="h-8 w-8 rounded-sm"
                     >
                         <ArrowLeft className="h-4 w-4" />
@@ -124,6 +157,9 @@ const CategoryDetailPage = () => {
                     <div>
                         <div className="flex items-center gap-2">
                             <h1 className="text-xl font-bold">{category.name}</h1>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 ml-2" onClick={handleEditClick}>
+                                <Edit className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors" />
+                            </Button>
                             <StatusBadge status={category.type === 'main' ? 'Main Category' : 'Sub Category'} variant="default" />
                         </div>
                         {category.type === 'sub' && mainCategory && (
@@ -167,6 +203,15 @@ const CategoryDetailPage = () => {
                     pageSize={10}
                 />
             </div>
+
+            <CategoryModal
+                open={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                formData={editFormData}
+                setFormData={setEditFormData}
+                onSave={handleSaveCategory}
+                isPending={isUpdating}
+            />
         </div>
     );
 };

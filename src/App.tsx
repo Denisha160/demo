@@ -21,7 +21,6 @@ import Tasks from "@/pages/tasks/TasksPage";
 import Parties from "@/pages/parties/PartiesPage";
 import CalendarPage from "@/pages/calendar/CalendarPage";
 import InboxPage from "@/pages/inbox/InboxPage";
-import Settings from "@/pages/settings/SettingsPage";
 import Products from "@/pages/products/ProductsPage";
 import Roles from "@/pages/roles/RolesPage";
 import RoleDetail from "@/pages/roles/RoleDetail";
@@ -105,7 +104,6 @@ const App = () => (
             <Route index element={<Navigate to="companies" replace />} />
             <Route path="tasks" element={<Tasks />} />
             <Route path="inbox" element={<InboxPage />} />
-            <Route path="settings" element={<Settings />} />
             <Route path="product-categories" element={<ProductCategoriesPage />} />
             <Route path="product-categories/:id" element={<CategoryDetailPage />} />
             <Route path="users" element={<Users />} />
@@ -120,7 +118,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
       <ToastContainer
-        position="top-right"
+        position="bottom-right"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={true}

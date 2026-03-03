@@ -6,18 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/Modal";
 import { useLogin } from "@/hooks/useAuth";
-import type { OtpResponse } from "@/hooks/useAuth";
 import { useLogoutSession } from "@/hooks/useSession";
-import type { Session } from "@/hooks/useSession";
-
-interface LoginApiError {
-  message?: string;
-  details?: {
-    process_code?: string;
-    token?: string;
-    sessions?: Session[];
-  };
-}
+import type { OtpResponse, Session, ApiError as LoginApiError } from "@/types/Auth";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
 import {
   LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
@@ -21,7 +21,7 @@ const navItems = [
   { label: "Suppliers", icon: Truck, path: "suppliers" },
   { label: "Parties", icon: Users, path: "parties" },
   { label: "Products", icon: Box, path: "products" },
-  { label: "Product Categories", icon: Tags, path: "product-categories" },
+  { label: "Categories", icon: Tags, path: "product-categories" },
 ];
 
 const companies = [
@@ -67,6 +67,21 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const [currentCompany, setCurrentCompany] = useState(initialCompany);
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (companyId && companyId !== currentCompany.id) {
@@ -178,14 +193,18 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                 to={itemPath}
                 onClick={() => setSidebarOpen(false)}
                 className={`
-                  flex items-center gap-2 px-2 py-2 text-sm rounded-md transition-all duration-200 group
+                  flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
                   ${active
-                    ? "bg-primary/10 text-primary font-medium"
+                    ? "bg-primary/10 text-primary font-bold"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   }
                 `}
+                style={active ? { color: `hsl(${currentCompany.theme.primary})` } : {}}
               >
-                <item.icon className={`h-4 w-4 transition-colors ${active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                <item.icon 
+                  className={`h-4 w-4 transition-colors`} 
+                  style={active ? { color: `hsl(${currentCompany.theme.primary})` } : {}}
+                />
                 {item.label}
               </Link>
             );
@@ -256,6 +275,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
               {isUserDropdownOpen &&
                 createPortal(
                   <div
+                    ref={dropdownRef}
                     className="fixed top-14 right-4 w-56 bg-popover border border-border rounded-md shadow-lg z-[9999] animate-in fade-in zoom-in-95 duration-200"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -273,6 +293,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                           logout();
                           setIsUserDropdownOpen(false);
                         }}
+                        ref={buttonRef}
                         disabled={isLoggingOut}
                         className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm text-destructive hover:bg-destructive/10"
                       >

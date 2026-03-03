@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Combobox } from "@/components/ui/combobox";
 
 import { useCategoriesCombobox } from "@/hooks/useProductCategories";
-import type { CategoryType, ProductCategory } from "./types";
+import type { CategoryType, ProductCategory } from "../../types/productCategories";
 
 const categorySchema = z.object({
     name: z.string().min(2, "Category name must be at least 2 characters letters").max(100, "Category name cannot exceed 100 characters"),

@@ -24,6 +24,7 @@ export interface ProductCategory {
     type: CategoryType;
     mainCategoryId?: string;
     parent_id?: string | null;
+    parent_name?: string | null;
 }
 
 export interface CategoryPayload {

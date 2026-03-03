@@ -3,11 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useVerifyLogin } from "@/hooks/useAuth";
-
-interface LocationState {
-  token?: string;
-  identifier?: string;
-}
+import type { VerifyOtpLocationState } from "@/types/Auth";
 
 const VerifyOtp = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -16,7 +12,7 @@ const VerifyOtp = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const state = (location.state ?? {}) as LocationState;
+  const state = (location.state ?? {}) as VerifyOtpLocationState;
   const otpToken = state.token ?? "";
   const identifier = state.identifier ?? "";
 

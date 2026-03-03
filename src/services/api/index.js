@@ -57,3 +57,33 @@ export const updateProductCategory = ({ id, ...data }) => {
 };
 
 // end region
+
+// region Users
+// ===================== Users  =====================
+
+export const listUsers = (params) => {
+  const url = `users`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getUserDetails = (id) => {
+  const url = `users/${id}`;
+  return axios({ method: "GET", url });
+};
+
+export const createUser = (data) => {
+  const url = `users`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateUser = ({ id, ...data }) => {
+  const url = `users/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteUser = (id) => {
+  const url = `users/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Layers, Package } from "lucide-react";
-import { Product, ProductType, Variant, BOMItem } from "./types";
+import { Product, ProductType, Variant, BOMItem } from "../../types/products";
 
 interface ProductModalProps {
     open: boolean;

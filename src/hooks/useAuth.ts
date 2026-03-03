@@ -3,48 +3,13 @@ import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 import { accountLogin, accountLogout, verifyLogin, getPermissions } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
-
-interface ApiError {
-    message?: string;
-    details?: {
-        process_code?: string;
-        process?: string;
-        token?: string;
-        sessions?: unknown[];
-    };
-}
-
-export interface LoginCredentials {
-    identifier: string;
-    password: string;
-}
-
-export interface User {
-    id: string;
-    name: string;
-    email?: string;
-    phone_number: string;
-    role_id: string | null;
-    is_root_user: boolean;
-}
-
-export interface LoginResponse {
-    token_type: 'access';
-    token: string;
-    expires_in: string;
-    user: User;
-}
-
-export interface OtpResponse {
-    token_type: 'otp';
-    token: string;
-    user: User;
-}
-
-export interface VerifyLoginPayload {
-    token: string;
-    code: string;
-}
+import type {
+    ApiError,
+    LoginCredentials,
+    User,
+    LoginResponse,
+    VerifyLoginPayload
+} from '@/types/Auth';
 
 const AUTH_TOKEN_KEY = 'auth_token';
 const USER_DETAILS_KEY = 'user_details';

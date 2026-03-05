@@ -86,4 +86,66 @@ export const deleteUser = (id) => {
   return axios({ method: "DELETE", url });
 };
 
+export const updateUserPermissions = (id, data) => {
+  const url = `users/${id}/permissions`;
+  return axios({ method: "PUT", url, data });
+};
+
 // end region
+
+// region Companies
+// ===================== Companies  =====================
+
+export const listCompanies = (params) => {
+  const url = `companies`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getCompanyDetails = (id) => {
+  const url = `companies/${id}`;
+  return axios({ method: "GET", url });
+};
+
+export const updateCompany = ({ id, ...data }) => {
+  const url = `companies/${id}`;
+  return axios({ method: "PUT", url, data });
+};
+
+// end region
+
+// region Roles
+// ===================== Roles  =====================
+
+export const listRoles = (params) => {
+  const url = `roles`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getRoleDetails = (id) => {
+  const url = `roles/${id}`;
+  return axios({ method: "GET", url });
+};
+
+export const createRole = (data) => {
+  const url = `roles`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateRole = ({ id, ...data }) => {
+  const url = `roles/${id}`;
+  return axios({ method: "PUT", url, data });
+};
+
+export const deleteRole = (id) => {
+  const url = `roles/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
+export const getAvailablePermissions = () => {
+  const url = `roles/permissions`;
+  return axios({ method: "GET", url });
+};
+
+// end region
+
+

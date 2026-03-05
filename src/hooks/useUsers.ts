@@ -5,7 +5,8 @@ import {
     getUserDetails,
     createUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    updateUserPermissions
 } from "@/services/api";
 import { User, UserCreatePayload, UserUpdatePayload, ApiErrorResponse } from "@/types/user";
 import { queryKeys } from "@/lib/queryKeys";
@@ -90,6 +91,28 @@ export const useDeleteUser = () => {
         onError: (error: Error | { response?: { data?: { message?: string } } }) => {
             const err = error as { response?: { data?: { message?: string } } };
             toast.error(err.response?.data?.message || "Failed to delete user.");
+        }
+    });
+};
+
+export const useUpdateUserPermissions = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id, allocations }: { id: string, allocations: { company_id: string, role_id: string }[] }) => {
+            const response = await updateUserPermissions(id, { allocations });
+            return response;
+        },
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(variables.id) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.list() });
+            toast.success("User permissions updated successfully!");
+        },
+        onError: (error: unknown) => {
+            const err = error as ApiErrorResponse;
+            const errorData = (err?.response?.data || err?.details || err || {}) as ApiErrorResponse;
+            const message = errorData?.message || errorData?.error?.message || "Failed to update user permissions.";
+            toast.error(message);
         }
     });
 };

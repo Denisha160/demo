@@ -26,6 +26,7 @@ export interface User {
     phone_number: string;
     role_id: string | null;
     is_root_user: boolean;
+    companies?: { id: string }[];
 }
 
 export interface LoginResponse {

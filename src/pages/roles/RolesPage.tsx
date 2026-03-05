@@ -7,11 +7,16 @@ import { Plus, Search, Edit, Eye, Trash2, Shield } from "lucide-react";
 import RoleModal from "./RoleModal";
 import { useNavigate } from "react-router-dom";
 
-import { Role, initialRoles } from "@/data/rolesData";
+import { useRoles, useCreateRole, useUpdateRole, useDeleteRole } from "@/hooks/useRoles";
+import { Role } from "@/types/Role";
 
 const RolesPage = () => {
     const navigate = useNavigate();
-    const [roles, setRoles] = useState<Role[]>(initialRoles);
+    const { data, isLoading } = useRoles();
+    const roles: Role[] = data?.items || [];
+    const createRoleMutation = useCreateRole();
+    const updateRoleMutation = useUpdateRole();
+    const deleteRoleMutation = useDeleteRole();
     const [search, setSearch] = useState("");
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
@@ -21,16 +26,17 @@ const RolesPage = () => {
         r.description.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleSave = (roleData: Omit<Role, 'id' | 'userCount'>) => {
-        if (selectedRole) {
-            setRoles(roles.map((r) => (r.id === selectedRole.id ? { ...r, ...roleData } : r)));
-        } else {
-            const newRole: Role = {
-                ...roleData,
-                id: Date.now(),
-                userCount: 0
-            };
-            setRoles([...roles, newRole]);
+    const handleSave = async (roleData: Partial<Role>) => {
+        try {
+            if (selectedRole) {
+                await updateRoleMutation.mutateAsync({ id: selectedRole.id, ...roleData });
+            } else {
+                await createRoleMutation.mutateAsync(roleData);
+            }
+            setModalOpen(false);
+            setSelectedRole(null);
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -39,9 +45,13 @@ const RolesPage = () => {
         setModalOpen(true);
     };
 
-    const handleDelete = (id: number) => {
+    const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this role? This might affect users assigned to it.")) {
-            setRoles(roles.filter((r) => r.id !== id));
+            try {
+                await deleteRoleMutation.mutateAsync(id);
+            } catch (error) {
+                console.error(error);
+            }
         }
     };
 
@@ -65,11 +75,11 @@ const RolesPage = () => {
             ),
         },
         {
-            key: "userCount",
+            key: "users_count",
             header: "Members",
             render: (item) => (
                 <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-foreground">{item.userCount}</span>
+                    <span className="text-sm font-semibold text-foreground">{item.users_count}</span>
                     <span className="text-[11px] text-muted-foreground">users</span>
                 </div>
             )
@@ -77,7 +87,7 @@ const RolesPage = () => {
         {
             key: "status",
             header: "Status",
-            render: (item) => <StatusBadge status={item.status} variant="success" />
+            render: () => <StatusBadge status="Active" variant="success" />
         },
         {
             key: "actions",

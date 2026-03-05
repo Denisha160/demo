@@ -68,11 +68,13 @@ export function useVerifyLogin() {
 
             toast.success(`Welcome, ${data.user.name}!`);
 
-            // Redirect based on role
+            // Redirect based on role and companies
             if (data.user.is_root_user) {
                 window.location.href = '/admin';
+            } else if (data.user.companies && data.user.companies.length > 0) {
+                window.location.href = `/${data.user.companies[0].id}/dashboard`;
             } else {
-                window.location.href = '/basalt-amenities/dashboard';
+                window.location.href = '/no-access';
             }
         },
         onError: (error: ApiError) => {

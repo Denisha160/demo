@@ -58,6 +58,7 @@ export type UserUpdatePayload = Partial<UserCreatePayload> & { id: string };
 export interface UserDetailData extends Partial<User> {
     id: string; // Ensure id is always present
     revenue?: string;
+    allocations?: { company_id: string, role_id: string, company_name: string, role_name: string }[];
     target?: string;
     attainment?: string;
     totalLeads?: number;

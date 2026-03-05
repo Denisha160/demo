@@ -1,5 +1,46 @@
-export type ProductType = 'raw_material' | 'finished_good' | 'branded_product' | 'unbranded_product';
+export type ProductType = 'RAW_MATERIAL' | 'FINISHED_GOOD';
+export type UnitCategory = 'weight' | 'volume' | 'count';
+export type BaseUnit = 'kg' | 'g' | 'l' | 'ml' | 'pcs';
 
+export interface Product {
+    id: string;
+    code: string;
+    product_name: string;
+    category_id: string | null;
+    product_type: ProductType;
+    is_brand: boolean;
+    base_unit: BaseUnit;
+    unit_category: UnitCategory;
+    weight: number | null;
+    length: number | null;
+    width: number | null;
+    height: number | null;
+    volume: number | null;
+    packaging_id: string | null;
+    hsn_code: string | null;
+    shape: string | null;
+    capacity: string | null;
+    material: string | null;
+    cost_price: number | null;
+    selling_price: number | null;
+    is_active: boolean;
+    metadata: Record<string, unknown>;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface BOMItem {
+    id?: string;
+    finished_product_id: string;
+    raw_product_id: string;
+    raw_quantity: number;
+    raw_unit: BaseUnit;
+    raw_unit_category: UnitCategory;
+    // UI helper fields
+    raw_product_name?: string;
+}
+
+// Keep Variant temporarily for compatibility or if needed later
 export interface Variant {
     id: string;
     variant_name: string;
@@ -8,21 +49,4 @@ export interface Variant {
     unit: string;
     cost_price: number;
     selling_price: number;
-}
-
-export interface BOMItem {
-    component_variant_id: string;
-    quantity_required: number;
-    // UI helper fields
-    component_name?: string;
-}
-
-export interface Product {
-    id: string;
-    name: string;
-    type: ProductType;
-    base_unit: string;
-    is_active: boolean;
-    variants: Variant[];
-    bom?: BOMItem[]; // Only for finished_good or kit
 }

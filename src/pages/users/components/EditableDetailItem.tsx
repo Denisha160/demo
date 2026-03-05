@@ -9,7 +9,7 @@ export const EditableDetailItem = ({
     label, value, isEditing, onChange, type = "text", options = [], prefix, error
 }: {
     label: string;
-    value: string | undefined;
+    value: string | number | undefined;
     isEditing: boolean;
     onChange: (val: string) => void;
     type?: "text" | "number" | "date" | "select" | "textarea";

@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { initialRoles } from "@/data/rolesData";
 import { useUser } from "@/hooks/useUsers";
 
 import OverviewTab from "./components/OverviewTab";
@@ -95,11 +94,33 @@ const UserDetailPage = () => {
                 }
                 return prev;
             });
-            setUserRole(apiUser.role || "User");
+
+            if (apiUser.allocations && Array.isArray(apiUser.allocations)) {
+                const newCompanyRoles: Record<string, string> = {};
+                apiUser.allocations.forEach((alloc: { company_name: string; role_name: string }) => {
+                    newCompanyRoles[alloc.company_name] = alloc.role_name;
+                });
+
+
+                setInitialCompanyRoles(prev => {
+                    if (JSON.stringify(prev) !== JSON.stringify(newCompanyRoles)) {
+                        return newCompanyRoles;
+                    }
+                    return prev;
+                });
+
+                setCompanyRoles(prev => {
+                    if (JSON.stringify(prev) !== JSON.stringify(newCompanyRoles)) {
+                        return newCompanyRoles;
+                    }
+                    return prev;
+                });
+            }
         }
     }, [fetchedUser]);
 
-    const [userRole, setUserRole] = useState("User");
+    const [initialCompanyRoles, setInitialCompanyRoles] = useState<Record<string, string>>({});
+    const [companyRoles, setCompanyRoles] = useState<Record<string, string>>({});
 
     const genderOptions: SelectOption[] = [
         { label: "Male", value: "male" }, { label: "Female", value: "female" }
@@ -166,9 +187,9 @@ const UserDetailPage = () => {
                     <PermissionsTab
                         userData={userData}
                         setUserData={setUserData}
-                        userRole={userRole}
-                        setUserRole={setUserRole}
-                        initialRoles={initialRoles}
+                        initialCompanyRoles={initialCompanyRoles}
+                        companyRoles={companyRoles}
+                        setCompanyRoles={setCompanyRoles}
                     />
                 </TabsContent>
             </Tabs>

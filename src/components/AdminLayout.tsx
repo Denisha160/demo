@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import {
     LogOut, Menu, ChevronDown,
-    PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2, ShieldCheck, Users, Tags
+    PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2, ShieldCheck, Users, Tags, Box
 } from "lucide-react";
 import { useLogout, useCurrentUser } from "@/hooks/useAuth";
 import { createPortal } from 'react-dom';
@@ -17,6 +17,7 @@ const navItems = [
     { label: "Tasks", icon: CheckSquare, path: "/admin/tasks" },
     { label: "Users", icon: Users, path: "/admin/users" },
     { label: "Roles", icon: ShieldCheck, path: "/admin/roles" },
+    { label: "Products", icon: Box, path: "/admin/products" },
     { label: "Categories", icon: Tags, path: "/admin/product-categories" },
 ];
 

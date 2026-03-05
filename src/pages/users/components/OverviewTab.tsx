@@ -144,8 +144,8 @@ const OverviewTab = ({
             if (payload.anniversary_date === "") payload.anniversary_date = null;
 
             // Ensure numeric fields are casted correctly
-            payload.opening_balance = payload.opening_balance === "" ? 0 : Number(payload.opening_balance);
-            payload.basic_salary = payload.basic_salary === "" ? 0 : Number(payload.basic_salary);
+            payload.opening_balance = String(payload.opening_balance) === "" ? 0 : Number(payload.opening_balance);
+            payload.basic_salary = String(payload.basic_salary) === "" ? 0 : Number(payload.basic_salary);
 
             updateUser(payload, {
                 onSuccess: () => {
@@ -188,6 +188,24 @@ const OverviewTab = ({
                 setErrors(newErrors);
             }
         }
+    };
+
+    const handleToggleActive = () => {
+        const newStatus = !userData.is_active;
+        setApiError(null);
+        updateUser(
+            { id: userData.id!, is_active: newStatus },
+            {
+                onSuccess: () => {
+                    setUserData({ ...userData, is_active: newStatus });
+                },
+                onError: (error: unknown) => {
+                    const err = error as ApiErrorResponse;
+                    const errorData = (err?.details || err?.response?.data || err || {}) as ApiErrorResponse;
+                    setApiError(errorData?.message || "Failed to update user status.");
+                }
+            }
+        );
     };
 
     return (
@@ -295,7 +313,7 @@ const OverviewTab = ({
                     </div>
                 </div>
             </div>
-
+                    
             {/* Actions */}
             <div className="pt-6 border-t border-border/50 flex justify-between gap-3 items-center">
                 <Button
@@ -303,7 +321,7 @@ const OverviewTab = ({
                     variant={userData.is_active ? "destructive" : "default"}
                     size="sm"
                     className="h-8 text-xs rounded-sm gap-2"
-                    onClick={() => handleChange("is_active", !userData.is_active)}
+                    onClick={handleToggleActive}
                     disabled={isUpdating}
                 >
                     {userData.is_active ? "Deactivate Account" : "Activate Account"}

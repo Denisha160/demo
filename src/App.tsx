@@ -22,6 +22,7 @@ import Parties from "@/pages/parties/PartiesPage";
 import CalendarPage from "@/pages/calendar/CalendarPage";
 import InboxPage from "@/pages/inbox/InboxPage";
 import Products from "@/pages/products/ProductsPage";
+import ProductDetailPage from "@/pages/products/ProductDetailPage";
 import Roles from "@/pages/roles/RolesPage";
 import RoleDetail from "@/pages/roles/RoleDetail";
 import Users from "@/pages/users/UsersPage";
@@ -32,9 +33,11 @@ import AttendancePage from "./pages/attendance/AttendancePage";
 import EmployeesPage from "./pages/employees/EmployeesPage";
 import EmployeeDetailPage from "./pages/employees/EmployeeDetailPage";
 import CompaniesPage from "@/pages/companies/CompaniesPage";
+import CompanyDetailPage from "@/pages/companies/CompanyDetailPage";
 import NotFound from "@/pages/errors/NotFoundPage";
 import ProductCategoriesPage from "@/pages/product-categories/ProductCategoriesPage";
 import CategoryDetailPage from "@/pages/product-categories/CategoryDetailPage";
+import NoCompanyAccessPage from "@/pages/errors/NoCompanyAccessPage";
 
 const queryClient = new QueryClient();
 
@@ -58,9 +61,26 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const user = getStoredUser();
   const token = Cookies.get("auth_token");
   if (token && user) {
-    return <Navigate to={user.is_root_user ? "/admin" : "/basalt-amenities/dashboard"} replace />;
+    if (user.is_root_user) return <Navigate to="/admin" replace />;
+    const companyId = user.companies?.[0]?.id || 'no-access';
+    return <Navigate to={`/${companyId}/dashboard`} replace />;
   }
   return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const user = getStoredUser();
+  const token = Cookies.get("auth_token");
+  if (!token || !user) return <Navigate to="/login" replace />;
+  if (!user.is_root_user) return <Navigate to={`/${user.companies?.[0]?.id || 'no-access'}/dashboard`} replace />;
+  return <>{children}</>;
+}
+
+function DashboardRedirect() {
+  const user = getStoredUser();
+  if (!user) return <Navigate to="/login" replace />;
+  const companyId = user.companies?.[0]?.id || 'no-access';
+  return <Navigate to={`/${companyId}/dashboard`} replace />;
 }
 
 const App = () => (
@@ -77,6 +97,9 @@ const App = () => (
           <Route path="/reset-password-otp" element={<ResetPasswordOtp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/company-selection" element={<Navigate to="/admin/companies" replace />} />
+          <Route path="/no-access" element={<PrivateRoute><NoCompanyAccessPage /></PrivateRoute>} />
+
+          <Route path="/dashboard" element={<PrivateRoute><DashboardRedirect /></PrivateRoute>} />
 
           {/* Company Routes – protected */}
           <Route path="/:companyId" element={<PrivateRoute><CompanyLayout /></PrivateRoute>}>
@@ -84,6 +107,8 @@ const App = () => (
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="contacts" element={<Contacts />} />
             <Route path="products" element={<Products />} />
+            <Route path="products/new" element={<ProductDetailPage />} />
+            <Route path="products/:id" element={<ProductDetailPage />} />
             <Route path="product-categories" element={<ProductCategoriesPage />} />
             <Route path="product-categories/:id" element={<CategoryDetailPage />} />
             <Route path="leads" element={<Leads />} />
@@ -100,10 +125,13 @@ const App = () => (
           </Route>
 
           {/* Admin Routes – protected + root-user only */}
-          <Route path="/admin" element={<PrivateRoute><AdminLayout /></PrivateRoute>}>
+          <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
             <Route index element={<Navigate to="companies" replace />} />
             <Route path="tasks" element={<Tasks />} />
             <Route path="inbox" element={<InboxPage />} />
+            <Route path="products" element={<Products />} />
+            <Route path="products/new" element={<ProductDetailPage />} />
+            <Route path="products/:id" element={<ProductDetailPage />} />
             <Route path="product-categories" element={<ProductCategoriesPage />} />
             <Route path="product-categories/:id" element={<CategoryDetailPage />} />
             <Route path="users" element={<Users />} />
@@ -111,6 +139,7 @@ const App = () => (
             <Route path="roles" element={<Roles />} />
             <Route path="roles/:id" element={<RoleDetail />} />
             <Route path="companies" element={<CompaniesPage />} />
+            <Route path="companies/:id" element={<CompanyDetailPage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
 

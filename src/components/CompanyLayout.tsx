@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
 import {
   LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
@@ -7,6 +7,10 @@ import {
 } from "lucide-react";
 import { useLogout, useCurrentUser } from "@/hooks/useAuth";
 import { createPortal } from "react-dom";
+import { getCompanyTheme } from "@/data/companyData";
+import { useCompanies } from "@/hooks/useCompanies";
+import { Loader2 } from "lucide-react";
+import { Company } from "@/types/company";
 
 interface CompanyLayoutProps {
   title?: string;
@@ -24,26 +28,6 @@ const navItems = [
   { label: "Categories", icon: Tags, path: "product-categories" },
 ];
 
-const companies = [
-  {
-    id: "basalt-amenities",
-    name: "Basalt Amenities ",
-    initials: "BA",
-    theme: {
-      primary: "142.1 76.2% 36.3%",
-      ring: "142.1 76.2% 36.3%",
-    },
-  },
-  {
-    id: "smart-home",
-    name: "Smart Home Automation",
-    initials: "SHA",
-    theme: {
-      primary: "262.1 83.3% 57.8%",
-      ring: "262.1 83.3% 57.8%",
-    },
-  },
-];
 
 const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const { companyId } = useParams();
@@ -54,17 +38,15 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const user = useCurrentUser();
+  const { data: companiesData, isLoading: isLoadingCompanies } = useCompanies();
+  const companies = useMemo(() => companiesData?.items || [], [companiesData?.items]);
 
   // Derive initials from user name (e.g. "John Doe" → "JD")
   const initials = user?.name
     ? user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
     : 'ME';
 
-  const initialCompany = companies.find(c => c.id === companyId) ||
-    companies.find(c => c.id === localStorage.getItem("currentCompanyId")) ||
-    companies[0];
-
-  const [currentCompany, setCurrentCompany] = useState(initialCompany);
+  const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
@@ -84,22 +66,29 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   }, []);
 
   useEffect(() => {
-    if (companyId && companyId !== currentCompany.id) {
-      const found = companies.find(c => c.id === companyId);
-      if (found) setCurrentCompany(found);
+    if (companies.length > 0) {
+      const active = companies.find((c: Company) => c.id === companyId) ||
+        companies.find((c: Company) => c.id === localStorage.getItem("currentCompanyId")) ||
+        companies[0];
+      if (active?.id !== currentCompany?.id) {
+        setCurrentCompany(active);
+      }
     }
-  }, [companyId, currentCompany.id]);
+  }, [companyId, companies, currentCompany?.id]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty("--primary", currentCompany.theme.primary);
-    root.style.setProperty("--ring", currentCompany.theme.ring);
-    root.style.setProperty("--sidebar-primary", currentCompany.theme.primary);
-    root.style.setProperty("--sidebar-ring", currentCompany.theme.ring);
-    localStorage.setItem("currentCompanyId", currentCompany.id);
-  }, [currentCompany, currentCompany.id]);
+    if (currentCompany) {
+      const theme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
+      const root = document.documentElement;
+      root.style.setProperty("--primary", theme.primary);
+      root.style.setProperty("--ring", theme.ring);
+      root.style.setProperty("--sidebar-primary", theme.primary);
+      root.style.setProperty("--sidebar-ring", theme.ring);
+      localStorage.setItem("currentCompanyId", currentCompany.id);
+    }
+  }, [currentCompany]);
 
-  const toggleCompany = (company: typeof companies[0]) => {
+  const toggleCompany = (company: Company) => {
     setCurrentCompany(company);
     setIsCompanyDropdownOpen(false);
     // When switching company, navigate to the new company's dashboard
@@ -108,11 +97,22 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   };
 
   const activeNavItem = navItems.find(item => {
+    if (!currentCompany) return false;
     const fullPath = `/${currentCompany.id}/${item.path}`;
     return location.pathname === fullPath || location.pathname.startsWith(fullPath + "/");
   });
 
   const pageTitle = title || activeNavItem?.label || "CRM";
+
+  if (isLoadingCompanies || !currentCompany) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-secondary/30">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const currentTheme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
 
   return (
     <div className="flex h-screen bg-secondary/30">
@@ -134,16 +134,18 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             {/* Company Selector */}
             <div className="relative flex-1 min-w-0">
               <button
-                onClick={() => setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
-                className="flex items-center gap-2 w-full h-9 px-2 rounded-md hover:bg-accent transition-colors text-left overflow-hidden"
+                onClick={() => (user?.is_root_user || companies.length > 1) && setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
+                className={`flex items-center gap-2 w-full h-9 px-2 rounded-md transition-colors text-left overflow-hidden ${user?.is_root_user || companies.length > 1 ? 'hover:bg-accent' : 'cursor-default'}`}
               >
                 <div className="h-6 w-6 bg-primary text-primary-foreground flex items-center justify-center rounded-sm shrink-0">
-                  <span className="text-[10px] font-bold">{currentCompany.initials}</span>
+                  <span className="text-[10px] font-bold">{currentTheme.initials}</span>
                 </div>
                 <span className="flex-1 text-sm font-semibold truncate leading-none text-foreground">
-                  {currentCompany.name}
+                  {currentCompany.display_name || currentCompany.legal_name}
                 </span>
-                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+                {(user?.is_root_user || companies.length > 1) && (
+                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+                )}
               </button>
 
               {/* Dropdown Menu */}
@@ -151,21 +153,24 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                 <div className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-md shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-1">
                     <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Switch Company</div>
-                    {companies.map((company) => (
-                      <button
-                        key={company.id}
-                        onClick={() => toggleCompany(company)}
-                        className={`flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm transition-colors text-left
-                          ${currentCompany.id === company.id ? 'bg-accent text-accent-foreground' : 'text-popover-foreground hover:bg-accent hover:text-accent-foreground'}
-                        `}
-                      >
-                        <div className={`h-5 w-5 rounded-sm flex items-center justify-center shrink-0 border ${currentCompany.id === company.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted'}`}>
-                          <span className="text-[10px] font-bold">{company.initials}</span>
-                        </div>
-                        <span className="truncate flex-1">{company.name}</span>
-                        {currentCompany.id === company.id && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
-                      </button>
-                    ))}
+                    {companies.map((company: Company) => {
+                      const theme = getCompanyTheme(company.id, company.display_name || company.legal_name);
+                      return (
+                        <button
+                          key={company.id}
+                          onClick={() => toggleCompany(company)}
+                          className={`flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm transition-colors text-left
+                            ${currentCompany.id === company.id ? 'bg-accent text-accent-foreground' : 'text-popover-foreground hover:bg-accent hover:text-accent-foreground'}
+                          `}
+                        >
+                          <div className={`h-5 w-5 rounded-sm flex items-center justify-center shrink-0 border ${currentCompany.id === company.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted'}`}>
+                            <span className="text-[10px] font-bold">{theme.initials}</span>
+                          </div>
+                          <span className="truncate flex-1">{company.display_name || company.legal_name}</span>
+                          {currentCompany.id === company.id && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -199,11 +204,11 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   }
                 `}
-                style={active ? { color: `hsl(${currentCompany.theme.primary})` } : {}}
+                style={active ? { color: `hsl(${currentTheme.primary})` } : {}}
               >
-                <item.icon 
-                  className={`h-4 w-4 transition-colors`} 
-                  style={active ? { color: `hsl(${currentCompany.theme.primary})` } : {}}
+                <item.icon
+                  className={`h-4 w-4 transition-colors`}
+                  style={active ? { color: `hsl(${currentTheme.primary})` } : {}}
                 />
                 {item.label}
               </Link>
@@ -211,16 +216,18 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
           })}
         </nav>
 
-        <div className="p-2 border-t border-border">
-          <Link
-            to="/admin/tasks"
-            onClick={() => setSidebarOpen(false)}
-            className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-foreground w-full rounded-md hover:bg-accent transition-colors"
-          >
-            <ShieldCheck className="h-4 w-4" />
-            Admin Panel
-          </Link>
-        </div>
+        {user?.is_root_user && (
+          <div className="p-2 border-t border-border">
+            <Link
+              to="/admin/tasks"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-foreground w-full rounded-md hover:bg-accent transition-colors"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Admin Panel
+            </Link>
+          </div>
+        )}
       </aside>
 
       {/* Main Content */}

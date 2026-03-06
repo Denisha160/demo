@@ -117,7 +117,7 @@ const RoleDetail = () => {
     return (
         <div className="w-full mx-auto space-y-4 animate-fade-in">
             {/* Header Area */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button
                         variant="ghost"
@@ -129,7 +129,7 @@ const RoleDetail = () => {
                     </Button>
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-sm font-bold uppercase">GOTHAM</h2>
+                            <h2 className="text-sm font-bold text-foreground leading-none truncate font-mono uppercase tracking-widest text-primary">Role Permissions</h2>
                         </div>
                     </div>
                 </div>
@@ -160,7 +160,7 @@ const RoleDetail = () => {
             </div>
 
             {/* Permissions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {groups.map((group, groupIdx) => (
                     <div key={group.module} className="border border-border rounded-sm bg-card overflow-hidden shadow-sm flex flex-col">
                         <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between">

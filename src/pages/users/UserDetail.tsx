@@ -149,7 +149,7 @@ const UserDetailPage = () => {
 
     return (
         <div className="w-full mx-auto space-y-2 animate-fade-in">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm border border-border shrink-0" onClick={() => navigate(-1)}>
                         <ArrowLeft className="h-4 w-4" />
@@ -164,7 +164,7 @@ const UserDetailPage = () => {
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4 overflow-y-hidden">
                 <div className="flex items-center justify-between border-b border-border pr-2">
-                    <TabsList className="bg-transparent rounded-none h-11 justify-start gap-6 p-0 overflow-x-auto border-none">
+                    <TabsList className="bg-transparent rounded-none h-11 justify-start gap-2 p-0 overflow-x-auto border-none">
                         <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Overview</TabsTrigger>
                         <TabsTrigger value="leads" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Leads</TabsTrigger>
                         <TabsTrigger value="analytics" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Analytics</TabsTrigger>
@@ -224,7 +224,7 @@ const UserDetailPage = () => {
                     )}
                 </div>
 
-                <TabsContent value="overview" className="space-y-6 animate-in fade-in-50 duration-300">
+                <TabsContent value="overview" className="space-y-2 animate-in fade-in-50 duration-300">
                     <OverviewTab
                         ref={overviewRef}
                         onSavingChange={setIsSavingOverview}
@@ -244,7 +244,7 @@ const UserDetailPage = () => {
                     <AnalyticsTab />
                 </TabsContent>
 
-                <TabsContent value="permissions" className="space-y-6 animate-in fade-in-50 duration-300">
+                <TabsContent value="permissions" className="space-y-2 animate-in fade-in-50 duration-300">
                     <PermissionsTab
                         userData={userData}
                         setUserData={setUserData}

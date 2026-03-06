@@ -63,7 +63,7 @@ const SupplierDetailPage = () => {
     return (
         <div className="w-full mx-auto space-y-4 animate-fade-in">
             {/* Top Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button
                         variant="ghost"
@@ -97,13 +97,13 @@ const SupplierDetailPage = () => {
             </div>
 
             <Tabs defaultValue="overview" className="w-full space-y-4">
-                <TabsList className="bg-transparent border-b border-border rounded-none h-11 w-full justify-start gap-6 p-0">
+                <TabsList className="bg-transparent border-b border-border rounded-none h-11 w-full justify-start gap-2 p-0">
                     <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all">Overview</TabsTrigger>
                     <TabsTrigger value="orders" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all">Orders</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="mt-0">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
                         {/* Basic Info & Contact */}
                         <div className="lg:col-span-2 space-y-4">
                             <div className="p-6 border border-border rounded-sm bg-card shadow-sm">

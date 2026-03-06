@@ -14,8 +14,9 @@ import {
 import { Product, ProductCreatePayload } from "@/types/products";
 import { Combobox } from "@/components/ui/combobox";
 import { useCategoriesCombobox } from "@/hooks/useProductCategories";
-import { useCreateProduct } from "@/hooks/useProducts";
+import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
 import { ApiErrorResponse } from "@/types/user";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const ProductInput = ({
     label,
@@ -62,8 +63,7 @@ const ProductInput = ({
 const productSchema = z.object({
     product_name: z.string().min(2, "Product name is required (min 2 characters)"),
     code: z.string().optional().nullable(),
-    category_id: z.string().uuid("Please select a valid category").optional().nullable(),
-    packaging_id: z.string().uuid("Please select a valid packaging").optional().nullable(),
+    category_id: z.preprocess((val) => val === '' ? null : val, z.string().uuid("Please select a valid category").optional().nullable()),
     product_type: z.enum(["RAW_MATERIAL", "FINISHED_GOOD"]),
     is_brand: z.boolean(),
     is_active: z.boolean().default(true),
@@ -94,7 +94,6 @@ const productSchema = z.object({
 
     shelf_life_days: z.number().min(0, "Shelf life must be >= 0").nullable().optional(),
     storage_conditions: z.string().optional().nullable(),
-    is_perishable: z.boolean().default(false),
 }).refine(data => {
     if (data.unit_category === 'weight') return ['kg', 'g'].includes(data.base_unit);
     if (data.unit_category === 'volume') return ['l', 'ml'].includes(data.base_unit);
@@ -131,9 +130,15 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [apiError, setApiError] = useState<string | null>(null);
 
-    const { data: fetchedCategories = [] } = useCategoriesCombobox();
-    const categoryOptions = fetchedCategories.map(cat => ({
-        label: cat.name,
+    const [categorySearch, setCategorySearch] = useState('');
+    const debouncedCategorySearch = useDebounce(categorySearch, 300);
+
+    const { data: fetchedCategories = [] } = useCategoriesCombobox({
+        type: 'sub',
+        search: debouncedCategorySearch
+    });
+    const categoryOptions = fetchedCategories.map((cat: { id: string, name: string, parent_name?: string }) => ({
+        label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
         value: cat.id
     }));
 
@@ -148,7 +153,9 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
         { id: "q1234567-89ab-cdef-0123-456789abcdef", name: "500ml Glass Bottle" }
     ];
 
-    const { mutate: createProduct, isPending: isSaving } = useCreateProduct();
+    const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
+    const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
+    const isSaving = isCreating || isUpdating;
 
     useEffect(() => {
         onSavingChange?.(isSaving);
@@ -183,16 +190,23 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
     const [metaParams, setMetaParams] = useState<{ key: string, value: string }[]>(() => getInitialMetadata().params);
     const [metaAttrs, setMetaAttrs] = useState<{ key: string, value: string }[]>(() => getInitialMetadata().attrs);
 
-    const handleChange = (field: string, value: unknown) => {
-        if (typeof setProductData === 'function' && setProductData.length === 1) {
-            // This branch handles the case where setProductData is a direct setter function
-            setProductData({ ...productData, [field]: value });
-        } else {
-            // This branch handles the case where setProductData is a React.Dispatch function
-            (setProductData as React.Dispatch<React.SetStateAction<Partial<Product>>>)(
-                (prev) => ({ ...prev, [field]: value })
-            );
+    // Sync state when productData updates from parent fetch
+    useEffect(() => {
+        if (!isNew && productData?.id) {
+            const initial = getInitialMetadata();
+            setMetaColors(initial.colors);
+            setMetaFeatures(initial.features);
+            setMetaParams(initial.params);
+            setMetaAttrs(initial.attrs);
         }
+    }, [productData?.id, getInitialMetadata, isNew]);
+
+    const handleChange = (field: string, value: unknown) => {
+        if (typeof setProductData === 'function') {
+            const updater = setProductData as React.Dispatch<React.SetStateAction<Partial<Product>>>;
+            updater((prev) => ({ ...prev, [field]: value }));
+        }
+
         if (errors[field]) {
             setErrors(prev => {
                 const updated = { ...prev };
@@ -243,6 +257,20 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
         setter(prev => prev.length > 1 ? prev.filter((_, i) => i !== index) : [{ key: '', value: '' }] as unknown as T[]);
     };
 
+    // Init images from fetched data
+    useEffect(() => {
+        if (!isNew && productData?.images && Array.isArray(productData.images)) {
+            // Filter out existing DB images and extract their URLs for preview
+            const initialPreviews = productData.images
+                .map((img: { image_url?: { url?: string }, url?: string }) => img?.image_url?.url || img?.url)
+                .filter(Boolean);
+
+            if (initialPreviews.length > 0) {
+                setImagePreviews(initialPreviews);
+            }
+        }
+    }, [productData?.images, isNew]);
+
     const handleReset = useCallback(() => {
         setErrors({});
         setApiError(null);
@@ -251,8 +279,17 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
         setMetaFeatures(initial.features);
         setMetaParams(initial.params);
         setMetaAttrs(initial.attrs);
-        setImagePreviews([]);
-    }, [getInitialMetadata]);
+
+        // Keep existing images on reset if not new
+        if (!isNew && productData?.images && Array.isArray(productData.images)) {
+            const initialPreviews = productData.images
+                .map((img: { image_url?: { url?: string }, url?: string }) => img?.image_url?.url || img?.url)
+                .filter(Boolean);
+            setImagePreviews(initialPreviews);
+        } else {
+            setImagePreviews([]);
+        }
+    }, [getInitialMetadata, isNew, productData?.images]);
 
     useImperativeHandle(ref, () => ({
         save: () => handleSave(),
@@ -263,6 +300,8 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
         try {
             const validData = productSchema.parse({
                 ...productData,
+                category_id: productData.category_id || null,
+                packaging_id: productData.packaging_id || null,
                 weight: productData.weight ? Number(productData.weight) : null,
                 length: productData.length ? Number(productData.length) : null,
                 width: productData.width ? Number(productData.width) : null,
@@ -287,7 +326,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
             const finalColors = metaColors.map(c => c.trim()).filter(Boolean);
             const finalFeatures = metaFeatures.map(f => f.trim()).filter(Boolean);
 
-            const payload: ProductCreatePayload = {
+            const payload = {
                 ...validData,
                 metadata: {
                     ...(finalColors.length > 0 && { colors: finalColors }),
@@ -295,8 +334,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                     ...(Object.keys(parameters).length > 0 && { parameters }),
                     ...(Object.keys(attributes).length > 0 && { attributes })
                 },
-                image_urls: imagePreviews
-            };
+            } as unknown as ProductCreatePayload;
 
             if (isNew) {
                 createProduct(payload, {
@@ -333,17 +371,61 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                     }
                 });
             } else {
-                // Update Path handled separately later
-                toast.info("Update product functionality pending.");
+                const updatePayload = {
+                    ...validData,
+                    id: productData.id as string,
+                    metadata: {
+                        ...(finalColors.length > 0 && { colors: finalColors }),
+                        ...(finalFeatures.length > 0 && { features: finalFeatures }),
+                        ...(Object.keys(parameters).length > 0 && { parameters }),
+                        ...(Object.keys(attributes).length > 0 && { attributes })
+                    },
+                };
+
+                updateProduct(updatePayload, {
+                    onSuccess: () => {
+                        toast.success("Product updated successfully!");
+                    },
+                    onError: (error: unknown) => {
+                        const err = error as ApiErrorResponse;
+                        const errorData = (err?.details || err?.response?.data || err || {}) as ApiErrorResponse;
+
+                        if (errorData?.code === "validation_error" && errorData.details?.body) {
+                            setErrors(errorData.details.body);
+                            toast.error("Please correct the validation errors.");
+                        } else if (errorData?.code === "duplicate_key_value") {
+                            const msg = errorData.message || "A duplicate record exists.";
+                            setApiError(msg);
+
+                            // Map custom backend postgres constraints directly to specific input fields
+                            if (msg.toLowerCase().includes("product name")) {
+                                setErrors(prev => ({ ...prev, product_name: msg }));
+                            } else if (msg.toLowerCase().includes("product_code")) {
+                                setErrors(prev => ({ ...prev, code: msg }));
+                            } else if (msg.toLowerCase().includes("hsn_code")) {
+                                setErrors(prev => ({ ...prev, hsn_code: msg }));
+                            }
+                        } else if (errorData?.message) {
+                            setApiError(errorData.message);
+                            toast.error(errorData.message);
+                        } else {
+                            setApiError("An unexpected error occurred while updating.");
+                            toast.error("Failed to update product.");
+                        }
+                    }
+                });
             }
         } catch (error) {
+            console.error("Zod Validation Error:", error);
             if (error instanceof z.ZodError) {
                 const fieldErrors: Record<string, string> = {};
                 error.errors.forEach(err => {
                     if (err.path[0]) fieldErrors[err.path[0].toString()] = err.message;
                 });
+                console.log("Extracted Field Errors:", fieldErrors);
                 setErrors(fieldErrors);
-                toast.error("Please correct the highlighted errors.");
+                const errorCount = Object.keys(fieldErrors).length;
+                toast.error(`Please correct the ${errorCount} highlighted error${errorCount === 1 ? '' : 's'}.`);
             } else {
                 setApiError("An unexpected exception occurred.");
             }
@@ -351,7 +433,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
     };
 
     return (
-        <div className="p-4 border border-border rounded-lg bg-card shadow-sm space-y-6">
+        <div className="p-4 border border-border rounded-lg bg-card shadow-sm space-y-2">
 
             {apiError && (
                 <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
@@ -366,7 +448,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                         <Package className="h-4 w-4 text-primary" />
                         <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Basic Information</h3>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <ProductInput
                             label="Product Name"
                             value={productData.product_name ?? ""}
@@ -410,17 +492,19 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                                 emptyText="No categories found."
                                 className={`h-10 ${errors.category_id ? 'border-destructive' : ''}`}
                                 clearable
+                                searchValue={categorySearch}
+                                onSearchChange={setCategorySearch}
                             />
                             {errors.category_id && <p className="text-[10px] text-destructive mt-1">{errors.category_id}</p>}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-2">
                                 <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Brand Item</Label>
                                 <RadioGroup
                                     value={productData.is_brand ? "yes" : "no"}
                                     onValueChange={(val) => handleChange("is_brand", val === "yes")}
-                                    className="flex items-center gap-4 h-10"
+                                    className="flex items-center gap-2 h-10"
                                 >
                                     <div className="flex items-center space-x-1.5">
                                         <RadioGroupItem value="yes" id="brand-yes" />
@@ -487,16 +571,31 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                     <Scale className="h-4 w-4 text-primary" />
                     <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Units & Measurements</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-start">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 items-start">
                     <div className="space-y-2 lg:col-span-1">
                         <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Base Unit</Label>
                         <Select
                             value={productData.base_unit || "pcs"}
                             onValueChange={(v) => {
-                                handleChange("base_unit", v);
-                                if (v === "kg" || v === "g") handleChange("unit_category", "weight");
-                                if (v === "l" || v === "ml") handleChange("unit_category", "volume");
-                                if (v === "pcs") handleChange("unit_category", "count");
+                                const category = (v === "kg" || v === "g") ? "weight" : (v === "l" || v === "ml") ? "volume" : "count";
+
+                                if (typeof setProductData === 'function') {
+                                    const updater = setProductData as React.Dispatch<React.SetStateAction<Partial<Product>>>;
+                                    updater((prev) => ({
+                                        ...prev,
+                                        base_unit: v as "kg" | "g" | "l" | "ml" | "pcs",
+                                        unit_category: category as "weight" | "volume" | "count"
+                                    }));
+                                }
+
+                                // Clear errors for both
+                                setErrors(prev => {
+                                    const next = { ...prev };
+                                    delete next.base_unit;
+                                    delete next.unit_category;
+                                    return next;
+                                });
+                                if (apiError) setApiError(null);
                             }}
                         >
                             <SelectTrigger className={`text-sm ${errors.base_unit ? 'input-error' : ''}`}>
@@ -598,7 +697,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                         <PackageCheck className="h-4 w-4 text-primary" />
                         <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Packaging</h3>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                         <div className="space-y-2">
                             <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Packaging Type</Label>
                             <Select
@@ -643,7 +742,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                     <DollarSign className="h-4 w-4 text-primary" />
                     <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Pricing & Tax Info</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                     <ProductInput
                         label="Cost Price"
                         type="number"
@@ -671,7 +770,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                     <Settings className="h-4 w-4 text-primary" />
                     <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Specifications</h3>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                     {/* Colors */}
                     <div className="bg-muted/30 p-4 rounded-md border flex flex-col gap-3">
                         <div className="flex justify-between items-center w-full">
@@ -815,7 +914,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
             </div>
 
             {/* Form Actions */}
-            <div className="pt-6 border-t border-border/50 flex justify-between gap-4 items-center">
+            <div className="pt-6 border-t border-border/50 flex justify-between gap-2 items-center">
                 <div className="text-xs font-medium">
                     {Object.keys(errors).length > 0 && (
                         <span className="text-destructive flex items-center gap-1">

@@ -313,7 +313,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(({
                     )}
 
                     <div className="md:col-span-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <EditableDetailItem label="Personal Email" value={userData.personal_email} error={errors.personal_email} isEditing={true} onChange={(val) => handleChange("personal_email", val)} />
                             <EditableDetailItem label="Residence Address" value={userData.address} error={errors.address} isEditing={true} onChange={(val) => handleChange("address", val)} type="textarea" />
                             <EditableDetailItem

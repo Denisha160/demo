@@ -48,8 +48,8 @@ const LeadsTab = ({ userData }: LeadsTabProps) => {
                 <StatCard title="Revenue View" value={userData.revenue || "₹0"} change="Contribution" changeType="neutral" icon={<IndianRupee className="h-4 w-4" />} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                <div className="lg:col-span-2 space-y-2">
                     <div className="p-5 border border-border rounded-sm bg-card shadow-sm">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
@@ -92,7 +92,7 @@ const LeadsTab = ({ userData }: LeadsTabProps) => {
                     </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-2">
                     <div className="p-5 border border-border rounded-sm bg-card shadow-sm overflow-hidden relative group">
                         <div className="absolute top-0 right-0 p-2 opacity-10">
                             <span className="text-5xl text-primary rotate-12 inline-block font-bold">₹</span>

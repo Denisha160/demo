@@ -54,8 +54,8 @@ const SalaryModal = ({ open, onClose, employeeName, employeeId }: SalaryModalPro
                 </>
             }
         >
-            <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase text-muted-foreground">Select Month</label>
                         <Combobox

@@ -191,7 +191,7 @@ const CompanyDetailPage = () => {
 
     return (
         <div className="w-full mx-auto space-y-2 animate-fade-in">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm border border-border shrink-0" onClick={() => navigate(-1)}>
                         <ArrowLeft className="h-4 w-4" />
@@ -204,7 +204,7 @@ const CompanyDetailPage = () => {
                 </div>
             </div>
 
-            <div className="p-5 border border-border rounded-sm bg-card shadow-sm space-y-6">
+            <div className="p-5 border border-border rounded-sm bg-card shadow-sm space-y-2">
                 {/* Header Section with Company Logo/Initials and Basic Info */}
                 <div className="flex flex-col sm:flex-row items-start gap-5 pb-6 border-b border-border/50">
                     <div className="h-24 w-24 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-4xl font-bold border border-primary/20 shrink-0">
@@ -216,7 +216,7 @@ const CompanyDetailPage = () => {
                                 {companyData.display_name}
                             </h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Building2 className="h-4 w-4 text-primary shrink-0" />
                                 <span className="truncate">{companyData.legal_name}</span>
@@ -243,7 +243,7 @@ const CompanyDetailPage = () => {
                         <Building className="h-4 w-4 text-primary" />
                         <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Business Identity</h3>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         <CompanyInput
                             label="Display Name"
                             value={companyData.display_name}
@@ -290,7 +290,7 @@ const CompanyDetailPage = () => {
                         <Phone className="h-4 w-4 text-primary" />
                         <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Contact Information</h3>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         <CompanyInput
                             label="Primary Email"
                             value={companyData.email || ""}
@@ -332,7 +332,7 @@ const CompanyDetailPage = () => {
                         <MapPin className="h-4 w-4 text-primary" />
                         <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Registered Address</h3>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                         <div className="md:col-span-2">
                             <CompanyInput
                                 label="Address Line 1"

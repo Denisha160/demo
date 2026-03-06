@@ -32,6 +32,8 @@ interface ComboboxProps {
     /** If true, a clear ("×") button appears when a value is selected */
     clearable?: boolean;
     disabled?: boolean;
+    searchValue?: string;
+    onSearchChange?: (search: string) => void;
 }
 
 const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
@@ -46,6 +48,8 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             className,
             clearable = false,
             disabled = false,
+            searchValue,
+            onSearchChange,
         },
         ref
     ) => {
@@ -108,6 +112,8 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                         <CommandInput
                             placeholder={searchPlaceholder}
                             className="h-8 text-sm"
+                            value={searchValue}
+                            onValueChange={onSearchChange}
                         />
                         <CommandList>
                             <CommandEmpty className="py-4 text-center text-sm text-muted-foreground">

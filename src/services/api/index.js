@@ -156,9 +156,23 @@ export const getAvailablePermissions = () => {
 // regoin products
 // ===================== Products =====================
 
+export const listProducts = (params) => {
+  const url = `products`;
+  return axios({ method: "GET", url, params })
+}
+
+export const getProductDetails = (id) => {
+  const url = `products/${id}`;
+  return axios({ method: 'GET', url });
+}
+
 export const createProduct = (data) => {
   const url = `products`;
   return axios({ method: 'POST', url, data });
 }
 
+export const updateProduct = (id, data) => {
+  const url = `products/${id}`;
+  return axios({ method: 'PATCH', url, data });
+}
 // end region

@@ -27,6 +27,10 @@ export interface Product {
     metadata: Record<string, unknown>;
     created_at?: string;
     updated_at?: string;
+    stock?: number;
+    category_name?: string;
+    image?: string;
+    image   s?: any[];
 }
 
 export type ProductCreatePayload = Omit<Product, 'id' | 'created_at' | 'updated_at'>;

@@ -207,7 +207,7 @@ const PermissionsTab = ({
             </div>
 
             {/* Role Permissions Display & Save Button */}
-            <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="lg:col-span-2 flex flex-col gap-2">
                 <div className="p-5 border border-border rounded-sm bg-card shadow-sm flex-1">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
@@ -228,7 +228,7 @@ const PermissionsTab = ({
                             User is not assigned to {activeCompany}.
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             {isLoadingPermissions ? (
                                 <div className="col-span-full flex justify-center p-8">
                                     <Loader2 className="h-6 w-6 animate-spin text-primary" />

@@ -1,9 +1,11 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Box, Activity, LogIn, LogOut, FileText, Package, Plus, Minus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/types/products";
 import ProductOverviewTab from "./components/ProductOverviewTab";
+import { useProduct } from "@/hooks/useProducts";
+import { toast } from "react-toastify";
 
 const ProductDetailPage = () => {
     const { id, companyId } = useParams();
@@ -12,10 +14,13 @@ const ProductDetailPage = () => {
 
     const isAdmin = location.pathname.startsWith("/admin");
     const routePrefix = isAdmin ? "/admin" : `/${companyId}`;
-    const isNew = id === "new";
+    const isNew = id === "new" || !id;
+
+    // Fetch product data
+    const { data: fetchedProduct, isLoading, error } = useProduct(isNew ? undefined : id);
 
     // Form State initialization
-    const [productData, setProductData] = useState<Product>({
+    const [productData, setProductData] = useState<Partial<Product>>({
         id: isNew ? crypto.randomUUID() : (id as string),
         code: "",
         product_name: "",
@@ -40,7 +45,16 @@ const ProductDetailPage = () => {
         metadata: {},
     });
 
-    const isLoading = false; // Add real hook later
+    // Sync fetched data to local state
+    useEffect(() => {
+        if (fetchedProduct && !isNew) {
+            setProductData(fetchedProduct);
+        }
+    }, [fetchedProduct, isNew]);
+
+    if (error) {
+        toast.error("Failed to load product details");
+    }
 
     if (isLoading) {
         return (
@@ -53,7 +67,7 @@ const ProductDetailPage = () => {
 
     return (
         <div className="w-full mx-auto space-y-4 animate-fade-in">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm border border-border shrink-0" onClick={() => navigate(-1)}>
                         <ArrowLeft className="h-4 w-4" />
@@ -70,17 +84,11 @@ const ProductDetailPage = () => {
                         <Button size="sm" variant="outline" className="h-8 rounded-sm text-xs font-semibold uppercase tracking-wider text-blue-600 border-blue-600/30 hover:bg-blue-600/10">
                             <Activity className="w-3.5 h-3.5 mr-1" /> Transactions
                         </Button>
-                        <Button size="sm" variant="outline" className="h-8 rounded-sm text-xs font-semibold uppercase tracking-wider text-purple-600 border-purple-600/30 hover:bg-purple-600/10">
-                            <FileText className="w-3.5 h-3.5 mr-1" /> Pending Orders
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-8 rounded-sm text-xs font-semibold uppercase tracking-wider text-primary border-primary/30 hover:bg-primary/10">
-                            <Package className="w-3.5 h-3.5 mr-1" /> Packages
-                        </Button>
                     </div>
                 )}
             </div>
 
-            <div className="space-y-6 animate-in fade-in-50 duration-300">
+            <div className="space-y-2 animate-in fade-in-50 duration-300">
                 <ProductOverviewTab
                     productData={productData}
                     setProductData={setProductData}

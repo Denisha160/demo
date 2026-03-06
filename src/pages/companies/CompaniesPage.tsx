@@ -39,14 +39,14 @@ const CompaniesPage = () => {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {companies.map((company) => {
                     const theme = getCompanyTheme(company.id, company.display_name || company.legal_name);
 
                     return (
                         <div
                             key={company.id}
-                            className="group flex flex-col items-start gap-4 p-5 rounded-lg border border-border bg-card text-left transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-primary/40 relative"
+                            className="group flex flex-col items-start gap-2 p-5 rounded-lg border border-border bg-card text-left transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-primary/40 relative"
                         >
                             <div className="flex items-center gap-3 w-full cursor-pointer" onClick={() => handleSelect(company.id)}>
                                 <div className="h-11 w-11 text-white flex items-center justify-center rounded-md shrink-0 shadow-sm" style={{ backgroundColor: `hsl(${theme.primary})` }}>

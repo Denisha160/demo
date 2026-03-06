@@ -95,7 +95,7 @@ const SupplierModal = ({ open, onClose, onSave, supplier }: SupplierModalProps) 
             }
         >
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Supplier Name</Label>
                         <Input
@@ -125,7 +125,7 @@ const SupplierModal = ({ open, onClose, onSave, supplier }: SupplierModalProps) 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="contactPerson" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Contact Person</Label>
                         <Input
@@ -149,7 +149,7 @@ const SupplierModal = ({ open, onClose, onSave, supplier }: SupplierModalProps) 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
                         <Input
@@ -174,7 +174,7 @@ const SupplierModal = ({ open, onClose, onSave, supplier }: SupplierModalProps) 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="paymentTerms" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment Terms</Label>
                         <Combobox

@@ -147,7 +147,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
       <ToastContainer
-        position="bottom-right"
+        position="top-right"
         autoClose={3000}
         hideProgressBar={false}
         newestOnTop={true}

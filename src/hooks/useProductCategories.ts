@@ -5,6 +5,7 @@ import {
     getProductCategoryDetails,
     createProductCategory,
     updateProductCategory,
+    deleteProductCategory,
 } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
 import type { Category, CategoryPayload, UpdateCategoryPayload, CategoryListResponse } from '@/types/productCategories';
@@ -52,8 +53,10 @@ export function useCreateCategory() {
             queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
             toast.success('Category created successfully.');
         },
-        onError: (error: { message?: string }) => {
-            toast.error(error?.message ?? 'Failed to create category.');
+        onError: (error: unknown) => {
+            const err = error as { response?: { data?: { message?: string } }, message?: string };
+            const msg = err?.response?.data?.message || err?.message || 'Failed to create category.';
+            toast.error(msg);
         },
     });
 }
@@ -70,8 +73,29 @@ export function useUpdateCategory() {
             queryClient.invalidateQueries({ queryKey: queryKeys.categories.detail(variables.id) });
             toast.success('Category updated successfully.');
         },
-        onError: (error: { message?: string }) => {
-            toast.error(error?.message ?? 'Failed to update category.');
+        onError: (error: unknown) => {
+            const err = error as { response?: { data?: { message?: string } }, message?: string };
+            const msg = err?.response?.data?.message || err?.message || 'Failed to update category.';
+            toast.error(msg);
+        },
+    });
+}
+
+// ── Delete ─────────────────────────────────────────────────────────────────────
+
+export function useDeleteCategory() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => deleteProductCategory(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.categories.all });
+            toast.success('Category deleted successfully.');
+        },
+        onError: (error: unknown) => {
+            const err = error as { response?: { data?: { message?: string } }, message?: string };
+            const msg = err?.response?.data?.message || err?.message || 'Failed to delete category.';
+            toast.error(msg);
         },
     });
 }

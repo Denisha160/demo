@@ -1,7 +1,7 @@
 import axios from "./httpRequest";
 
 // region Auth
-// ===================== Auth  =====================
+// ===================== Auth =====================
 
 export const accountLogin = (data) => {
   const url = `auth/login`;
@@ -34,7 +34,7 @@ export const logoutSession = (sessionId, token = null) => {
 // end region
 
 // region Product Categories
-// ===================== Product Categories  =====================
+// ===================== Product Categories =====================
 
 export const listProductCategories = (params) => {
   const url = `categories`;
@@ -56,10 +56,15 @@ export const updateProductCategory = ({ id, ...data }) => {
   return axios({ method: "PATCH", url, data });
 };
 
+export const deleteProductCategory = (id) => {
+  const url = `categories/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
 // end region
 
 // region Users
-// ===================== Users  =====================
+// ===================== Users =====================
 
 export const listUsers = (params) => {
   const url = `users`;
@@ -94,7 +99,7 @@ export const updateUserPermissions = (id, data) => {
 // end region
 
 // region Companies
-// ===================== Companies  =====================
+// ===================== Companies =====================
 
 export const listCompanies = (params) => {
   const url = `companies`;
@@ -114,7 +119,7 @@ export const updateCompany = ({ id, ...data }) => {
 // end region
 
 // region Roles
-// ===================== Roles  =====================
+// ===================== Roles =====================
 
 export const listRoles = (params) => {
   const url = `roles`;
@@ -148,4 +153,12 @@ export const getAvailablePermissions = () => {
 
 // end region
 
+// regoin products
+// ===================== Products =====================
 
+export const createProduct = (data) => {
+  const url = `products`;
+  return axios({ method: 'POST', url, data });
+}
+
+// end region

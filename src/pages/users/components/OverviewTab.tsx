@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
 import { Camera, Briefcase, User, CreditCard, Loader2 } from "lucide-react";
 import { EditableDetailItem, SelectOption } from "./EditableDetailItem";
-import { useRef, useState } from "react";
+import { useRef, useState, forwardRef, useImperativeHandle, useEffect } from "react";
 import { useUpdateUser } from "@/hooks/useUsers";
 import { z } from "zod";
 import { UserDetailData, UserUpdatePayload, ApiErrorResponse, getLocalDateString } from "@/types/user";
@@ -23,21 +23,32 @@ interface OverviewTabProps {
     genderOptions: SelectOption[];
     maritalStatusOptions: SelectOption[];
     workShiftOptions: SelectOption[];
+    onSavingChange?: (isSaving: boolean) => void;
 }
 
-const OverviewTab = ({
+export interface OverviewTabRef {
+    save: () => void;
+    reset: () => void;
+}
+
+const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(({
     userData,
     setUserData,
     genderOptions,
     maritalStatusOptions,
-    workShiftOptions
-}: OverviewTabProps) => {
+    workShiftOptions,
+    onSavingChange
+}, ref) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [apiError, setApiError] = useState<string | null>(null);
     const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
+
+    useEffect(() => {
+        onSavingChange?.(isUpdating);
+    }, [isUpdating, onSavingChange]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -90,6 +101,16 @@ const OverviewTab = ({
         }
         if (apiError) setApiError(null);
     };
+
+    useImperativeHandle(ref, () => ({
+        save: () => handleSave(),
+        reset: () => {
+            setPassword("");
+            setConfirmPassword("");
+            setErrors({});
+            setApiError(null);
+        }
+    }));
 
     const handleSave = () => {
         try {
@@ -313,48 +334,24 @@ const OverviewTab = ({
                     </div>
                 </div>
             </div>
-                    
+
             {/* Actions */}
             <div className="pt-6 border-t border-border/50 flex justify-between gap-3 items-center">
                 <Button
                     type="button"
                     variant={userData.is_active ? "destructive" : "default"}
                     size="sm"
-                    className="h-8 text-xs rounded-sm gap-2"
+                    className="h-8 text-[10px] font-semibold tracking-widest uppercase rounded-sm gap-2 px-4"
                     onClick={handleToggleActive}
                     disabled={isUpdating}
                 >
                     {userData.is_active ? "Deactivate Account" : "Activate Account"}
                 </Button>
-
-                <div className="flex justify-end gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
-                        disabled={isUpdating}
-                        onClick={() => {
-                            // Normally this would reload or reset to initial data
-                            setPassword("");
-                            setConfirmPassword("");
-                        }}
-                    >
-                        Reset Changes
-                    </Button>
-                    <Button
-                        type="button"
-                        size="sm"
-                        className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
-                        onClick={handleSave}
-                        disabled={isUpdating}
-                    >
-                        {isUpdating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                        {isUpdating ? "Saving..." : "Save Changes"}
-                    </Button>
-                </div>
             </div>
         </div>
     );
-};
+});
+
+OverviewTab.displayName = "OverviewTab";
 
 export default OverviewTab;

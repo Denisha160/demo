@@ -74,7 +74,7 @@ const SupplierDetailPage = () => {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-bold text-foreground leading-none truncate font-mono uppercase tracking-widest text-primary">Supplier Profile</h2>
+                        <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary">Supplier Profile</h2>
                         <p className="text-[10px] text-muted-foreground mt-1">{supplier.name} • {supplier.category}</p>
                     </div>
                 </div>
@@ -135,7 +135,7 @@ const SupplierDetailPage = () => {
                         {/* Summary Sidebar */}
                         <div className="space-y-4">
                             <div className="p-6 border border-border rounded-sm bg-card shadow-sm text-center">
-                                <div className="h-20 w-20 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-3xl font-bold border border-primary/20 mx-auto mb-4 shadow-sm font-mono tracking-tighter">
+                                <div className="h-20 w-20 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-3xl font-bold border border-primary/20 mx-auto mb-4 shadow-sm tracking-tighter">
                                     {supplier.name.split(" ").map(n => n[0]).join("")}
                                 </div>
                                 <h4 className="font-bold text-lg text-foreground">{supplier.name}</h4>

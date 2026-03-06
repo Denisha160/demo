@@ -4,13 +4,23 @@ import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Tags, Edit, X } from "lucide-react";
+import { Plus, Search, Tags, Edit, X, Trash2 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CategoryModal from "./CategoryModal";
-import { useCategories, useCategoriesCombobox, useCreateCategory, useUpdateCategory, Category } from "@/hooks/useProductCategories";
+import { useCategories, useCategoriesCombobox, useCreateCategory, useUpdateCategory, Category, useDeleteCategory } from "@/hooks/useProductCategories";
 import type { ProductCategory } from "../../types/productCategories";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function toDisplay(c: Category): ProductCategory {
     return {
@@ -108,6 +118,9 @@ const ProductCategoriesPage = () => {
 
     const [modalOpen, setModalOpen] = useState(false);
     const [formData, setFormData] = useState<Partial<ProductCategory>>({ name: "", type: "sub" });
+    const [categoryToDelete, setCategoryToDelete] = useState<ProductCategory | null>(null);
+
+    const { mutate: deleteCategory, isPending: isDeleting } = useDeleteCategory();
 
     const handleCreateNew = () => {
         setFormData({ name: "", type: "sub" });
@@ -180,14 +193,25 @@ const ProductCategoriesPage = () => {
             key: "id",
             header: "Actions",
             render: (item) => (
-                <div className="flex items-center justify-end" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 w-7"
+                        className="h-7 w-7 p-0"
                         onClick={() => handleEdit(item)}
                     >
                         <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setCategoryToDelete(item);
+                        }}
+                    >
+                        <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                 </div>
             )
@@ -300,6 +324,35 @@ const ProductCategoriesPage = () => {
                 isPending={isPending}
                 onEdit={handleEdit}
             />
+
+            <AlertDialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the category "{categoryToDelete?.name}".
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isDeleting}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                if (categoryToDelete?.id) {
+                                    deleteCategory(categoryToDelete.id, {
+                                        onSuccess: () => setCategoryToDelete(null)
+                                    });
+                                }
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

@@ -129,7 +129,7 @@ const RoleDetail = () => {
                     </Button>
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-sm font-bold text-foreground leading-none truncate font-mono uppercase tracking-widest text-primary">Role Permissions</h2>
+                            <h2 className="text-sm font-bold uppercase">GOTHAM</h2>
                         </div>
                     </div>
                 </div>
@@ -143,9 +143,9 @@ const RoleDetail = () => {
                     <Button variant="outline" size="sm" className="h-8 text-xs rounded-sm ml-2" onClick={() => navigate(-1)}>
                         Cancel
                     </Button>
-                    <Button 
-                        size="sm" 
-                        className="h-8 text-xs rounded-sm gap-2" 
+                    <Button
+                        size="sm"
+                        className="h-8 text-xs rounded-sm gap-2"
                         onClick={handleSave}
                         disabled={updateRoleMutation.isPending}
                     >

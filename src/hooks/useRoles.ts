@@ -8,6 +8,7 @@ import {
     getAvailablePermissions
 } from '@/services/api';
 import { Role } from '@/types/Role';
+import { toast } from 'react-toastify';
 
 export const useRoles = (queryParams: Record<string, unknown> = {}) => {
     return useQuery({
@@ -80,6 +81,12 @@ export const useDeleteRole = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['roles'] });
+            toast.success('Role deleted successfully.');
         },
+        onError: (error: unknown) => {
+            const err = error as { response?: { data?: { message?: string } }, message?: string };
+            const msg = err?.response?.data?.message || err?.message || 'Failed to delete role.';
+            toast.error(msg);
+        }
     });
 };

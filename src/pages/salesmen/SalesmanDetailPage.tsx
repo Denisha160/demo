@@ -89,7 +89,7 @@ const SalesmanDetailPage = () => {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-bold text-foreground leading-none truncate font-mono uppercase tracking-widest text-primary">Salesman Dashboard</h2>
+                        <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary">Salesman Dashboard</h2>
                         <p className="text-[10px] text-muted-foreground mt-1">{salesman.name} • {salesman.region} Region</p>
                     </div>
                 </div>

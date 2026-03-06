@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useUser } from "@/hooks/useUsers";
 
-import OverviewTab from "./components/OverviewTab";
+import OverviewTab, { OverviewTabRef } from "./components/OverviewTab";
 import LeadsTab from "./components/LeadsTab";
 import AnalyticsTab from "./components/AnalyticsTab";
 import PermissionsTab from "./components/PermissionsTab";
@@ -15,6 +15,11 @@ import { UserDetailData } from "@/types/user";
 const UserDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+
+    // Tab state
+    const [activeTab, setActiveTab] = useState("overview");
+    const [isSavingOverview, setIsSavingOverview] = useState(false);
+    const overviewRef = useRef<OverviewTabRef>(null);
 
     // Form State initialization
     const [userData, setUserData] = useState<UserDetailData>({
@@ -157,16 +162,72 @@ const UserDetailPage = () => {
                 </div>
             </div>
 
-            <Tabs defaultValue="overview" className="w-full space-y-4 overflow-y-hidden">
-                <TabsList className="bg-transparent border-b border-border rounded-none h-11 w-full justify-start gap-6 p-0 overflow-x-auto">
-                    <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Overview</TabsTrigger>
-                    <TabsTrigger value="leads" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Leads</TabsTrigger>
-                    <TabsTrigger value="analytics" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Analytics</TabsTrigger>
-                    <TabsTrigger value="permissions" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Permissions</TabsTrigger>
-                </TabsList>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4 overflow-y-hidden">
+                <div className="flex items-center justify-between border-b border-border pr-2">
+                    <TabsList className="bg-transparent rounded-none h-11 justify-start gap-6 p-0 overflow-x-auto border-none">
+                        <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Overview</TabsTrigger>
+                        <TabsTrigger value="leads" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Leads</TabsTrigger>
+                        <TabsTrigger value="analytics" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Analytics</TabsTrigger>
+                        <TabsTrigger value="permissions" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0">Permissions</TabsTrigger>
+                    </TabsList>
+
+                    {activeTab === "overview" && (
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-[10px] font-semibold tracking-widest uppercase rounded-sm px-4"
+                                onClick={() => {
+                                    if (fetchedUser) {
+                                        setUserData(prev => ({
+                                            ...prev,
+                                            id: fetchedUser.id,
+                                            name: fetchedUser.name || "",
+                                            phone_number: fetchedUser.phone_number || "",
+                                            email: fetchedUser.email || "",
+                                            personal_email: fetchedUser.personal_email || "",
+                                            employee_code: fetchedUser.employee_code || "",
+                                            date_of_joining: fetchedUser.date_of_joining ? fetchedUser.date_of_joining.split('T')[0] : "",
+                                            department: fetchedUser.department || "",
+                                            region: fetchedUser.region || "",
+                                            work_shift: fetchedUser.work_shift || "morning",
+                                            is_root_user: fetchedUser.is_root_user || false,
+                                            is_active: fetchedUser.is_active ?? true,
+                                            gender: fetchedUser.gender || "male",
+                                            date_of_birth: fetchedUser.date_of_birth ? fetchedUser.date_of_birth.split('T')[0] : "",
+                                            marital_status: fetchedUser.marital_status || "single",
+                                            anniversary_date: fetchedUser.anniversary_date ? fetchedUser.anniversary_date.split('T')[0] : "",
+                                            basic_salary: Number(fetchedUser.basic_salary) || 0,
+                                            opening_balance: Number(fetchedUser.opening_balance) || 0,
+                                            pan_number: fetchedUser.pan_number || "",
+                                            gst_number: fetchedUser.gst_number || "",
+                                            address: fetchedUser.address || "",
+                                            role: fetchedUser.role || "User"
+                                        }));
+                                    }
+                                    overviewRef.current?.reset();
+                                }}
+                                disabled={isSavingOverview}
+                            >
+                                Reset
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="h-8 text-[10px] font-semibold tracking-widest uppercase rounded-sm px-6"
+                                onClick={() => overviewRef.current?.save()}
+                                disabled={isSavingOverview}
+                            >
+                                {isSavingOverview && <Loader2 className="h-3 w-3 animate-spin mr-2" />}
+                                Save Changes
+                            </Button>
+                        </div>
+                    )}
+                </div>
 
                 <TabsContent value="overview" className="space-y-6 animate-in fade-in-50 duration-300">
                     <OverviewTab
+                        ref={overviewRef}
+                        onSavingChange={setIsSavingOverview}
                         userData={userData}
                         setUserData={setUserData}
                         genderOptions={genderOptions}

@@ -29,6 +29,9 @@ export interface Product {
     updated_at?: string;
 }
 
+export type ProductCreatePayload = Omit<Product, 'id' | 'created_at' | 'updated_at'>;
+export type ProductUpdatePayload = Partial<ProductCreatePayload> & { id: string };
+
 export interface BOMItem {
     id?: string;
     finished_product_id: string;

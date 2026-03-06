@@ -9,6 +9,16 @@ import { useNavigate } from "react-router-dom";
 
 import { useRoles, useCreateRole, useUpdateRole, useDeleteRole } from "@/hooks/useRoles";
 import { Role } from "@/types/Role";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const RolesPage = () => {
     const navigate = useNavigate();
@@ -20,6 +30,8 @@ const RolesPage = () => {
     const [search, setSearch] = useState("");
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+    const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const filtered = roles.filter((r) =>
         r.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -46,12 +58,14 @@ const RolesPage = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm("Are you sure you want to delete this role? This might affect users assigned to it.")) {
-            try {
-                await deleteRoleMutation.mutateAsync(id);
-            } catch (error) {
-                console.error(error);
-            }
+        setDeleteError(null);
+        try {
+            await deleteRoleMutation.mutateAsync(id);
+            setRoleToDelete(null);
+        } catch (error: unknown) {
+            console.error(error);
+            const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to delete role";
+            setDeleteError(msg);
         }
     };
 
@@ -101,7 +115,7 @@ const RolesPage = () => {
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(item)} title="Edit Role">
                         <Edit className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(item.id)} title="Delete Role">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setRoleToDelete(item)} title="Delete Role">
                         <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                 </div>
@@ -138,6 +152,42 @@ const RolesPage = () => {
                 onSave={handleSave}
                 role={selectedRole}
             />
+
+            <AlertDialog
+                open={!!roleToDelete}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setRoleToDelete(null);
+                        setDeleteError(null);
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the role "{roleToDelete?.name}".
+                            This might affect users currently assigned to it.
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteRoleMutation.isPending}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={deleteRoleMutation.isPending}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                if (roleToDelete?.id) {
+                                    handleDelete(roleToDelete.id);
+                                }
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {deleteRoleMutation.isPending ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

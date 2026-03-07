@@ -9,12 +9,16 @@ import { z } from "zod";
 import {
     Package, Scale, Ruler, DollarSign, Loader2,
     Image as ImageIcon, UploadCloud, X, Layers, Tags, Box,
-    Settings, Plus, Trash2, Shield, FolderTree, Barcode, PackageCheck
+    Settings, Plus, Trash2, Shield, FolderTree, Barcode, PackageCheck,
+    ChevronLeft, ChevronRight, ZoomIn
 } from "lucide-react";
 import { Product, ProductCreatePayload } from "@/types/products";
 import { Combobox } from "@/components/ui/combobox";
 import { useCategoriesCombobox } from "@/hooks/useProductCategories";
-import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
+import { usePackagesCombobox } from "@/hooks/usePackages";
+import { PackageType } from "@/types/packages";
+import { useCreateProduct, useUpdateProduct, useDeleteProductPhoto } from "@/hooks/useProducts";
+import AddProductPhotoModal from "@/pages/products/components/AddProductPhotoModal";
 import { ApiErrorResponse } from "@/types/user";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -75,7 +79,8 @@ const productSchema = z.object({
     length: z.number().positive("Must be > 0").nullable().optional(),
     width: z.number().positive("Must be > 0").nullable().optional(),
     height: z.number().positive("Must be > 0").nullable().optional(),
-    volume: z.number().positive("Must be > 0").nullable().optional(),
+    size_value: z.number().positive("Must be > 0").nullable().optional(),
+    dimension_unit: z.enum(["mm", "cm", "m", "in", "ft"]).nullable().optional(),
 
     cost_price: z.number().positive("Must be > 0").nullable().optional(),
     selling_price: z.number().positive("Must be > 0").nullable().optional(),
@@ -94,6 +99,7 @@ const productSchema = z.object({
 
     shelf_life_days: z.number().min(0, "Shelf life must be >= 0").nullable().optional(),
     storage_conditions: z.string().optional().nullable(),
+    packaging_id: z.string().uuid("Please select a valid package").optional().nullable(),
 }).refine(data => {
     if (data.unit_category === 'weight') return ['kg', 'g'].includes(data.base_unit);
     if (data.unit_category === 'volume') return ['l', 'ml'].includes(data.base_unit);
@@ -127,8 +133,11 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
     onSavingChange
 }, ref) => {
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<{ id?: string; url: string }[]>([]);
     const [apiError, setApiError] = useState<string | null>(null);
+    const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [slideIdx, setSlideIdx] = useState(0);
 
     const [categorySearch, setCategorySearch] = useState('');
     const debouncedCategorySearch = useDebounce(categorySearch, 300);
@@ -140,6 +149,18 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
     const categoryOptions = fetchedCategories.map((cat: { id: string, name: string, parent_name?: string }) => ({
         label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
         value: cat.id
+    }));
+
+    const [packageSearch, setPackageSearch] = useState('');
+    const debouncedPackageSearch = useDebounce(packageSearch, 300);
+
+    const { data: fetchedPackages = [] } = usePackagesCombobox({
+        search: debouncedPackageSearch.trim() || undefined
+    });
+
+    const packageOptions = fetchedPackages.map((pkg: PackageType) => ({
+        label: pkg.package_code ? `${pkg.package_name} (${pkg.package_code})` : pkg.package_name,
+        value: pkg.id
     }));
 
     // Mock Options if none provided
@@ -155,6 +176,7 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
 
     const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
     const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
+    const { mutate: deletePhoto } = useDeleteProductPhoto();
     const isSaving = isCreating || isUpdating;
 
     useEffect(() => {
@@ -222,26 +244,19 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
         handleChange(field, isNaN(num as number) ? null : num);
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files) return;
+    // Keyboard navigation for lightbox
+    useEffect(() => {
+        if (lightboxIndex === null) return;
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowRight') setLightboxIndex(i => i !== null ? (i + 1) % imagePreviews.length : null);
+            if (e.key === 'ArrowLeft') setLightboxIndex(i => i !== null ? (i - 1 + imagePreviews.length) % imagePreviews.length : null);
+            if (e.key === 'Escape') setLightboxIndex(null);
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [lightboxIndex, imagePreviews.length]);
 
-        Array.from(files).forEach(file => {
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setImagePreviews(prev => [...prev, reader.result as string]);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                toast.error(`${file.name} is not an image file`);
-            }
-        });
-    };
 
-    const removeImage = (indexToRemove: number) => {
-        setImagePreviews(prev => prev.filter((_, idx) => idx !== indexToRemove));
-    };
 
     // Generic Array & Object handlers for Specifications
     const updateArrayState = <T,>(setter: React.Dispatch<React.SetStateAction<T[]>>, index: number, val: T) => {
@@ -260,16 +275,22 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
     // Init images from fetched data
     useEffect(() => {
         if (!isNew && productData?.images && Array.isArray(productData.images)) {
-            // Filter out existing DB images and extract their URLs for preview
             const initialPreviews = productData.images
-                .map((img: { image_url?: { url?: string }, url?: string }) => img?.image_url?.url || img?.url)
-                .filter(Boolean);
-
-            if (initialPreviews.length > 0) {
-                setImagePreviews(initialPreviews);
-            }
+                .map((img: { id?: string; image_url?: { url?: string }; url?: string; image?: { url?: string } }) => ({
+                    id: img?.id,
+                    url: img?.image?.url || img?.image_url?.url || img?.url || '',
+                }))
+                .filter((x) => x.url);
+            setImagePreviews(initialPreviews);
         }
     }, [productData?.images, isNew]);
+
+    const handleDeletePhoto = (imageId: string | undefined, index: number) => {
+        if (imageId && productData.id) {
+            deletePhoto({ productId: productData.id as string, imageId });
+        }
+        setImagePreviews((prev) => prev.filter((_, idx) => idx !== index));
+    };
 
     const handleReset = useCallback(() => {
         setErrors({});
@@ -280,11 +301,13 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
         setMetaParams(initial.params);
         setMetaAttrs(initial.attrs);
 
-        // Keep existing images on reset if not new
         if (!isNew && productData?.images && Array.isArray(productData.images)) {
             const initialPreviews = productData.images
-                .map((img: { image_url?: { url?: string }, url?: string }) => img?.image_url?.url || img?.url)
-                .filter(Boolean);
+                .map((img: { id?: string; image_url?: { url?: string }; url?: string; image?: { url?: string } }) => ({
+                    id: img?.id,
+                    url: img?.image?.url || img?.image_url?.url || img?.url || '',
+                }))
+                .filter((x) => x.url);
             setImagePreviews(initialPreviews);
         } else {
             setImagePreviews([]);
@@ -306,7 +329,8 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                 length: productData.length ? Number(productData.length) : null,
                 width: productData.width ? Number(productData.width) : null,
                 height: productData.height ? Number(productData.height) : null,
-                volume: productData.volume ? Number(productData.volume) : null,
+                size_value: productData.size_value ? Number(productData.size_value) : null,
+                dimension_unit: productData.dimension_unit || null,
                 cost_price: productData.cost_price ? Number(productData.cost_price) : null,
                 selling_price: productData.selling_price ? Number(productData.selling_price) : null,
             });
@@ -339,7 +363,6 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
             if (isNew) {
                 createProduct(payload, {
                     onSuccess: () => {
-                        toast.success("Product created successfully!");
                         handleReset(); // Optionally clear form if needed or let parent handle routing off
                     },
                     onError: (error: unknown) => {
@@ -348,7 +371,6 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
 
                         if (errorData?.code === "validation_error" && errorData.details?.body) {
                             setErrors(errorData.details.body);
-                            toast.error("Please correct the validation errors.");
                         } else if (errorData?.code === "duplicate_key_value") {
                             const msg = errorData.message || "A duplicate record exists.";
                             setApiError(msg);
@@ -363,10 +385,8 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                             }
                         } else if (errorData?.message) {
                             setApiError(errorData.message);
-                            toast.error(errorData.message);
                         } else {
                             setApiError("An unexpected error occurred while saving.");
-                            toast.error("Failed to create product.");
                         }
                     }
                 });
@@ -383,16 +403,12 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                 };
 
                 updateProduct(updatePayload, {
-                    onSuccess: () => {
-                        toast.success("Product updated successfully!");
-                    },
                     onError: (error: unknown) => {
                         const err = error as ApiErrorResponse;
                         const errorData = (err?.details || err?.response?.data || err || {}) as ApiErrorResponse;
 
                         if (errorData?.code === "validation_error" && errorData.details?.body) {
                             setErrors(errorData.details.body);
-                            toast.error("Please correct the validation errors.");
                         } else if (errorData?.code === "duplicate_key_value") {
                             const msg = errorData.message || "A duplicate record exists.";
                             setApiError(msg);
@@ -407,10 +423,8 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                             }
                         } else if (errorData?.message) {
                             setApiError(errorData.message);
-                            toast.error(errorData.message);
                         } else {
                             setApiError("An unexpected error occurred while updating.");
-                            toast.error("Failed to update product.");
                         }
                     }
                 });
@@ -530,37 +544,112 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
 
                 {/* Images Section */}
                 <div className="xl:col-span-1 space-y-4">
-                    <div className="flex items-center gap-2 mb-4">
-                        <ImageIcon className="h-4 w-4 text-primary" />
-                        <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Product Images</h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <ImageIcon className="h-4 w-4 text-primary" />
+                            <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Product Images</h3>
+                        </div>
+                        {!isNew && productData.id && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs rounded-sm"
+                                onClick={() => setIsPhotoModalOpen(true)}
+                            >
+                                <UploadCloud className="h-3 w-3 mr-1" />
+                                Add Photos
+                            </Button>
+                        )}
                     </div>
                     <div className="border border-dashed border-border rounded-lg p-4 bg-muted/10 min-h-[180px] flex flex-col items-start h-[calc(100%-2.25rem)]">
-                        <div className="flex flex-wrap gap-3 mb-3 flex-1 w-full overflow-y-auto content-start">
-                            {imagePreviews.map((url, idx) => (
-                                <div key={idx} className="relative w-[72px] h-[72px] group rounded-md overflow-hidden border bg-background shadow-sm">
-                                    <img src={url} alt="Preview" className="w-full h-full object-cover" />
+                        {imagePreviews.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center w-full h-full flex-1 gap-2 text-muted-foreground">
+                                <ImageIcon className="h-8 w-8 opacity-30" />
+                                <p className="text-xs">
+                                    {isNew ? 'Save the product first to add images' : 'No images yet'}
+                                </p>
+                                {!isNew && productData.id && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs rounded-sm mt-1"
+                                        onClick={() => setIsPhotoModalOpen(true)}
+                                    >
+                                        <UploadCloud className="h-3 w-3 mr-1" />
+                                        Upload first image
+                                    </Button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col w-full gap-2 flex-1">
+                                {/* Main image viewer */}
+                                <div className="relative w-full rounded-md overflow-hidden bg-muted/20 border border-border group cursor-zoom-in" style={{ minHeight: 160 }}>
+                                    <img
+                                        src={imagePreviews[Math.min(slideIdx, imagePreviews.length - 1)].url}
+                                        alt={`Product image ${Math.min(slideIdx, imagePreviews.length - 1) + 1}`}
+                                        className="w-full object-cover"
+                                        style={{ minHeight: 160, maxHeight: 200 }}
+                                        onClick={() => setLightboxIndex(Math.min(slideIdx, imagePreviews.length - 1))}
+                                    />
+                                    {/* Counter badge */}
+                                    <span className="absolute top-2 left-2 bg-black/50 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full pointer-events-none">
+                                        {Math.min(slideIdx, imagePreviews.length - 1) + 1} / {imagePreviews.length}
+                                    </span>
+                                    {/* Delete */}
                                     <button
                                         type="button"
-                                        onClick={() => removeImage(idx)}
-                                        className="absolute top-1 right-1 bg-black/60 hover:bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const idx = Math.min(slideIdx, imagePreviews.length - 1);
+                                            handleDeletePhoto(imagePreviews[idx].id, idx);
+                                            if (idx > 0) setSlideIdx(idx - 1);
+                                        }}
+                                        className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                     >
-                                        <X className="w-3 h-3" />
+                                        <Trash2 className="w-3 h-3" />
                                     </button>
+                                    {/* Zoom hint */}
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
+                                        <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-60 transition-opacity" />
+                                    </div>
+                                    {/* Prev / Next arrows */}
+                                    {imagePreviews.length > 1 && (
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setSlideIdx(i => (i - 1 + imagePreviews.length) % imagePreviews.length); }}
+                                                className="absolute left-1.5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setSlideIdx(i => (i + 1) % imagePreviews.length); }}
+                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <ChevronRight className="h-4 w-4" />
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
-                            ))}
-                            <label className="cursor-pointer w-[72px] h-[72px] border border-dashed border-muted-foreground/40 rounded-md flex flex-col items-center justify-center gap-1 bg-background hover:bg-muted/50 transition-colors">
-                                <UploadCloud className="w-5 h-5 text-muted-foreground" />
-                                <span className="text-[9px] text-muted-foreground font-medium">Upload</span>
-                                <input
-                                    type="file"
-                                    multiple
-                                    accept="image/jpeg,image/png,image/webp"
-                                    className="hidden"
-                                    onChange={handleImageUpload}
-                                />
-                            </label>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-auto w-full pt-3 border-t border-border/50 text-center">Supported formats: JPG, PNG, WebP</p>
+                                {/* Dot strip */}
+                                {imagePreviews.length > 1 && (
+                                    <div className="flex items-center justify-center gap-1.5">
+                                        {imagePreviews.map((_, i) => (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => setSlideIdx(i)}
+                                                className={`rounded-full transition-all ${i === Math.min(slideIdx, imagePreviews.length - 1) ? 'bg-primary w-3 h-1.5' : 'bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5'}`}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        <p className="text-[10px] text-muted-foreground mt-auto w-full pt-3 border-t border-border/50 text-center">JPG, PNG, WebP · Auto-compressed on upload</p>
                     </div>
                 </div>
             </div>
@@ -642,50 +731,61 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                         />
                     )}
 
-                    <div className="space-y-2 sm:col-span-2 lg:col-span-2">
-                        <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                            Dimensions (L × W × H) <span className="text-muted-foreground font-normal lowercase">(cm)</span>
-                        </Label>
-                        <div className="flex items-center gap-1.5">
-                            <Input
-                                className="text-sm text-center px-2 flex-1 min-w-0"
-                                type="number"
-                                step="any"
-                                value={productData.length ?? ""}
-                                onChange={(e) => handleNumberChange("length", e.target.value)}
-                                placeholder="L"
-                                title="Length (cm)"
-                            />
-                            <span className="text-muted-foreground text-[10px] shrink-0">×</span>
-                            <Input
-                                className="text-sm text-center px-2 flex-1 min-w-0"
-                                type="number"
-                                step="any"
-                                value={productData.width ?? ""}
-                                onChange={(e) => handleNumberChange("width", e.target.value)}
-                                placeholder="W"
-                                title="Width (cm)"
-                            />
-                            <span className="text-muted-foreground text-[10px] shrink-0">×</span>
-                            <Input
-                                className="text-sm text-center px-2 flex-1 min-w-0"
-                                type="number"
-                                step="any"
-                                value={productData.height ?? ""}
-                                onChange={(e) => handleNumberChange("height", e.target.value)}
-                                placeholder="H"
-                                title="Height (cm)"
-                            />
-                        </div>
+                    {/* Length, Width, Height Group */}
+                    <div className="lg:col-span-3 flex items-end gap-2">
+                        <ProductInput
+                            label={`Length (${productData.dimension_unit || "cm"})`}
+                            type="number"
+                            value={productData.length ?? ""}
+                            onChange={(val) => handleNumberChange("length", val)}
+                            placeholder="0.00"
+                            className="flex-1"
+                        />
+                        <div className="pb-3 text-muted-foreground font-medium select-none">×</div>
+                        <ProductInput
+                            label={`Width (${productData.dimension_unit || "cm"})`}
+                            type="number"
+                            value={productData.width ?? ""}
+                            onChange={(val) => handleNumberChange("width", val)}
+                            placeholder="0.00"
+                            className="flex-1"
+                        />
+                        <div className="pb-3 text-muted-foreground font-medium select-none">×</div>
+                        <ProductInput
+                            label={`Height (${productData.dimension_unit || "cm"})`}
+                            type="number"
+                            value={productData.height ?? ""}
+                            onChange={(val) => handleNumberChange("height", val)}
+                            placeholder="0.00"
+                            className="flex-1"
+                        />
                     </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Dimension Unit</Label>
+                        <Select
+                            value={productData.dimension_unit || "cm"}
+                            onValueChange={(val) => handleChange("dimension_unit", val)}
+                        >
+                            <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="mm" className="text-xs">mm</SelectItem>
+                                <SelectItem value="cm" className="text-xs">cm</SelectItem>
+                                <SelectItem value="m" className="text-xs">m</SelectItem>
+                                <SelectItem value="in" className="text-xs">in</SelectItem>
+                                <SelectItem value="ft" className="text-xs">ft</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <ProductInput
-                        label="Volume (cm³)"
+                        label="Size Value"
                         type="number"
-                        value={productData.volume ?? ""}
-                        error={errors.volume}
-                        onChange={(val) => handleNumberChange("volume", val)}
-                        placeholder="0.00"
-                        className="lg:col-span-1"
+                        value={productData.size_value ?? ""}
+                        onChange={(val) => handleNumberChange("size_value", val)}
+                        placeholder="e.g. 500"
                     />
                 </div>
             </div>
@@ -700,19 +800,19 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                         <div className="space-y-2">
                             <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Packaging Type</Label>
-                            <Select
+                            <Combobox
+                                options={packageOptions.length > 0 ? packageOptions : (packagingOptions.length > 0 ? packagingOptions.map(p => ({ label: p.name, value: p.id })) : [])}
                                 value={productData.packaging_id ?? ""}
                                 onValueChange={(v) => handleChange("packaging_id", v)}
-                            >
-                                <SelectTrigger className="text-sm">
-                                    <SelectValue placeholder="Select format" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {mockPackages.map(pkg => (
-                                        <SelectItem key={pkg.id} value={pkg.id} className="text-xs">{pkg.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                placeholder="Select format..."
+                                searchPlaceholder="Search package..."
+                                emptyText="No packages found."
+                                className={`h-10 ${errors.packaging_id ? 'border-destructive' : ''}`}
+                                clearable
+                                searchValue={packageSearch}
+                                onSearchChange={setPackageSearch}
+                            />
+                            {errors.packaging_id && <p className="text-[10px] text-destructive mt-1">{errors.packaging_id}</p>}
                         </div>
                         <ProductInput
                             label="Shape/Form"
@@ -946,6 +1046,83 @@ const ProductOverviewTab = forwardRef<ProductOverviewTabRef, ProductOverviewTabP
                     </Button>
                 </div>
             </div>
+
+            {!isNew && productData.id && (
+                <AddProductPhotoModal
+                    product={{ id: productData.id as string, name: productData.product_name as string }}
+                    open={isPhotoModalOpen}
+                    onClose={() => setIsPhotoModalOpen(false)}
+                    onSuccess={() => setIsPhotoModalOpen(false)}
+                />
+            )}
+
+            {/* Lightbox / image carousel overlay */}
+            {lightboxIndex !== null && imagePreviews.length > 0 && (
+                <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-sm"
+                    onClick={() => setLightboxIndex(null)}
+                >
+                    {/* Prev button */}
+                    {imagePreviews.length > 1 && (
+                        <button
+                            type="button"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => i !== null ? (i - 1 + imagePreviews.length) % imagePreviews.length : null); }}
+                        >
+                            <ChevronLeft className="h-6 w-6" />
+                        </button>
+                    )}
+
+                    {/* Image */}
+                    <div
+                        className="relative max-w-[90vw] max-h-[85vh] flex flex-col items-center gap-3"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src={imagePreviews[lightboxIndex].url}
+                            alt={`Product image ${lightboxIndex + 1}`}
+                            className="max-w-full max-h-[78vh] object-contain rounded-lg shadow-2xl"
+                        />
+                        {/* Counter + close row */}
+                        <div className="flex items-center gap-4">
+                            {imagePreviews.length > 1 && (
+                                <>
+                                    {/* Dot indicators */}
+                                    <div className="flex items-center gap-1.5">
+                                        {imagePreviews.map((_, i) => (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => setLightboxIndex(i)}
+                                                className={`w-1.5 h-1.5 rounded-full transition-all ${i === lightboxIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/70'}`}
+                                            />
+                                        ))}
+                                    </div>
+                                    <span className="text-white/70 text-xs">{lightboxIndex + 1} / {imagePreviews.length}</span>
+                                </>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => setLightboxIndex(null)}
+                                className="bg-white/10 hover:bg-white/25 text-white rounded-full p-1.5 transition-colors ml-auto"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Next button */}
+                    {imagePreviews.length > 1 && (
+                        <button
+                            type="button"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/10 hover:bg-white/25 text-white rounded-full p-2 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => i !== null ? (i + 1) % imagePreviews.length : null); }}
+                        >
+                            <ChevronRight className="h-6 w-6" />
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 });

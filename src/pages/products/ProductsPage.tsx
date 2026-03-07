@@ -13,7 +13,6 @@ import { Category } from "@/types/productCategories";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
 
 const ProductsPage = () => {
     const navigate = useNavigate();
@@ -96,10 +95,6 @@ const ProductsPage = () => {
         updateProduct({
             id: product.id,
             is_active: !product.is_active
-        }, {
-            onSuccess: () => {
-                toast.success(`Product ${!product.is_active ? 'activated' : 'deactivated'} successfully`);
-            }
         });
     };
 

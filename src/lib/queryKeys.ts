@@ -35,4 +35,14 @@ export const queryKeys = {
         list: (filters?: Record<string, unknown>) => [...queryKeys.companies.all, 'list', filters] as const,
         detail: (id: string) => [...queryKeys.companies.all, 'detail', id] as const,
     },
+    packages: {
+        all: ['packages'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.packages.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.packages.all, 'detail', id] as const,
+    },
+    bom: {
+        all: ['bom'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.bom.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.bom.all, 'detail', id] as const,
+    },
 } as const;

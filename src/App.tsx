@@ -37,6 +37,7 @@ import CompanyDetailPage from "@/pages/companies/CompanyDetailPage";
 import NotFound from "@/pages/errors/NotFoundPage";
 import ProductCategoriesPage from "@/pages/product-categories/ProductCategoriesPage";
 import CategoryDetailPage from "@/pages/product-categories/CategoryDetailPage";
+import PackagesPage from "@/pages/packages/PackagesPage";
 import NoCompanyAccessPage from "@/pages/errors/NoCompanyAccessPage";
 
 const queryClient = new QueryClient();
@@ -88,64 +89,63 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<PublicRoute><Navigate to="/login" replace /></PublicRoute>} />
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-          <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password-otp" element={<ResetPasswordOtp />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/company-selection" element={<Navigate to="/admin/companies" replace />} />
-          <Route path="/no-access" element={<PrivateRoute><NoCompanyAccessPage /></PrivateRoute>} />
+      <Routes>
+        <Route path="/" element={<PublicRoute><Navigate to="/login" replace /></PublicRoute>} />
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password-otp" element={<ResetPasswordOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/company-selection" element={<Navigate to="/admin/companies" replace />} />
+        <Route path="/no-access" element={<PrivateRoute><NoCompanyAccessPage /></PrivateRoute>} />
 
-          <Route path="/dashboard" element={<PrivateRoute><DashboardRedirect /></PrivateRoute>} />
+        <Route path="/dashboard" element={<PrivateRoute><DashboardRedirect /></PrivateRoute>} />
 
-          {/* Company Routes – protected */}
-          <Route path="/:companyId" element={<PrivateRoute><CompanyLayout /></PrivateRoute>}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="contacts" element={<Contacts />} />
-            <Route path="products" element={<Products />} />
-            <Route path="products/new" element={<ProductDetailPage />} />
-            <Route path="products/:id" element={<ProductDetailPage />} />
-            <Route path="product-categories" element={<ProductCategoriesPage />} />
-            <Route path="product-categories/:id" element={<CategoryDetailPage />} />
-            <Route path="leads" element={<Leads />} />
-            <Route path="salesmen" element={<Salesmen />} />
-            <Route path="salesmen/:id" element={<SalesmanDetail />} />
-            <Route path="suppliers" element={<Suppliers />} />
-            <Route path="suppliers/:id" element={<SupplierDetail />} />
-            <Route path="parties" element={<Parties />} />
-            <Route path="calendar" element={<CalendarPage />} />
-            <Route path="attendance" element={<AttendancePage />} />
-            <Route path="employees" element={<EmployeesPage />} />
-            <Route path="employees/:id" element={<EmployeeDetailPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-
-          {/* Admin Routes – protected + root-user only */}
-          <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-            <Route index element={<Navigate to="companies" replace />} />
-            <Route path="tasks" element={<Tasks />} />
-            <Route path="inbox" element={<InboxPage />} />
-            <Route path="products" element={<Products />} />
-            <Route path="products/new" element={<ProductDetailPage />} />
-            <Route path="products/:id" element={<ProductDetailPage />} />
-            <Route path="product-categories" element={<ProductCategoriesPage />} />
-            <Route path="product-categories/:id" element={<CategoryDetailPage />} />
-            <Route path="users" element={<Users />} />
-            <Route path="users/:id" element={<UserDetail />} />
-            <Route path="roles" element={<Roles />} />
-            <Route path="roles/:id" element={<RoleDetail />} />
-            <Route path="companies" element={<CompaniesPage />} />
-            <Route path="companies/:id" element={<CompanyDetailPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-
+        {/* Company Routes – protected */}
+        <Route path="/:companyId" element={<PrivateRoute><CompanyLayout /></PrivateRoute>}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="contacts" element={<Contacts />} />
+          <Route path="products" element={<Products />} />
+          <Route path="products/new" element={<ProductDetailPage />} />
+          <Route path="products/:id" element={<ProductDetailPage />} />
+          <Route path="product-categories" element={<ProductCategoriesPage />} />
+          <Route path="product-categories/:id" element={<CategoryDetailPage />} />
+          <Route path="leads" element={<Leads />} />
+          <Route path="salesmen" element={<Salesmen />} />
+          <Route path="salesmen/:id" element={<SalesmanDetail />} />
+          <Route path="suppliers" element={<Suppliers />} />
+          <Route path="suppliers/:id" element={<SupplierDetail />} />
+          <Route path="parties" element={<Parties />} />
+          <Route path="calendar" element={<CalendarPage />} />
+          <Route path="attendance" element={<AttendancePage />} />
+          <Route path="employees" element={<EmployeesPage />} />
+          <Route path="employees/:id" element={<EmployeeDetailPage />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+        </Route>
+
+        {/* Admin Routes – protected + root-user only */}
+        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route index element={<Navigate to="companies" replace />} />
+          <Route path="tasks" element={<Tasks />} />
+          <Route path="inbox" element={<InboxPage />} />
+          <Route path="products" element={<Products />} />
+          <Route path="products/new" element={<ProductDetailPage />} />
+          <Route path="products/:id" element={<ProductDetailPage />} />
+          <Route path="packages" element={<PackagesPage />} />
+          <Route path="product-categories" element={<ProductCategoriesPage />} />
+          <Route path="product-categories/:id" element={<CategoryDetailPage />} />
+          <Route path="users" element={<Users />} />
+          <Route path="users/:id" element={<UserDetail />} />
+          <Route path="roles" element={<Roles />} />
+          <Route path="roles/:id" element={<RoleDetail />} />
+          <Route path="companies" element={<CompaniesPage />} />
+          <Route path="companies/:id" element={<CompanyDetailPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
       <ToastContainer
         position="top-right"
         autoClose={3000}

@@ -153,7 +153,7 @@ export const getAvailablePermissions = () => {
 
 // end region
 
-// regoin products
+// region products
 // ===================== Products =====================
 
 export const listProducts = (params) => {
@@ -175,4 +175,76 @@ export const updateProduct = (id, data) => {
   const url = `products/${id}`;
   return axios({ method: 'PATCH', url, data });
 }
+
+export const uploadProductPhoto = (id, formData) => {
+  const url = `products/${id}/images`;
+  return axios({ method: "POST", url, data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+};
+
+export const deleteProductPhoto = (id, imageId) => {
+  const url = `products/${id}/images/${imageId}`;
+  return axios({ method: "DELETE", url });
+};
+
+
+// end region
+
+// region packages
+// ===================== Packages =====================
+
+export const listPackages = (params) => {
+  const url = `package`;
+  return axios({ method: "GET", url, params })
+}
+
+export const getPackageDetails = (id) => {
+  const url = `package/${id}`;
+  return axios({ method: 'GET', url });
+}
+
+export const createPackage = (data) => {
+  const url = `package`;
+  return axios({ method: 'POST', url, data });
+}
+
+export const updatePackage = ({ id, ...data }) => {
+  const url = `package/${id}`;
+  return axios({ method: 'PATCH', url, data });
+}
+
+export const deletePackage = (id) => {
+  const url = `package/${id}`;
+  return axios({ method: "DELETE", url });
+}
+
+// end region
+
+// region BOM
+// ===================== BOM =====================
+
+export const listBOM = (params) => {
+  const url = `bom`;
+  return axios({ method: "GET", url, params })
+}
+
+export const getBOMDetails = (id) => {
+  const url = `bom/${id}`;
+  return axios({ method: 'GET', url });
+}
+
+export const createBOM = (data) => {
+  const url = `bom`;
+  return axios({ method: 'POST', url, data });
+}
+
+export const updateBOM = ({ id, ...data }) => {
+  const url = `bom/${id}`;
+  return axios({ method: 'PATCH', url, data });
+}
+
+export const deleteBOM = (id) => {
+  const url = `bom/${id}`;
+  return axios({ method: "DELETE", url });
+}
+
 // end region

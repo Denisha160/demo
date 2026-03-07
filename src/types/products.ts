@@ -1,7 +1,7 @@
 export type ProductType = 'RAW_MATERIAL' | 'FINISHED_GOOD';
 export type UnitCategory = 'weight' | 'volume' | 'count';
 export type BaseUnit = 'kg' | 'g' | 'l' | 'ml' | 'pcs';
-
+export type DimensionUnit = 'mm' | 'cm' | 'm' | 'in' | 'ft';
 export interface Product {
     id: string;
     code: string;
@@ -15,7 +15,8 @@ export interface Product {
     length: number | null;
     width: number | null;
     height: number | null;
-    volume: number | null;
+    size_value: number | null;
+    dimension_unit: DimensionUnit | null;
     packaging_id: string | null;
     hsn_code: string | null;
     shape: string | null;
@@ -29,8 +30,7 @@ export interface Product {
     updated_at?: string;
     stock?: number;
     category_name?: string;
-    image?: string;
-    image   s?: any[];
+    images?: Record<string, unknown>[];
 }
 
 export type ProductCreatePayload = Omit<Product, 'id' | 'created_at' | 'updated_at'>;

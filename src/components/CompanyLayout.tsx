@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate, Outlet, useParams } from "react-router-
 import {
   LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
   Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List,
-  UserCheck, Truck, Clock, Tags
+  UserCheck, Truck, Clock, Tags,
+  Package
 } from "lucide-react";
 import { useLogout, useCurrentUser } from "@/hooks/useAuth";
 import { createPortal } from "react-dom";
@@ -25,6 +26,8 @@ const navItems = [
   { label: "Suppliers", icon: Truck, path: "suppliers" },
   { label: "Parties", icon: Users, path: "parties" },
   { label: "Products", icon: Box, path: "products" },
+  { label: "Recipes", icon: List, path: "recipes" },
+  { label: "Kits", icon: Package, path: "kits" },
   { label: "Categories", icon: Tags, path: "product-categories" },
 ];
 

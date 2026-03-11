@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import { createProduct, listProducts, updateProduct, getProductDetails, uploadProductPhoto, deleteProductPhoto } from '@/services/api';
-import type { ProductCreatePayload, ProductUpdatePayload } from '@/types/products';
+import type { Product, ProductCreatePayload, ProductUpdatePayload } from '@/types/products';
 import { toast } from 'react-toastify';
 
 interface ApiResponse<T = unknown> {
@@ -21,13 +21,37 @@ interface ApiErrorResponse {
     message?: string;
 }
 
+export interface ProductListResponse {
+    items: Product[];
+    pagination: {
+        total: number;
+        offset: number;
+        limit: number;
+    };
+}
+
+export interface ProductComboboxResponse {
+    products: Product[];
+}
+
 export function useProducts(params?: Record<string, unknown>) {
-    return useQuery({
+    return useQuery<ProductListResponse>({
         queryKey: queryKeys.products.list(params),
         queryFn: async () => {
-            const response = await listProducts(params) as ApiResponse<unknown>;
-            return response.data;
+            const response = await listProducts(params) as ApiResponse<ProductListResponse>;
+            return response.data!;
         },
+    });
+}
+
+export function useProductsCombobox(params?: Record<string, unknown>) {
+    return useQuery<Product[]>({
+        queryKey: queryKeys.products.list({ ...params, combobox: true }),
+        queryFn: async () => {
+            const response = await listProducts({ ...params, combobox: true }) as ApiResponse<ProductComboboxResponse>;
+            return response.data?.products ?? [];
+        },
+        staleTime: 5 * 60 * 1000,
     });
 }
 

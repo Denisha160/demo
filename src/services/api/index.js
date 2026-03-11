@@ -248,3 +248,33 @@ export const deleteBOM = (id) => {
 }
 
 // end region
+
+// start region
+// ===================== Kits =====================
+
+export const listKits = (params) => {
+  const url = `kit`;
+  return axios({ method: "GET", url, params })
+}
+
+export const getKitDetails = (id) => {
+  const url = `kit/${id}`;
+  return axios({ method: 'GET', url });
+}
+
+export const createKit = (data) => {
+  const url = `kit`;
+  return axios({ method: 'POST', url, data });
+}
+
+export const updateKit = ({ id, ...data }) => {
+  const url = `kit/${id}`;
+  return axios({ method: 'PATCH', url, data });
+}
+
+export const deleteKit = (id) => {
+  const url = `kit/${id}`;
+  return axios({ method: "DELETE", url });
+}
+
+// end region

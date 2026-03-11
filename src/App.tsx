@@ -38,6 +38,9 @@ import NotFound from "@/pages/errors/NotFoundPage";
 import ProductCategoriesPage from "@/pages/product-categories/ProductCategoriesPage";
 import CategoryDetailPage from "@/pages/product-categories/CategoryDetailPage";
 import PackagesPage from "@/pages/packages/PackagesPage";
+import BomPage from "@/pages/bom/BomPage";
+import KitsPage from "@/pages/kits/KitsPage";
+import KitFormPage from "@/pages/kits/KitFormPage";
 import NoCompanyAccessPage from "@/pages/errors/NoCompanyAccessPage";
 
 const queryClient = new QueryClient();
@@ -111,6 +114,10 @@ const App = () => (
           <Route path="products/:id" element={<ProductDetailPage />} />
           <Route path="product-categories" element={<ProductCategoriesPage />} />
           <Route path="product-categories/:id" element={<CategoryDetailPage />} />
+          <Route path="recipes" element={<BomPage />} />
+          <Route path="kits" element={<KitsPage />} />
+          <Route path="kits/new" element={<KitFormPage />} />
+          <Route path="kits/edit/:id" element={<KitFormPage />} />
           <Route path="leads" element={<Leads />} />
           <Route path="salesmen" element={<Salesmen />} />
           <Route path="salesmen/:id" element={<SalesmanDetail />} />
@@ -133,6 +140,10 @@ const App = () => (
           <Route path="products/new" element={<ProductDetailPage />} />
           <Route path="products/:id" element={<ProductDetailPage />} />
           <Route path="packages" element={<PackagesPage />} />
+          <Route path="recipes" element={<BomPage />} />
+          <Route path="kits" element={<KitsPage />} />
+          <Route path="kits/new" element={<KitFormPage />} />
+          <Route path="kits/edit/:id" element={<KitFormPage />} />
           <Route path="product-categories" element={<ProductCategoriesPage />} />
           <Route path="product-categories/:id" element={<CategoryDetailPage />} />
           <Route path="users" element={<Users />} />

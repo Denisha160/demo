@@ -26,6 +26,7 @@ const ProductsPage = () => {
     const [filterType, setFilterType] = useState<string>(searchParams.get("type") || "all");
     const [categoryIdFilter, setCategoryIdFilter] = useState<string>(searchParams.get("categoryId") || "");
     const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") || "all");
+    const [brandFilter, setBrandFilter] = useState<string>(searchParams.get("is_brand") || "all");
     const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
     const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
     const [sortKey, setSortKey] = useState<string | null>(searchParams.get("sortKey") || "created_at");
@@ -37,7 +38,7 @@ const ProductsPage = () => {
     const routePrefix = isAdmin ? "/admin" : `/${companyId}`;
 
     const hasFilters = Boolean(
-        search || filterType !== "all" || categoryIdFilter || statusFilter !== "all" || sortKey !== "created_at"
+        search || filterType !== "all" || categoryIdFilter || statusFilter !== "all" || brandFilter !== "all" || sortKey !== "created_at"
     );
 
     const handleClearFilters = () => {
@@ -45,6 +46,7 @@ const ProductsPage = () => {
         setFilterType("all");
         setCategoryIdFilter("");
         setStatusFilter("all");
+        setBrandFilter("all");
         setSortKey("created_at");
         setSortDirection("desc");
         setPage(1);
@@ -61,13 +63,14 @@ const ProductsPage = () => {
             if (filterType !== "all") next.set("type", filterType); else next.delete("type");
             if (categoryIdFilter) next.set("categoryId", categoryIdFilter); else next.delete("categoryId");
             if (statusFilter !== "all") next.set("status", statusFilter); else next.delete("status");
+            if (brandFilter !== "all") next.set("is_brand", brandFilter); else next.delete("is_brand");
             if (page > 1) next.set("page", page.toString()); else next.delete("page");
             if (limit !== 10) next.set("limit", limit.toString()); else next.delete("limit");
             if (sortKey) next.set("sortKey", sortKey); else next.delete("sortKey");
             if (sortDirection) next.set("sortDirection", sortDirection); else next.delete("sortDirection");
             return next;
         }, { replace: true });
-    }, [debouncedSearch, filterType, categoryIdFilter, statusFilter, page, limit, sortKey, sortDirection, setSearchParams]);
+    }, [debouncedSearch, filterType, categoryIdFilter, statusFilter, brandFilter, page, limit, sortKey, sortDirection, setSearchParams]);
 
     const { data: categories = [], isLoading: isLoadingCategories } = useCategoriesCombobox({
         type: 'sub',
@@ -80,6 +83,7 @@ const ProductsPage = () => {
         type: filterType === "all" ? undefined : filterType,
         category_id: categoryIdFilter || undefined,
         status: statusFilter === "all" ? undefined : statusFilter,
+        is_brand: brandFilter === "all" ? undefined : brandFilter,
         sort_by: sortKey || undefined,
         sort_direction: sortDirection || undefined,
         offset: (page - 1) * limit,
@@ -123,6 +127,17 @@ const ProductsPage = () => {
             header: "Type",
             sortable: true,
             render: (item) => <StatusBadge status={item.product_type.replace('_', ' ')} variant="info" />
+        },
+        {
+            key: "is_brand",
+            header: "Brand Status",
+            sortable: true,
+            render: (item) => (
+                <StatusBadge
+                    status={item.is_brand ? "Brand" : "Without Brand"}
+                    variant={item.is_brand ? "success" : "secondary"}
+                />
+            )
         },
         {
             key: "category_name",
@@ -234,6 +249,17 @@ const ProductsPage = () => {
                             <SelectItem value="all">All Status</SelectItem>
                             <SelectItem value="active">Active</SelectItem>
                             <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={brandFilter} onValueChange={(val) => { setBrandFilter(val); setPage(1); }}>
+                        <SelectTrigger className="w-[120px] h-8 text-xs rounded-sm">
+                            <SelectValue placeholder="Brand Filter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Brands</SelectItem>
+                            <SelectItem value="true">Brand Product</SelectItem>
+                            <SelectItem value="false">Without Brand Product</SelectItem>
                         </SelectContent>
                     </Select>
 

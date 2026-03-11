@@ -8,62 +8,115 @@ import {
     deleteBOM,
 } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
-import type { Bom, BomCreatePayload, BomUpdatePayload, BomListResponse } from '@/types/bom';
+import type { Bom, BomCreatePayload, BomUpdatePayload, BomListResponse, RawMaterialItem } from '@/types/bom';
+import type { ApiResponse } from '@/types/packages';
+
+interface ApiError {
+    response?: {
+        data?: {
+            message?: string;
+            details?: Record<string, string[]>;
+        };
+    };
+    message: string;
+}
 
 export type { Bom, BomCreatePayload, BomUpdatePayload };
+
+export interface BomDetailsResponse {
+    finished_product: {
+        id: string;
+        product_name: string;
+        code: string;
+        selling_price: number | null;
+        base_unit: string;
+        unit_category: string;
+    };
+    raw_materials: Array<{
+        id: string;
+        raw_product_id: string;
+        raw_product: string;
+        cost_price: number | null;
+        raw_quantity: number;
+        raw_unit: string;
+        raw_unit_category: string;
+        created_at: string;
+    }>;
+}
 
 export const useBOMList = (params?: Record<string, unknown>) => {
     return useQuery<BomListResponse>({
         queryKey: queryKeys.bom.list(params),
-        queryFn: () => listBOM(params),
+        queryFn: async () => {
+            const response = await listBOM(params) as ApiResponse<BomListResponse>;
+            return response.data!;
+        },
     });
 };
 
-export const useBOMDetails = (id: string) => {
-    return useQuery<Bom>({
-        queryKey: queryKeys.bom.detail(id),
-        queryFn: () => getBOMDetails(id),
+export const useBOMDetails = (id?: string) => {
+    return useQuery<BomDetailsResponse | null>({
+        queryKey: queryKeys.bom.detail(id!),
+        queryFn: async () => {
+            if (!id) return null;
+            const response = await getBOMDetails(id) as ApiResponse<BomDetailsResponse>;
+            return response.data!;
+        },
+        enabled: !!id,
     });
 };
 
 export const useCreateBOM = () => {
     const queryClient = useQueryClient();
-    return useMutation<Bom, Error, BomCreatePayload>({
-        mutationFn: (payload) => createBOM(payload),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.bom.list() });
-            toast.success('BOM created successfully');
+    return useMutation<ApiResponse<unknown>, Error, BomCreatePayload>({
+        mutationFn: async (payload) => {
+            const response = await createBOM(payload) as ApiResponse<unknown>;
+            return response;
+        },
+        onSuccess: (response) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.bom.all });
+            toast.success(response.message || 'BOM created successfully');
         },
         onError: (error) => {
-            toast.error(error.message);
+            const apiError = error as ApiError;
+            const message = apiError.response?.data?.message || apiError.message || 'Failed to create BOM';
+            toast.error(message);
         },
     });
 };
 
 export const useUpdateBOM = () => {
     const queryClient = useQueryClient();
-    return useMutation<Bom, Error, BomUpdatePayload>({
-        mutationFn: ({ id, ...payload }) => updateBOM(id, payload),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.bom.list() });
-            toast.success('BOM updated successfully');
+    return useMutation<ApiResponse<unknown>, Error, BomUpdatePayload>({
+        mutationFn: async (payload) => {
+            // The backend uses PATCH /bom/:id but expects finished_product_id in body
+            const response = await updateBOM({ id: payload.finished_product_id, ...payload }) as ApiResponse<unknown>;
+            return response;
+        },
+        onSuccess: (response) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.bom.all });
+            toast.success(response.message || 'BOM updated successfully');
         },
         onError: (error) => {
-            toast.error(error.message);
+            const apiError = error as ApiError;
+            const message = apiError.response?.data?.message || apiError.message || 'Failed to update BOM';
+            toast.error(message);
         },
     });
 };
 
 export const useDeleteBOM = () => {
     const queryClient = useQueryClient();
-    return useMutation<void, Error, string>({
+    return useMutation<ApiResponse, Error, string>({
         mutationFn: (id) => deleteBOM(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.bom.list() });
-            toast.success('BOM deleted successfully');
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.bom.all });
+            toast.success(data?.message || 'BOM deleted successfully');
         },
         onError: (error) => {
-            toast.error(error.message);
+            const apiError = error as ApiError;
+            const message = apiError.response?.data?.message || apiError.message || 'Failed to delete BOM';
+            toast.error(message);
         },
     });
 };

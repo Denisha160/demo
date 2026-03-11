@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Box, Search, Loader2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,15 @@ import { Combobox } from "@/components/ui/combobox";
 import { ProductCategory } from "../../types/productCategories";
 import { Product } from "@/types/products";
 import { useCategoryDetails, useUpdateCategory } from "@/hooks/useProductCategories";
+import { useProducts } from "@/hooks/useProducts";
 import CategoryModal from "./CategoryModal";
 
 const CategoryDetailPage = () => {
     const { id, companyId } = useParams<{ id: string; companyId?: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isAdmin = location.pathname.startsWith('/admin');
+    const routePrefix = isAdmin ? '/admin' : `/${companyId}`;
     const { data: detailsData, isLoading } = useCategoryDetails(id);
 
     // Derived state from API response
@@ -24,13 +28,21 @@ const CategoryDetailPage = () => {
         (detailsData?.subCategories || []) as ProductCategory[],
         [detailsData?.subCategories]);
 
-    const allProducts = useMemo(() =>
-        (detailsData?.products || []) as (Product & { categoryId: string })[],
-        [detailsData?.products]);
-
     const [selectedSubCategory, setSelectedSubCategory] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+    // Fetch products based on category and selected sub-category
+    const effectiveCategoryId = category?.type === 'main'
+        ? (selectedSubCategory === 'all' ? id : selectedSubCategory)
+        : id;
+
+    const { data: productsData, isLoading: isLoadingProducts } = useProducts({
+        category_id: effectiveCategoryId,
+        search: debouncedSearchQuery,
+    });
+
+    const products = productsData?.items || [];
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editFormData, setEditFormData] = useState<Partial<ProductCategory>>({});
@@ -65,29 +77,7 @@ const CategoryDetailPage = () => {
         });
     };
 
-    const filteredProducts = useMemo(() => {
-        if (!category) return [];
-
-        if (category.type === 'sub') {
-            return allProducts.filter(p => p.categoryId === category.id);
-        }
-
-        // If it's a main category
-        if (selectedSubCategory !== "all") {
-            return allProducts.filter(p => p.categoryId === selectedSubCategory);
-        }
-
-        // Return all products that belong to any subcategory of this main category
-        const subCatIds = subCategories.map(c => c.id);
-        const filteredByCat = allProducts.filter(p => subCatIds.includes(p.categoryId));
-
-        if (!debouncedSearchQuery.trim()) {
-            return filteredByCat;
-        }
-
-        return filteredByCat.filter(p => p.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
-
-    }, [category, selectedSubCategory, subCategories, debouncedSearchQuery, allProducts]);
+    const filteredProducts = products;
 
     if (isLoading) {
         return (
@@ -109,31 +99,43 @@ const CategoryDetailPage = () => {
         );
     }
 
-    const columns: Column<Product & { categoryId: string }>[] = [
+    const columns: Column<Product>[] = [
         {
-            key: "name",
+            key: "product_name",
             header: "Product Name",
             render: (item) => (
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-muted rounded-md">
-                        <Box className="h-4 w-4 text-muted-foreground" />
+                    {item.image_url ? (
+                        <img src={item.image_url} alt={item.product_name} className="h-8 w-8 object-cover rounded-md" />
+                    ) : (
+                        <div className="p-2 bg-muted rounded-md">
+                            <Box className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                    )}
+                    <div className="flex flex-col">
+                        <span className="font-medium text-sm">{item.product_name}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">#{item.code}</span>
                     </div>
-                    <span className="font-medium text-sm">{item.name}</span>
                 </div>
             )
         },
         {
-            key: "type",
+            key: "product_type",
             header: "Product Type",
-            render: (item) => <StatusBadge status={item.type.replace('_', ' ')} variant="info" />
+            render: (item) => <StatusBadge status={item.product_type.replace('_', ' ')} variant="info" />
         },
         {
-            key: "categoryId",
+            key: "category_id",
             header: "Sub Category",
             render: (item) => {
-                const subCat = subCategories.find(c => c.id === item.categoryId);
+                const subCat = subCategories.find(c => c.id === item.category_id);
                 return <span className="text-sm">{subCat ? subCat.name : category.name}</span>;
             }
+        },
+        {
+            key: "is_active",
+            header: "Status",
+            render: (item) => <StatusBadge status={item.is_active ? 'Active' : 'Inactive'} variant={item.is_active ? 'success' : 'secondary'} />
         }
     ];
 
@@ -201,6 +203,8 @@ const CategoryDetailPage = () => {
                     data={filteredProducts}
                     columns={columns}
                     pageSize={10}
+                    isLoading={isLoadingProducts}
+                    onRowClick={(item) => navigate(`${routePrefix}/products/${item.id}`)}
                 />
             </div>
 

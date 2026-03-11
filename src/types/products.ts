@@ -30,6 +30,7 @@ export interface Product {
     updated_at?: string;
     stock?: number;
     category_name?: string;
+    image_url?: string | null;
     images?: Record<string, unknown>[];
 }
 

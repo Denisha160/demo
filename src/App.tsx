@@ -42,6 +42,10 @@ import BomPage from "@/pages/bom/BomPage";
 import KitsPage from "@/pages/kits/KitsPage";
 import KitFormPage from "@/pages/kits/KitFormPage";
 import NoCompanyAccessPage from "@/pages/errors/NoCompanyAccessPage";
+import BatchesPage from "@/pages/batches/BatchesPage";
+import BatchFormPage from "@/pages/batches/BatchFormPage";
+import SerialNumbersPage from "@/pages/serials/SerialNumbersPage";
+import GenerateSerialsPage from "@/pages/serials/GenerateSerialsPage";
 
 const queryClient = new QueryClient();
 
@@ -128,6 +132,11 @@ const App = () => (
           <Route path="attendance" element={<AttendancePage />} />
           <Route path="employees" element={<EmployeesPage />} />
           <Route path="employees/:id" element={<EmployeeDetailPage />} />
+          <Route path="batches" element={<BatchesPage />} />
+          <Route path="batches/new" element={<BatchFormPage />} />
+          <Route path="batches/edit/:id" element={<BatchFormPage />} />
+          <Route path="serials" element={<SerialNumbersPage />} />
+          <Route path="serials/generate" element={<GenerateSerialsPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 
@@ -152,6 +161,11 @@ const App = () => (
           <Route path="roles/:id" element={<RoleDetail />} />
           <Route path="companies" element={<CompaniesPage />} />
           <Route path="companies/:id" element={<CompanyDetailPage />} />
+          <Route path="batches" element={<BatchesPage />} />
+          <Route path="batches/new" element={<BatchFormPage />} />
+          <Route path="batches/edit/:id" element={<BatchFormPage />} />
+          <Route path="serials" element={<SerialNumbersPage />} />
+          <Route path="serials/generate" element={<GenerateSerialsPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

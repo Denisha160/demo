@@ -78,7 +78,7 @@ const SalesmanDetailPage = () => {
     return (
         <div className="w-full mx-auto space-y-4 animate-fade-in">
             {/* 1. Top Header */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button
                         variant="ghost"
@@ -141,7 +141,7 @@ const SalesmanDetailPage = () => {
 
                     {/* Leads Chart */}
                     <div className="p-5 border border-border rounded-sm bg-card shadow-sm">
-                        <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/50">
+                        <div className="flex items-center justify-between mb-8 pb-2 border-b border-border/50">
                             <h3 className="text-[10px] font-bold text-foreground uppercase tracking-[0.2em] flex items-center gap-2">
                                 <PieChart className="h-3 w-3 text-primary" /> Lead Stage Distribution
                             </h3>

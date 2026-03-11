@@ -183,7 +183,7 @@ const KitsPage = () => {
         <div className="w-full mx-auto space-y-2 animate-fade-in pb-10">
 
             {/* ── Header bar (PackagesPage style) ── */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-2">
                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto text-sm">
                     {/* Search */}
                     <div className="relative flex-1 sm:flex-initial">

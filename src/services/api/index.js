@@ -278,3 +278,40 @@ export const deleteKit = (id) => {
 }
 
 // end region
+
+// start region
+// ===================== Batches =====================
+
+export const listBatch = (params) => {
+  const url = `inventory/batches`
+  return axios({ method: "GET", url, params })
+}
+
+export const createBatch = (data) => {
+  const url = `inventory/batches`
+  return axios({ method: "POST", url, data })
+}
+
+export const getBatch = (id) => {
+  const url = `inventory/batches/${id}`
+  return axios({ method: "GET", url })
+}
+
+export const updateBatch = ({ id, ...data }) => {
+  const url = `inventory/batches/${id}`
+  return axios({ method: "PATCH", url, data })
+}
+
+// ===================== Serials =====================
+
+export const listSerials = (params) => {
+  const url = `inventory/serials`
+  return axios({ method: "GET", url, params })
+}
+
+export const generateSerials = (data) => {
+  const url = `inventory/serials/generate`
+  return axios({ method: "POST", url, data })
+}
+
+// end region

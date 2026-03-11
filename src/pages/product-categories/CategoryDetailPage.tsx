@@ -146,7 +146,7 @@ const CategoryDetailPage = () => {
     return (
         <div className="w-full mx-auto space-y-4 animate-fade-in">
             {/* Header Section */}
-            <div className="flex items-center border-b border-border pb-4">
+            <div className="flex items-center border-b border-border pb-2">
                 <div className="flex items-center gap-2">
                     <Button
                         variant="ghost"

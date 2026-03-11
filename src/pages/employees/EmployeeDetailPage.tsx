@@ -118,7 +118,7 @@ const EmployeeDetailPage = () => {
     return (
         <div className="w-full mx-auto space-y-2 animate-fade-in">
             {/* 1. Navigation & Actions Bar */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button
                         variant="ghost"

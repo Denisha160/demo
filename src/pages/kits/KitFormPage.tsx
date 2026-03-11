@@ -250,7 +250,7 @@ const KitFormPage = () => {
     return (
         <div className="w-full mx-auto space-y-4 animate-fade-in pb-10">
             {/* Header */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button
                         variant="ghost"

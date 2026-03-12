@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 interface Product {
     id: number;
@@ -43,18 +44,21 @@ const ProductTable = ({ products, onEditClick, updatingId }: ProductTableProps) 
                             >
                                 <td className="px-6 py-5">
                                     <div className="flex items-center gap-4">
-                                        <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-100 dark:bg-white/5 group-hover:scale-105 transition-transform duration-300 shadow-md">
+                                        <Link href={`/products/${product.id}`} className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-100 dark:bg-white/5 group-hover:scale-105 transition-transform duration-300 shadow-md block">
                                             <Image
                                                 src={product.thumbnail}
                                                 alt={product.title}
                                                 fill
                                                 className="object-cover"
                                             />
-                                        </div>
+                                        </Link>
                                         <div>
-                                            <div className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                            <Link 
+                                                href={`/products/${product.id}`}
+                                                className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors block"
+                                            >
                                                 {product.title}
-                                            </div>
+                                            </Link>
                                             <div className="text-xs text-gray-500 dark:text-gray-500 font-medium">
                                                 {product.brand}
                                             </div>
@@ -84,13 +88,21 @@ const ProductTable = ({ products, onEditClick, updatingId }: ProductTableProps) 
                                     </div>
                                 </td>
                                 <td className="px-6 py-5 text-right">
-                                    <button
-                                        onClick={() => onEditClick(product)}
-                                        disabled={updatingId === product.id}
-                                        className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-95"
-                                    >
-                                        Edit Title
-                                    </button>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Link
+                                            href={`/products/${product.id}`}
+                                            className="px-4 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-400/10 hover:bg-blue-100 dark:hover:bg-blue-400/20 rounded-lg transition-colors border border-blue-100 dark:border-blue-400/20 shadow-sm active:scale-95"
+                                        >
+                                            View
+                                        </Link>
+                                        <button
+                                            onClick={() => onEditClick(product)}
+                                            disabled={updatingId === product.id}
+                                            className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-95"
+                                        >
+                                            Edit Title
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

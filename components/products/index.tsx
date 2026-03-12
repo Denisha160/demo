@@ -38,6 +38,11 @@ const updateProduct = async ({ id, title }: { id: number; title: string }) => {
     return data;
 };
 
+const deleteProduct = async (id: number) => {
+    const { data } = await axios.delete(`https://dummyjson.com/products/${id}`);
+    return data;
+};
+
 const Products = () => {
     const queryClient = useQueryClient();
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -69,11 +74,28 @@ const Products = () => {
         },
     });
 
+    const deleteMutation = useMutation({
+        mutationFn: deleteProduct,
+        onSuccess: (deletedProduct) => {
+            queryClient.setQueryData(["products"], (oldData: ProductsResponse | undefined) => {
+                if (!oldData) return oldData;
+                return {
+                    ...oldData,
+                    products: oldData.products.filter((p) => p.id !== deletedProduct.id),
+                };
+            });
+        }
+    })
+
     const handleEditClick = (product: Product) => {
         setEditingProduct(product);
         setTempTitle(product.title);
         setIsDialogOpen(true);
     };
+
+    const handleDeleteClick = (id: number) => {
+        deleteMutation.mutate(id);
+    }
 
     const handleDialogSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -137,7 +159,14 @@ const Products = () => {
             <ProductTable
                 products={data?.products || []}
                 onEditClick={handleEditClick}
-                updatingId={mutation.isPending ? (mutation.variables as { id: number })?.id : null}
+                onDeleteClick={handleDeleteClick}
+                updatingId={
+                    mutation.isPending
+                        ? (mutation.variables as { id: number })?.id
+                        : deleteMutation.isPending
+                            ? (deleteMutation.variables as number)
+                            : null
+                }
             />
 
             <EditTitleDialog

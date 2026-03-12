@@ -19,9 +19,10 @@ interface ProductTableProps {
     products: Product[];
     onEditClick: (product: Product) => void;
     updatingId?: number | null;
+    onDeleteClick: (id: number) => void;
 }
 
-const ProductTable = ({ products, onEditClick, updatingId }: ProductTableProps) => {
+const ProductTable = ({ products, onEditClick, updatingId, onDeleteClick }: ProductTableProps) => {
     return (
         <div className="overflow-hidden rounded-3xl border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-black/20 backdrop-blur-xl shadow-2xl">
             <div className="overflow-x-auto">
@@ -102,6 +103,13 @@ const ProductTable = ({ products, onEditClick, updatingId }: ProductTableProps) 
                                             className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-95"
                                         >
                                             Edit Title
+                                        </button>
+                                        <button
+                                            onClick={() => onDeleteClick(product.id)}
+                                            disabled={updatingId === product.id}
+                                            className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-95"
+                                        >
+                                            Delete
                                         </button>
                                     </div>
                                 </td>

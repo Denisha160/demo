@@ -50,10 +50,11 @@ const ProductTable = ({ products, onEditClick, updatingId }: ProductTableProps) 
                                                 alt={product.title}
                                                 fill
                                                 className="object-cover"
+                                                sizes="auto"
                                             />
                                         </Link>
                                         <div>
-                                            <Link 
+                                            <Link
                                                 href={`/products/${product.id}`}
                                                 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors block"
                                             >

@@ -25,7 +25,6 @@ async function getProduct(id: string): Promise<Product | null> {
     return res.json();
 }
 
-// DYNAMIC SEO METADATA
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
     const product = await getProduct(id);
@@ -80,6 +79,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                                 fill
                                 priority
                                 className="object-cover"
+                                sizes='auto'
                             />
                         </div>
 
@@ -139,6 +139,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                                         alt={`${product.title} ${idx + 1}`}
                                         fill
                                         className="object-cover"
+                                        sizes='auto'
                                     />
                                 </div>
                             ))}

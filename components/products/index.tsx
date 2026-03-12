@@ -62,7 +62,6 @@ const Products = () => {
                     ),
                 };
             });
-            console.log("Product updated successfully:", updatedProduct);
             setLastUpdated(updatedProduct.title);
             setIsDialogOpen(false);
             setEditingProduct(null);
@@ -135,8 +134,8 @@ const Products = () => {
                 </div>
             )}
 
-            <ProductTable 
-                products={data?.products || []} 
+            <ProductTable
+                products={data?.products || []}
                 onEditClick={handleEditClick}
                 updatingId={mutation.isPending ? (mutation.variables as { id: number })?.id : null}
             />

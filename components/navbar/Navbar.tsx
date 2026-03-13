@@ -6,19 +6,6 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useSearch } from "@/components/providers/SearchProvider";
 import { useRouter } from "next/navigation";
 
-const categories = [
-  "Women Ethnic",
-  "Women Western",
-  "Men",
-  "Kids",
-  "Home & Kitchen",
-  "Beauty & Health",
-  "Jewellery & Accessories",
-  "Electronics",
-  "Sports & Fitness",
-  "Bags & Footwear",
-];
-
 const Navbar = () => {
   const [localQuery, setLocalQuery] = useState("");
   const { cartCount } = useCart();

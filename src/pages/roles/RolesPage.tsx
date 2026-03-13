@@ -1,6 +1,5 @@
 import { useState } from "react";
 import DataTable, { Column } from "@/components/DataTable";
-import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Edit, Eye, Trash2, Shield } from "lucide-react";
@@ -97,11 +96,6 @@ const RolesPage = () => {
                     <span className="text-[11px] text-muted-foreground">users</span>
                 </div>
             )
-        },
-        {
-            key: "status",
-            header: "Status",
-            render: () => <StatusBadge status="Active" variant="success" />
         },
         {
             key: "actions",

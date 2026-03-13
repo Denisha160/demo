@@ -2,6 +2,14 @@ export type ProductType = 'RAW_MATERIAL' | 'FINISHED_GOOD';
 export type UnitCategory = 'weight' | 'volume' | 'count';
 export type BaseUnit = 'kg' | 'g' | 'l' | 'ml' | 'pcs';
 export type DimensionUnit = 'mm' | 'cm' | 'm' | 'in' | 'ft';
+export interface ProductImage {
+    id?: string;
+    url?: string;
+    image?: { url: string };
+    image_url?: { url: string };
+    [key: string]: unknown;
+}
+
 export interface Product {
     id: string;
     code: string;
@@ -30,8 +38,12 @@ export interface Product {
     updated_at?: string;
     stock?: number;
     category_name?: string;
+    brand_id?: string | null;
+    brand_name?: string;
+    fragrance_id?: string | null;
+    fragrance_name?: string;
     image_url?: string | null;
-    images?: Record<string, unknown>[];
+    images?: ProductImage[];
 }
 
 export type ProductCreatePayload = Omit<Product, 'id' | 'created_at' | 'updated_at'>;
@@ -57,4 +69,34 @@ export interface Variant {
     unit: string;
     cost_price: number;
     selling_price: number;
+}
+
+export interface ApiResponse<T = unknown> {
+    success: boolean;
+    data?: T;
+    message?: string;
+}
+
+export interface ApiErrorResponse {
+    response?: {
+        data?: {
+            message?: string;
+            code?: string;
+            details?: unknown;
+        };
+    };
+    message?: string;
+}
+
+export interface ProductListResponse {
+    items: Product[];
+    pagination: {
+        total: number;
+        offset: number;
+        limit: number;
+    };
+}
+
+export interface ProductComboboxResponse {
+    products: Product[];
 }

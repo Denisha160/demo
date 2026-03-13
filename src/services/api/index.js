@@ -186,6 +186,45 @@ export const deleteProductPhoto = (id, imageId) => {
   return axios({ method: "DELETE", url });
 };
 
+export const listBrands = (params) => {
+  const url = `products/brands`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createBrand = (data) => {
+  const url = `products/brands`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateBrand = (id, data) => {
+  const url = `products/brands/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteBrand = (id) => {
+  const url = `products/brands/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
+export const listFragrance = (params) => {
+  const url = `products/fragrances`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createFragrance = (data) => {
+  const url = `products/fragrances`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateFragrance = (id, data) => {
+  const url = `products/fragrances/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteFragrance = (id) => {
+  const url = `products/fragrances/${id}`;
+  return axios({ method: "DELETE", url });
+};
 
 // end region
 
@@ -227,8 +266,8 @@ export const listBOM = (params) => {
   return axios({ method: "GET", url, params })
 }
 
-export const getBOMDetails = (id) => {
-  const url = `bom/${id}`;
+export const getBOMDetails = (bom_id) => {
+  const url = `bom/${bom_id}`;
   return axios({ method: 'GET', url });
 }
 
@@ -237,13 +276,13 @@ export const createBOM = (data) => {
   return axios({ method: 'POST', url, data });
 }
 
-export const updateBOM = ({ id, ...data }) => {
-  const url = `bom/${id}`;
+export const updateBOM = ({ bom_id, ...data }) => {
+  const url = `bom/${bom_id}`;
   return axios({ method: 'PATCH', url, data });
 }
 
-export const deleteBOM = (id) => {
-  const url = `bom/${id}`;
+export const deleteBOM = (bom_id) => {
+  const url = `bom/${bom_id}`;
   return axios({ method: "DELETE", url });
 }
 

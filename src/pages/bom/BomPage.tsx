@@ -105,7 +105,7 @@ const BomPage = () => {
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground truncate">{item.finished_product_name}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Recipe Ref: {item.finished_product_id.split('-')[0]}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Recipe Ref: {item.bom_id?.split('-')[0] || 'N/A'}</p>
                     </div>
                 </div>
             )
@@ -151,7 +151,7 @@ const BomPage = () => {
                         size="sm"
                         className="h-8 w-8 p-0"
                         title="Edit Recipe"
-                        onClick={() => handleEdit(item.finished_product_id)}
+                        onClick={() => handleEdit(item.bom_id)}
                     >
                         <Edit className="h-4 w-4" />
                     </Button>
@@ -223,7 +223,7 @@ const BomPage = () => {
                         setSortDirection(direction);
                         setPage(1);
                     }}
-                    onRowClick={(item) => handleView(item.finished_product_id)}
+                    onRowClick={(item) => handleView(item.bom_id)}
                 />
             </div>
 
@@ -242,8 +242,8 @@ const BomPage = () => {
                             disabled={isDeleting}
                             onClick={(e) => {
                                 e.preventDefault();
-                                if (bomToDelete?.finished_product_id) {
-                                    deleteBOM(bomToDelete.finished_product_id, {
+                                if (bomToDelete?.bom_id) {
+                                    deleteBOM(bomToDelete.bom_id, {
                                         onSuccess: () => {
                                             setBomToDelete(null);
                                         }
@@ -264,7 +264,7 @@ const BomPage = () => {
                     setIsModalOpen(false);
                     setIsViewOnly(false);
                 }}
-                finishedProductId={selectedFinishedProductId}
+                bomId={selectedFinishedProductId}
                 isViewOnly={isViewOnly}
             />
         </div>

@@ -54,15 +54,15 @@ export const useBOMList = (params?: Record<string, unknown>) => {
     });
 };
 
-export const useBOMDetails = (id?: string) => {
+export const useBOMDetails = (bom_id?: string) => {
     return useQuery<BomDetailsResponse | null>({
-        queryKey: queryKeys.bom.detail(id!),
+        queryKey: queryKeys.bom.detail(bom_id!),
         queryFn: async () => {
-            if (!id) return null;
-            const response = await getBOMDetails(id) as ApiResponse<BomDetailsResponse>;
+            if (!bom_id) return null;
+            const response = await getBOMDetails(bom_id) as ApiResponse<BomDetailsResponse>;
             return response.data!;
         },
-        enabled: !!id,
+        enabled: !!bom_id,
     });
 };
 
@@ -89,8 +89,7 @@ export const useUpdateBOM = () => {
     const queryClient = useQueryClient();
     return useMutation<ApiResponse<unknown>, Error, BomUpdatePayload>({
         mutationFn: async (payload) => {
-            // The backend uses PATCH /bom/:id but expects finished_product_id in body
-            const response = await updateBOM({ id: payload.finished_product_id, ...payload }) as ApiResponse<unknown>;
+            const response = await updateBOM({ bom_id: payload.bom_id, ...payload }) as ApiResponse<unknown>;
             return response;
         },
         onSuccess: (response) => {
@@ -108,7 +107,7 @@ export const useUpdateBOM = () => {
 export const useDeleteBOM = () => {
     const queryClient = useQueryClient();
     return useMutation<ApiResponse, Error, string>({
-        mutationFn: (id) => deleteBOM(id),
+        mutationFn: (bom_id) => deleteBOM(bom_id),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.bom.all });
             toast.success(data?.message || 'BOM deleted successfully');

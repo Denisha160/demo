@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 interface BomModalProps {
     isOpen: boolean;
     onClose: () => void;
-    finishedProductId?: string;
+    bomId?: string;
     isViewOnly?: boolean;
 }
 
@@ -47,26 +47,26 @@ const materialItemSchema = z.object({
 });
 
 const bomSchema = z.object({
-    finished_product_id: z.string().min(1, "Please select a finished product"),
+    bom_id: z.string().min(1, "Please select a finished product"),
     materials: z.array(materialItemSchema).min(1, "At least one raw material is required"),
 });
 
 type BomFormData = z.infer<typeof bomSchema>;
 type MaterialErrors = Partial<Record<keyof z.infer<typeof materialItemSchema>, string>>;
 
-const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: BomModalProps) => {
-    const isEditing = !!finishedProductId;
+const BomModal = ({ isOpen, onClose, bomId, isViewOnly = false }: BomModalProps) => {
+    const isEditing = !!bomId;
 
     // Hooks for data
-    const [effectiveProductId, setEffectiveProductId] = useState<string | undefined>(finishedProductId);
+    const [effectiveProductId, setEffectiveProductId] = useState<string | undefined>(bomId);
 
     // Sync effectiveProductId when modal opens or prop changes
     useEffect(() => {
         if (isOpen) {
-            setEffectiveProductId(finishedProductId);
+            setEffectiveProductId(bomId);
             setHasDetectedExisting(false);
         }
-    }, [isOpen, finishedProductId]);
+    }, [isOpen, bomId]);
 
     const { data: bomDetails, isLoading: isLoadingBOM } = useBOMDetails(effectiveProductId);
     const { data: finishedProduct, isLoading: isLoadingFinishedProduct } = useProduct(effectiveProductId);
@@ -91,7 +91,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
     });
 
     // State
-    const [selectedFinishedProductId, setSelectedFinishedProductId] = useState<string>("");
+    const [selectedBomId, setSelectedBomId] = useState<string>("");
     const [materials, setMaterials] = useState<RawMaterialItem[]>([]);
     const [errors, setErrors] = useState<Partial<Record<keyof BomFormData, string>>>({});
     const [materialErrors, setMaterialErrors] = useState<MaterialErrors[]>([]);
@@ -111,7 +111,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
             const hasMaterials = bomDetails.raw_materials && bomDetails.raw_materials.length > 0;
 
             // Update selectors
-            setSelectedFinishedProductId(effectiveProductId);
+            setSelectedBomId(effectiveProductId);
 
             // Populate materials
             setMaterials(bomDetails.raw_materials.map(m => ({
@@ -124,7 +124,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
             })));
 
             // Detect shift from Create to Edit ONLY if materials actually exist and we haven't warned yet
-            if (!finishedProductId && hasMaterials && !hasDetectedExisting) {
+            if (!bomId && hasMaterials && !hasDetectedExisting) {
                 toast.info("This product is already configured. Switching to Edit mode.", {
                     theme: "colored"
                 });
@@ -133,7 +133,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
         }
         // Case 2: Fresh Create mode (no product selected)
         else if (!effectiveProductId) {
-            setSelectedFinishedProductId("");
+            setSelectedBomId("");
             setMaterials([]);
             setErrors({});
             setMaterialErrors([]);
@@ -142,14 +142,14 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
         // Case 3: Product selected but NO recipe found (Stay in Create mode)
         else if (effectiveProductId && !bomDetails && !isLoadingBOM) {
             // Only clear if we were NOT originally editing (i.e., user manually selected a new product)
-            if (!finishedProductId) {
+            if (!bomId) {
                 setMaterials([]);
                 setErrors({});
                 setMaterialErrors([]);
                 setHasDetectedExisting(false);
             }
         }
-    }, [isOpen, bomDetails, effectiveProductId, finishedProductId, isLoadingBOM, hasDetectedExisting]);
+    }, [isOpen, bomDetails, effectiveProductId, bomId, isLoadingBOM, hasDetectedExisting]);
 
     useEffect(() => {
         if (rawMaterials.length > 0) {
@@ -173,13 +173,13 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
     }, [rawMaterials]);
 
     const handleFinishedProductChange = useCallback((id: string) => {
-        setSelectedFinishedProductId(id);
+        setSelectedBomId(id);
         setEffectiveProductId(id);
         setErrors({});
-        if (id !== finishedProductId) {
+        if (id !== bomId) {
             setHasDetectedExisting(false);
         }
-    }, [finishedProductId]);
+    }, [bomId]);
 
     const handleAddMaterial = useCallback(() => {
         setMaterials(prev => [
@@ -259,9 +259,9 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
     // Calculations
     const currentFinishedProduct = useMemo(() => {
         if (bomDetails?.finished_product) return bomDetails.finished_product as unknown as Product;
-        if (finishedProductId && finishedProduct) return finishedProduct as Product;
-        return finishedGoods.find((p: Product) => p.id === selectedFinishedProductId) as Product;
-    }, [selectedFinishedProductId, finishedGoods, finishedProductId, finishedProduct, bomDetails]);
+        if (bomId && finishedProduct) return finishedProduct as Product;
+        return finishedGoods.find((p: Product) => p.id === selectedBomId) as Product;
+    }, [selectedBomId, finishedGoods, bomId, finishedProduct, bomDetails]);
 
     const totalCost = useMemo(() => {
         return materials.reduce((sum, m) => sum + ((Number(m.raw_quantity) || 0) * (m.cost_price || 0)), 0);
@@ -274,7 +274,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
     const validateForm = () => {
         try {
             const formData = {
-                finished_product_id: selectedFinishedProductId,
+                bom_id: selectedBomId,
                 materials: materials.map(m => ({
                     ...m,
                     raw_quantity: Number(m.raw_quantity) // Ensure number for validation
@@ -290,8 +290,8 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
                 const newMaterialErrors: MaterialErrors[] = materials.map(() => ({}));
 
                 error.errors.forEach((err) => {
-                    if (err.path[0] === "finished_product_id") {
-                        newErrors.finished_product_id = err.message;
+                    if (err.path[0] === "bom_id") {
+                        newErrors.bom_id = err.message;
                     } else if (err.path[0] === "materials") {
                         const index = err.path[1] as number;
                         const field = err.path[2] as keyof z.infer<typeof materialItemSchema>;
@@ -317,7 +317,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
         }
 
         const payload = {
-            finished_product_id: selectedFinishedProductId,
+            bom_id: selectedBomId,
             raw_materials: materials.map(({ raw_product_id, raw_quantity, raw_unit, raw_unit_category }) => ({
                 raw_product_id,
                 raw_quantity: Number(raw_quantity),
@@ -327,7 +327,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
         };
 
         // If we detected an existing BOM or were originally editing, use update mutation
-        const isActuallyUpdating = !!finishedProductId || hasDetectedExisting;
+        const isActuallyUpdating = !!bomId || hasDetectedExisting;
 
         if (isActuallyUpdating) {
             updateBOM(payload as BomUpdatePayload, {
@@ -372,7 +372,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
                                 disabled={isPending}
                             >
                                 {isPending && <Loader2 className="mr-2 h-3 w-4 animate-spin" />}
-                                {!!finishedProductId || hasDetectedExisting ? "Update Recipe" : "Save Recipe"}
+                                {!!bomId || hasDetectedExisting ? "Update Recipe" : "Save Recipe"}
                             </Button>
                         )}
                     </div>
@@ -390,18 +390,18 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
                             label: `${p.product_name} (${p.code})`,
                             value: p.id
                         }))}
-                        value={selectedFinishedProductId}
+                        value={selectedBomId}
                         onValueChange={handleFinishedProductChange}
                         placeholder="Select finished product..."
                         searchPlaceholder="Search product name or code..."
                         emptyText={isLoadingFG ? "Loading products..." : "No finished goods found."}
-                        className={`h-10 border-primary/20 focus:ring-primary/20 ${errors.finished_product_id ? 'border-destructive' : ''}`}
-                        disabled={!!finishedProductId || isPending || isViewOnly}
+                        className={`h-10 border-primary/20 focus:ring-primary/20 ${errors.bom_id ? 'border-destructive' : ''}`}
+                        disabled={!!bomId || isPending || isViewOnly}
                         searchValue={fgSearch}
                         onSearchChange={setFgSearch}
                     />
-                    {errors.finished_product_id && (
-                        <p className="text-[10px] text-destructive mt-1 font-medium">{errors.finished_product_id}</p>
+                    {errors.bom_id && (
+                        <p className="text-[10px] text-destructive mt-1 font-medium">{errors.bom_id}</p>
                     )}
                 </div>
 
@@ -415,7 +415,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
                             type="button"
                             variant="outline"
                             onClick={handleAddMaterial}
-                            disabled={isPending || !selectedFinishedProductId || isViewOnly}
+                            disabled={isPending || !selectedBomId || isViewOnly}
                             className="h-7 px-3 text-[10px] font-bold border-dashed border-primary/50 text-primary hover:bg-primary/5 flex gap-1"
                         >
                             <Plus className="h-3 w-3" />
@@ -516,7 +516,7 @@ const BomModal = ({ isOpen, onClose, finishedProductId, isViewOnly = false }: Bo
                     <div className="p-2.5 bg-destructive/10 border border-destructive/20 rounded-sm flex items-center gap-2.5 text-destructive text-[11px] animate-in fade-in slide-in-from-top-1">
                         <AlertCircle className="h-4 w-4" />
                         <span className="font-semibold">
-                            {errors.materials || errors.finished_product_id || "Please fix the errors indicated above."}
+                            {errors.materials || errors.bom_id || "Please fix the errors indicated above."}
                         </span>
                     </div>
                 )}

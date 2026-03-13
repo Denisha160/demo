@@ -230,7 +230,7 @@ const BatchFormPage = () => {
                                 </Label>
                                 <Combobox
                                     options={products.map((p) => ({
-                                        label: `${p.product_name} (${p.code})`,
+                                        label: `${p.product_name} (${p.code}) - ${p.product_type === "FINISHED_GOOD" ? "Finish Good" : "Raw Material"}`,
                                         value: p.id,
                                     }))}
                                     value={formData.product_id}

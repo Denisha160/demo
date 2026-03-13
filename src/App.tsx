@@ -22,7 +22,7 @@ import Parties from "@/pages/parties/PartiesPage";
 import CalendarPage from "@/pages/calendar/CalendarPage";
 import InboxPage from "@/pages/inbox/InboxPage";
 import Products from "@/pages/products/ProductsPage";
-import ProductDetailPage from "@/pages/products/ProductDetailPage";
+import ProductFormPage from "@/pages/products/ProductFormPage";
 import Roles from "@/pages/roles/RolesPage";
 import RoleDetail from "@/pages/roles/RoleDetail";
 import Users from "@/pages/users/UsersPage";
@@ -37,6 +37,8 @@ import CompanyDetailPage from "@/pages/companies/CompanyDetailPage";
 import NotFound from "@/pages/errors/NotFoundPage";
 import ProductCategoriesPage from "@/pages/product-categories/ProductCategoriesPage";
 import CategoryDetailPage from "@/pages/product-categories/CategoryDetailPage";
+import BrandsPage from "@/pages/brands/BrandsPage";
+import FragrancesPage from "@/pages/fragrances/FragrancesPage";
 import PackagesPage from "@/pages/packages/PackagesPage";
 import BomPage from "@/pages/bom/BomPage";
 import KitsPage from "@/pages/kits/KitsPage";
@@ -114,10 +116,12 @@ const App = () => (
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="products" element={<Products />} />
-          <Route path="products/new" element={<ProductDetailPage />} />
-          <Route path="products/:id" element={<ProductDetailPage />} />
+          <Route path="products/new" element={<ProductFormPage />} />
+          <Route path="products/:id" element={<ProductFormPage />} />
           <Route path="product-categories" element={<ProductCategoriesPage />} />
           <Route path="product-categories/:id" element={<CategoryDetailPage />} />
+          <Route path="brands" element={<BrandsPage />} />
+          <Route path="fragrances" element={<FragrancesPage />} />
           <Route path="recipes" element={<BomPage />} />
           <Route path="kits" element={<KitsPage />} />
           <Route path="kits/new" element={<KitFormPage />} />
@@ -146,8 +150,8 @@ const App = () => (
           <Route path="tasks" element={<Tasks />} />
           <Route path="inbox" element={<InboxPage />} />
           <Route path="products" element={<Products />} />
-          <Route path="products/new" element={<ProductDetailPage />} />
-          <Route path="products/:id" element={<ProductDetailPage />} />
+          <Route path="products/new" element={<ProductFormPage />} />
+          <Route path="products/:id" element={<ProductFormPage />} />
           <Route path="packages" element={<PackagesPage />} />
           <Route path="recipes" element={<BomPage />} />
           <Route path="kits" element={<KitsPage />} />
@@ -155,6 +159,8 @@ const App = () => (
           <Route path="kits/edit/:id" element={<KitFormPage />} />
           <Route path="product-categories" element={<ProductCategoriesPage />} />
           <Route path="product-categories/:id" element={<CategoryDetailPage />} />
+          <Route path="brands" element={<BrandsPage />} />
+          <Route path="fragrances" element={<FragrancesPage />} />
           <Route path="users" element={<Users />} />
           <Route path="users/:id" element={<UserDetail />} />
           <Route path="roles" element={<Roles />} />

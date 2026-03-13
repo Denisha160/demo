@@ -1,38 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import { createProduct, listProducts, updateProduct, getProductDetails, uploadProductPhoto, deleteProductPhoto } from '@/services/api';
-import type { Product, ProductCreatePayload, ProductUpdatePayload } from '@/types/products';
+import type { Product, ProductCreatePayload, ProductUpdatePayload, ApiResponse, ProductListResponse, ProductComboboxResponse, ApiErrorResponse } from '@/types/products';
 import { toast } from 'react-toastify';
-
-interface ApiResponse<T = unknown> {
-    success: boolean;
-    data?: T;
-    message?: string;
-}
-
-interface ApiErrorResponse {
-    response?: {
-        data?: {
-            message?: string;
-            code?: string;
-            details?: unknown;
-        };
-    };
-    message?: string;
-}
-
-export interface ProductListResponse {
-    items: Product[];
-    pagination: {
-        total: number;
-        offset: number;
-        limit: number;
-    };
-}
-
-export interface ProductComboboxResponse {
-    products: Product[];
-}
 
 export function useProducts(params?: Record<string, unknown>) {
     return useQuery<ProductListResponse>({
@@ -60,7 +30,7 @@ export function useProduct(id?: string) {
         queryKey: queryKeys.products.detail(id),
         queryFn: async () => {
             if (!id || id === 'new') return null;
-            const response = await getProductDetails(id) as ApiResponse<unknown>;
+            const response = await getProductDetails(id) as ApiResponse<Product>;
             return response.data;
         },
         enabled: !!id && id !== 'new',
@@ -77,9 +47,6 @@ export function useCreateProduct() {
             toast.success(response?.message || "Product created successfully!");
         },
         onError: (error: ApiErrorResponse) => {
-            const errorData = error?.response?.data || error || {};
-            const message = (errorData as { message?: string })?.message || "Failed to create product.";
-            toast.error(message);
             console.error('Create product failed:', error);
         },
     });
@@ -95,9 +62,6 @@ export function useUpdateProduct() {
             toast.success(response?.message || "Product updated successfully!");
         },
         onError: (error: ApiErrorResponse) => {
-            const errorData = error?.response?.data || error || {};
-            const message = (errorData as { message?: string })?.message || "Failed to update product.";
-            toast.error(message);
             console.error('Update product failed:', error);
         },
     });

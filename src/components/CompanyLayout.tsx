@@ -4,8 +4,9 @@ import {
   LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
   Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List,
   UserCheck, Truck, Clock, Tags, Blocks,
-  Package, Hash
+  Package, Hash, Award, Wind
 } from "lucide-react";
+
 import { useLogout, useCurrentUser } from "@/hooks/useAuth";
 import { createPortal } from "react-dom";
 import { getCompanyTheme } from "@/data/companyData";
@@ -29,6 +30,8 @@ const navItems = [
   { label: "Recipes", icon: List, path: "recipes" },
   { label: "Kits", icon: Package, path: "kits" },
   { label: "Categories", icon: Tags, path: "product-categories" },
+  { label: "Brands", icon: Award, path: "brands" },
+  { label: "Fragrances", icon: Wind, path: "fragrances" },
   { label: "Batches", icon: Blocks, path: "batches" },
   { label: "Serial Numbers", icon: Hash, path: "serials" },
 ];

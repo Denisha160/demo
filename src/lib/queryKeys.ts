@@ -50,4 +50,14 @@ export const queryKeys = {
         list: (filters?: Record<string, unknown>) => [...queryKeys.kits.all, 'list', filters] as const,
         detail: (id: string) => [...queryKeys.kits.all, 'detail', id] as const,
     },
+    brands: {
+        all: ['brands'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.brands.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.brands.all, 'detail', id] as const,
+    },
+    fragrances: {
+        all: ['fragrances'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.fragrances.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.fragrances.all, 'detail', id] as const,
+    },
 } as const;

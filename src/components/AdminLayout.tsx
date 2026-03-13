@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet } from "react-router-dom";
 import {
     PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2,
     ShieldCheck, Users, Tags, Box, Archive, List, Package, LogOut,
-    Menu, ChevronDown, Blocks, Hash
+    Menu, ChevronDown, Blocks, Hash, Award, Wind
 } from "lucide-react";
 import { useLogout, useCurrentUser } from "@/hooks/useAuth";
 import { createPortal } from 'react-dom';
@@ -23,6 +23,8 @@ const navItems = [
     { label: "Kits", icon: Package, path: "/admin/kits" },
     { label: "Packages", icon: Archive, path: "/admin/packages" },
     { label: "Categories", icon: Tags, path: "/admin/product-categories" },
+    { label: "Brands", icon: Award, path: "/admin/brands" },
+    { label: "Fragrances", icon: Wind, path: "/admin/fragrances" },
     { label: "Batches", icon: Blocks, path: "/admin/batches" },
     { label: "Serial Numbers", icon: Hash, path: "/admin/serials" },
 ];

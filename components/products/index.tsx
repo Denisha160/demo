@@ -101,7 +101,6 @@ const Products = () => {
     enabled: !!searchQuery,
   });
 
-  // ── IntersectionObserver: fire fetchNextPage when sentinel is visible ───────
   const handleIntersection = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -115,18 +114,17 @@ const Products = () => {
     const el = sentinelRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(handleIntersection, {
-      rootMargin: "200px", // start loading 200px before the bottom
+      rootMargin: "200px",
     });
     observer.observe(el);
     return () => observer.disconnect();
   }, [handleIntersection]);
 
-  // ── Mutations ──────────────────────────────────────────────────────────────
+  // ── Mutations ──
 
   const mutation = useMutation({
     mutationFn: updateProduct,
     onSuccess: (updatedProduct) => {
-      // Update in both infinite pages and search cache
       queryClient.setQueryData(
         ["products"],
         (old: { pages: ProductsResponse[] } | undefined) => {
@@ -170,7 +168,7 @@ const Products = () => {
     },
   });
 
-  // ── Derived state ─────────────────────────────────────────────────────────
+  // ── Derived state ─
 
   const isLoading = searchQuery ? isSearchLoading : isInfiniteLoading;
   const isError = searchQuery ? isSearchError : isInfiniteError;
@@ -181,7 +179,7 @@ const Products = () => {
     ? (searchData?.products ?? [])
     : (infiniteData?.pages.flatMap((p) => p.products) ?? []);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // ── Handlers ──
 
   const handleEditClick = (product: Product) => {
     setEditingProduct(product);
@@ -209,7 +207,7 @@ const Products = () => {
     }
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render ──
 
   if (isLoading) {
     return (

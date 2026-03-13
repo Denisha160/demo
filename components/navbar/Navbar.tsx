@@ -19,7 +19,7 @@ const categories = [
   "Bags & Footwear",
 ];
 
-const MeeshoNavbar = () => {
+const Navbar = () => {
   const [localQuery, setLocalQuery] = useState("");
   const { cartCount } = useCart();
   const { setSearchQuery } = useSearch();
@@ -69,7 +69,7 @@ const MeeshoNavbar = () => {
     <nav className="w-full sticky top-0 z-50 font-sans">
       {/* ── Main Navbar ── */}
       <div className="bg-white dark:bg-gray-950 shadow-md border-b border-gray-100 dark:border-white/5">
-        <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center gap-4">
+        <div className="max-w-screen-xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
           {/* Logo */}
           <Link
             href="/"
@@ -89,8 +89,7 @@ const MeeshoNavbar = () => {
             </span>
           </Link>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-2xl mx-auto">
+          <div className="order-last md:order-none w-full md:flex-1 md:max-w-2xl md:mx-auto">
             <div className="relative flex items-center">
               <div className="absolute left-3.5 text-gray-400 pointer-events-none">
                 <svg
@@ -112,7 +111,7 @@ const MeeshoNavbar = () => {
                 value={localQuery}
                 onChange={(e) => setLocalQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Search for sarees, kurtis, tops and more..."
+                placeholder="Search products..."
                 className="w-full pl-10 pr-20 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all duration-200"
               />
               {/* Clear button */}
@@ -120,7 +119,7 @@ const MeeshoNavbar = () => {
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="absolute right-20 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                  className="absolute right-14 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                   aria-label="Clear search"
                 >
                   <svg
@@ -141,9 +140,23 @@ const MeeshoNavbar = () => {
               <button
                 type="button"
                 onClick={handleSearch}
-                className="absolute right-2 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-lg px-3 py-1.5 text-xs font-bold hover:opacity-90 transition-opacity active:scale-95"
+                aria-label="Search"
+                className="absolute right-2 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-lg px-2.5 py-1.5 text-xs font-bold hover:opacity-90 transition-opacity active:scale-95 flex items-center gap-1"
               >
-                Search
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Search</span>
               </button>
             </div>
           </div>
@@ -261,4 +274,4 @@ const MeeshoNavbar = () => {
   );
 };
 
-export default MeeshoNavbar;
+export default Navbar;

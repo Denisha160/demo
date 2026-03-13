@@ -66,7 +66,7 @@ const MeeshoNavbar = () => {
               </svg>
             </div>
             <span className="text-2xl font-black bg-gradient-to-r from-pink-600 to-fuchsia-600 bg-clip-text text-transparent hidden sm:block">
-              meesho
+              MyApp
             </span>
           </Link>
 

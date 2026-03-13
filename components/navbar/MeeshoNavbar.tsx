@@ -43,12 +43,17 @@ const MeeshoNavbar = () => {
 
   const router = useRouter();
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(localQuery.trim());
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [localQuery, setSearchQuery]);
+
   const handleSearch = () => {
     const q = localQuery.trim();
-    if (q) {
-      setSearchQuery(q);
-      router.push("/");
-    }
+    setSearchQuery(q);
+    router.push("/");
   };
 
   const handleClear = () => {

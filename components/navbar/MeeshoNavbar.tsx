@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/providers/CartProvider";
+import { useRouter } from "next/navigation";
 
 const categories = [
   "Women Ethnic",
@@ -38,6 +39,12 @@ const MeeshoNavbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const router = useRouter();
+
+  const handleCartItems = () => {
+    router.push("/products/cart");
+  };
 
   return (
     <nav className="w-full sticky top-0 z-50 font-sans">
@@ -178,7 +185,8 @@ const MeeshoNavbar = () => {
             {/* Cart */}
             <button
               aria-label="Cart"
-              className="relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl hover:bg-pink-50 dark:hover:bg-white/5 transition-colors group"
+              className="cursor-pointer relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl hover:bg-pink-50 dark:hover:bg-white/5 transition-colors group"
+              onClick={handleCartItems}
             >
               <svg
                 className="w-6 h-6 text-gray-600 dark:text-gray-400 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors"

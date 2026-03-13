@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/providers/CartProvider";
+import { useSearch } from "@/components/providers/SearchProvider";
 import { useRouter } from "next/navigation";
 
 const categories = [
@@ -19,9 +20,9 @@ const categories = [
 ];
 
 const MeeshoNavbar = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [localQuery, setLocalQuery] = useState("");
   const { cartCount } = useCart();
+  const { setSearchQuery } = useSearch();
   const [wishlistCount] = useState(7);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -41,6 +42,19 @@ const MeeshoNavbar = () => {
   }, []);
 
   const router = useRouter();
+
+  const handleSearch = () => {
+    const q = localQuery.trim();
+    if (q) {
+      setSearchQuery(q);
+      router.push("/");
+    }
+  };
+
+  const handleClear = () => {
+    setLocalQuery("");
+    setSearchQuery("");
+  };
 
   const handleCartItems = () => {
     router.push("/products/cart");
@@ -90,13 +104,38 @@ const MeeshoNavbar = () => {
               </div>
               <input
                 type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={localQuery}
+                onChange={(e) => setLocalQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="Search for sarees, kurtis, tops and more..."
-                className="w-full pl-10 pr-14 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all duration-200"
+                className="w-full pl-10 pr-20 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all duration-200"
               />
+              {/* Clear button */}
+              {localQuery && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="absolute right-20 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                  aria-label="Clear search"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
               <button
                 type="button"
+                onClick={handleSearch}
                 className="absolute right-2 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-lg px-3 py-1.5 text-xs font-bold hover:opacity-90 transition-opacity active:scale-95"
               >
                 Search

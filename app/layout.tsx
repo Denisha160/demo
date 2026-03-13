@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 import ReactQueryProvider from "@/components/providers/ReactQueryProvider";
 import MeeshoNavbar from "@/components/navbar/MeeshoNavbar";
 import { CartProvider } from "@/components/providers/CartProvider";
+import { SearchProvider } from "@/components/providers/SearchProvider";
 
 export default function RootLayout({
   children,
@@ -19,10 +20,12 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ReactQueryProvider>
-          <CartProvider>
-            <MeeshoNavbar />
-            {children}
-          </CartProvider>
+          <SearchProvider>
+            <CartProvider>
+              <MeeshoNavbar />
+              {children}
+            </CartProvider>
+          </SearchProvider>
         </ReactQueryProvider>
       </body>
     </html>

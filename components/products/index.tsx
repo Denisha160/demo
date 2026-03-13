@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import ProductTable from "./ProductTable";
 import EditTitleDialog from "./EditTitleDialog";
+import DeleteDialog from "./DeleteProductsDialog";
 
 interface Product {
     id: number;
@@ -49,6 +50,8 @@ const Products = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [tempTitle, setTempTitle] = useState("");
+    const [deleteDialog, setDeleteDialog] = useState(false);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
 
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ["products"],
@@ -94,7 +97,16 @@ const Products = () => {
     };
 
     const handleDeleteClick = (id: number) => {
-        deleteMutation.mutate(id);
+        setDeleteDialog(true);
+        setDeletingId(id);
+    }
+
+    const handelDeleteSubmit = () => {
+        if (deletingId) {
+            deleteMutation.mutate(deletingId);
+            setDeleteDialog(false);
+            setDeletingId(null);
+        }
     }
 
     const handleDialogSubmit = (e: React.FormEvent) => {
@@ -177,6 +189,13 @@ const Products = () => {
                 tempTitle={tempTitle}
                 setTempTitle={setTempTitle}
                 isPending={mutation.isPending}
+            />
+
+            <DeleteDialog
+                isOpen={deleteDialog}
+                onClose={() => setDeleteDialog(false)}
+                onSubmit={handelDeleteSubmit}
+                isPending={deleteMutation.isPending}
             />
         </div>
     );

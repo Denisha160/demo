@@ -1,7 +1,8 @@
-import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import AddToCartButton from "@/components/products/AddToCartButton";
+import { Metadata } from "next";
 
 interface Product {
   id: number;
@@ -150,9 +151,7 @@ export default async function ViewProducts({
                 </div>
               </div>
 
-              <button className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98]">
-                Add to Cart
-              </button>
+              <AddToCartButton productId={product.id} />
             </div>
           </div>
         </div>

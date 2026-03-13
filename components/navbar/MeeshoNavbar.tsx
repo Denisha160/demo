@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useCart } from "@/components/providers/CartProvider";
 
 const categories = [
   "Women Ethnic",
@@ -19,7 +20,7 @@ const categories = [
 const MeeshoNavbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [cartCount] = useState(3);
+  const { cartCount } = useCart();
   const [wishlistCount] = useState(7);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);

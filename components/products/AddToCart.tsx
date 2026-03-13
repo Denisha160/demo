@@ -202,7 +202,7 @@ export default function AddToCart() {
                       <button
                         onClick={() => removeCart(cart.id)}
                         disabled={isDeleting}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 border border-red-200 dark:border-red-400/30 hover:border-red-500 rounded-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                        className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 border border-red-200 dark:border-red-400/30 hover:border-red-500 rounded-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                       >
                         {isThisDeleting ? (
                           <>

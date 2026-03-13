@@ -50,7 +50,7 @@ export default function AddToCartButton({ productId }: AddToCartButtonProps) {
     idle: {
       text: "Add to Cart",
       className:
-        "w-full py-5 bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-pink-500/25 active:scale-[0.98] flex items-center justify-center gap-2",
+        "cursor-pointer w-full py-5 bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-pink-500/25 active:scale-[0.98] flex items-center justify-center gap-2",
     },
     pending: {
       text: "Adding...",

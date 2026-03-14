@@ -81,21 +81,9 @@ export default function Profile() {
 
                 {/* Header / Hero Section */}
                 <div className="relative overflow-hidden rounded-3xl bg-white shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800 transition-all hover:shadow-md">
-                    {/* Banner */}
-                    <div className="h-48 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
 
                     <div className="px-6 pb-6 sm:px-10">
                         <div className="relative flex flex-col sm:flex-row sm:items-end sm:space-x-8">
-                            <div className="relative -mt-20 h-36 w-36 sm:-mt-24 sm:h-40 sm:w-40 flex-shrink-0">
-                                <img
-                                    src={user.image}
-                                    alt={`${user.firstName} ${user.lastName}`}
-                                    className="h-full w-full rounded-2xl border-4 border-white object-cover shadow-lg dark:border-slate-900 transition-transform duration-500 hover:scale-105"
-                                />
-                                <div className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white bg-green-500 dark:border-slate-900">
-                                    <span className="sr-only">Online status</span>
-                                </div>
-                            </div>
 
                             <div className="mt-6 flex-1 sm:mt-0 sm:pt-4 sm:pb-2">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -346,6 +334,6 @@ export default function Profile() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

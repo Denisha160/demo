@@ -176,18 +176,19 @@ const Navbar = () => {
                   {[
                     { label: "My Orders", icon: "📦" },
                     { label: "My Wishlist", icon: "❤️" },
-                    { label: "My Account", icon: "👤" },
+                    { label: "My Account", icon: "👤", href: "/profile" },
                     { label: "Meesho Credit", icon: "💰" },
                     { label: "Notifications", icon: "🔔" },
                     { label: "Help Center", icon: "🤝" },
                   ].map((item) => (
-                    <button
+                    <Link
                       key={item.label}
+                      href={item.href || "#"}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-pink-50 dark:hover:bg-white/5 hover:text-pink-600 dark:hover:text-pink-400 transition-colors text-left"
                     >
                       <span>{item.icon}</span>
                       {item.label}
-                    </button>
+                    </Link>
                   ))}
                   <div className="border-t border-gray-100 dark:border-white/5 mt-1 pt-1">
                     <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-400/10 transition-colors text-left">

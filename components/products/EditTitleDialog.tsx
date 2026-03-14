@@ -65,7 +65,7 @@ const EditTitleDialog = ({
           <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
             Change the title for{" "}
             <span className="font-bold text-blue-600 text-ellipsis overflow-hidden">
-              "{product?.title}"
+              &quot;{product?.title}&quot;
             </span>
           </p>
 

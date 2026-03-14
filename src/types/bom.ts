@@ -1,3 +1,5 @@
+import { BaseUnit, UnitCategory } from "./products";
+
 export interface Bom {
     id?: string;
     bom_id: string;
@@ -8,8 +10,8 @@ export interface Bom {
     last_used_date: string;
     raw_material_id?: string;
     raw_quantity?: number;
-    raw_unit?: string;
-    raw_unit_category?: string;
+    raw_unit?: BaseUnit;
+    raw_unit_category?: UnitCategory;
 }
 
 export interface BomListResponse {
@@ -24,8 +26,8 @@ export interface BomListResponse {
 export interface RawMaterialItem {
     raw_product_id: string;
     raw_quantity: number;
-    raw_unit: string;
-    raw_unit_category: string;
+    raw_unit: BaseUnit;
+    raw_unit_category: UnitCategory;
     cost_price?: number;
     product_name?: string;
 }

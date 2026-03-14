@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import {
     PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2,
@@ -12,25 +12,99 @@ interface AdminLayoutProps {
     title?: string;
 }
 
-const navItems = [
+interface NavItemEntry {
+    label: string;
+    icon: React.ElementType;
+    path?: string;
+    children?: NavItemEntry[];
+}
+
+const navItems: NavItemEntry[] = [
     { label: "Companies", icon: Building2, path: "/admin/companies" },
     { label: "Inbox", icon: Inbox, path: "/admin/inbox" },
     { label: "Tasks", icon: CheckSquare, path: "/admin/tasks" },
     { label: "Users", icon: Users, path: "/admin/users" },
     { label: "Roles", icon: ShieldCheck, path: "/admin/roles" },
-    { label: "Products", icon: Box, path: "/admin/products" },
-    { label: "Recipes", icon: List, path: "/admin/recipes" },
-    { label: "Kits", icon: Package, path: "/admin/kits" },
-    { label: "Packages", icon: Archive, path: "/admin/packages" },
-    { label: "Categories", icon: Tags, path: "/admin/product-categories" },
-    { label: "Brands", icon: Award, path: "/admin/brands" },
-    { label: "Fragrances", icon: Wind, path: "/admin/fragrances" },
+    {
+        label: "Product Setup",
+        icon: Blocks,
+        children: [
+            { label: "Products", icon: Box, path: "/admin/products" },
+            { label: "Recipes", icon: List, path: "/admin/recipes" },
+            { label: "Packages", icon: Archive, path: "/admin/packages" },
+            { label: "Kits", icon: Package, path: "/admin/kits" },
+            { label: "Categories", icon: Tags, path: "/admin/product-categories" },
+            { label: "Brands", icon: Award, path: "/admin/brands" },
+            { label: "Fragrances", icon: Wind, path: "/admin/fragrances" },
+        ]
+    },
     { label: "Batches", icon: Blocks, path: "/admin/batches" },
     { label: "Serial Numbers", icon: Hash, path: "/admin/serials" },
 ];
 
 // Admin theme - single consistent color
 const ADMIN_PRIMARY = "221.2 83.2% 53.3%"; // Blue
+
+interface NavGroupProps {
+    item: NavItemEntry;
+    active: boolean;
+    onCloseSidebar: () => void;
+}
+
+const NavGroup = ({ item, active, onCloseSidebar }: NavGroupProps) => {
+    const location = useLocation();
+    const [isOpen, setIsOpen] = useState(active);
+
+    // Sync open state with active child group
+    useEffect(() => {
+        if (active) setIsOpen(true);
+    }, [active]);
+
+    return (
+        <div className="space-y-0.5">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`
+                    w-full flex items-center justify-between px-2 py-2 text-sm rounded-md transition-all duration-200 group
+                    ${active ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground hover:text-foreground hover:bg-accent"}
+                `}
+                style={active ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
+            >
+                <div className="flex items-center gap-3">
+                    <item.icon className="h-4 w-4 shrink-0 transition-colors" />
+                    <span>{item.label}</span>
+                </div>
+                <ChevronDown className={`h-3 w-3 transition-transform duration-200 opacity-50 group-hover:opacity-100 ${isOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {isOpen && (
+                <div className="ml-4 pl-3 border-l border-border/60 space-y-0.5 mt-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                    {item.children.map((child) => {
+                        const childActive = !!child.path && (location.pathname === child.path || location.pathname.startsWith(`${child.path}/`));
+                        return (
+                            <Link
+                                key={child.path}
+                                to={child.path!}
+                                onClick={onCloseSidebar}
+                                className={`
+                                    flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-md transition-all duration-200
+                                    ${childActive
+                                        ? "bg-primary/15 text-primary font-bold"
+                                        : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
+                                    }
+                                `}
+                                style={childActive ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
+                            >
+                                <child.icon className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate">{child.label}</span>
+                            </Link>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const AdminLayout = ({ title }: AdminLayoutProps) => {
     const location = useLocation();
@@ -53,9 +127,12 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
         ? user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
         : 'AD';
 
-    const activeNavItem = navItems.find(item =>
-        location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
-    );
+    const activeNavItem = navItems.find(item => {
+        if (item.children) {
+            return item.children.some(child => location.pathname === child.path || location.pathname.startsWith(`${child.path}/`));
+        }
+        return location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+    });
     const pageTitle = title || activeNavItem?.label || "Admin";
 
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -111,11 +188,25 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                 {/* Navigation */}
                 <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
                     {navItems.map((item) => {
-                        const active = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+                        const active = item.children
+                            ? item.children.some(child => location.pathname === child.path || location.pathname.startsWith(`${child.path}/`))
+                            : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+
+                        if (item.children) {
+                            return (
+                                <NavGroup
+                                    key={item.label}
+                                    item={item}
+                                    active={active}
+                                    onCloseSidebar={() => setSidebarOpen(false)}
+                                />
+                            );
+                        }
+
                         return (
                             <Link
                                 key={item.path}
-                                to={item.path}
+                                to={item.path!}
                                 onClick={() => setSidebarOpen(false)}
                                 className={`
                                         flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group

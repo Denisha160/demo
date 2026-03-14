@@ -1,3 +1,5 @@
+import { BaseUnit } from "./products";
+
 export interface KitItem {
     id?: string;
     kit_id?: string;
@@ -6,7 +8,7 @@ export interface KitItem {
     product_name?: string;
     quantity_per_kit: number;
     price: number;
-    unit?: string;
+    unit?: BaseUnit;
     created_at?: string;
     image_url?: string | null;
 }
@@ -21,6 +23,11 @@ export interface Kit {
     total_items: number;
     created_at: string;
     updated_at: string;
+}
+
+export interface KitMembership extends Kit {
+    quantity_per_kit: number;
+    associated_at: string;
 }
 
 export interface KitDetails extends Kit {

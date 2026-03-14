@@ -6,9 +6,52 @@ import {
     createKit,
     updateKit,
     deleteKit,
+    associateProductToKit,
+    disassociateProductFromKit,
+    listKitsByProduct,
 } from '@/services/api';
+
+export const useKitsByProduct = (productId?: string) => {
+    return useQuery<KitMembership[]>({
+        queryKey: ['kits', 'product', productId],
+        queryFn: async () => {
+            if (!productId) return [];
+            const response = await listKitsByProduct(productId) as ApiResponse<KitMembership[]>;
+            return response.data || [];
+        },
+        enabled: !!productId,
+    });
+};
+
+export const useAssociateProductToKit = () => {
+    const queryClient = useQueryClient();
+    return useMutation<ApiResponse, Error, { kit_id: string; product_id: string; quantity_per_kit?: number }>({
+        mutationFn: (payload) => associateProductToKit(payload),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['kits', 'product', variables.product_id] });
+            toast.success('Product added to kit');
+        },
+        onError: (error) => {
+            toast.error(error.message || 'Failed to associate product to kit');
+        },
+    });
+};
+
+export const useDisassociateProductFromKit = () => {
+    const queryClient = useQueryClient();
+    return useMutation<ApiResponse, Error, { kit_id: string; product_id: string }>({
+        mutationFn: (payload) => disassociateProductFromKit(payload),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['kits', 'product', variables.product_id] });
+            toast.success('Product removed from kit');
+        },
+        onError: (error) => {
+            toast.error(error.message || 'Failed to remove product from kit');
+        },
+    });
+};
 import { queryKeys } from '@/lib/queryKeys';
-import type { Kit, KitCreatePayload, KitUpdatePayload, KitListResponse, KitDetails } from '@/types/kits';
+import type { Kit, KitCreatePayload, KitUpdatePayload, KitListResponse, KitDetails, KitMembership } from '@/types/kits';
 import type { ApiResponse } from '@/types/kits';
 
 interface ApiError {

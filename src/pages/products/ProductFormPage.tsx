@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AddProductPhotoModal from "@/pages/products/components/AddProductPhotoModal";
+import KitViewModal from "@/pages/kits/KitViewModal";
+import { Badge } from "@/components/ui/badge";
 
 import { Product, ProductCreatePayload } from "@/types/products";
 import { PackageType } from "@/types/packages";
@@ -31,7 +33,12 @@ import { useCategoriesCombobox, Category } from "@/hooks/useProductCategories";
 import { usePackagesCombobox } from "@/hooks/usePackages";
 import { useBrandCombobox } from "@/hooks/useBrands";
 import { useFragranceCombobox } from "@/hooks/useFragrances";
+import { useKitList, useKitsByProduct, useAssociateProductToKit, useDisassociateProductFromKit } from "@/hooks/useKits";
+import { useBOMDetails } from "@/hooks/useBom";
 import { useDebounce } from "@/hooks/useDebounce";
+import DataTable, { Column } from "@/components/DataTable";
+import { Kit, KitItem, KitMembership } from "@/types/kits";
+import BomModal from "@/pages/bom/components/BomModal";
 
 // --- Shared Reusable Components & Helpers ---
 
@@ -85,7 +92,7 @@ const productSchema = z.object({
     is_active: z.boolean().default(true),
 
     unit_category: z.enum(["weight", "volume", "count"]),
-    base_unit: z.enum(["kg", "g", "l", "ml", "pcs"]),
+    base_unit: z.enum(["kg", "g", "ltr", "ml", "pcs"]),
 
     weight: z.number().positive("Must be > 0").nullable().optional(),
     length: z.number().positive("Must be > 0").nullable().optional(),
@@ -113,7 +120,7 @@ const productSchema = z.object({
     packaging_id: z.string().uuid("Please select a valid package").optional().nullable(),
 }).refine(data => {
     if (data.unit_category === 'weight') return ['kg', 'g'].includes(data.base_unit);
-    if (data.unit_category === 'volume') return ['l', 'ml'].includes(data.base_unit);
+    if (data.unit_category === 'volume') return ['ltr', 'ml'].includes(data.base_unit);
     if (data.unit_category === 'count') return data.base_unit === 'pcs';
     return false;
 }, {
@@ -166,12 +173,6 @@ const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comb
             <Package className="h-4 w-4 text-primary" />
             <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Basic Information</h3>
         </div>
-
-        {apiError && (
-            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md mb-4 border border-destructive/20">
-                {apiError}
-            </div>
-        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <ProductInput
@@ -302,8 +303,8 @@ const UnitsMeasurementsTab = ({ productData, errors, handleChange, handleNumberC
                 <Select
                     value={productData.base_unit || "pcs"}
                     onValueChange={(v) => {
-                        const category = (v === "kg" || v === "g") ? "weight" : (v === "l" || v === "ml") ? "volume" : "count";
-                        setProductData((prev) => ({ ...prev, base_unit: v as "kg" | "g" | "l" | "ml" | "pcs", unit_category: category as "weight" | "volume" | "count" }));
+                        const category = (v === "kg" || v === "g") ? "weight" : (v === "ltr" || v === "ml") ? "volume" : "count";
+                        setProductData((prev) => ({ ...prev, base_unit: v as "kg" | "g" | "ltr" | "ml" | "pcs", unit_category: category as "weight" | "volume" | "count" }));
                         setErrors(prev => { const next = { ...prev }; delete next.base_unit; delete next.unit_category; return next; });
                         setApiError(null);
                     }}
@@ -314,7 +315,7 @@ const UnitsMeasurementsTab = ({ productData, errors, handleChange, handleNumberC
                     <SelectContent>
                         <SelectItem value="kg" className="text-xs">Kilogram (kg)</SelectItem>
                         <SelectItem value="g" className="text-xs">Gram (g)</SelectItem>
-                        <SelectItem value="l" className="text-xs">Liter (l)</SelectItem>
+                        <SelectItem value="ltr" className="text-xs">Liter (ltr)</SelectItem>
                         <SelectItem value="ml" className="text-xs">Milliliter (ml)</SelectItem>
                         <SelectItem value="pcs" className="text-xs">Pieces (pcs)</SelectItem>
                     </SelectContent>
@@ -568,25 +569,331 @@ const SpecificationsTab = ({ metadata }: ProductTabProps) => {
     );
 };
 
-const KitsTab = () => (
-    <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/10 rounded-lg border border-dashed border-border">
-        <Layers className="h-8 w-8 text-muted-foreground opacity-50 mb-3" />
-        <h3 className="text-sm font-semibold text-foreground">Kits</h3>
-        <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-            Kits functionality is coming soon. You will be able to bundle multiple products here.
-        </p>
-    </div>
-);
+const KitsTab = ({ productId, productType, isNew }: { productId?: string; productType?: string, isNew: boolean }) => {
+    const [kitSearch, setKitSearch] = useState("");
+    const debouncedKitSearch = useDebounce(kitSearch, 300);
+    const [selectedKitId, setSelectedKitId] = useState<string>("");
+    const [quantity, setQuantity] = useState<string>("1");
+    const [viewKitId, setViewKitId] = useState<string | undefined>();
 
-const RecipesTab = () => (
-    <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/10 rounded-lg border border-dashed border-border">
-        <Activity className="h-8 w-8 text-muted-foreground opacity-50 mb-3" />
-        <h3 className="text-sm font-semibold text-foreground">Recipes</h3>
-        <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-            Recipes functionality is coming soon. Define bills of materials and formulation logic here.
-        </p>
-    </div>
-);
+    const { data: kitsByProduct = [], isLoading: isLoadingAssoc } = useKitsByProduct(isNew ? undefined : productId);
+    const { data: allKitsData } = useKitList({ search: debouncedKitSearch, combobox: true });
+    const { mutate: associate, isPending: isAssociating } = useAssociateProductToKit();
+    const { mutate: disassociate, isPending: isDisassociating } = useDisassociateProductFromKit();
+
+    const allKitsOptions = (allKitsData?.items || []).map((k: Kit) => ({
+        label: k.sku ? `${k.name} (${k.sku})` : k.name,
+        value: k.id,
+    }));
+
+    const handleAdd = () => {
+        const qty = parseFloat(quantity);
+        if (!selectedKitId || !productId || isNaN(qty) || qty <= 0) return;
+        associate({ kit_id: selectedKitId, product_id: productId, quantity_per_kit: qty }, {
+            onSuccess: () => {
+                setSelectedKitId("");
+                setQuantity("1");
+            },
+        });
+    };
+
+    const columns: Column<KitMembership>[] = [
+        {
+            key: "name",
+            header: "Kit Information",
+            render: (item) => (
+                <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 bg-primary/10 text-primary rounded flex items-center justify-center shrink-0 border border-primary/20">
+                        <Package className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-xs font-bold text-foreground truncate">{item.name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-mono truncate">{item.sku || "NO-SKU"}</p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            key: "quantity_per_kit",
+            header: "Qty / Kit",
+            className: "w-[120px]",
+            render: (item) => (
+                <span className="text-xs font-bold font-mono text-primary">
+                    {item.quantity_per_kit}
+                </span>
+            )
+        },
+        {
+            key: "id",
+            header: "",
+            className: "w-[80px] text-right",
+            render: (item) => (
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => disassociate({ kit_id: item.id!, product_id: productId! })}
+                        disabled={isDisassociating}
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    >
+                        <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                </div>
+            )
+        }
+    ];
+
+    if (isNew) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/10 rounded-lg border border-dashed border-border transition-all hover:bg-muted/20">
+                <Box className="h-8 w-8 text-primary opacity-40 mb-3" />
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Save Product First</h3>
+                <p className="text-[11px] text-muted-foreground mt-1 max-w-xs leading-relaxed">
+                    Kits can only be associated once the product record is created. Please save your changes and return to this tab.
+                </p>
+            </div>
+        );
+    }
+
+    if (productType !== "FINISHED_GOOD") {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/10 rounded-lg border border-dashed border-border">
+                <Layers className="h-8 w-8 text-muted-foreground opacity-30 mb-3" />
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Kits Unavailable</h3>
+                <p className="text-[11px] text-muted-foreground mt-1 max-w-xs leading-relaxed">
+                    Only <span className="text-primary font-bold">Finished Goods</span> can be bundled into kits. Raw materials should be managed via Recipes.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Header section with Stats */}
+            <div className="flex items-center justify-between border-b border-border/60 pb-3 h-8">
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-primary/10 rounded-md">
+                        <Layers className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.1em]">Product Kit Memberships</h3>
+                </div>
+                {!isLoadingAssoc && kitsByProduct.length > 0 && (
+                    <Badge variant="outline" className="h-5 text-[9px] font-bold uppercase tracking-wider rounded-md border-primary/20 bg-primary/5 text-primary">
+                        {kitsByProduct.length} {kitsByProduct.length === 1 ? 'Association' : 'Associations'}
+                    </Badge>
+                )}
+            </div>
+
+            {/* Quick Add Section */}
+            <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                <div className="relative bg-card border border-border/80 rounded-xl shadow-sm p-4 space-y-4">
+                    <div className="flex flex-col lg:flex-row items-end gap-3">
+                        <div className="flex-[3] w-full space-y-1.5">
+                            <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-0.5">Find Kit to Join</Label>
+                            <Combobox
+                                options={allKitsOptions}
+                                value={selectedKitId}
+                                onValueChange={setSelectedKitId}
+                                placeholder="Search kits or SKU..."
+                                searchValue={kitSearch}
+                                onSearchChange={setKitSearch}
+                                className="h-9 text-xs"
+                            />
+                        </div>
+                        <div className="flex-1 w-full lg:w-[120px] space-y-1.5">
+                            <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-0.5">Qty / Kit</Label>
+                            <div className="relative">
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={quantity}
+                                    onChange={(e) => setQuantity(e.target.value)}
+                                    placeholder="1.00"
+                                    className="h-9 text-xs font-mono pr-7"
+                                />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-muted-foreground uppercase">Unit</span>
+                            </div>
+                        </div>
+                        <Button
+                            type="button"
+                            onClick={handleAdd}
+                            disabled={!selectedKitId || isAssociating}
+                            className="h-9 px-5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 group transition-all"
+                        >
+                            {isAssociating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />}
+                            <span className="text-xs font-bold uppercase tracking-wider">Add Association</span>
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            {/* List Section */}
+            <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                    <div className="h-1 w-8 bg-primary rounded-full"></div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Current Kit Memberships</span>
+                </div>
+                <div className="rounded-xl border border-border/60 overflow-hidden shadow-inner bg-muted/5">
+                    <DataTable
+                        data={kitsByProduct}
+                        columns={columns}
+                        isLoading={isLoadingAssoc}
+                        pageSize={5}
+                        onRowClick={(item) => setViewKitId(item.id)}
+                    />
+                </div>
+            </div>
+
+            <KitViewModal
+                open={!!viewKitId}
+                onClose={() => setViewKitId(undefined)}
+                kitId={viewKitId}
+            />
+        </div>
+    );
+};
+
+const RecipesTab = ({ productId, productType, isNew, sellingPrice }: { productId?: string; productType?: string; isNew: boolean; sellingPrice: number }) => {
+    const [isBomModalOpen, setIsBomModalOpen] = useState(false);
+    const { data: bom, isLoading } = useBOMDetails(isNew ? undefined : productId);
+
+    if (isNew) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/10 rounded-lg border border-dashed border-border transition-all hover:bg-muted/20">
+                <Box className="h-8 w-8 text-primary opacity-40 mb-3" />
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Save Product First</h3>
+                <p className="text-[11px] text-muted-foreground mt-1 max-w-xs leading-relaxed">
+                    Recipes can only be defined once the product record is created. Please save your changes and return to this tab.
+                </p>
+            </div>
+        );
+    }
+
+    if (productType !== "FINISHED_GOOD") {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/10 rounded-lg border border-dashed border-border">
+                <Activity className="h-8 w-8 text-muted-foreground opacity-30 mb-3" />
+                <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Recipes Unavailable</h3>
+                <p className="text-[11px] text-muted-foreground mt-1 max-w-xs leading-relaxed">
+                    Recipes are only applicable to <span className="text-primary font-bold">Finished Goods</span>. Raw materials are used as components within recipes.
+                </p>
+            </div>
+        );
+    }
+
+    const totalCost = bom?.raw_materials?.reduce((sum, m) => sum + (m.raw_quantity * (m.cost_price || 0)), 0) || 0;
+    const profit = sellingPrice - totalCost;
+    const margin = sellingPrice > 0 ? (profit / sellingPrice) * 100 : 0;
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+            {/* Header section */}
+            <div className="flex items-center justify-between border-b border-border/60 pb-3 h-8">
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-primary/10 rounded-md">
+                        <Activity className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.1em]">Manufacturing Formulation</h3>
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsBomModalOpen(true)}
+                    className="h-7 text-[10px] font-bold uppercase tracking-wider border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
+                >
+                    {bom ? "Manage Recipe" : "Create Recipe"}
+                </Button>
+            </div>
+
+            {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+            ) : !bom || !bom.raw_materials || bom.raw_materials.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/5 rounded-xl border border-dashed border-border group hover:bg-muted/10 transition-all cursor-pointer" onClick={() => setIsBomModalOpen(true)}>
+                    <div className="h-12 w-12 bg-primary/5 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <Plus className="h-6 w-6 text-primary/40" />
+                    </div>
+                    <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">No Recipe Defined</h3>
+                    <p className="text-[11px] text-muted-foreground mt-1 max-w-xs leading-relaxed">
+                        This finished good doesn't have a Bill of Materials yet. Click to define the raw materials required for production.
+                    </p>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 space-y-1">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Base Material Cost</p>
+                            <p className="text-xl font-bold font-mono text-primary">₹{totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                        </div>
+                        <div className="p-4 bg-muted/30 rounded-xl border border-border/60 space-y-1">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Selling Price</p>
+                            <p className="text-xl font-bold font-mono text-foreground">₹{sellingPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                        </div>
+                        <div className={`p-4 rounded-xl border space-y-1 ${profit >= 0 ? 'bg-emerald-500/5 border-emerald-500/10' : 'bg-destructive/5 border-destructive/10'}`}>
+                            <p className={`text-[10px] font-bold uppercase tracking-widest ${profit >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                                Est. Margin ({margin.toFixed(1)}%)
+                            </p>
+                            <p className={`text-xl font-bold font-mono ${profit >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                                {profit >= 0 ? '+' : ''}₹{profit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Ingredient Table */}
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 px-1">
+                            <div className="h-1 w-6 bg-primary rounded-full"></div>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Formula Ingredients</span>
+                        </div>
+                        <div className="rounded-xl border border-border/60 overflow-hidden shadow-inner bg-card">
+                            <table className="w-full text-xs">
+                                <thead className="bg-muted/40 text-[10px] uppercase font-bold text-muted-foreground border-b border-border/60">
+                                    <tr>
+                                        <th className="px-4 py-2.5 text-left">Material</th>
+                                        <th className="px-4 py-2.5 text-center w-[120px]">Quantity</th>
+                                        <th className="px-4 py-2.5 text-right w-[150px]">Cost Impact</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/40">
+                                    {bom.raw_materials.map((m) => (
+                                        <tr key={m.id} className="hover:bg-muted/20 transition-colors">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-6 w-6 rounded bg-primary/5 flex items-center justify-center border border-primary/10">
+                                                        <Box className="h-3 w-3 text-primary/60" />
+                                                    </div>
+                                                    <span className="font-semibold text-foreground">{m.raw_product}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <Badge variant="secondary" className="font-mono text-[10px] font-bold">
+                                                    {m.raw_quantity} {m.raw_unit}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-mono font-bold text-primary/80">
+                                                ₹{(m.raw_quantity * (m.cost_price || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <BomModal
+                isOpen={isBomModalOpen}
+                onClose={() => setIsBomModalOpen(false)}
+                bomId={productId}
+            />
+        </div>
+    );
+};
 
 
 // --- Main Form Component ---
@@ -1022,8 +1329,8 @@ const ProductFormPage = () => {
                             <TabsContent value="packaging" className="m-0"><PackagingTab {...tabProps} /></TabsContent>
                             <TabsContent value="pricing" className="m-0"><PricingTab {...tabProps} /></TabsContent>
                             <TabsContent value="specifications" className="m-0"><SpecificationsTab {...tabProps} /></TabsContent>
-                            <TabsContent value="kits" className="m-0"><KitsTab /></TabsContent>
-                            <TabsContent value="recipes" className="m-0"><RecipesTab /></TabsContent>
+                            <TabsContent value="kits" className="m-0"><KitsTab productId={productData.id} productType={productData.product_type} isNew={isNew} /></TabsContent>
+                            <TabsContent value="recipes" className="m-0"><RecipesTab productId={productData.id} productType={productData.product_type} isNew={isNew} sellingPrice={Number(productData.selling_price || 0)} /></TabsContent>
                         </div>
                     </Tabs>
 

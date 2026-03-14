@@ -18,7 +18,14 @@ interface CompanyLayoutProps {
   title?: string;
 }
 
-const navItems = [
+interface NavItemEntry {
+  label: string;
+  icon: React.ElementType;
+  path?: string;
+  children?: NavItemEntry[];
+}
+
+const navItems: NavItemEntry[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "dashboard" },
   { label: "Leads", icon: Kanban, path: "leads" },
   { label: "Salesmen", icon: UserCheck, path: "salesmen" },
@@ -26,16 +33,91 @@ const navItems = [
   { label: "Attendance", icon: Clock, path: "attendance" },
   { label: "Suppliers", icon: Truck, path: "suppliers" },
   { label: "Parties", icon: Users, path: "parties" },
-  { label: "Products", icon: Box, path: "products" },
-  { label: "Recipes", icon: List, path: "recipes" },
-  { label: "Kits", icon: Package, path: "kits" },
-  { label: "Categories", icon: Tags, path: "product-categories" },
-  { label: "Brands", icon: Award, path: "brands" },
-  { label: "Fragrances", icon: Wind, path: "fragrances" },
+  {
+    label: "Product Setup",
+    icon: Blocks,
+    children: [
+      { label: "Products", icon: Box, path: "products" },
+      { label: "Recipes", icon: List, path: "recipes" },
+      { label: "Kits", icon: Package, path: "kits" },
+      { label: "Categories", icon: Tags, path: "product-categories" },
+      { label: "Brands", icon: Award, path: "brands" },
+      { label: "Fragrances", icon: Wind, path: "fragrances" },
+    ]
+  },
   { label: "Batches", icon: Blocks, path: "batches" },
   { label: "Serial Numbers", icon: Hash, path: "serials" },
 ];
 
+
+interface NavGroupProps {
+  item: NavItemEntry & { children: NavItemEntry[] };
+  active: boolean;
+  onCloseSidebar: () => void;
+  currentCompany: Company;
+  location: { pathname: string };
+}
+
+const NavGroup = ({ item, active, onCloseSidebar, currentCompany, location }: NavGroupProps) => {
+  const [isOpen, setIsOpen] = useState(active);
+
+  useEffect(() => {
+    if (active) setIsOpen(true);
+  }, [active]);
+
+  const theme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
+
+  const getFullActive = (path?: string) => {
+    if (!path) return false;
+    const itemPath = `/${currentCompany.id}/${path}`;
+    return location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
+  };
+
+  return (
+    <div className="space-y-0.5">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`
+          w-full flex items-center justify-between px-2 py-2 text-sm rounded-md transition-all duration-200 group
+          ${active ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground hover:text-foreground hover:bg-accent"}
+        `}
+        style={active ? { color: `hsl(${theme.primary})` } : {}}
+      >
+        <div className="flex items-center gap-3">
+          <item.icon className="h-4 w-4 shrink-0 transition-colors" />
+          <span>{item.label}</span>
+        </div>
+        <ChevronDown className={`h-3 w-3 transition-transform duration-200 opacity-50 group-hover:opacity-100 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <div className="ml-4 pl-3 border-l border-border/60 space-y-0.5 mt-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          {item.children.map((child) => {
+            const childActive = getFullActive(child.path);
+            return (
+              <Link
+                key={child.path}
+                to={`/${currentCompany.id}/${child.path}`}
+                onClick={onCloseSidebar}
+                className={`
+                  flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-md transition-all duration-200
+                  ${childActive
+                    ? "bg-primary/15 text-primary font-bold"
+                    : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
+                  }
+                `}
+                style={childActive ? { color: `hsl(${theme.primary})` } : {}}
+              >
+                <child.icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{child.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const { companyId } = useParams();
@@ -49,12 +131,22 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const { data: companiesData, isLoading: isLoadingCompanies } = useCompanies();
   const companies = useMemo(() => companiesData?.items || [], [companiesData?.items]);
 
-  // Derive initials from user name (e.g. "John Doe" → "JD")
+  const currentCompany = useMemo(() => {
+    if (companies.length === 0) return null;
+    return companies.find((c: Company) => c.id === companyId) ||
+      companies.find((c: Company) => c.id === localStorage.getItem("currentCompanyId")) ||
+      companies[0];
+  }, [companyId, companies]);
+
+  const getFullActive = (path?: string) => {
+    if (!currentCompany || !path) return false;
+    const itemPath = `/${currentCompany.id}/${path}`;
+    return location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
+  };
   const initials = user?.name
     ? user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
     : 'ME';
 
-  const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
@@ -73,16 +165,6 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (companies.length > 0) {
-      const active = companies.find((c: Company) => c.id === companyId) ||
-        companies.find((c: Company) => c.id === localStorage.getItem("currentCompanyId")) ||
-        companies[0];
-      if (active?.id !== currentCompany?.id) {
-        setCurrentCompany(active);
-      }
-    }
-  }, [companyId, companies, currentCompany?.id]);
 
   useEffect(() => {
     if (currentCompany) {
@@ -97,7 +179,6 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   }, [currentCompany]);
 
   const toggleCompany = (company: Company) => {
-    setCurrentCompany(company);
     setIsCompanyDropdownOpen(false);
     // When switching company, navigate to the new company's dashboard
     const currentPath = location.pathname.split("/").slice(2).join("/");
@@ -106,8 +187,10 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
   const activeNavItem = navItems.find(item => {
     if (!currentCompany) return false;
-    const fullPath = `/${currentCompany.id}/${item.path}`;
-    return location.pathname === fullPath || location.pathname.startsWith(fullPath + "/");
+    if (item.children) {
+      return item.children.some(child => getFullActive(child.path));
+    }
+    return getFullActive(item.path);
   });
 
   const pageTitle = title || activeNavItem?.label || "CRM";
@@ -198,8 +281,24 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
         {/* Navigation */}
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => {
+            const active = item.children
+              ? item.children.some(child => getFullActive(child.path))
+              : getFullActive(item.path);
+
+            if (item.children) {
+              return (
+                <NavGroup
+                  key={item.label}
+                  item={item as NavItemEntry & { children: NavItemEntry[] }}
+                  active={active}
+                  onCloseSidebar={() => setSidebarOpen(false)}
+                  currentCompany={currentCompany}
+                  location={location}
+                />
+              );
+            }
+
             const itemPath = `/${currentCompany.id}/${item.path}`;
-            const active = location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
             return (
               <Link
                 key={item.path}

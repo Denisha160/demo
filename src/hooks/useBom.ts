@@ -9,6 +9,7 @@ import {
 } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
 import type { Bom, BomCreatePayload, BomUpdatePayload, BomListResponse, RawMaterialItem } from '@/types/bom';
+import { BaseUnit, UnitCategory } from '@/types/products';
 import type { ApiResponse } from '@/types/packages';
 
 interface ApiError {
@@ -29,8 +30,8 @@ export interface BomDetailsResponse {
         product_name: string;
         code: string;
         selling_price: number | null;
-        base_unit: string;
-        unit_category: string;
+        base_unit: BaseUnit;
+        unit_category: UnitCategory;
     };
     raw_materials: Array<{
         id: string;
@@ -38,8 +39,8 @@ export interface BomDetailsResponse {
         raw_product: string;
         cost_price: number | null;
         raw_quantity: number;
-        raw_unit: string;
-        raw_unit_category: string;
+        raw_unit: BaseUnit;
+        raw_unit_category: UnitCategory;
         created_at: string;
     }>;
 }

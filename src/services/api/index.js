@@ -316,6 +316,21 @@ export const deleteKit = (id) => {
   return axios({ method: "DELETE", url });
 }
 
+export const associateProductToKit = (data) => {
+  const url = `kit/associate`;
+  return axios({ method: "POST", url, data });
+};
+
+export const disassociateProductFromKit = (data) => {
+  const url = `kit/disassociate`;
+  return axios({ method: "DELETE", url, data });
+};
+
+export const listKitsByProduct = (productId) => {
+  const url = `kit/product/${productId}`;
+  return axios({ method: "GET", url });
+};
+
 // end region
 
 // start region

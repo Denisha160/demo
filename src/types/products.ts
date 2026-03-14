@@ -1,6 +1,6 @@
 export type ProductType = 'RAW_MATERIAL' | 'FINISHED_GOOD';
 export type UnitCategory = 'weight' | 'volume' | 'count';
-export type BaseUnit = 'kg' | 'g' | 'l' | 'ml' | 'pcs';
+export type BaseUnit = 'kg' | 'g' | 'ltr' | 'ml' | 'pcs';
 export type DimensionUnit = 'mm' | 'cm' | 'm' | 'in' | 'ft';
 export interface ProductImage {
     id?: string;

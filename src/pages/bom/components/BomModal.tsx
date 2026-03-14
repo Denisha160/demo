@@ -13,7 +13,7 @@ import {
 } from "@/hooks/useBom";
 import { useProductsCombobox, useProduct } from "@/hooks/useProducts";
 import { RawMaterialItem, BomCreatePayload, BomUpdatePayload } from "@/types/bom";
-import { Product } from "@/types/products";
+import { Product, BaseUnit, UnitCategory } from "@/types/products";
 import {
     Loader2,
     Plus,
@@ -117,8 +117,8 @@ const BomModal = ({ isOpen, onClose, bomId, isViewOnly = false }: BomModalProps)
             setMaterials(bomDetails.raw_materials.map(m => ({
                 raw_product_id: m.raw_product_id,
                 raw_quantity: m.raw_quantity,
-                raw_unit: m.raw_unit,
-                raw_unit_category: m.raw_unit_category,
+                raw_unit: m.raw_unit as BaseUnit,
+                raw_unit_category: m.raw_unit_category as UnitCategory,
                 product_name: m.raw_product,
                 cost_price: m.cost_price || 0,
             })));
@@ -187,8 +187,8 @@ const BomModal = ({ isOpen, onClose, bomId, isViewOnly = false }: BomModalProps)
             {
                 raw_product_id: "",
                 raw_quantity: "" as unknown as number,
-                raw_unit: "kg",
-                raw_unit_category: "weight",
+                raw_unit: "kg" as BaseUnit,
+                raw_unit_category: "weight" as UnitCategory,
                 cost_price: 0,
                 product_name: ""
             }

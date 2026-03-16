@@ -3,6 +3,12 @@ import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
+    const handleWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+      if (type === "number") {
+        e.currentTarget.blur();
+      }
+    };
+
     return (
       <input
         type={type}
@@ -14,8 +20,10 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           "focus-visible:outline-none focus-visible:border-primary",
           "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/30",
           "shadow-sm",
+          type === "number" && "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
           className
         )}
+        onWheel={handleWheel}
         ref={ref}
         {...props}
       />

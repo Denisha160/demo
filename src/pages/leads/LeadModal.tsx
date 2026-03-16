@@ -2,7 +2,7 @@ import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PipelineColumn } from "./types";
+import { PipelineColumn } from "../../types/leads";
 
 interface LeadModalProps {
     open: boolean;

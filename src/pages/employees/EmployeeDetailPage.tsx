@@ -118,7 +118,7 @@ const EmployeeDetailPage = () => {
     return (
         <div className="w-full mx-auto space-y-2 animate-fade-in">
             {/* 1. Navigation & Actions Bar */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button
                         variant="ghost"
@@ -182,19 +182,19 @@ const EmployeeDetailPage = () => {
 
             {/* 3. Content Layout wrapped in Tabs */}
             <Tabs defaultValue="overview" className="w-full space-y-4">
-                <TabsList className="bg-transparent border-b border-border rounded-none h-11 w-full justify-start gap-6 p-0">
+                <TabsList className="bg-transparent border-b border-border rounded-none h-11 w-full justify-start gap-2 p-0">
                     <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all">Overview</TabsTrigger>
                     <TabsTrigger value="attendance" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all">Attendance</TabsTrigger>
                     <TabsTrigger value="salary" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all">Salary History</TabsTrigger>
                     <TabsTrigger value="loans" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all">Loans</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="overview" className="space-y-6 animate-in fade-in-50 duration-300">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 space-y-6">
+                <TabsContent value="overview" className="space-y-2 animate-in fade-in-50 duration-300">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                        <div className="lg:col-span-2 space-y-2">
                             {/* Professional Details Card */}
                             <div className="p-5 border border-border rounded-sm bg-card shadow-sm relative group">
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-8">
                                     <div className="h-14 w-14 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xl font-bold border border-primary/20 shrink-0">
                                         {employeeData.name.split(" ").map((n) => n[0]).join("")}
                                     </div>
@@ -233,7 +233,7 @@ const EmployeeDetailPage = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                     <DetailItem label="Notice Period" value="60 Days" />
                                     <DetailItem label="Probation End" value="Jul 15, 2023" />
                                     <DetailItem label="Tax Status" value="Standard" />
@@ -245,9 +245,9 @@ const EmployeeDetailPage = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-2">
                             {/* Stats Summary */}
-                            <div className="p-5 border border-border rounded-sm bg-card shadow-sm h-full space-y-6">
+                            <div className="p-5 border border-border rounded-sm bg-card shadow-sm h-full space-y-2">
                                 <div className="flex items-center gap-2 mb-2">
                                     <TrendingUp className="h-4 w-4 text-primary" />
                                     <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest">Performance Metrics</h3>

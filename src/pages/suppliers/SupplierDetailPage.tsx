@@ -63,7 +63,7 @@ const SupplierDetailPage = () => {
     return (
         <div className="w-full mx-auto space-y-4 animate-fade-in">
             {/* Top Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button
                         variant="ghost"
@@ -74,7 +74,7 @@ const SupplierDetailPage = () => {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-bold text-foreground leading-none truncate font-mono uppercase tracking-widest text-primary">Supplier Profile</h2>
+                        <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary">Supplier Profile</h2>
                         <p className="text-[10px] text-muted-foreground mt-1">{supplier.name} • {supplier.category}</p>
                     </div>
                 </div>
@@ -97,13 +97,13 @@ const SupplierDetailPage = () => {
             </div>
 
             <Tabs defaultValue="overview" className="w-full space-y-4">
-                <TabsList className="bg-transparent border-b border-border rounded-none h-11 w-full justify-start gap-6 p-0">
+                <TabsList className="bg-transparent border-b border-border rounded-none h-11 w-full justify-start gap-2 p-0">
                     <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all">Overview</TabsTrigger>
                     <TabsTrigger value="orders" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all">Orders</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="mt-0">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
                         {/* Basic Info & Contact */}
                         <div className="lg:col-span-2 space-y-4">
                             <div className="p-6 border border-border rounded-sm bg-card shadow-sm">
@@ -135,7 +135,7 @@ const SupplierDetailPage = () => {
                         {/* Summary Sidebar */}
                         <div className="space-y-4">
                             <div className="p-6 border border-border rounded-sm bg-card shadow-sm text-center">
-                                <div className="h-20 w-20 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-3xl font-bold border border-primary/20 mx-auto mb-4 shadow-sm font-mono tracking-tighter">
+                                <div className="h-20 w-20 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-3xl font-bold border border-primary/20 mx-auto mb-4 shadow-sm tracking-tighter">
                                     {supplier.name.split(" ").map(n => n[0]).join("")}
                                 </div>
                                 <h4 className="font-bold text-lg text-foreground">{supplier.name}</h4>

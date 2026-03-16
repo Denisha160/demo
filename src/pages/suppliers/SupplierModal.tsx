@@ -3,14 +3,7 @@ import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-    SelectValue as any,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Textarea } from "@/components/ui/textarea";
 
 export interface Supplier {
@@ -102,7 +95,7 @@ const SupplierModal = ({ open, onClose, onSave, supplier }: SupplierModalProps) 
             }
         >
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Supplier Name</Label>
                         <Input
@@ -116,25 +109,23 @@ const SupplierModal = ({ open, onClose, onSave, supplier }: SupplierModalProps) 
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
-                        <Select
+                        <Combobox
+                            options={[
+                                { value: "Raw Materials", label: "Raw Materials" },
+                                { value: "Electronics", label: "Electronics" },
+                                { value: "Furniture", label: "Furniture" },
+                                { value: "Logistics", label: "Logistics" },
+                                { value: "Packaging", label: "Packaging" },
+                            ]}
                             value={formData.category}
                             onValueChange={(val) => setFormData({ ...formData, category: val })}
-                        >
-                            <SelectTrigger id="category" className="h-9 text-sm rounded-sm">
-                                <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Raw Materials">Raw Materials</SelectItem>
-                                <SelectItem value="Electronics">Electronics</SelectItem>
-                                <SelectItem value="Furniture">Furniture</SelectItem>
-                                <SelectItem value="Logistics">Logistics</SelectItem>
-                                <SelectItem value="Packaging">Packaging</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            placeholder="Select category"
+                            searchPlaceholder="Search category..."
+                        />
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="contactPerson" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Contact Person</Label>
                         <Input
@@ -158,7 +149,7 @@ const SupplierModal = ({ open, onClose, onSave, supplier }: SupplierModalProps) 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Email Address</Label>
                         <Input
@@ -183,39 +174,35 @@ const SupplierModal = ({ open, onClose, onSave, supplier }: SupplierModalProps) 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="paymentTerms" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment Terms</Label>
-                        <Select
+                        <Combobox
+                            options={[
+                                { value: "Immediate", label: "Immediate" },
+                                { value: "Net 15", label: "Net 15" },
+                                { value: "Net 30", label: "Net 30" },
+                                { value: "Net 60", label: "Net 60" },
+                            ]}
                             value={formData.paymentTerms}
                             onValueChange={(val) => setFormData({ ...formData, paymentTerms: val })}
-                        >
-                            <SelectTrigger id="paymentTerms" className="h-9 text-sm rounded-sm">
-                                <SelectValue placeholder="Select terms" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Immediate">Immediate</SelectItem>
-                                <SelectItem value="Net 15">Net 15</SelectItem>
-                                <SelectItem value="Net 30">Net 30</SelectItem>
-                                <SelectItem value="Net 60">Net 60</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            placeholder="Select terms"
+                            searchPlaceholder="Search terms..."
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="status" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</Label>
-                        <Select
+                        <Combobox
+                            options={[
+                                { value: "Active", label: "Active" },
+                                { value: "Inactive", label: "Inactive" },
+                                { value: "On Hold", label: "On Hold" },
+                            ]}
                             value={formData.status}
                             onValueChange={(val) => setFormData({ ...formData, status: val })}
-                        >
-                            <SelectTrigger id="status" className="h-9 text-sm rounded-sm">
-                                <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Active">Active</SelectItem>
-                                <SelectItem value="Inactive">Inactive</SelectItem>
-                                <SelectItem value="On Hold">On Hold</SelectItem>
-                            </SelectContent>
-                        </Select>
+                            placeholder="Select status"
+                            searchPlaceholder="Search status..."
+                        />
                     </div>
                 </div>
 

@@ -142,7 +142,7 @@ const Dashboard = () => {
         {/* Deals by Stage */}
         <div className="lg:col-span-1 shadow-card border border-border bg-card rounded-sm p-3">
           <h3 className="text-sm font-semibold text-foreground mb-2">Deals by Stage</h3>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <ResponsiveContainer width="60%" height={160}>
               <PieChart>
                 <Pie data={dealsByStage} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" stroke="none">

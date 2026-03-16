@@ -78,7 +78,7 @@ const SalesmanDetailPage = () => {
     return (
         <div className="w-full mx-auto space-y-4 animate-fade-in">
             {/* 1. Top Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2">
                 <div className="flex items-center gap-3 min-w-0">
                     <Button
                         variant="ghost"
@@ -89,7 +89,7 @@ const SalesmanDetailPage = () => {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-bold text-foreground leading-none truncate font-mono uppercase tracking-widest text-primary">Salesman Dashboard</h2>
+                        <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary">Salesman Dashboard</h2>
                         <p className="text-[10px] text-muted-foreground mt-1">{salesman.name} • {salesman.region} Region</p>
                     </div>
                 </div>
@@ -104,8 +104,8 @@ const SalesmanDetailPage = () => {
             </div>
 
             {/* 2. Content Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                <div className="lg:col-span-2 space-y-2">
                     {/* Performance Metrics */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         <StatCard title="Total Revenue" value={salesman.totalRevenue} change="+8.2% vs target" icon={<IndianRupee className="h-4 w-4" />} changeType="positive" />
@@ -119,7 +119,7 @@ const SalesmanDetailPage = () => {
                         <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest flex items-center gap-2 mb-6">
                             <BarChart3 className="h-3 w-3 text-primary" /> Performance Summary
                         </h3>
-                        <div className="space-y-6">
+                        <div className="space-y-2">
                             <div className="relative group">
                                 <div className="flex justify-between items-center mb-1.5">
                                     <span className="text-xs font-semibold text-foreground">Quarterly Quota</span>
@@ -141,7 +141,7 @@ const SalesmanDetailPage = () => {
 
                     {/* Leads Chart */}
                     <div className="p-5 border border-border rounded-sm bg-card shadow-sm">
-                        <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/50">
+                        <div className="flex items-center justify-between mb-8 pb-2 border-b border-border/50">
                             <h3 className="text-[10px] font-bold text-foreground uppercase tracking-[0.2em] flex items-center gap-2">
                                 <PieChart className="h-3 w-3 text-primary" /> Lead Stage Distribution
                             </h3>
@@ -204,7 +204,7 @@ const SalesmanDetailPage = () => {
                     </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-2">
                     {/* Profile Summary */}
                     <div className="p-5 border border-border rounded-sm bg-card shadow-sm">
                         <div className="text-center pb-6 border-b border-border mb-6">

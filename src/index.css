@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Gotham Regular';
+  src: local('Gotham Regular'), url('../fonts/Gotham Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -29,7 +37,9 @@
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 85%; /* Darker background for better visibility */
+    --input-foreground: 220 15% 10%; /* Added foreground for inputs */
+    --input-placeholder: 215.4 16.3% 56.9%; /* Added placeholder color */
     --ring: 221.2 83.2% 53.3%;
 
     --radius: 0.5rem;
@@ -46,6 +56,7 @@
     --shadow-sm: 0 1px 2px 0 hsl(220 10% 10% / 0.04);
     --shadow-md: 0 1px 3px 0 hsl(220 10% 10% / 0.06), 0 1px 2px -1px hsl(220 10% 10% / 0.06);
     --shadow-lg: 0 4px 12px -2px hsl(220 10% 10% / 0.08), 0 2px 4px -2px hsl(220 10% 10% / 0.04);
+    --shadow-input: 0 1px 2px 0 hsl(220 10% 10% / 0.02), inset 0 1px 2px 0 hsl(220 10% 10% / 0.02); /* Added input shadow */
 
     --success: 142 60% 40%;
     --success-foreground: 0 0% 100%;
@@ -60,11 +71,69 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Helvetica Neue', 'Helvetica', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-    font-weight: 400;
-}
+    letter-spacing: -0.01em;
+  }
+
+  /* Improved input styles */
+  input, textarea, select {
+    @apply bg-input text-foreground border-border rounded-md px-3 py-2;
+    box-shadow: var(--shadow-input);
+    transition: all 0.15s ease;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background border-transparent;
+    box-shadow: var(--shadow-md);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: hsl(var(--input-placeholder));
+    opacity: 1;
+  }
+
+  input:disabled, textarea:disabled, select:disabled {
+    @apply opacity-50 cursor-not-allowed bg-muted;
+  }
+
+  /* Better select styling */
+  select {
+    @apply appearance-none pr-8;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+  }
+
+  /* Checkbox and radio improvements */
+  input[type="checkbox"], input[type="radio"] {
+    @apply w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring;
+    box-shadow: var(--shadow-sm);
+  }
+
+  input[type="radio"] {
+    @apply rounded-full;
+  }
+
+  /* Better focus styles for interactive elements */
+  button:focus-visible, a:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Input groups for better visual separation */
+  .input-group {
+    @apply relative;
+  }
+
+  .input-group input {
+    @apply pl-9; /* For icons */
+  }
+
+  .input-group .input-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground;
+  }
 }
 
 @layer utilities {
@@ -85,4 +154,21 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* New utility classes for inputs */
+  .input-error {
+    @apply border-destructive ring-destructive/20 focus:ring-destructive;
+  }
+
+  .input-success {
+    @apply border-success ring-success/20 focus:ring-success;
+  }
+
+  .input-warning {
+    @apply border-warning ring-warning/20 focus:ring-warning;
+  }
+}
+
+a {
+    text-decoration: none !important;
 }

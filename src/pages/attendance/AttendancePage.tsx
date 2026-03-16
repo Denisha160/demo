@@ -1,30 +1,14 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, Calendar as CalendarIcon, User } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-
-interface AttendanceRecord {
-    id: number;
-    userName: string;
-    userEmail: string;
-    date: string;
-    clockIn: string;
-    clockOut: string;
-    duration: string;
-    status: string;
-}
+import { AttendanceRecord } from "@/types/attendance";
 
 const mockAttendance: AttendanceRecord[] = [
     { id: 1, userName: "John Doe", userEmail: "john@company.com", date: "2024-02-21", clockIn: "09:00 AM", clockOut: "06:00 PM", duration: "9h 00m", status: "Present" },
@@ -103,7 +87,7 @@ const AttendancePage = () => {
 
     return (
         <div className="w-full mx-auto space-y-2 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-2">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:flex-initial">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
@@ -115,18 +99,17 @@ const AttendancePage = () => {
                         />
                     </div>
 
-                    <Select value={userFilter} onValueChange={setUserFilter}>
-                        <SelectTrigger className="w-full sm:w-[180px] h-9 rounded-sm">
-                            <User className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all-users">All Users</SelectItem>
-                            {users.map(u => (
-                                <SelectItem key={u} value={u}>{u}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Combobox
+                        options={[
+                            { value: "all-users", label: "All Users" },
+                            ...users.map(u => ({ value: u, label: u }))
+                        ]}
+                        value={userFilter}
+                        onValueChange={setUserFilter}
+                        placeholder="All Users"
+                        searchPlaceholder="Search employee..."
+                        className="w-full sm:w-[200px] h-9"
+                    />
 
                     <div className="flex-1 sm:flex-none min-w-[260px]">
                         <DatePickerWithRange date={dateRange} setDate={setDateRange} />

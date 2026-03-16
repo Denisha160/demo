@@ -1,38 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { z } from "zod";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DatePicker } from "@/components/ui/date-picker";
 
-interface User {
-    id?: number;
-    name: string;
-    email: string;
-    role: string;
-    status: string;
-    department?: string;
-    companyName?: string;
-    gstNumber?: string;
-    phone?: string;
-    region?: string;
-    // Expanded Fields
-    gender?: string;
-    dateOfJoining?: string;
-    basicSalary?: string;
-    dateOfBirth?: string;
-    fatherName?: string;
-    panNumber?: string;
-    personalEmail?: string;
-    residenceAddress?: string;
-}
+import { User, UserCreatePayload, ApiErrorResponse, getLocalDateString } from "@/types/user";
+import { useCreateUser } from "@/hooks/useUsers";
 
 interface UserModalProps {
     open: boolean;
@@ -41,307 +17,328 @@ interface UserModalProps {
     user?: User | null;
 }
 
-const companies = [
-    { id: "basalt-amenities", name: "Basalt Amenities" },
-    { id: "smart-home", name: "Smart Home Automation" }
-];
+// Validation schema
+const userSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    phone_number: z.string().regex(/^[0-9+\-\s]{10,15}$/, "Invalid phone number"),
+    employee_code: z.string().min(3, "Employee code must be at least 3 characters"),
+    date_of_joining: z.string().min(1, "Date of joining is required"),
+    password: z.string().min(6, "Password must be at least 6 characters").optional(),
+    department: z.string().optional(),
+    is_active: z.boolean().optional(),
+    basic_salary: z.number().optional(),
+});
+
+type UserFormData = z.infer<typeof userSchema>;
 
 const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
-    const [activeTab, setActiveTab] = useState("professional");
-    const [formData, setFormData] = useState<User>({
-        name: "",
-        email: "",
-        role: "User",
-        status: "Active",
-        department: "",
-        companyName: "",
-        gstNumber: "",
-        phone: "",
-        region: "",
-        gender: "",
-        dateOfJoining: "",
-        basicSalary: "",
-        dateOfBirth: "",
-        fatherName: "",
-        panNumber: "",
-        personalEmail: "",
-        residenceAddress: "",
+    const { mutate: createUser, isPending: isCreating } = useCreateUser();
+
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [errors, setErrors] = useState<Partial<Record<keyof UserFormData | "confirmPassword", string>>>({});
+    const [apiError, setApiError] = useState<string | null>(null);
+
+    const [formData, setFormData] = useState<UserFormData>({
+        name: user?.name || "",
+        email: user?.email || "",
+        password: "",
+        phone_number: user?.phone_number || "",
+        employee_code: user?.employee_code || "",
+        date_of_joining: user?.date_of_joining ? getLocalDateString(user?.date_of_joining) : getLocalDateString(new Date()),
+        department: user?.department || "",
+        is_active: user?.is_active ?? true,
+        basic_salary: user?.basic_salary || 0,
     });
 
-    useEffect(() => {
-        if (user) {
-            setFormData({
-                ...user,
-                department: user.department || "",
-                companyName: user.companyName || "",
-                gstNumber: user.gstNumber || "",
-                phone: user.phone || "",
-                region: user.region || "",
-                gender: user.gender || "",
-                dateOfJoining: user.dateOfJoining || "",
-                basicSalary: user.basicSalary || "",
-                dateOfBirth: user.dateOfBirth || "",
-                fatherName: user.fatherName || "",
-                panNumber: user.panNumber || "",
-                personalEmail: user.personalEmail || "",
-                residenceAddress: user.residenceAddress || "",
-            });
-        } else {
-            setFormData({
-                name: "",
-                email: "",
-                role: "User",
-                status: "Active",
-                department: "",
-                companyName: "",
-                gstNumber: "",
-                phone: "",
-                region: "",
-                gender: "",
-                dateOfJoining: "",
-                basicSalary: "",
-                dateOfBirth: "",
-                fatherName: "",
-                panNumber: "",
-                personalEmail: "",
-                residenceAddress: "",
-            });
+    const validateForm = () => {
+        try {
+            // Validate main form data
+            userSchema.parse(formData);
+
+            // Validate password match for new users
+            if (!user) {
+                if (!formData.password) {
+                    setErrors({ password: "Password is required" });
+                    return false;
+                }
+                if (formData.password !== confirmPassword) {
+                    setErrors({ confirmPassword: "Passwords do not match" });
+                    return false;
+                }
+            }
+
+            setErrors({});
+            return true;
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                const newErrors: Partial<Record<keyof UserFormData, string>> = {};
+                error.errors.forEach((err) => {
+                    if (err.path[0]) {
+                        newErrors[err.path[0] as keyof UserFormData] = err.message;
+                    }
+                });
+                setErrors(newErrors);
+            }
+            return false;
         }
-        setActiveTab("professional");
-    }, [user, open]);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
+
+        if (!validateForm()) {
+            return;
+        }
+
+        if (!user) {
+            createUser(formData as UserCreatePayload, {
+                onSuccess: (data) => {
+                    handleClose();
+                    if (onSave) onSave(data as unknown as User);
+                },
+                onError: (error: unknown) => {
+                    console.error("Failed to create user:", error);
+                    const err = error as ApiErrorResponse;
+                    const errorData = (err?.details || err?.response?.data || err || {}) as ApiErrorResponse;
+
+                    if (errorData?.code === "duplicate_key_value") {
+                        const msg = errorData.message || "A duplicate record exists.";
+                        setApiError(msg);
+
+                        // Show below specific input based on message content
+                        if (msg.toLowerCase().includes("email")) {
+                            setErrors(prev => ({ ...prev, email: msg }));
+                        } else if (msg.toLowerCase().includes("phone")) {
+                            setErrors(prev => ({ ...prev, phone_number: msg }));
+                        } else if (msg.toLowerCase().includes("employee")) {
+                            setErrors(prev => ({ ...prev, employee_code: msg }));
+                        }
+                    } else if (errorData?.message) {
+                        setApiError(errorData.message);
+                    } else {
+                        setApiError("An unexpected error occurred while saving.");
+                    }
+                }
+            });
+        } else {
+            handleClose();
+        }
+    };
+
+    const handleChange = (field: keyof UserFormData, value: string | boolean | number) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        // Clear error for this field when user starts typing
+        if (errors[field]) {
+            setErrors(prev => ({ ...prev, [field]: undefined }));
+        }
+        if (apiError) setApiError(null);
+    };
+
+    const handleClose = () => {
+        setErrors({});
+        setApiError(null);
+        setFormData({
+            name: "",
+            email: "",
+            password: "",
+            phone_number: "",
+            employee_code: "",
+            date_of_joining: getLocalDateString(new Date()),
+        });
+        setConfirmPassword("");
+        setShowPassword(false);
         onClose();
     };
+
+    const isPending = isCreating;
 
     return (
         <Modal
             open={open}
-            onClose={onClose}
+            onClose={handleClose}
             headerBg="bg-primary/10"
             titleClassName="text-primary"
-            maxWidth="sm:max-w-[800px]"
-            title={user ? "Maintain Profile Information" : "Add New User"}
-            description={user ? "Update basic and personal details for the user" : "Fill in the required information below"}
+            maxWidth="sm:max-w-[600px]"
+            title="Add New User"
+            description="Fill in the required information below to create a new user"
             footer={
                 <>
-                    <Button variant="outline" size="sm" className="rounded-sm text-sm h-8" onClick={onClose}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-sm text-sm h-8"
+                        onClick={handleClose}
+                        disabled={isPending}
+                    >
                         Cancel
                     </Button>
-                    <Button size="sm" className="rounded-sm text-sm h-8" onClick={handleSubmit}>
-                        {user ? "Save Changes" : "Save User"}
+                    <Button
+                        size="sm"
+                        className="rounded-sm text-sm h-8"
+                        onClick={handleSubmit}
+                        disabled={isPending}
+                    >
+                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isPending ? "Creating..." : "Save User"}
                     </Button>
                 </>
             }
         >
             <div className="space-y-4">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 h-9 bg-muted/50 border border-border rounded-sm p-1">
-                        <TabsTrigger value="professional" className="text-xs font-bold uppercase tracking-wider">Professional</TabsTrigger>
-                        <TabsTrigger value="personal" className="text-xs font-bold uppercase tracking-wider">Personal</TabsTrigger>
-                    </TabsList>
+                <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                            <Label htmlFor="name" className="text-sm">
+                                Full Name <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="name"
+                                placeholder="John Doe"
+                                value={formData.name}
+                                onChange={(e) => handleChange("name", e.target.value)}
+                                className={`h-8 text-sm rounded-sm ${errors.name ? 'border-destructive' : ''}`}
+                                disabled={isPending}
+                                required
+                            />
+                            {errors.name && (
+                                <p className="text-xs text-destructive mt-1">{errors.name}</p>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="email" className="text-sm">
+                                Business Email <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="john@basalt.com"
+                                value={formData.email}
+                                onChange={(e) => handleChange("email", e.target.value)}
+                                className={`h-8 text-sm rounded-sm ${errors.email ? 'border-destructive' : ''}`}
+                                disabled={isPending}
+                                required
+                            />
+                            {errors.email && (
+                                <p className="text-xs text-destructive mt-1">{errors.email}</p>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="phone" className="text-sm">
+                                Phone Number <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="phone"
+                                placeholder="+91 98765 43210"
+                                value={formData.phone_number}
+                                onChange={(e) => handleChange("phone_number", e.target.value)}
+                                className={`h-8 text-sm rounded-sm ${errors.phone_number ? 'border-destructive' : ''}`}
+                                disabled={isPending}
+                                required
+                            />
+                            {errors.phone_number && (
+                                <p className="text-xs text-destructive mt-1">{errors.phone_number}</p>
+                            )}
+                        </div>
+                    </div>
 
-                    <form onSubmit={handleSubmit}>
-                        <TabsContent value="professional" className="space-y-4 mt-4 animate-in fade-in-50">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label htmlFor="name" className="text-sm">Full Name</Label>
-                                    <Input
-                                        id="name"
-                                        placeholder="John Doe"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="h-8 text-sm rounded-sm"
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="email" className="text-sm">Business Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="john@basalt.com"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="h-8 text-sm rounded-sm"
-                                        required
-                                    />
-                                </div>
-                            </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <Label htmlFor="employee_code" className="text-sm">
+                                Employee Code <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="employee_code"
+                                placeholder="EMP-001"
+                                value={formData.employee_code}
+                                onChange={(e) => handleChange("employee_code", e.target.value)}
+                                className={`h-8 text-sm rounded-sm ${errors.employee_code ? 'border-destructive' : ''}`}
+                                disabled={isPending}
+                                required
+                            />
+                            {errors.employee_code && (
+                                <p className="text-xs text-destructive mt-1">{errors.employee_code}</p>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="doj" className="text-sm">
+                                Date of Joining <span className="text-destructive">*</span>
+                            </Label>
+                            <DatePicker
+                                value={formData.date_of_joining ? getLocalDateString(formData.date_of_joining) : ""}
+                                onChange={(val) => handleChange("date_of_joining", val ? getLocalDateString(val) : getLocalDateString(new Date()))}
+                                placeholder="dd/MM/yyyy"
+                                disabled={isPending}
+                            />
+                            {errors.date_of_joining && (
+                                <p className="text-xs text-destructive mt-1">{errors.date_of_joining}</p>
+                            )}
+                        </div>
+                    </div>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label htmlFor="gender" className="text-sm">Gender</Label>
-                                    <Select
-                                        value={formData.gender}
-                                        onValueChange={(value) => setFormData({ ...formData, gender: value })}
-                                    >
-                                        <SelectTrigger className="h-8 text-sm rounded-sm">
-                                            <SelectValue placeholder="Select Gender" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Male">Male</SelectItem>
-                                            <SelectItem value="Female">Female</SelectItem>
-                                            <SelectItem value="Other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="doj" className="text-sm">Date of Joining</Label>
-                                    <Input
-                                        id="doj"
-                                        type="date"
-                                        value={formData.dateOfJoining}
-                                        onChange={(e) => setFormData({ ...formData, dateOfJoining: e.target.value })}
-                                        className="h-8 text-sm rounded-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label htmlFor="company" className="text-sm">Associated Company</Label>
-                                    <Select
-                                        value={formData.companyName}
-                                        onValueChange={(value) => setFormData({ ...formData, companyName: value })}
-                                    >
-                                        <SelectTrigger className="h-8 text-sm rounded-sm">
-                                            <SelectValue placeholder="Select Company" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {companies.map(c => (
-                                                <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="salary" className="text-sm">Basic Salary Info</Label>
-                                    <Input
-                                        id="salary"
-                                        placeholder="₹ 0.00"
-                                        value={formData.basicSalary}
-                                        onChange={(e) => setFormData({ ...formData, basicSalary: e.target.value })}
-                                        className="h-8 text-sm rounded-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label htmlFor="gst" className="text-sm">GST Number</Label>
-                                    <Input
-                                        id="gst"
-                                        placeholder="27AAAAA0000A1Z5"
-                                        value={formData.gstNumber}
-                                        onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
-                                        className="h-8 text-sm rounded-sm"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="region" className="text-sm">Region / Zone</Label>
-                                    <Input
-                                        id="region"
-                                        placeholder="North / South / East / West"
-                                        value={formData.region}
-                                        onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                                        className="h-8 text-sm rounded-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label htmlFor="phone" className="text-sm">Business Phone</Label>
-                                    <Input
-                                        id="phone"
-                                        placeholder="+91"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="h-8 text-sm rounded-sm"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="status" className="text-sm">Account Status</Label>
-                                    <Select
-                                        value={formData.status}
-                                        onValueChange={(value) => setFormData({ ...formData, status: value })}
-                                    >
-                                        <SelectTrigger className="h-8 text-sm rounded-sm">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Active">Active</SelectItem>
-                                            <SelectItem value="Inactive">Inactive</SelectItem>
-                                            <SelectItem value="Suspended">Suspended</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="personal" className="space-y-4 mt-4 animate-in fade-in-50">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label htmlFor="dob" className="text-sm">Date of Birth</Label>
-                                    <Input
-                                        id="dob"
-                                        type="date"
-                                        value={formData.dateOfBirth}
-                                        onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                                        className="h-8 text-sm rounded-sm"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="pan" className="text-sm">PAN Number</Label>
-                                    <Input
-                                        id="pan"
-                                        placeholder="ABCDE1234F"
-                                        value={formData.panNumber}
-                                        onChange={(e) => setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })}
-                                        className="h-8 text-sm rounded-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="fatherName" className="text-sm">Father's Name</Label>
+                    {/* Password fields for new user */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <Label htmlFor="password" className="text-sm">
+                                Password <span className="text-destructive">*</span>
+                            </Label>
+                            <div className="relative">
                                 <Input
-                                    id="fatherName"
-                                    placeholder="Full Name"
-                                    value={formData.fatherName}
-                                    onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
-                                    className="h-8 text-sm rounded-sm"
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter password..."
+                                    value={formData.password}
+                                    onChange={(e) => handleChange("password", e.target.value)}
+                                    className={`h-8 text-sm rounded-sm pr-9 ${errors.password ? 'border-destructive' : ''}`}
+                                    disabled={isPending}
+                                    required
                                 />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="absolute right-0 top-0 h-8 w-8 px-0 py-0 hover:bg-transparent"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    disabled={isPending}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                                    ) : (
+                                        <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                                    )}
+                                </Button>
                             </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="personalEmail" className="text-sm">Personal Email</Label>
+                            {errors.password && (
+                                <p className="text-xs text-destructive mt-1">{errors.password}</p>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="confirm_password" className="text-sm">
+                                Confirm Password <span className="text-destructive">*</span>
+                            </Label>
+                            <div className="relative">
                                 <Input
-                                    id="personalEmail"
-                                    type="email"
-                                    placeholder="personal@gmail.com"
-                                    value={formData.personalEmail}
-                                    onChange={(e) => setFormData({ ...formData, personalEmail: e.target.value })}
-                                    className="h-8 text-sm rounded-sm"
+                                    id="confirm_password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Confirm password..."
+                                    value={confirmPassword}
+                                    onChange={(e) => {
+                                        setConfirmPassword(e.target.value);
+                                        if (errors.confirmPassword) {
+                                            setErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                                        }
+                                    }}
+                                    className={`h-8 text-sm rounded-sm pr-9 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                                    disabled={isPending}
+                                    required
                                 />
                             </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="address" className="text-sm">Residence Address</Label>
-                                <textarea
-                                    id="address"
-                                    placeholder="Enter full address here..."
-                                    value={formData.residenceAddress}
-                                    onChange={(e) => setFormData({ ...formData, residenceAddress: e.target.value })}
-                                    className="w-full min-h-[80px] px-3 py-2 text-sm border border-input bg-background rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                />
-                            </div>
-                        </TabsContent>
-                    </form>
-                </Tabs>
+                            {errors.confirmPassword && (
+                                <p className="text-xs text-destructive mt-1">{errors.confirmPassword}</p>
+                            )}
+                        </div>
+                    </div>
+                </form>
             </div>
         </Modal>
     );

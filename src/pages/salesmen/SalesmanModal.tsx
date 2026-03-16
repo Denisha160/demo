@@ -72,7 +72,7 @@ const SalesmanModal = ({ open, onClose, onSave, salesman }: SalesmanModalProps) 
             }
         >
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Full Name</Label>
                         <Input
@@ -97,7 +97,7 @@ const SalesmanModal = ({ open, onClose, onSave, salesman }: SalesmanModalProps) 
                         />
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                         <Label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Phone Number</Label>
                         <Input

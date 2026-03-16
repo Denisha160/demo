@@ -3,13 +3,7 @@ import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 
 interface LoanModalProps {
     open: boolean;
@@ -55,23 +49,21 @@ const LoanModal = ({ open, onClose, employeeName, employeeId }: LoanModalProps) 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                     <Label className="text-xs font-bold uppercase text-muted-foreground">Loan Type</Label>
-                    <Select
+                    <Combobox
+                        options={[
+                            { value: "Personal Loan", label: "Personal Loan" },
+                            { value: "Advance Salary", label: "Advance Salary" },
+                            { value: "Medical Loan", label: "Medical Loan" },
+                            { value: "Education Loan", label: "Education Loan" },
+                        ]}
                         value={formData.type}
                         onValueChange={(v) => setFormData({ ...formData, type: v })}
-                    >
-                        <SelectTrigger className="h-9 text-xs rounded-sm">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Personal Loan">Personal Loan</SelectItem>
-                            <SelectItem value="Advance Salary">Advance Salary</SelectItem>
-                            <SelectItem value="Medical Loan">Medical Loan</SelectItem>
-                            <SelectItem value="Education Loan">Education Loan</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        placeholder="Select loan type"
+                        searchPlaceholder="Search loan type..."
+                    />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1.5">
                         <Label className="text-xs font-bold uppercase text-muted-foreground">Loan Amount (₹)</Label>
                         <Input

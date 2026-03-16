@@ -1,16 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
 import {
   LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
   Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List,
-  UserCheck, Truck, Clock
+  UserCheck, Truck, Clock, Tags, Blocks,
+  Package, Hash, Award, Wind
 } from "lucide-react";
+
+import { useLogout, useCurrentUser } from "@/hooks/useAuth";
+import { createPortal } from "react-dom";
+import { getCompanyTheme } from "@/data/companyData";
+import { useCompanies } from "@/hooks/useCompanies";
+import { Loader2 } from "lucide-react";
+import { Company } from "@/types/company";
 
 interface CompanyLayoutProps {
   title?: string;
 }
 
-const navItems = [
+interface NavItemEntry {
+  label: string;
+  icon: React.ElementType;
+  path?: string;
+  children?: NavItemEntry[];
+}
+
+const navItems: NavItemEntry[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "dashboard" },
   { label: "Leads", icon: Kanban, path: "leads" },
   { label: "Salesmen", icon: UserCheck, path: "salesmen" },
@@ -18,31 +33,91 @@ const navItems = [
   { label: "Attendance", icon: Clock, path: "attendance" },
   { label: "Suppliers", icon: Truck, path: "suppliers" },
   { label: "Parties", icon: Users, path: "parties" },
-  { label: "Products", icon: Box, path: "products" },
-  { label: "Users", icon: Users, path: "users" },
-  { label: "Roles", icon: ShieldCheck, path: "roles" },
+  {
+    label: "Product Setup",
+    icon: Blocks,
+    children: [
+      { label: "Products", icon: Box, path: "products" },
+      { label: "Recipes", icon: List, path: "recipes" },
+      { label: "Kits", icon: Package, path: "kits" },
+      { label: "Categories", icon: Tags, path: "product-categories" },
+      { label: "Brands", icon: Award, path: "brands" },
+      { label: "Fragrances", icon: Wind, path: "fragrances" },
+    ]
+  },
+  { label: "Batches", icon: Blocks, path: "batches" },
+  { label: "Serial Numbers", icon: Hash, path: "serials" },
 ];
 
-const companies = [
-  {
-    id: "basalt-amenities",
-    name: "Basalt Amenities ",
-    initials: "BA",
-    theme: {
-      primary: "142.1 76.2% 36.3%",
-      ring: "142.1 76.2% 36.3%",
-    },
-  },
-  {
-    id: "smart-home",
-    name: "Smart Home Automation",
-    initials: "SHA",
-    theme: {
-      primary: "262.1 83.3% 57.8%",
-      ring: "262.1 83.3% 57.8%",
-    },
-  },
-];
+
+interface NavGroupProps {
+  item: NavItemEntry & { children: NavItemEntry[] };
+  active: boolean;
+  onCloseSidebar: () => void;
+  currentCompany: Company;
+  location: { pathname: string };
+}
+
+const NavGroup = ({ item, active, onCloseSidebar, currentCompany, location }: NavGroupProps) => {
+  const [isOpen, setIsOpen] = useState(active);
+
+  useEffect(() => {
+    if (active) setIsOpen(true);
+  }, [active]);
+
+  const theme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
+
+  const getFullActive = (path?: string) => {
+    if (!path) return false;
+    const itemPath = `/${currentCompany.id}/${path}`;
+    return location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
+  };
+
+  return (
+    <div className="space-y-0.5">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`
+          w-full flex items-center justify-between px-2 py-2 text-sm rounded-md transition-all duration-200 group
+          ${active ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground hover:text-foreground hover:bg-accent"}
+        `}
+        style={active ? { color: `hsl(${theme.primary})` } : {}}
+      >
+        <div className="flex items-center gap-3">
+          <item.icon className="h-4 w-4 shrink-0 transition-colors" />
+          <span>{item.label}</span>
+        </div>
+        <ChevronDown className={`h-3 w-3 transition-transform duration-200 opacity-50 group-hover:opacity-100 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <div className="ml-4 pl-3 border-l border-border/60 space-y-0.5 mt-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+          {item.children.map((child) => {
+            const childActive = getFullActive(child.path);
+            return (
+              <Link
+                key={child.path}
+                to={`/${currentCompany.id}/${child.path}`}
+                onClick={onCloseSidebar}
+                className={`
+                  flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-md transition-all duration-200
+                  ${childActive
+                    ? "bg-primary/15 text-primary font-bold"
+                    : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
+                  }
+                `}
+                style={childActive ? { color: `hsl(${theme.primary})` } : {}}
+              >
+                <child.icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{child.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const { companyId } = useParams();
@@ -51,32 +126,59 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const initialCompany = companies.find(c => c.id === companyId) ||
-    companies.find(c => c.id === localStorage.getItem("currentCompanyId")) ||
-    companies[0];
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const user = useCurrentUser();
+  const { data: companiesData, isLoading: isLoadingCompanies } = useCompanies();
+  const companies = useMemo(() => companiesData?.items || [], [companiesData?.items]);
 
-  const [currentCompany, setCurrentCompany] = useState(initialCompany);
+  const currentCompany = useMemo(() => {
+    if (companies.length === 0) return null;
+    return companies.find((c: Company) => c.id === companyId) ||
+      companies.find((c: Company) => c.id === localStorage.getItem("currentCompanyId")) ||
+      companies[0];
+  }, [companyId, companies]);
+
+  const getFullActive = (path?: string) => {
+    if (!currentCompany || !path) return false;
+    const itemPath = `/${currentCompany.id}/${path}`;
+    return location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
+  };
+  const initials = user?.name
+    ? user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
+    : 'ME';
+
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
-    if (companyId && companyId !== currentCompany.id) {
-      const found = companies.find(c => c.id === companyId);
-      if (found) setCurrentCompany(found);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+
+  useEffect(() => {
+    if (currentCompany) {
+      const theme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
+      const root = document.documentElement;
+      root.style.setProperty("--primary", theme.primary);
+      root.style.setProperty("--ring", theme.ring);
+      root.style.setProperty("--sidebar-primary", theme.primary);
+      root.style.setProperty("--sidebar-ring", theme.ring);
+      localStorage.setItem("currentCompanyId", currentCompany.id);
     }
-  }, [companyId]);
+  }, [currentCompany]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty("--primary", currentCompany.theme.primary);
-    root.style.setProperty("--ring", currentCompany.theme.ring);
-    root.style.setProperty("--sidebar-primary", currentCompany.theme.primary);
-    root.style.setProperty("--sidebar-ring", currentCompany.theme.ring);
-    localStorage.setItem("currentCompanyId", currentCompany.id);
-  }, [currentCompany, currentCompany.id]);
-
-  const toggleCompany = (company: typeof companies[0]) => {
-    setCurrentCompany(company);
+  const toggleCompany = (company: Company) => {
     setIsCompanyDropdownOpen(false);
     // When switching company, navigate to the new company's dashboard
     const currentPath = location.pathname.split("/").slice(2).join("/");
@@ -84,11 +186,24 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   };
 
   const activeNavItem = navItems.find(item => {
-    const fullPath = `/${currentCompany.id}/${item.path}`;
-    return location.pathname === fullPath || location.pathname.startsWith(fullPath + "/");
+    if (!currentCompany) return false;
+    if (item.children) {
+      return item.children.some(child => getFullActive(child.path));
+    }
+    return getFullActive(item.path);
   });
 
   const pageTitle = title || activeNavItem?.label || "CRM";
+
+  if (isLoadingCompanies || !currentCompany) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-secondary/30">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const currentTheme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
 
   return (
     <div className="flex h-screen bg-secondary/30">
@@ -110,16 +225,18 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             {/* Company Selector */}
             <div className="relative flex-1 min-w-0">
               <button
-                onClick={() => setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
-                className="flex items-center gap-2 w-full h-9 px-2 rounded-md hover:bg-accent transition-colors text-left overflow-hidden"
+                onClick={() => (user?.is_root_user || companies.length > 1) && setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
+                className={`flex items-center gap-2 w-full h-9 px-2 rounded-md transition-colors text-left overflow-hidden ${user?.is_root_user || companies.length > 1 ? 'hover:bg-accent' : 'cursor-default'}`}
               >
                 <div className="h-6 w-6 bg-primary text-primary-foreground flex items-center justify-center rounded-sm shrink-0">
-                  <span className="text-[10px] font-bold">{currentCompany.initials}</span>
+                  <span className="text-[10px] font-bold">{currentTheme.initials}</span>
                 </div>
                 <span className="flex-1 text-sm font-semibold truncate leading-none text-foreground">
-                  {currentCompany.name}
+                  {currentCompany.display_name || currentCompany.legal_name}
                 </span>
-                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+                {(user?.is_root_user || companies.length > 1) && (
+                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+                )}
               </button>
 
               {/* Dropdown Menu */}
@@ -127,21 +244,24 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                 <div className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-md shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-1">
                     <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Switch Company</div>
-                    {companies.map((company) => (
-                      <button
-                        key={company.id}
-                        onClick={() => toggleCompany(company)}
-                        className={`flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm transition-colors text-left
-                          ${currentCompany.id === company.id ? 'bg-accent text-accent-foreground' : 'text-popover-foreground hover:bg-accent hover:text-accent-foreground'}
-                        `}
-                      >
-                        <div className={`h-5 w-5 rounded-sm flex items-center justify-center shrink-0 border ${currentCompany.id === company.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted'}`}>
-                          <span className="text-[10px] font-bold">{company.initials}</span>
-                        </div>
-                        <span className="truncate flex-1">{company.name}</span>
-                        {currentCompany.id === company.id && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
-                      </button>
-                    ))}
+                    {companies.map((company: Company) => {
+                      const theme = getCompanyTheme(company.id, company.display_name || company.legal_name);
+                      return (
+                        <button
+                          key={company.id}
+                          onClick={() => toggleCompany(company)}
+                          className={`flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm transition-colors text-left
+                            ${currentCompany.id === company.id ? 'bg-accent text-accent-foreground' : 'text-popover-foreground hover:bg-accent hover:text-accent-foreground'}
+                          `}
+                        >
+                          <div className={`h-5 w-5 rounded-sm flex items-center justify-center shrink-0 border ${currentCompany.id === company.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted'}`}>
+                            <span className="text-[10px] font-bold">{theme.initials}</span>
+                          </div>
+                          <span className="truncate flex-1">{company.display_name || company.legal_name}</span>
+                          {currentCompany.id === company.id && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -161,38 +281,60 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
         {/* Navigation */}
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => {
+            const active = item.children
+              ? item.children.some(child => getFullActive(child.path))
+              : getFullActive(item.path);
+
+            if (item.children) {
+              return (
+                <NavGroup
+                  key={item.label}
+                  item={item as NavItemEntry & { children: NavItemEntry[] }}
+                  active={active}
+                  onCloseSidebar={() => setSidebarOpen(false)}
+                  currentCompany={currentCompany}
+                  location={location}
+                />
+              );
+            }
+
             const itemPath = `/${currentCompany.id}/${item.path}`;
-            const active = location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
             return (
               <Link
                 key={item.path}
                 to={itemPath}
                 onClick={() => setSidebarOpen(false)}
                 className={`
-                  flex items-center gap-2 px-2 py-2 text-sm rounded-md transition-all duration-200 group
+                  flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
                   ${active
-                    ? "bg-primary/10 text-primary font-medium"
+                    ? "bg-primary/10 text-primary font-bold"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   }
                 `}
+                style={active ? { color: `hsl(${currentTheme.primary})` } : {}}
               >
-                <item.icon className={`h-4 w-4 transition-colors ${active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                <item.icon
+                  className={`h-4 w-4 transition-colors`}
+                  style={active ? { color: `hsl(${currentTheme.primary})` } : {}}
+                />
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-2 border-t border-border">
-          <Link
-            to="/admin/tasks"
-            onClick={() => setSidebarOpen(false)}
-            className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-foreground w-full rounded-md hover:bg-accent transition-colors"
-          >
-            <ShieldCheck className="h-4 w-4" />
-            Admin Panel
-          </Link>
-        </div>
+        {user?.is_root_user && (
+          <div className="p-2 border-t border-border">
+            <Link
+              to="/admin/tasks"
+              onClick={() => setSidebarOpen(false)}
+              className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-foreground w-full rounded-md hover:bg-accent transition-colors"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Admin Panel
+            </Link>
+          </div>
+        )}
       </aside>
 
       {/* Main Content */}
@@ -235,27 +377,47 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                 className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors"
               >
                 <div className="h-7 w-7 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-sm text-primary-foreground">
-                  <span className="text-[10px] font-bold">JD</span>
+                  <span className="text-[10px] font-bold">{initials}</span>
                 </div>
                 <div className="hidden md:block text-left mr-1">
-                  <span className="block text-[11px] font-semibold leading-none">John Doe</span>
+                  <span className="block text-[11px] font-semibold leading-none">{user?.name || 'User'}</span>
                 </div>
                 <ChevronDown className={`h-3 w-3 text-muted-foreground hidden sm:block transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {isUserDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1 w-48 bg-popover border border-border rounded-md shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="p-1">
-                    <button
-                      onClick={() => { navigate("/login"); setIsUserDropdownOpen(false); }}
-                      className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm text-destructive hover:bg-destructive/10 transition-colors text-left"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Sign out</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+
+              {isUserDropdownOpen &&
+                createPortal(
+                  <div
+                    ref={dropdownRef}
+                    className="fixed top-14 right-4 w-56 bg-popover border border-border rounded-md shadow-lg z-[9999] animate-in fade-in zoom-in-95 duration-200"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-1">
+                      <div className="px-2 py-2 border-b border-border mb-1">
+                        <p className="text-xs font-semibold truncate">
+                          {user?.name || "User"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {user?.email || ""}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsUserDropdownOpen(false);
+                        }}
+                        ref={buttonRef}
+                        disabled={isLoggingOut}
+                        className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm text-destructive hover:bg-destructive/10"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>{isLoggingOut ? "Signing out…" : "Sign out"}</span>
+                      </button>
+                    </div>
+                  </div>,
+                  document.body
+                )}
             </div>
           </div>
         </header>

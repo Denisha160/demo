@@ -48,6 +48,7 @@ import BatchesPage from "@/pages/batches/BatchesPage";
 import BatchFormPage from "@/pages/batches/BatchFormPage";
 import SerialNumbersPage from "@/pages/serials/SerialNumbersPage";
 import GenerateSerialsPage from "@/pages/serials/GenerateSerialsPage";
+import InventoriesPage from "@/pages/inventory/InventoriesPage";
 
 const queryClient = new QueryClient();
 
@@ -141,6 +142,7 @@ const App = () => (
           <Route path="batches/edit/:id" element={<BatchFormPage />} />
           <Route path="serials" element={<SerialNumbersPage />} />
           <Route path="serials/generate" element={<GenerateSerialsPage />} />
+          <Route path="inventory" element={<InventoriesPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 
@@ -172,6 +174,7 @@ const App = () => (
           <Route path="batches/edit/:id" element={<BatchFormPage />} />
           <Route path="serials" element={<SerialNumbersPage />} />
           <Route path="serials/generate" element={<GenerateSerialsPage />} />
+          <Route path="inventory" element={<InventoriesPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

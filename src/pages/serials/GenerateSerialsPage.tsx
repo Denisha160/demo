@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
-import { 
-    Hash, Plus, AlertCircle, CheckCircle2, 
+import { useState, useMemo, useEffect } from "react";
+import {
+    Hash, Plus, AlertCircle, CheckCircle2,
     ArrowLeft, LayoutPanelLeft, Box, Clock,
     X, Loader2, MapPin, FileText, Info
 } from "lucide-react";
@@ -12,21 +12,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "react-toastify";
-import { useBatches } from "@/hooks/useBatch";
-import { useGenerateSerials } from "@/hooks/useSerials";
+import { useBatchesCombobox } from "@/hooks/useBatch";
+import { useSerials, useBulkSyncSerials } from "@/hooks/useSerials";
 import { GenerateSerialParams } from "@/types/serial";
-import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
+import { useDebounce } from "@/hooks/useDebounce";
+import SerialsPreviewTable from "@/components/customtables/SerialsPreviewTable";
+import { v4 as uuidv4 } from "uuid";
+import { useSearchParams } from "react-router-dom";
 
 const schema = z.object({
     batch_id: z.string().uuid("Please select a valid batch"),
     pattern: z.string().min(1, "Pattern template is required"),
-    starting_number: z.number().int().min(0, "Starting number cannot be negative"),
     quantity: z.number().int().positive("Quantity must be positive"),
     location: z.string().optional(),
 });
@@ -49,107 +46,166 @@ const VariableBadge = ({ tag, label }: { tag: string; label: string }) => (
     </div>
 );
 
+interface SerialPreview {
+    id?: string;
+    serial_number: string;
+    batch_number: string;
+}
+
 const GenerateSerialsPage = () => {
     const navigate = useNavigate();
-    const [selectedBatchId, setSelectedBatchId] = useState<string>("");
+    const [searchParams] = useSearchParams();
+    const urlBatchId = searchParams.get("batch_id");
     
+    const [selectedBatchId, setSelectedBatchId] = useState<string>(urlBatchId || "");
+    const [batchSearch, setBatchSearch] = useState("");
+    const [previewSerials, setPreviewSerials] = useState<SerialPreview[]>([]);
+    const [existingSerials, setExistingSerials] = useState<{ id: string; serial_number: string; batch_number: string; status: string; location?: string }[]>([]);
+    const debouncedBatchSearch = useDebounce(batchSearch, 300);
+
     // Fetch batches for selection
-    const { data: batchesRes } = useBatches();
-    const batches = useMemo(() => batchesRes?.items || [], [batchesRes]);
-    
-    const selectedBatch = useMemo(() => 
+    const { data: batches = [] } = useBatchesCombobox({
+        search: debouncedBatchSearch || undefined,
+        status: 'active'
+    });
+
+    const selectedBatch = useMemo(() =>
         batches.find(b => b.id === selectedBatchId), [batches, selectedBatchId]);
 
-    const { 
-        register, 
-        handleSubmit, 
-        watch, 
+    const {
+        register,
+        handleSubmit,
+        watch,
         setValue,
-        formState: { errors } 
+        formState: { errors }
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            pattern: "{PROD}-{YYYY}-{MM}-{####}",
-            starting_number: 1,
+            batch_id: urlBatchId || "",
+            pattern: "{BATCH}-{####}",
             quantity: 1
         }
     });
 
+    // Fetch existing serials for the selected batch
+    const { data: existingSerialsData, isLoading: isLoadingExisting } = useSerials(
+        { batch_id: selectedBatchId, limit: 200 },
+        { enabled: !!selectedBatchId }
+    );
+
+    useEffect(() => {
+        if (urlBatchId) {
+            setSelectedBatchId(urlBatchId);
+            setValue("batch_id", urlBatchId);
+        }
+    }, [urlBatchId, setValue]);
+
+    useEffect(() => {
+        if (existingSerialsData?.items) {
+            const mapped = existingSerialsData.items.map(s => ({
+                id: s.id,
+                serial_number: s.serial_number,
+                batch_number: s.batch_number || selectedBatch?.batch_number || "—",
+                status: s.status,
+                location: s.location || ""
+            }));
+            setExistingSerials(mapped);
+            // Update quantity to existing serials count OR 1 if none
+            setValue("quantity", mapped.length > 0 ? mapped.length : 1);
+        } else {
+            setExistingSerials([]);
+            setValue("quantity", 1);
+        }
+    }, [existingSerialsData, selectedBatch, setValue]);
+
     const watchPattern = watch("pattern");
-    const watchStartingNumber = watch("starting_number") || 0;
     const watchQuantity = watch("quantity") || 0;
     const watchLocation = watch("location");
 
-    const generatePreview = () => {
-        if (!watchPattern) return [];
+    // Auto-generate preview rows when pattern or quantity changes
+    useEffect(() => {
+        if (!watchPattern || watchQuantity <= 0) {
+            setPreviewSerials([]);
+            return;
+        }
+
         const now = new Date();
         const year = now.getFullYear().toString();
         const month = (now.getMonth() + 1).toString().padStart(2, '0');
         const day = now.getDate().toString().padStart(2, '0');
-        
-        const previews = Array.from({ length: Math.min(watchQuantity, 6) }, (_, i) => {
-            const sequence = watchStartingNumber + i;
-            const str = (watchPattern || "")
+
+        const newPreview = Array.from({ length: Math.min(watchQuantity, 500) }, (_, i) => {
+            // Priority 1: Use existing serial at this index if available
+            if (existingSerials[i]) {
+                return {
+                    id: existingSerials[i].id,
+                    serial_number: existingSerials[i].serial_number,
+                    batch_number: existingSerials[i].batch_number
+                };
+            }
+
+            // Priority 2: Generate new serial
+            const sequence = i + 1;
+            let str = watchPattern;
+
+            str = str
                 .replace(/{YYYY}/g, year)
                 .replace(/{MM}/g, month)
                 .replace(/{DD}/g, day)
                 .replace(/{PROD}/g, selectedBatch?.product_code || "PROD")
                 .replace(/{BATCH}/g, selectedBatch?.batch_number || "BATCH");
 
-            // Look for sequence placeholder with braces first
             const bracedMatch = str.match(/{#+}/);
             if (bracedMatch) {
                 const [token] = bracedMatch;
                 const len = token.length - 2;
-                return str.replace(token, sequence.toString().padStart(len, '0'));
+                str = str.replace(token, sequence.toString().padStart(len, '0'));
+            } else {
+                const rawMatch = str.match(/#+/);
+                if (rawMatch) {
+                    const [token] = rawMatch;
+                    const len = token.length;
+                    str = str.replace(token, sequence.toString().padStart(len, '0'));
+                }
             }
 
-            // Fallback: look for sequence placeholder without braces
-            const rawMatch = str.match(/#+/);
-            if (rawMatch) {
-                const [token] = rawMatch;
-                const len = token.length;
-                return str.replace(token, sequence.toString().padStart(len, '0'));
-            }
-
-            return str;
+            return {
+                serial_number: str,
+                batch_number: selectedBatch?.batch_number || "—"
+            };
         });
 
-        if (watchQuantity > 6) {
-            previews.push(`... and ${watchQuantity - 6} more`);
-        }
-        
-        return previews;
+        setPreviewSerials(newPreview);
+    }, [watchPattern, watchQuantity, selectedBatch, existingSerials]);
+
+    const onUpdateSerial = (id: string, newSerial: string) => {
+        setPreviewSerials(prev => prev.map(s => s.id === id ? { ...s, serial_number: newSerial } : s));
     };
 
-    const previewList = generatePreview();
-
-    const { mutate: generate, isPending } = useGenerateSerials();
+    const { mutate: sync, isPending: isSyncing } = useBulkSyncSerials();
 
     const onSubmit = (data: FormData) => {
-        if (selectedBatch && data.quantity > selectedBatch.remaining_quantity) {
-             toast.error(`Quantity exceeds batch remaining capacity of ${selectedBatch.remaining_quantity}`);
-             return;
-        }
+        if (!selectedBatch) return;
 
-        const payload: GenerateSerialParams = {
+        // If we have existing serials OR we are managing a list, use sync
+        const payload = {
             batch_id: data.batch_id,
-            pattern: data.pattern,
-            starting_number: data.starting_number,
-            quantity: data.quantity,
-            location: data.location || undefined
+            serials: previewSerials.map(s => ({
+                id: s.id,
+                serial_number: s.serial_number,
+                location: data.location
+            }))
         };
 
-        generate(payload, {
+        sync(payload, {
             onSuccess: (res) => {
-                const message = (res as { data?: { message?: string }; message?: string }).data?.message || 
-                               (res as { message?: string }).message || 
-                               "Serial numbers generated successfully";
+                const responseData = res as { data?: { message?: string }; message?: string };
+                const message = responseData.data?.message || responseData.message || "Serials synchronized successfully";
                 toast.success(message);
                 navigate("/inventory/serials");
             },
-            onError: (error: { response?: { data?: { message?: string } }; message?: string }) => {
-                const msg = error.response?.data?.message || error.message || "Failed to generate serial numbers";
+            onError: (error: any) => {
+                const msg = error.response?.data?.message || error.message || "Failed to sync serials";
                 toast.error(msg);
             }
         });
@@ -160,10 +216,10 @@ const GenerateSerialsPage = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-2">
                 <div className="flex items-center gap-3">
-                    <Button 
+                    <Button
                         type="button"
-                        variant="ghost" 
-                        size="icon" 
+                        variant="ghost"
+                        size="icon"
                         onClick={() => navigate(-1)}
                         className="h-8 w-8 rounded-sm border border-border shrink-0"
                     >
@@ -172,9 +228,11 @@ const GenerateSerialsPage = () => {
                     <div>
                         <h2 className="text-sm font-bold uppercase tracking-widest text-primary flex items-center gap-2">
                             <LayoutPanelLeft className="h-4 w-4" />
-                            GENERATE SERIAL NUMBERS
+                            {urlBatchId ? "MANAGE BATCH SERIALS" : "GENERATE SERIAL NUMBERS"}
                         </h2>
-                        <p className="text-[10px] text-muted-foreground font-mono mt-0.5">Assign unique identifiers to batch units</p>
+                        <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                            {urlBatchId ? `Synchronizing serial numbers for batch ${selectedBatch?.batch_number || ""}` : "Assign unique identifiers to batch units"}
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -184,7 +242,7 @@ const GenerateSerialsPage = () => {
                         size="sm"
                         className="h-8 rounded-sm text-xs gap-1.5"
                         onClick={() => navigate(-1)}
-                        disabled={isPending}
+                        disabled={isSyncing}
                     >
                         <X className="h-3.5 w-3.5" />
                         Cancel
@@ -194,17 +252,19 @@ const GenerateSerialsPage = () => {
                         size="sm"
                         className="h-8 rounded-sm text-xs gap-1.5"
                         onClick={handleSubmit(onSubmit)}
-                        disabled={isPending || !selectedBatchId}
+                        disabled={isSyncing || !selectedBatchId}
                     >
-                        {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                        {isPending ? "Generating..." : "Generate Serials"}
+                        {isSyncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                        {isSyncing ? "Saving..." : "Save Serials"}
                     </Button>
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* LEFT: Configuration */}
-                <div className="lg:col-span-2 space-y-4">
+            {/* Changed from lg:grid-cols-3 to lg:grid-cols-12 for better left/right proportions */}
+            <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+                {/* LEFT: Configuration - Assigned 4 cols and made it Sticky! */}
+                <div className="lg:col-span-5 xl:col-span-4 space-y-4 lg:sticky lg:top-4 lg:self-start z-10">
                     {/* Batch Selection */}
                     <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
                         <SectionHeader icon={<Box className="h-3.5 w-3.5" />} title="Target Batch" />
@@ -213,23 +273,21 @@ const GenerateSerialsPage = () => {
                                 <Label className="text-xs font-semibold">
                                     Select Batch <span className="text-destructive">*</span>
                                 </Label>
-                                <Select 
+                                <Combobox
+                                    options={batches.map(b => ({
+                                        label: `${b.batch_number} - ${b.product_name}`,
+                                        value: b.id
+                                    }))}
+                                    value={selectedBatchId}
                                     onValueChange={(v) => {
                                         setSelectedBatchId(v);
                                         setValue("batch_id", v);
                                     }}
-                                >
-                                    <SelectTrigger className="h-8 text-xs rounded-sm">
-                                        <SelectValue placeholder="Search Batch (ID - Product Name)" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {batches.map(b => (
-                                            <SelectItem key={b.id} value={b.id}>
-                                                {b.batch_number} - {b.product_name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                    onSearchChange={setBatchSearch}
+                                    placeholder="Search Batch (Number - Product Name)"
+                                    className={`h-8 text-xs rounded-sm ${errors.batch_id ? "border-destructive" : ""}`}
+                                    disabled={!!urlBatchId}
+                                />
                                 {errors.batch_id && <p className="text-[10px] text-destructive font-medium">{errors.batch_id.message}</p>}
                             </div>
 
@@ -256,17 +314,31 @@ const GenerateSerialsPage = () => {
                                 <Label className="text-xs font-semibold">
                                     Pattern Template <span className="text-destructive">*</span>
                                 </Label>
-                                <Input 
-                                    {...register("pattern")}
-                                    placeholder="Template: {PROD}-{YYYY}-{MM}-{####}"
-                                    className={`h-8 text-xs rounded-sm font-mono ${errors.pattern ? "border-destructive" : ""}`}
-                                />
+                                <div className="flex gap-2">
+                                    <Input
+                                        {...register("pattern")}
+                                        placeholder="Template: {PROD}-{YYYY}-{MM}-{####}"
+                                        className={`h-8 text-xs rounded-sm font-mono flex-1 ${errors.pattern ? "border-destructive" : ""}`}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 px-2.5 text-xs rounded-sm shrink-0"
+                                        title="Auto-fill recommended pattern"
+                                        onClick={() => setValue("pattern", "{BATCH}-{####}")}
+                                        disabled={isSyncing}
+                                    >
+                                        Auto
+                                    </Button>
+                                </div>
                                 {errors.pattern && <p className="text-[10px] text-destructive font-medium">{errors.pattern.message}</p>}
                             </div>
 
                             <div className="bg-muted/30 rounded-md p-3 border border-border/40">
                                 <p className="text-[9px] font-bold text-muted-foreground uppercase mb-2">Available Variables:</p>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-y-1.5 gap-x-4">
+                                {/* Adjusted to grid-cols-2 inside the narrower column */}
+                                <div className="grid grid-cols-2 xl:grid-cols-3 gap-y-1.5 gap-x-2">
                                     <VariableBadge tag="{YYYY}" label="Year (2025)" />
                                     <VariableBadge tag="{MM}" label="Month (03)" />
                                     <VariableBadge tag="{DD}" label="Day (12)" />
@@ -281,24 +353,17 @@ const GenerateSerialsPage = () => {
                     {/* Run Parameters */}
                     <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
                         <SectionHeader icon={<Clock className="h-3.5 w-3.5" />} title="Run Parameters" />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Starting Number</Label>
-                                <Input 
-                                    type="number"
-                                    {...register("starting_number", { valueAsNumber: true })}
-                                    className={`h-8 text-xs rounded-sm ${errors.starting_number ? "border-destructive" : ""}`}
-                                />
-                                 {errors.starting_number && <p className="text-[10px] text-destructive font-medium">{errors.starting_number.message}</p>}
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quantity to Generate</Label>
+                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    {urlBatchId ? "Manage Quantity" : "Quantity to Generate"}
+                                </Label>
                                 <Input 
                                     type="number"
                                     {...register("quantity", { valueAsNumber: true })}
                                     className={`h-8 text-xs rounded-sm ${errors.quantity ? "border-destructive" : ""}`}
                                 />
-                                 {errors.quantity && <p className="text-[10px] text-destructive font-medium">{errors.quantity.message}</p>}
+                                {errors.quantity && <p className="text-[10px] text-destructive font-medium">{errors.quantity.message}</p>}
                             </div>
                         </div>
 
@@ -308,7 +373,7 @@ const GenerateSerialsPage = () => {
                                 Default Location
                                 <span className="text-muted-foreground font-normal text-[9px]">(optional)</span>
                             </Label>
-                            <Input 
+                            <Input
                                 {...register("location")}
                                 placeholder="e.g. Warehouse A, Shelf 1"
                                 className="h-8 text-xs rounded-sm"
@@ -319,63 +384,35 @@ const GenerateSerialsPage = () => {
                         <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-md flex items-start gap-3">
                             <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                             <p className="text-[10px] text-amber-800 dark:text-amber-400">
-                                <strong>Note:</strong> Generating <span className="font-bold underline">{watchQuantity}</span> serial numbers for <strong>{selectedBatch?.batch_number || "selected batch"}</strong>. 
+                                <strong>Note:</strong> Generating <span className="font-bold underline">{watchQuantity}</span> serial numbers for <strong>{selectedBatch?.batch_number || "selected batch"}</strong>.
                                 Ensure sequence length is sufficient.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* RIGHT: Summary & Previews */}
-                <div className="space-y-4">
-                    <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
-                        <SectionHeader icon={<FileText className="h-3.5 w-3.5" />} title="Generation Summary" />
-                        
-                        <div className="space-y-3">
-                            <div className="space-y-2 text-xs">
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground uppercase tracking-tighter">Batch #</span>
-                                    <span className="font-mono font-bold truncate max-w-[120px]">
-                                        {selectedBatch?.batch_number || "—"}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground uppercase tracking-tighter">Quantity</span>
-                                    <span className="font-bold">{watchQuantity || 0}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground uppercase tracking-tighter">Location</span>
-                                    <span className="truncate max-w-[120px]">{watchLocation || "Default"}</span>
-                                </div>
+                {/* RIGHT: Preview Table - Assigned remaining 8 cols */}
+                <div className="lg:col-span-7 xl:col-span-8">
+                    <div className="bg-card border border-border rounded-lg p-5 shadow-sm h-full flex flex-col">
+                        <SectionHeader icon={<FileText className="h-3.5 w-3.5" />} title="Serials Management" />
+                        <div className="space-y-4 flex-1">
+                            <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-md flex items-start gap-3">
+                                <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                                <p className="text-[10px] text-amber-800 dark:text-amber-400">
+                                    <strong>Note:</strong> You can edit the individual serial numbers below before final generation.
+                                    Maximum quantity for preview is 500 items.
+                                </p>
                             </div>
 
-                            <div className="pt-3 border-t border-border">
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Live Preview:</p>
-                                <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {previewList.length > 0 ? (
-                                        previewList.map((p, i) => (
-                                            <div key={i} className="flex items-center gap-2 py-1 px-2 bg-secondary/30 rounded border border-border/40">
-                                                <code className="text-[10px] font-mono text-primary truncate flex-1">{p}</code>
-                                                {p.toString().startsWith("...") === false && <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />}
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-[10px] text-muted-foreground italic">Enter details to see preview...</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-muted/30 border border-border/60 rounded-lg p-4">
-                        <div className="flex items-start gap-2">
-                            <Info className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                            <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                Serial numbers are unique identifiers. Once generated, they will be linked to this batch and cannot be reassigned to other products.
-                            </p>
+                            <SerialsPreviewTable
+                                data={previewSerials}
+                                onUpdate={onUpdateSerial}
+                                isLoading={isLoadingExisting || isSyncing}
+                            />
                         </div>
                     </div>
                 </div>
+
             </form>
         </div>
     );

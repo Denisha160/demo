@@ -368,4 +368,21 @@ export const generateSerials = (data) => {
   return axios({ method: "POST", url, data })
 }
 
+export const bulkSyncSerials = (data) => {
+  const url = `inventory/serials/bulk-sync`
+  return axios({ method: "POST", url, data })
+}
+
+// ===================== Inventory =====================
+
+export const listInventories = (params) => {
+  const url = `inventory`;
+  return axios({ method: "GET", url, params });
+};
+
+export const listTransactions = (params) => {
+  const url = `inventory/transactions`;
+  return axios({ method: "GET", url, params });
+};
+
 // end region

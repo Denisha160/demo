@@ -1,22 +1,22 @@
 export type SerialStatus = 'in_stock' | 'reserved' | 'sold' | 'returned' | 'damaged' | 'lost';
 
-export interface SerialNumber {
+export interface Serial {
     id: string;
     serial_number: string;
-    status: SerialStatus;
-    product_id: string;
-    product_name: string;
-    product_code: string;
+    status: 'in_stock' | 'reserved' | 'sold' | 'returned' | 'damaged' | 'lost';
     batch_id: string;
-    batch_number: string;
-    location?: string | null;
-    image_url?: string | null;
+    product_id: string;
+    product_name?: string;
+    batch_number?: string;
+    product_code?: string;
+    location?: string;
+    image_url?: string;
     created_at: string;
     updated_at: string;
 }
 
 export interface SerialListResponse {
-    items: SerialNumber[];
+    items: Serial[];
     pagination: {
         total: number;
         offset: number;
@@ -39,7 +39,17 @@ export interface SerialListParams {
 export interface GenerateSerialParams {
     batch_id: string;
     pattern: string;
-    starting_number: number;
+    starting_number?: number;
     quantity: number;
     location?: string;
+    serials?: string[];
+}
+
+export interface BulkSyncSerialParams {
+    batch_id: string;
+    serials: {
+        id?: string;
+        serial_number: string;
+        location?: string;
+    }[];
 }

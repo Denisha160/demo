@@ -39,6 +39,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import DataTable, { Column } from "@/components/DataTable";
 import { Kit, KitItem, KitMembership } from "@/types/kits";
 import BomModal from "@/pages/bom/components/BomModal";
+import PackageModal from "@/pages/packages/components/PackageModal";
 
 // --- Shared Reusable Components & Helpers ---
 
@@ -164,7 +165,8 @@ interface ProductTabProps {
         category: { open: boolean, setOpen: (v: boolean) => void };
         fragrance: { open: boolean, setOpen: (v: boolean) => void };
         brand: { open: boolean, setOpen: (v: boolean) => void };
-    }
+    };
+    packageModal?: { open: boolean, setOpen: (v: boolean) => void };
 }
 
 const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comboboxes, drawers }: ProductTabProps) => (
@@ -413,7 +415,7 @@ const UnitsMeasurementsTab = ({ productData, errors, handleChange, handleNumberC
     </div>
 );
 
-const PackagingTab = ({ productData, errors, handleChange, comboboxes }: ProductTabProps) => {
+const PackagingTab = ({ productData, errors, handleChange, comboboxes, packageModal }: ProductTabProps) => {
     if (productData.product_type !== "FINISHED_GOOD") {
         return (
             <div className="p-8 text-center text-muted-foreground bg-muted/10 rounded-lg border border-dashed">
@@ -437,6 +439,15 @@ const PackagingTab = ({ productData, errors, handleChange, comboboxes }: Product
                         className={`h-10 ${errors.packaging_id ? 'border-destructive' : ''}`}
                         clearable searchValue={comboboxes.package.search} onSearchChange={comboboxes.package.setSearch}
                     />
+                    <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
+                        onClick={() => packageModal?.setOpen(true)}
+                    >
+                        <Plus className="h-3 w-3" /> Add New Package
+                    </Button>
                     {errors.packaging_id && <p className="text-[10px] text-destructive mt-1">{errors.packaging_id}</p>}
                 </div>
                 <ProductInput label="Shape/Form" value={productData.shape ?? ""} onChange={(val) => handleChange("shape", val)} placeholder="e.g. Round" />
@@ -933,6 +944,7 @@ const ProductFormPage = () => {
     const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
     const [isFragranceDrawerOpen, setIsFragranceDrawerOpen] = useState(false);
     const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false);
+    const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [slideIdx, setSlideIdx] = useState(0);
 
@@ -1176,7 +1188,8 @@ const ProductFormPage = () => {
             category: { open: isCategoryDrawerOpen, setOpen: setIsCategoryDrawerOpen },
             fragrance: { open: isFragranceDrawerOpen, setOpen: setIsFragranceDrawerOpen },
             brand: { open: isBrandDrawerOpen, setOpen: setIsBrandDrawerOpen },
-        }
+        },
+        packageModal: { open: isPackageModalOpen, setOpen: setIsPackageModalOpen }
     };
 
     // --- Render ---
@@ -1366,6 +1379,11 @@ const ProductFormPage = () => {
                     <CategoryDrawer open={isCategoryDrawerOpen} onOpenChange={setIsCategoryDrawerOpen} />
                     <FragranceDrawer open={isFragranceDrawerOpen} onOpenChange={setIsFragranceDrawerOpen} />
                     <BrandDrawer open={isBrandDrawerOpen} onOpenChange={setIsBrandDrawerOpen} />
+
+                    <PackageModal 
+                        isOpen={isPackageModalOpen} 
+                        onClose={() => setIsPackageModalOpen(false)} 
+                    />
 
                     {/* Lightbox Overlay */}
                     {lightboxIndex !== null && imagePreviews.length > 0 && (

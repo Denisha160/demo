@@ -18,10 +18,12 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import { useSerials } from "@/hooks/useSerials";
-import { SerialNumber, SerialStatus } from "@/types/serial";
+import { Serial, SerialStatus } from "@/types/serial";
 import { format } from "date-fns";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useBatchesCombobox } from "@/hooks/useBatch";
+import { Combobox } from "@/components/ui/combobox";
 
 // ── Summary Card ─────────────────────────────────────────────────────────────
 
@@ -58,14 +60,24 @@ const SerialNumbersPage = () => {
     const [search, setSearch] = useState(searchParams.get("search") || "");
     const debouncedSearch = useDebounce(search, 500);
     const [filterStatus, setFilterStatus] = useState(searchParams.get("status") || "all");
+    const [selectedBatchId, setSelectedBatchId] = useState(searchParams.get("batch_id") || "");
+    const [batchSearch, setBatchSearch] = useState("");
+    const debouncedBatchSearch = useDebounce(batchSearch, 300);
+
     const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
     const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "15", 10));
 
-    const hasFilters = Boolean(search || filterStatus !== "all");
+    const { data: batches = [] } = useBatchesCombobox({ 
+        search: debouncedBatchSearch || undefined,
+        status: 'active'
+    });
+
+    const hasFilters = Boolean(search || filterStatus !== "all" || selectedBatchId);
 
     const handleClearFilters = () => {
         setSearch("");
         setFilterStatus("all");
+        setSelectedBatchId("");
         setPage(1);
     };
 
@@ -75,15 +87,17 @@ const SerialNumbersPage = () => {
             const next = new URLSearchParams(prev);
             if (debouncedSearch) next.set("search", debouncedSearch); else next.delete("search");
             if (filterStatus !== "all") next.set("status", filterStatus); else next.delete("status");
+            if (selectedBatchId) next.set("batch_id", selectedBatchId); else next.delete("batch_id");
             if (page > 1) next.set("page", String(page)); else next.delete("page");
             if (limit !== 15) next.set("limit", String(limit)); else next.delete("limit");
             return next;
         }, { replace: true });
-    }, [debouncedSearch, filterStatus, page, limit, setSearchParams]);
+    }, [debouncedSearch, filterStatus, selectedBatchId, page, limit, setSearchParams]);
 
     const { data: serialsData, isLoading } = useSerials({
         search: debouncedSearch.trim() || undefined,
         status: filterStatus !== "all" ? filterStatus : undefined,
+        batch_id: selectedBatchId || undefined,
         offset: (page - 1) * limit,
         limit,
     });
@@ -95,7 +109,7 @@ const SerialNumbersPage = () => {
     const inStockCount = serials.filter(s => s.status === 'in_stock').length; // Local approximation
     const damagedCount = serials.filter(s => s.status === 'damaged').length;
 
-    const columns: Column<SerialNumber>[] = [
+    const columns: Column<Serial>[] = [
         {
             key: "serial_number",
             header: "Serial #",
@@ -238,6 +252,21 @@ const SerialNumbersPage = () => {
                         </SelectContent>
                     </Select>
 
+                    <Combobox
+                        options={batches.map(b => ({
+                            label: `${b.batch_number} - ${b.product_name}`,
+                            value: b.id
+                        }))}
+                        value={selectedBatchId}
+                        onValueChange={(v) => {
+                            setSelectedBatchId(v);
+                            setPage(1);
+                        }}
+                        onSearchChange={setBatchSearch}
+                        placeholder="Filter by Batch"
+                        className="h-8 text-xs rounded-sm w-[180px]"
+                    />
+
                     {hasFilters && (
                         <Button
                             variant="ghost"
@@ -251,6 +280,16 @@ const SerialNumbersPage = () => {
                 </div>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
+                    {selectedBatchId && (
+                        <Button 
+                            variant="secondary"
+                            size="sm" 
+                            className="h-8 text-xs rounded-sm gap-2 animate-in fade-in zoom-in-95"
+                            onClick={() => navigate(`generate?batch_id=${selectedBatchId}`)}
+                        >
+                            <RefreshCw className="h-3.5 w-3.5" /> Manage Batch
+                        </Button>
+                    )}
                     <Button 
                         size="sm" 
                         className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"

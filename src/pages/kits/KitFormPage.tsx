@@ -33,6 +33,7 @@ import { useProductsCombobox } from "@/hooks/useProducts";
 import { usePackagesCombobox } from "@/hooks/usePackages";
 import { useDebounce } from "@/hooks/useDebounce";
 import { KitCreatePayload, KitUpdatePayload } from "@/types/kits";
+import PackageModal from "@/pages/packages/components/PackageModal";
 
 const ProductInput = ({
     label,
@@ -98,6 +99,7 @@ const KitFormPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEditing = !!id;
+    const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
 
     // Data Hooks
     const { data: kitDetails, isLoading: isLoadingDetails } = useKitDetails(id);
@@ -336,6 +338,15 @@ const KitFormPage = () => {
                                     placeholder="Select packaging..."
                                     className="h-8 text-xs rounded-sm"
                                 />
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
+                                    onClick={() => setIsPackageModalOpen(true)}
+                                >
+                                    <Plus className="h-3 w-3" /> Add New Package
+                                </Button>
                             </div>
 
                             <div className="pt-1 px-1">
@@ -513,6 +524,11 @@ const KitFormPage = () => {
                     {errors.items.message}
                 </div>
             )}
+
+            <PackageModal 
+                isOpen={isPackageModalOpen} 
+                onClose={() => setIsPackageModalOpen(false)} 
+            />
         </div>
     );
 };

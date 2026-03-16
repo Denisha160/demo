@@ -38,6 +38,11 @@ export interface BatchCreatePayload {
     initial_quantity: number;
     status?: BatchStatus;
     notes?: string | null;
+    component_batches?: Array<{
+        raw_product_id: string;
+        batch_id: string;
+        quantity: number;
+    }>;
 }
 
 export interface BatchUpdatePayload extends Partial<BatchCreatePayload> {

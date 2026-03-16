@@ -24,6 +24,36 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { BatchCreatePayload, BatchUpdatePayload } from "@/types/batch";
 import { format } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useBatchesCombobox } from "@/hooks/useBatch";
+import { useBOMDetails } from "@/hooks/useBom";
+import BatchBomModal from "./components/BatchBomModal";
+
+// ── Batch Selector Component ────────────────────────────────────────────────
+
+const BatchSelector = ({ productId, value, onChange, disabled }: { 
+    productId: string; 
+    value: string; 
+    onChange: (v: string) => void; 
+    disabled?: boolean;
+}) => {
+    const { data: batches = [] } = useBatchesCombobox({ product_id: productId, status: 'active' });
+    const [search, setSearch] = useState("");
+
+    return (
+        <Combobox
+            options={batches.map((b) => ({
+                label: `${b.batch_number} (Stock: ${b.remaining_quantity}${b.unit ? ` ${b.unit}` : ""})`,
+                value: b.id,
+            }))}
+            value={value}
+            onValueChange={onChange}
+            onSearchChange={setSearch}
+            placeholder="Select source batch..."
+            disabled={disabled}
+            className="h-8 text-xs"
+        />
+    );
+};
 
 // ── Validation Schema ────────────────────────────────────────────────────────
 
@@ -81,11 +111,14 @@ const BatchFormPage = () => {
     const [errors, setErrors] = useState<Partial<Record<keyof BatchFormData, string>>>({});
     const [productSearch, setProductSearch] = useState("");
     const [selectedProductCode, setSelectedProductCode] = useState("");
+    const [isBomModalOpen, setIsBomModalOpen] = useState(false);
+    const [selectedComponentBatches, setSelectedComponentBatches] = useState<Record<string, string>>({}); // raw_product_id -> batch_id
     const debouncedProductSearch = useDebounce(productSearch, 300);
 
     // Data + mutations
     const { data: existingBatch, isLoading: isLoadingBatch } = useBatchDetails(id);
     const { data: products = [] } = useProductsCombobox({ search: debouncedProductSearch || undefined });
+    const { data: bomDetails } = useBOMDetails(formData.product_id);
     const { mutate: createBatch, isPending: isCreating } = useCreateBatch();
     const { mutate: updateBatch, isPending: isUpdating } = useUpdateBatch();
     const isPending = isCreating || isUpdating;
@@ -137,7 +170,23 @@ const BatchFormPage = () => {
         e.preventDefault();
         if (!validate()) return;
 
-        const payload = {
+        let component_batches;
+        if (!isEditing) {
+            const isFinishedGood = products.find(p => p.id === formData.product_id)?.product_type === "FINISHED_GOOD";
+            component_batches = (isFinishedGood && bomDetails) ? bomDetails.raw_materials.map(m => ({
+                raw_product_id: m.raw_product_id,
+                batch_id: selectedComponentBatches[m.raw_product_id],
+                quantity: m.raw_quantity * formData.initial_quantity
+            })) : undefined;
+
+            // Ensure all components have a batch selected if FG
+            if (isFinishedGood && component_batches && component_batches.some(cb => !cb.batch_id)) {
+                toast.error("Please select a batch for all raw material components");
+                return;
+            }
+        }
+
+        const payload: BatchCreatePayload = {
             product_id: formData.product_id,
             batch_number: formData.batch_number,
             manufacturing_date: formData.manufacturing_date,
@@ -146,13 +195,18 @@ const BatchFormPage = () => {
             initial_quantity: formData.initial_quantity,
             status: formData.status,
             notes: formData.notes || null,
+            component_batches: component_batches,
         };
 
         if (isEditing) {
             updateBatch({ id, ...payload } as BatchUpdatePayload, { onSuccess: () => navigate(-1) });
         } else {
-            createBatch(payload as BatchCreatePayload, { onSuccess: () => navigate(-1) });
+            createBatch(payload, { onSuccess: () => navigate(-1) });
         }
+    };
+
+    const handleComponentBatchChange = (rawProductId: string, batchId: string) => {
+        setSelectedComponentBatches(prev => ({ ...prev, [rawProductId]: batchId }));
     };
 
     if (isEditing && isLoadingBatch) {
@@ -244,6 +298,20 @@ const BatchFormPage = () => {
                                     disabled={isEditing || isPending}
                                     className={errors.product_id ? "border-destructive" : ""}
                                 />
+                                {formData.product_id && products.find(p => p.id === formData.product_id)?.product_type === "FINISHED_GOOD" && (
+                                    <div className="flex items-center gap-2 mt-2 ml-0.5">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1.5 font-bold uppercase tracking-wider p-0 bg-transparent hover:bg-transparent"
+                                            onClick={() => setIsBomModalOpen(true)}
+                                        >
+                                            <FlaskConical className="h-3 w-3" />
+                                            View Manufacturing Recipe
+                                        </Button>
+                                    </div>
+                                )}
                                 {errors.product_id && <p className="text-[10px] text-destructive font-medium">{errors.product_id}</p>}
                             </div>
 
@@ -344,6 +412,34 @@ const BatchFormPage = () => {
                         </div>
                     </div>
 
+                    {/* Manufacturing - Raw Material Selection */}
+                    {!isEditing && formData.product_id && products.find(p => p.id === formData.product_id)?.product_type === "FINISHED_GOOD" && bomDetails && (
+                        <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+                            <SectionHeader icon={<FlaskConical className="h-3.5 w-3.5" />} title="Raw Material Selection" />
+                            <div className="space-y-4">
+                                {bomDetails.raw_materials.map((item) => (
+                                    <div key={item.raw_product_id} className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-b border-border pb-4 last:border-0 last:pb-0">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs font-semibold">{item.raw_product}</Label>
+                                            <p className="text-[10px] text-muted-foreground font-medium">
+                                                Required: <span className="font-bold text-foreground">{(item.raw_quantity * formData.initial_quantity).toFixed(2)} {item.raw_unit}</span>
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-medium text-muted-foreground uppercase">Source Batch</Label>
+                                            <BatchSelector
+                                                productId={item.raw_product_id}
+                                                value={selectedComponentBatches[item.raw_product_id]}
+                                                onChange={(val) => handleComponentBatchChange(item.raw_product_id, val)}
+                                                disabled={isPending}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Quality & Notes */}
                     <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
                         <SectionHeader icon={<FileText className="h-3.5 w-3.5" />} title="Quality & Notes" />
@@ -428,6 +524,13 @@ const BatchFormPage = () => {
                     </div>
                 </div>
             </form>
+
+            <BatchBomModal
+                isOpen={isBomModalOpen}
+                onClose={() => setIsBomModalOpen(false)}
+                productId={formData.product_id}
+                productName={products.find(p => p.id === formData.product_id)?.product_name || ""}
+            />
         </div>
     );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import {
-    PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2,
+    PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2, Layers,
     ShieldCheck, Users, Tags, Box, Archive, List, Package, LogOut,
     Menu, ChevronDown, Blocks, Hash, Award, Wind
 } from "lucide-react";
@@ -38,8 +38,9 @@ const navItems: NavItemEntry[] = [
             { label: "Fragrances", icon: Wind, path: "/admin/fragrances" },
         ]
     },
-    { label: "Batches", icon: Blocks, path: "/admin/batches" },
+    { label: "Batches", icon: Layers, path: "/admin/batches" },
     { label: "Serial Numbers", icon: Hash, path: "/admin/serials" },
+    { label: "Inventory", icon: Archive, path: "/admin/inventory" },
 ];
 
 // Admin theme - single consistent color

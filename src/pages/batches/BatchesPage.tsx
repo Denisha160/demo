@@ -67,6 +67,7 @@ const BatchesPage = () => {
     const [search, setSearch] = useState(searchParams.get("search") || "");
     const debouncedSearch = useDebounce(search, 500);
     const [filterStatus, setFilterStatus] = useState(searchParams.get("status") || "all");
+    const [filterType, setFilterType] = useState(searchParams.get("type") || "all");
     const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
     const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "15", 10));
     const [sortKey, setSortKey] = useState<string | null>(searchParams.get("sortKey") || "created_at");
@@ -76,11 +77,12 @@ const BatchesPage = () => {
 
     const [viewBatchId, setViewBatchId] = useState<string | undefined>();
 
-    const hasFilters = Boolean(search || filterStatus !== "all");
+    const hasFilters = Boolean(search || filterStatus !== "all" || filterType !== "all");
 
     const handleClearFilters = () => {
         setSearch("");
         setFilterStatus("all");
+        setFilterType("all");
         setSortKey("created_at");
         setSortDirection("desc");
         setPage(1);
@@ -92,17 +94,19 @@ const BatchesPage = () => {
             const next = new URLSearchParams(prev);
             if (debouncedSearch) next.set("search", debouncedSearch); else next.delete("search");
             if (filterStatus !== "all") next.set("status", filterStatus); else next.delete("status");
+            if (filterType !== "all") next.set("type", filterType); else next.delete("type");
             if (page > 1) next.set("page", String(page)); else next.delete("page");
             if (limit !== 15) next.set("limit", String(limit)); else next.delete("limit");
             if (sortKey) next.set("sortKey", sortKey); else next.delete("sortKey");
             if (sortDirection) next.set("sortDirection", sortDirection); else next.delete("sortDirection");
             return next;
         }, { replace: true });
-    }, [debouncedSearch, filterStatus, page, limit, sortKey, sortDirection, setSearchParams]);
+    }, [debouncedSearch, filterStatus, filterType, page, limit, sortKey, sortDirection, setSearchParams]);
 
     const { data: listResponse, isLoading } = useBatches({
         search: debouncedSearch.trim() || undefined,
         status: filterStatus !== "all" ? filterStatus : undefined,
+        product_type: filterType !== "all" ? filterType : undefined,
         offset: (page - 1) * limit,
         limit,
         sort_by: sortKey || undefined,
@@ -305,6 +309,17 @@ const BatchesPage = () => {
                             <SelectItem value="active">Active</SelectItem>
                             <SelectItem value="blocked">Blocked</SelectItem>
                             <SelectItem value="expired">Expired</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={filterType} onValueChange={(v) => { setFilterType(v); setPage(1); }}>
+                        <SelectTrigger className="w-[140px] h-8 text-xs rounded-sm">
+                            <SelectValue placeholder="All types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="FINISHED_GOOD">Finished Good</SelectItem>
+                            <SelectItem value="RAW_MATERIAL">Raw Material</SelectItem>
                         </SelectContent>
                     </Select>
 

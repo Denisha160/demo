@@ -16,6 +16,7 @@ interface UseBatchesParams {
     limit?: number;
     sort_by?: string;
     sort_direction?: string;
+    product_type?: string;
 }
 
 export const useBatches = (params?: UseBatchesParams) => {
@@ -24,6 +25,16 @@ export const useBatches = (params?: UseBatchesParams) => {
         queryFn: async () => {
             const response = await listBatch(params) as ApiResponse<BatchListResponse>;
             return response.data!;
+        },
+    });
+};
+
+export const useBatchesCombobox = (params?: UseBatchesParams) => {
+    return useQuery<Batch[]>({
+        queryKey: ['batches', 'list', { ...params, combobox: true }],
+        queryFn: async () => {
+            const response = await listBatch({ ...params, combobox: true }) as ApiResponse<BatchListResponse>;
+            return response.data?.items ?? [];
         },
     });
 };

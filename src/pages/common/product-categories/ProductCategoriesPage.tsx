@@ -8,7 +8,7 @@ import { Plus, Search, Tags, Edit, X, Trash2 } from "lucide-react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CategoryModal from "./CategoryModal";
 import { useCategories, useCategoriesCombobox, useCreateCategory, useUpdateCategory, Category, useDeleteCategory } from "@/hooks/useProductCategories";
-import type { ProductCategory } from "../../types/productCategories";
+import type { ProductCategory } from "../../../types/productCategories";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import {

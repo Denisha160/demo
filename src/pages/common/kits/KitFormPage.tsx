@@ -33,7 +33,7 @@ import { useProductsCombobox } from "@/hooks/useProducts";
 import { usePackagesCombobox } from "@/hooks/usePackages";
 import { useDebounce } from "@/hooks/useDebounce";
 import { KitCreatePayload, KitUpdatePayload } from "@/types/kits";
-import PackageModal from "@/pages/packages/components/PackageModal";
+import PackageModal from "@/pages/common/packages/components/PackageModal";
 
 const ProductInput = ({
     label,
@@ -338,10 +338,10 @@ const KitFormPage = () => {
                                     placeholder="Select packaging..."
                                     className="h-8 text-xs rounded-sm"
                                 />
-                                <Button 
-                                    type="button" 
-                                    variant="ghost" 
-                                    size="sm" 
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
                                     className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
                                     onClick={() => setIsPackageModalOpen(true)}
                                 >
@@ -525,9 +525,9 @@ const KitFormPage = () => {
                 </div>
             )}
 
-            <PackageModal 
-                isOpen={isPackageModalOpen} 
-                onClose={() => setIsPackageModalOpen(false)} 
+            <PackageModal
+                isOpen={isPackageModalOpen}
+                onClose={() => setIsPackageModalOpen(false)}
             />
         </div>
     );

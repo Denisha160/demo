@@ -18,8 +18,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AddProductPhotoModal from "@/pages/products/components/AddProductPhotoModal";
-import KitViewModal from "@/pages/kits/KitViewModal";
+import AddProductPhotoModal from "@/pages/common/products/components/AddProductPhotoModal";
+import KitViewModal from "@/pages/common/kits/KitViewModal";
 import { Badge } from "@/components/ui/badge";
 
 import { Product, ProductCreatePayload } from "@/types/products";
@@ -38,8 +38,8 @@ import { useBOMDetails } from "@/hooks/useBom";
 import { useDebounce } from "@/hooks/useDebounce";
 import DataTable, { Column } from "@/components/DataTable";
 import { Kit, KitItem, KitMembership } from "@/types/kits";
-import BomModal from "@/pages/bom/components/BomModal";
-import PackageModal from "@/pages/packages/components/PackageModal";
+import BomModal from "@/pages/common/bom/components/BomModal";
+import PackageModal from "@/pages/common/packages/components/PackageModal";
 
 // --- Shared Reusable Components & Helpers ---
 
@@ -207,10 +207,10 @@ const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comb
                     className={`h-9 ${errors.category_id ? 'border-destructive' : ''}`}
                     clearable searchValue={comboboxes.category.search} onSearchChange={comboboxes.category.setSearch}
                 />
-                <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm" 
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
                     className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
                     onClick={() => drawers?.category.setOpen(true)}
                 >
@@ -255,10 +255,10 @@ const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comb
                         className={`h-9 ${errors.fragrance_id ? 'border-destructive' : ''}`}
                         clearable searchValue={comboboxes.fragrance.search} onSearchChange={comboboxes.fragrance.setSearch}
                     />
-                    <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
                         onClick={() => drawers?.fragrance.setOpen(true)}
                     >
@@ -276,10 +276,10 @@ const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comb
                             className={`h-9 ${errors.brand_id ? 'border-destructive' : ''}`}
                             clearable searchValue={comboboxes.brand.search} onSearchChange={comboboxes.brand.setSearch}
                         />
-                        <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="sm" 
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
                             className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
                             onClick={() => drawers?.brand.setOpen(true)}
                         >
@@ -439,10 +439,10 @@ const PackagingTab = ({ productData, errors, handleChange, comboboxes, packageMo
                         className={`h-10 ${errors.packaging_id ? 'border-destructive' : ''}`}
                         clearable searchValue={comboboxes.package.search} onSearchChange={comboboxes.package.setSearch}
                     />
-                    <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
                         onClick={() => packageModal?.setOpen(true)}
                     >
@@ -1380,9 +1380,9 @@ const ProductFormPage = () => {
                     <FragranceDrawer open={isFragranceDrawerOpen} onOpenChange={setIsFragranceDrawerOpen} />
                     <BrandDrawer open={isBrandDrawerOpen} onOpenChange={setIsBrandDrawerOpen} />
 
-                    <PackageModal 
-                        isOpen={isPackageModalOpen} 
-                        onClose={() => setIsPackageModalOpen(false)} 
+                    <PackageModal
+                        isOpen={isPackageModalOpen}
+                        onClose={() => setIsPackageModalOpen(false)}
                     />
 
                     {/* Lightbox Overlay */}

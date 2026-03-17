@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Combobox } from "@/components/ui/combobox";
-import { ProductCategory } from "../../types/productCategories";
+import { ProductCategory } from "../../../types/productCategories";
 import { Product } from "@/types/products";
 import { useCategoryDetails, useUpdateCategory } from "@/hooks/useProductCategories";
 import { useProducts } from "@/hooks/useProducts";

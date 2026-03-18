@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import LeadModal from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
-import { Deal, PipelineColumn } from "../../types/leads";
+import { Deal, PipelineColumn } from "../../../types/leads";
 
 // Helper to generate mock data
 const generateMockDeals = (count: number, statusId: string): Deal[] => {

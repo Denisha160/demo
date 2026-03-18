@@ -1,6 +1,6 @@
 import { Droppable, Draggable, DragDropContext, DropResult } from "@hello-pangea/dnd";
 import StatusBadge from "@/components/StatusBadge";
-import { PipelineColumn } from "../../types/leads";
+import { PipelineColumn } from "../../../types/leads";
 
 interface LeadPipelineProps {
     displayedColumns: PipelineColumn[];

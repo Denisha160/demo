@@ -3,16 +3,14 @@ import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { PipelineColumn } from "../../../types/leads";
 import { Tag, Plus } from "lucide-react";
 import { z } from "zod";
 
 const leadValidationSchema = z.object({
-    status: z.string().refine(val => val !== "nothing", { message: "Status is required" }),
-    source: z.string().refine(val => val !== "nothing", { message: "Source is required" }),
+    status: z.string().min(1, { message: "Status is required" }),
+    source: z.string().min(1, { message: "Source is required" }),
     title: z.string().min(1, { message: "Name is required" }),
 });
 
@@ -28,14 +26,20 @@ interface LeadModalProps {
 
 const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNewDeal }: LeadModalProps) => {
 
-    const [status, setStatus] = useState("nothing");
-    const [source, setSource] = useState("nothing");
+    const [status, setStatus] = useState("");
+    const [source, setSource] = useState("");
+    const [assigned, setAssigned] = useState("charley");
+    const [country, setCountry] = useState("");
+    const [language, setLanguage] = useState("system");
     const [errors, setErrors] = useState<{ status?: string, source?: string, title?: string }>({});
 
     useEffect(() => {
         if (open) {
-            setStatus("nothing");
-            setSource("nothing");
+            setStatus("");
+            setSource("");
+            setAssigned("charley");
+            setCountry("");
+            setLanguage("system");
             setErrors({});
         }
     }, [open]);
@@ -74,22 +78,24 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
 
                 {/* Top Row: Status, Source, Assigned */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-1.5 flex flex-col">
+                    <div className="space-y-1.5 flex flex-col w-full">
                         <Label className="text-xs font-bold text-foreground flex items-center gap-1">
                             <span className="text-destructive">*</span> Status
                         </Label>
                         <div className="flex gap-1.5">
-                            <Select value={status} onValueChange={(val) => { setStatus(val); if (errors.status) setErrors({ ...errors, status: undefined }); }}>
-                                <SelectTrigger className={`h-9 text-xs border-border/60 bg-background flex-1 ${status === 'nothing' ? 'text-muted-foreground' : 'text-foreground'} ${errors.status ? 'border-destructive focus:ring-destructive/20' : ''}`}>
-                                    <SelectValue placeholder="Nothing selected" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="nothing">Nothing selected</SelectItem>
-                                    <SelectItem value="new">New</SelectItem>
-                                    <SelectItem value="contacted">Contacted</SelectItem>
-                                    <SelectItem value="qualified">Qualified</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="flex-1 w-full min-w-0 flex">
+                                <Combobox
+                                    options={[
+                                        { value: "new", label: "New" },
+                                        { value: "contacted", label: "Contacted" },
+                                        { value: "qualified", label: "Qualified" },
+                                    ]}
+                                    value={status}
+                                    onValueChange={(val) => { setStatus(val); if (errors.status) setErrors({ ...errors, status: undefined }); }}
+                                    placeholder="Select Status"
+                                    className={`h-9 w-full ${errors.status ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
+                                />
+                            </div>
                             <Button variant="outline" size="icon" className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
                                 <Plus className="h-4 w-4" />
                             </Button>
@@ -97,22 +103,24 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                         {errors.status && <p className="text-[10px] text-destructive m-0 mt-0.5">{errors.status}</p>}
                     </div>
 
-                    <div className="space-y-1.5 flex flex-col">
+                    <div className="space-y-1.5 flex flex-col w-full">
                         <Label className="text-xs font-bold text-foreground flex items-center gap-1">
                             <span className="text-destructive">*</span> Source
                         </Label>
                         <div className="flex gap-1.5">
-                            <Select value={source} onValueChange={(val) => { setSource(val); if (errors.source) setErrors({ ...errors, source: undefined }); }}>
-                                <SelectTrigger className={`h-9 text-xs border-border/60 bg-background flex-1 ${source === 'nothing' ? 'text-muted-foreground' : 'text-foreground'} ${errors.source ? 'border-destructive focus:ring-destructive/20' : ''}`}>
-                                    <SelectValue placeholder="Nothing selected" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="nothing">Nothing selected</SelectItem>
-                                    <SelectItem value="organic">Organic Search</SelectItem>
-                                    <SelectItem value="referral">Referral</SelectItem>
-                                    <SelectItem value="social">Social Media</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="flex-1 w-full min-w-0 flex">
+                                <Combobox
+                                    options={[
+                                        { value: "organic", label: "Organic Search" },
+                                        { value: "referral", label: "Referral" },
+                                        { value: "social", label: "Social Media" },
+                                    ]}
+                                    value={source}
+                                    onValueChange={(val) => { setSource(val); if (errors.source) setErrors({ ...errors, source: undefined }); }}
+                                    placeholder="Select Source"
+                                    className={`h-9 w-full ${errors.source ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
+                                />
+                            </div>
                             <Button variant="outline" size="icon" className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
                                 <Plus className="h-4 w-4" />
                             </Button>
@@ -124,16 +132,17 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                         <Label className="text-xs font-bold text-foreground">
                             Assigned
                         </Label>
-                        <Select defaultValue="charley">
-                            <SelectTrigger className="h-9 text-xs border-border/60 bg-background w-full">
-                                <SelectValue placeholder="Select user" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="charley">Charley Dicki</SelectItem>
-                                <SelectItem value="john">John Doe</SelectItem>
-                                <SelectItem value="jane">Jane Smith</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Combobox
+                            options={[
+                                { value: "charley", label: "Charley Dicki" },
+                                { value: "john", label: "John Doe" },
+                                { value: "jane", label: "Jane Smith" },
+                            ]}
+                            value={assigned}
+                            onValueChange={setAssigned}
+                            placeholder="Select User"
+                            className="h-9 w-full"
+                        />
                     </div>
                 </div>
 
@@ -150,193 +159,204 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                     </div>
                 </div>
 
-                {/* 2-Column Details Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 pt-4 border-t border-border/40">
+                {/* Details Grid (12 Mobile, 6 per side Desktop) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 pt-4 border-t border-border/40">
 
-                    {/* LEFT COLUMN */}
-                    <div className="space-y-5">
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-                                <span className="text-destructive">*</span> Name
-                            </Label>
-                            <Input
-                                value={newDeal.title}
-                                onChange={(e) => {
-                                    setNewDeal({ ...newDeal, title: e.target.value });
-                                    if (errors.title) setErrors({ ...errors, title: undefined });
-                                }}
-                                className={`h-9 text-xs border-border/60 ${errors.title ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
+                    {/* Name */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground flex items-center gap-1">
+                            <span className="text-destructive">*</span> Name
+                        </Label>
+                        <Input
+                            value={newDeal.title}
+                            onChange={(e) => {
+                                setNewDeal({ ...newDeal, title: e.target.value });
+                                if (errors.title) setErrors({ ...errors, title: undefined });
+                            }}
+                            className={`h-9 text-xs border-border/60 ${errors.title ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
+                        />
+                        {errors.title && <p className="text-[10px] text-destructive m-0 mt-0.5">{errors.title}</p>}
+                    </div>
+
+                    {/* Email Address */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Email Address
+                        </Label>
+                        <Input
+                            type="email"
+                            value={newDeal.contact}
+                            onChange={(e) => setNewDeal({ ...newDeal, contact: e.target.value })}
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
+                    {/* Phone */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Phone
+                        </Label>
+                        <Input
+                            type="tel"
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
+                    {/* Alternative Phone Number */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Alternative Phone Number
+                        </Label>
+                        <Input
+                            type="tel"
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
+
+                    {/* City */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            City
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
+                    {/* State */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            State
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
+                    {/* Country */}
+                    <div className="space-y-1.5 flex flex-col min-w-0">
+                        <Label className="text-xs font-bold text-foreground">
+                            Country
+                        </Label>
+                        <div className="w-full flex">
+                            <Combobox
+                                options={[
+                                    { value: "in", label: "India" },
+                                    { value: "us", label: "United States" },
+                                    { value: "uk", label: "United Kingdom" },
+                                    { value: "ca", label: "Canada" },
+                                ]}
+                                value={country}
+                                onValueChange={setCountry}
+                                placeholder="Select Country"
+                                className="h-9 w-full"
                             />
-                            {errors.title && <p className="text-[10px] text-destructive m-0 mt-0.5">{errors.title}</p>}
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Position
-                            </Label>
-                            <Input
-                                className="h-9 text-xs border-border/60"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Email Address
-                            </Label>
-                            <Input
-                                type="email"
-                                value={newDeal.contact}
-                                onChange={(e) => setNewDeal({ ...newDeal, contact: e.target.value })}
-                                className="h-9 text-xs border-border/60"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Website
-                            </Label>
-                            <Input
-                                className="h-9 text-xs border-border/60"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Phone
-                            </Label>
-                            <Input
-                                type="tel"
-                                className="h-9 text-xs border-border/60"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Lead value
-                            </Label>
-                            <div className="flex">
-                                <Input
-                                    value={newDeal.value.replace('₹', '')}
-                                    onChange={(e) => {
-                                        const cleanVal = e.target.value.replace(/[^0-9.]/g, '');
-                                        setNewDeal({ ...newDeal, value: cleanVal ? `₹${cleanVal}` : '' });
-                                    }}
-                                    className="h-9 text-xs border-border/60 rounded-r-none border-r-0 focus-visible:z-10"
-                                />
-                                <div className="h-9 px-3 flex items-center justify-center border border-border/60 bg-muted/20 rounded-r-sm text-xs font-medium text-muted-foreground shrink-0">
-                                    $
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Company
-                            </Label>
-                            <Input
-                                value={newDeal.company}
-                                onChange={(e) => setNewDeal({ ...newDeal, company: e.target.value })}
-                                className="h-9 text-xs border-border/60"
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Description
-                            </Label>
-                            <Textarea
-                                className="min-h-[100px] text-xs border-border/60 resize-none shadow-sm"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-6 pt-2 pb-4">
-                            <div className="flex items-center gap-2">
-                                <Checkbox id="public" className="border-border/60" />
-                                <Label htmlFor="public" className="text-xs font-bold cursor-pointer">
-                                    Public
-                                </Label>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Checkbox id="contacted" defaultChecked className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground" />
-                                <Label htmlFor="contacted" className="text-xs font-bold cursor-pointer">
-                                    Contacted Today
-                                </Label>
-                            </div>
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN */}
-                    <div className="space-y-5">
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Address
-                            </Label>
-                            <Textarea
-                                className="min-h-[72px] text-xs border-border/60 resize-none shadow-sm"
+                    {/* Language */}
+                    <div className="space-y-1.5 flex flex-col min-w-0">
+                        <Label className="text-xs font-bold text-foreground">
+                            Language
+                        </Label>
+                        <div className="w-full flex">
+                            <Combobox
+                                options={[
+                                    { value: "system", label: "System Default" },
+                                    { value: "en", label: "English" },
+                                    { value: "es", label: "Spanish" },
+                                    { value: "fr", label: "French" },
+                                ]}
+                                value={language}
+                                onValueChange={setLanguage}
+                                placeholder="Select Language"
+                                className="h-9 w-full"
                             />
                         </div>
+                    </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                City
-                            </Label>
-                            <Input
-                                className="h-9 text-xs border-border/60"
-                            />
-                        </div>
+                    {/* Pincode */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Pincode
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                State
-                            </Label>
-                            <Input
-                                className="h-9 text-xs border-border/60"
-                            />
-                        </div>
+                    {/* Company Name */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Company Name
+                        </Label>
+                        <Input
+                            value={newDeal.company}
+                            onChange={(e) => setNewDeal({ ...newDeal, company: e.target.value })}
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Country
-                            </Label>
-                            <Select defaultValue="nothing">
-                                <SelectTrigger className="h-9 text-xs border-border/60 bg-background text-muted-foreground w-full">
-                                    <SelectValue placeholder="Nothing selected" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="nothing">Nothing selected</SelectItem>
-                                    <SelectItem value="us">United States</SelectItem>
-                                    <SelectItem value="uk">United Kingdom</SelectItem>
-                                    <SelectItem value="in">India</SelectItem>
-                                    <SelectItem value="ca">Canada</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    {/* Designation */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Designation
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Zip Code
-                            </Label>
-                            <Input
-                                className="h-9 text-xs border-border/60"
-                            />
-                        </div>
+                    {/* Website */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Website
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-bold text-foreground">
-                                Default Language
-                            </Label>
-                            <Select defaultValue="system">
-                                <SelectTrigger className="h-9 text-xs border-border/60 bg-background text-foreground w-full">
-                                    <SelectValue placeholder="System Default" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="system">System Default</SelectItem>
-                                    <SelectItem value="en">English</SelectItem>
-                                    <SelectItem value="es">Spanish</SelectItem>
-                                    <SelectItem value="fr">French</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    {/* GST Number */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            GST Number
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
+                    {/* PAN Number */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            PAN Number
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60 uppercase"
+                        />
+                    </div>
+
+
+                    {/* Address Line 1 */}
+                    <div className="space-y-1.5 flex flex-col md:col-span-2">
+                        <Label className="text-xs font-bold text-foreground">
+                            Address Line 1
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
+                    {/* Address Line 2 */}
+                    <div className="space-y-1.5 flex flex-col md:col-span-2">
+                        <Label className="text-xs font-bold text-foreground">
+                            Address Line 2
+                        </Label>
+                        <Input
+                            className="h-9 text-xs border-border/60"
+                        />
                     </div>
 
                 </div>

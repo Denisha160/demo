@@ -57,19 +57,19 @@ const AccountPage = () => {
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState<string>("all");
-    
+
     // Modal states
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
 
     const [accounts, setAccounts] = useState<BankAccount[]>(STATIC_ACCOUNTS);
-    
+
     // Static filtering
     const filteredAccounts = accounts.filter(acc => {
-        const matchesSearch = acc.accountName.toLowerCase().includes(search.toLowerCase()) || 
-                              acc.bankName.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = filterStatus === "all" ? true : 
-                              filterStatus === "active" ? acc.isActive : !acc.isActive;
+        const matchesSearch = acc.accountName.toLowerCase().includes(search.toLowerCase()) ||
+            acc.bankName.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = filterStatus === "all" ? true :
+            filterStatus === "active" ? acc.isActive : !acc.isActive;
         return matchesSearch && matchesStatus;
     });
 
@@ -96,7 +96,7 @@ const AccountPage = () => {
     const handleSaveAccount = (data: any) => {
         if (editingAccount) {
             // Update existing
-            setAccounts(accounts.map(acc => 
+            setAccounts(accounts.map(acc =>
                 acc.id === editingAccount.id ? { ...acc, ...data, isActive: acc.isActive } : acc
             ));
         } else {
@@ -255,14 +255,15 @@ const AccountPage = () => {
                     </Button>
                 </div>
             )}
-
-            <AccountFormModal 
+            {isFormModalOpen && (<AccountFormModal
                 open={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
                 accountData={editingAccount}
                 isEditing={!!editingAccount}
                 onSave={handleSaveAccount}
             />
+            )}
+
         </div>
     );
 };

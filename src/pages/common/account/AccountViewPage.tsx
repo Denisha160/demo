@@ -152,7 +152,7 @@ const AccountViewPage = () => {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
-                        <h1 className="text-lg font-bold flex items-center gap-2">
+                        <h1 className="h-8 text-xs rounded-sm font-bold flex items-center gap-2">
                             {account.accountName}
                             <Badge variant={account.isActive ? "success" : "secondary"} className="uppercase text-[10px]">
                                 {account.isActive ? "Active" : "Inactive"}

@@ -1,4 +1,5 @@
 import { Droppable, Draggable, DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { useNavigate } from "react-router-dom";
 import StatusBadge from "@/components/StatusBadge";
 import { PipelineColumn } from "../../../types/leads";
 
@@ -8,6 +9,7 @@ interface LeadPipelineProps {
 }
 
 const LeadPipeline = ({ displayedColumns, onDragEnd }: LeadPipelineProps) => {
+    const navigate = useNavigate();
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide min-h-[calc(100vh-200px)]">
@@ -44,12 +46,12 @@ const LeadPipeline = ({ displayedColumns, onDragEnd }: LeadPipelineProps) => {
                                                         style={{
                                                             ...provided.draggableProps.style,
                                                         }}
-                                                        className={`group relative bg-card rounded-xl p-4 transition-all duration-300 ease-out cursor-grab active:cursor-grabbing ${snapshot.isDragging
+                                                        className={`group relative bg-card rounded-xl p-4 transition-all duration-300 ease-out cursor-pointer active:cursor-grabbing ${snapshot.isDragging
                                                             ? "shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40 scale-[1.04] rotate-2 z-50 opacity-95"
                                                             : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:-translate-y-1 hover:ring-1 hover:ring-primary/20"
                                                             }`}
                                                     >
-                                                        <div className="flex flex-col gap-1.5 focus:outline-none">
+                                                        <div onClick={() => navigate(deal.id)} className="flex flex-col gap-1.5 focus:outline-none h-full">
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex justify-between items-start gap-2">
                                                                     <p className="text-[14px] font-semibold text-foreground leading-tight line-clamp-2 transition-colors group-hover:text-primary">

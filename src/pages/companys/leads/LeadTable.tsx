@@ -1,13 +1,15 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
-import { Deal, PipelineColumn } from "../../types/leads";
+import { Deal, PipelineColumn } from "../../../types/leads";
 
 interface LeadTableProps {
     displayedColumns: PipelineColumn[];
 }
 
 const LeadTable = ({ displayedColumns }: LeadTableProps) => {
+    const navigate = useNavigate();
     const flatDeals = useMemo(() => {
         return displayedColumns.flatMap(col =>
             col.deals.map(deal => ({
@@ -48,6 +50,7 @@ const LeadTable = ({ displayedColumns }: LeadTableProps) => {
                 data={flatDeals}
                 columns={tableColumns}
                 pageSize={15}
+                onRowClick={(item) => navigate(item.id)}
             />
         </div>
     );

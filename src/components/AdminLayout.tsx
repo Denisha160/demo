@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet } from "react-router-dom";
 import {
     PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2, Layers,
     ShieldCheck, Users, Tags, Box, Archive, List, Package, LogOut,
-    Menu, ChevronDown, Blocks, Hash, Award, Wind
+    Menu, ChevronDown, Blocks, Hash, Award, Wind, Landmark
 } from "lucide-react";
 import { useLogout, useCurrentUser } from "@/hooks/useAuth";
 import { createPortal } from 'react-dom';
@@ -41,7 +41,7 @@ const navItems: NavItemEntry[] = [
     { label: "Batches", icon: Layers, path: "/admin/batches" },
     { label: "Serial Numbers", icon: Hash, path: "/admin/serials" },
     { label: "Inventory", icon: Archive, path: "/admin/inventory" },
-    { label: "Accounts", icon: Archive, path: "/admin/accounts" },
+    { label: "Accounts", icon: Landmark, path: "/admin/accounts" },
 ];
 
 // Admin theme - single consistent color

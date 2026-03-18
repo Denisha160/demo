@@ -41,6 +41,7 @@ const navItems: NavItemEntry[] = [
     { label: "Batches", icon: Layers, path: "/admin/batches" },
     { label: "Serial Numbers", icon: Hash, path: "/admin/serials" },
     { label: "Inventory", icon: Archive, path: "/admin/inventory" },
+    { label: "Accounts", icon: Archive, path: "/admin/accounts" },
 ];
 
 // Admin theme - single consistent color

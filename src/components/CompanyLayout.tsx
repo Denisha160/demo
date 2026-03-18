@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
   Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List,
   UserCheck, Truck, Clock, Tags, Blocks,
-  Package, Hash, Award, Wind
+  Package, Hash, Award, Wind, Archive
 } from "lucide-react";
 
 import { useLogout, useCurrentUser } from "@/hooks/useAuth";
@@ -47,6 +47,7 @@ const navItems: NavItemEntry[] = [
   },
   { label: "Batches", icon: Blocks, path: "batches" },
   { label: "Serial Numbers", icon: Hash, path: "serials" },
+  { label: "Accounts", icon: Archive, path: "accounts" },
 ];
 
 

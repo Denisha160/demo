@@ -41,12 +41,21 @@ const TABS = [
 
 const LeadDetailsPage = () => {
     const { id } = useParams();
-    const [activeTab, setActiveTab] = useState("contacts");
+    const [activeTab, setActiveTab] = useState("profile");
     const navigate = useNavigate();
+    const [newDeal, setNewDeal] = useState({
+        title: "",
+        company: "",
+        value: "",
+        contact: "",
+    });
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case "profile": return <ProfileTab />;
+            case "profile": return <ProfileTab
+                newDeal={newDeal}
+                setNewDeal={setNewDeal}
+            />;
             case "contacts": return <ContactsTab />;
             case "follow-up": return <FollowUpTab />;
             case "visits": return <VisitsTab />;

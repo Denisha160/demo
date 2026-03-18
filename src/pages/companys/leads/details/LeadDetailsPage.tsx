@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 
 import ProfileTab from "./tabs/ProfileTab";
-import ContactsTab from "./tabs/ContactsTab";
+import ContactsTab from "./tabs/contacts/ContactsTab";
 import FollowUpTab from "./tabs/FollowUpTab";
 import VisitsTab from "./tabs/VisitsTab";
 import TasksTab from "./tabs/TasksTab";

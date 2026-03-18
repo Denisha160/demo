@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
 import { Switch } from "@/components/ui/switch";
-
+import { useState } from "react";
+import ContactModal from "./ContactModal";
 // Mock Contacts Table
 const mockContacts = [
     {
@@ -18,6 +19,12 @@ const mockContacts = [
 ];
 
 const ContactsTab = () => {
+    const [open, setOpen] = useState(false);
+    const [contacts, setContacts] = useState(mockContacts);
+
+    const handleSave = (contact) => {
+        setContacts((prev) => [contact, ...prev]);
+    };
     const columns: Column<any>[] = [
         {
             key: "fullName",
@@ -41,12 +48,12 @@ const ContactsTab = () => {
         { key: "email", header: "Email" },
         { key: "position", header: "Position" },
         { key: "phone", header: "Phone" },
-        { 
-            key: "active", 
+        {
+            key: "active",
             header: "Active",
             render: (item) => (
                 <Switch checked={item.active} className="scale-75 origin-left" />
-            ) 
+            )
         },
         { key: "lastLogin", header: "Last Login", render: () => <span className="text-muted-foreground">-</span> },
     ];
@@ -54,15 +61,15 @@ const ContactsTab = () => {
     return (
         <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 w-full animate-fade-in">
             <div className="flex justify-between items-center mb-4">
-                <Button size="sm" className="gap-2 h-9 px-4">
+                <Button onClick={() => setOpen(true)} size="sm" className="gap-2 h-9 px-4">
                     <Plus className="h-4 w-4" />
                     New Contact
                 </Button>
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                            placeholder="Search contacts..." 
+                        <Input
+                            placeholder="Search contacts..."
                             className="h-9 pl-9 w-[250px] text-sm"
                         />
                     </div>
@@ -72,6 +79,11 @@ const ContactsTab = () => {
                 columns={columns}
                 data={mockContacts}
                 pageSize={25}
+            />
+            <ContactModal
+                open={open}
+                onClose={() => setOpen(false)}
+                onSave={handleSave}
             />
         </div>
     );

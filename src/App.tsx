@@ -51,6 +51,7 @@ import GenerateSerialsPage from "@/pages/companys/serials/GenerateSerialsPage";
 import InventoriesPage from "@/pages/admin/inventory/InventoriesPage";
 import AccountPage from "./pages/common/account/AccountPage";
 import AccountViewPage from "./pages/common/account/AccountViewPage";
+import StatusPage from "./pages/companys/leads/status/StatusPage";
 
 const queryClient = new QueryClient();
 
@@ -147,6 +148,7 @@ const App = () => (
           <Route path="inventory" element={<InventoriesPage />} />
           <Route path="accounts" element={<AccountPage />} />
           <Route path="accounts/:id" element={<AccountViewPage />} />
+          <Route path="status" element={<StatusPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

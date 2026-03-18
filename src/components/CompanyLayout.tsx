@@ -48,6 +48,7 @@ const navItems: NavItemEntry[] = [
   { label: "Batches", icon: Blocks, path: "batches" },
   { label: "Serial Numbers", icon: Hash, path: "serials" },
   { label: "Accounts", icon: Landmark, path: "accounts" },
+  { label: "Status", icon: Kanban, path: "status" },
 ];
 
 

@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
     User, Users, Clock, MapPin, ClipboardList,
     PhoneCall, Package, Paperclip, Activity, FileText, Bell
 } from "lucide-react";
-import { useNavigate } from "react-router-dom"
+
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 import ProfileTab from "./tabs/ProfileTab";
 import ContactsTab from "./tabs/ContactsTab";
@@ -34,9 +41,8 @@ const TABS = [
 
 const LeadDetailsPage = () => {
     const { id } = useParams();
-    const [activeTab, setActiveTab] = useState("contacts"); // Default to contacts
-    const navigate = useNavigate()
-
+    const [activeTab, setActiveTab] = useState("contacts");
+    const navigate = useNavigate();
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -58,8 +64,8 @@ const LeadDetailsPage = () => {
     return (
         <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in">
 
-            {/* Header Section */}
-            <div className="mb-6 px-1">
+            {/* Header */}
+            <div className="mb-4 px-1">
                 <div className="text-[13px] font-medium text-muted-foreground mb-1">
                     Customer from Lead -{" "}
                     <span
@@ -69,17 +75,40 @@ const LeadDetailsPage = () => {
                         View
                     </span>
                 </div>
-                <h1 className="text-2xl font-bold text-foreground">
+
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">
                     #{id || "21"} Jerde Inc
                 </h1>
             </div>
 
-            <div className="flex gap-6 flex-1 w-full min-h-0">
-                {/* Left Sidebar Menu */}
-                <div className="w-[260px] flex-shrink-0 flex flex-col gap-1 pr-2 overflow-y-auto scrollbar-hide border-r border-border/50 pb-10">
+            {/* Mobile Dropdown */}
+            <div className="block md:hidden mb-4">
+                <Select value={activeTab} onValueChange={setActiveTab}>
+                    <SelectTrigger className="w-full">
+                        <SelectValue>
+                            {TABS.find(t => t.id === activeTab)?.label}
+                        </SelectValue>
+                    </SelectTrigger>
+
+                    <SelectContent>
+                        {TABS.map((tab) => (
+                            <SelectItem key={tab.id} value={tab.id}>
+                                {tab.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {/* Layout */}
+            <div className="flex flex-col md:flex-row gap-6 flex-1 w-full min-h-0">
+
+                {/* Sidebar (Desktop only) */}
+                <div className="hidden md:flex w-[260px] flex-shrink-0 flex-col gap-1 pr-2 overflow-y-auto border-r border-border/50 pb-10">
                     {TABS.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
+
                         return (
                             <button
                                 key={tab.id}
@@ -89,10 +118,14 @@ const LeadDetailsPage = () => {
                                     : "text-foreground/80 hover:bg-muted/50 hover:text-foreground"
                                     }`}
                             >
-                                <Icon className={`h-[18px] w-[18px] ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                                <Icon className={`h-[18px] w-[18px] ${isActive ? "text-primary" : "text-muted-foreground"
+                                    }`} />
                                 <span className="flex-1 text-left">{tab.label}</span>
+
                                 {tab.id === "contacts" && (
-                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive
+                                        ? "bg-primary/20 text-primary"
+                                        : "bg-muted text-muted-foreground"
                                         }`}>
                                         1
                                     </span>
@@ -102,14 +135,17 @@ const LeadDetailsPage = () => {
                     })}
                 </div>
 
-                {/* Right Content Area */}
+                {/* Content */}
                 <div className="flex-1 min-w-0 overflow-y-auto pb-10 pr-2">
-                    <div className="mb-4">
+
+                    {/* Title (Desktop only) */}
+                    <div className="hidden md:block mb-4">
                         <h2 className="text-lg font-bold text-foreground">
                             {TABS.find(t => t.id === activeTab)?.label}
                         </h2>
                     </div>
 
+                    {/* Content */}
                     {renderTabContent()}
                 </div>
             </div>

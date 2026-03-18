@@ -49,6 +49,7 @@ const navItems: NavItemEntry[] = [
   { label: "Serial Numbers", icon: Hash, path: "serials" },
   { label: "Accounts", icon: Landmark, path: "accounts" },
   { label: "Status", icon: Kanban, path: "status" },
+  { label: "Sources", icon: Kanban, path: "source" },
 ];
 
 

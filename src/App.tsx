@@ -52,6 +52,7 @@ import InventoriesPage from "@/pages/admin/inventory/InventoriesPage";
 import AccountPage from "./pages/common/account/AccountPage";
 import AccountViewPage from "./pages/common/account/AccountViewPage";
 import StatusPage from "./pages/companys/leads/status/StatusPage";
+import SourcePage from "./pages/companys/leads/source/SourcePage";
 
 const queryClient = new QueryClient();
 
@@ -149,6 +150,7 @@ const App = () => (
           <Route path="accounts" element={<AccountPage />} />
           <Route path="accounts/:id" element={<AccountViewPage />} />
           <Route path="status" element={<StatusPage />} />
+          <Route path="source" element={<SourcePage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

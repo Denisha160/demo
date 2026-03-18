@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
+import { ComboboxWithAdd } from "@/components/ui/comboBoxWithAdd";
 import { PipelineColumn } from "../../../types/leads";
-import { Tag, Plus } from "lucide-react";
+import { Tag, Plus, Check, X } from "lucide-react";
 import { z } from "zod";
 
 const leadValidationSchema = z.object({
@@ -26,6 +27,22 @@ interface LeadModalProps {
 
 const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNewDeal }: LeadModalProps) => {
 
+    const [statusOptions, setStatusOptions] = useState([
+        { value: "new", label: "New" },
+        { value: "contacted", label: "Contacted" },
+        { value: "qualified", label: "Qualified" },
+    ]);
+    const [isAddingStatus, setIsAddingStatus] = useState(false);
+    const [newStatusValue, setNewStatusValue] = useState("");
+
+    const [sourceOptions, setSourceOptions] = useState([
+        { value: "organic", label: "Organic Search" },
+        { value: "referral", label: "Referral" },
+        { value: "social", label: "Social Media" },
+    ]);
+    const [isAddingSource, setIsAddingSource] = useState(false);
+    const [newSourceValue, setNewSourceValue] = useState("");
+
     const [status, setStatus] = useState("");
     const [source, setSource] = useState("");
     const [assigned, setAssigned] = useState("charley");
@@ -37,6 +54,10 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
         if (open) {
             setStatus("");
             setSource("");
+            setIsAddingStatus(false);
+            setNewStatusValue("");
+            setIsAddingSource(false);
+            setNewSourceValue("");
             setAssigned("charley");
             setCountry("");
             setLanguage("system");
@@ -74,7 +95,7 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                 </div>
             }
         >
-            <div className="space-y-6 pt-2 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-2 pt-2 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
 
                 {/* Top Row: Status, Source, Assigned */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -82,23 +103,83 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                         <Label className="text-xs font-bold text-foreground flex items-center gap-1">
                             <span className="text-destructive">*</span> Status
                         </Label>
-                        <div className="flex gap-1.5">
-                            <div className="flex-1 w-full min-w-0 flex">
-                                <Combobox
-                                    options={[
-                                        { value: "new", label: "New" },
-                                        { value: "contacted", label: "Contacted" },
-                                        { value: "qualified", label: "Qualified" },
-                                    ]}
-                                    value={status}
-                                    onValueChange={(val) => { setStatus(val); if (errors.status) setErrors({ ...errors, status: undefined }); }}
-                                    placeholder="Select Status"
-                                    className={`h-9 w-full ${errors.status ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
-                                />
-                            </div>
-                            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
-                                <Plus className="h-4 w-4" />
-                            </Button>
+                        <div className="flex gap-1.5 h-9">
+                            {isAddingStatus ? (
+                                <>
+                                    <Input
+                                        autoFocus
+                                        value={newStatusValue}
+                                        onChange={(e) => setNewStatusValue(e.target.value)}
+                                        placeholder="Enter new status"
+                                        className="h-9 flex-1 min-w-0"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const val = newStatusValue.trim();
+                                                if (val) {
+                                                    if (!statusOptions.some(o => o.label.toLowerCase() === val.toLowerCase())) {
+                                                        setStatusOptions([...statusOptions, { value: val.toLowerCase(), label: val }]);
+                                                    }
+                                                    setStatus(val.toLowerCase());
+                                                    if (errors.status) setErrors({ ...errors, status: undefined });
+                                                }
+                                                setIsAddingStatus(false);
+                                                setNewStatusValue("");
+                                            } else if (e.key === 'Escape') {
+                                                setIsAddingStatus(false);
+                                                setNewStatusValue("");
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            const val = newStatusValue.trim();
+                                            if (val) {
+                                                if (!statusOptions.some(o => o.label.toLowerCase() === val.toLowerCase())) {
+                                                    setStatusOptions([...statusOptions, { value: val.toLowerCase(), label: val }]);
+                                                }
+                                                setStatus(val.toLowerCase());
+                                                if (errors.status) setErrors({ ...errors, status: undefined });
+                                            }
+                                            setIsAddingStatus(false);
+                                            setNewStatusValue("");
+                                        }}
+                                        className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
+                                        <Check className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            setIsAddingStatus(false);
+                                            setNewStatusValue("");
+                                        }}
+                                        className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex-1 w-full min-w-0 flex">
+                                        <ComboboxWithAdd
+                                            options={statusOptions}
+                                            value={status}
+                                            onValueChange={(val) => { setStatus(val); if (errors.status) setErrors({ ...errors, status: undefined }); }}
+                                            placeholder="Select Status"
+                                            className={`h-9 w-full ${errors.status ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
+                                        />
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setIsAddingStatus(true)}
+                                        className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            )}
                         </div>
                         {errors.status && <p className="text-[10px] text-destructive m-0 mt-0.5">{errors.status}</p>}
                     </div>
@@ -107,23 +188,83 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                         <Label className="text-xs font-bold text-foreground flex items-center gap-1">
                             <span className="text-destructive">*</span> Source
                         </Label>
-                        <div className="flex gap-1.5">
-                            <div className="flex-1 w-full min-w-0 flex">
-                                <Combobox
-                                    options={[
-                                        { value: "organic", label: "Organic Search" },
-                                        { value: "referral", label: "Referral" },
-                                        { value: "social", label: "Social Media" },
-                                    ]}
-                                    value={source}
-                                    onValueChange={(val) => { setSource(val); if (errors.source) setErrors({ ...errors, source: undefined }); }}
-                                    placeholder="Select Source"
-                                    className={`h-9 w-full ${errors.source ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
-                                />
-                            </div>
-                            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
-                                <Plus className="h-4 w-4" />
-                            </Button>
+                        <div className="flex gap-1.5 h-9">
+                            {isAddingSource ? (
+                                <>
+                                    <Input
+                                        autoFocus
+                                        value={newSourceValue}
+                                        onChange={(e) => setNewSourceValue(e.target.value)}
+                                        placeholder="Enter new source"
+                                        className="h-9 flex-1 min-w-0"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const val = newSourceValue.trim();
+                                                if (val) {
+                                                    if (!sourceOptions.some(o => o.label.toLowerCase() === val.toLowerCase())) {
+                                                        setSourceOptions([...sourceOptions, { value: val.toLowerCase(), label: val }]);
+                                                    }
+                                                    setSource(val.toLowerCase());
+                                                    if (errors.source) setErrors({ ...errors, source: undefined });
+                                                }
+                                                setIsAddingSource(false);
+                                                setNewSourceValue("");
+                                            } else if (e.key === 'Escape') {
+                                                setIsAddingSource(false);
+                                                setNewSourceValue("");
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            const val = newSourceValue.trim();
+                                            if (val) {
+                                                if (!sourceOptions.some(o => o.label.toLowerCase() === val.toLowerCase())) {
+                                                    setSourceOptions([...sourceOptions, { value: val.toLowerCase(), label: val }]);
+                                                }
+                                                setSource(val.toLowerCase());
+                                                if (errors.source) setErrors({ ...errors, source: undefined });
+                                            }
+                                            setIsAddingSource(false);
+                                            setNewSourceValue("");
+                                        }}
+                                        className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
+                                        <Check className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            setIsAddingSource(false);
+                                            setNewSourceValue("");
+                                        }}
+                                        className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex-1 w-full min-w-0 flex">
+                                        <Combobox
+                                            options={sourceOptions}
+                                            value={source}
+                                            onValueChange={(val) => { setSource(val); if (errors.source) setErrors({ ...errors, source: undefined }); }}
+                                            placeholder="Select Source"
+                                            className={`h-9 w-full ${errors.source ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
+                                        />
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setIsAddingSource(true)}
+                                        className="h-9 w-9 shrink-0 rounded-sm border-border/60 text-muted-foreground hover:text-foreground">
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            )}
                         </div>
                         {errors.source && <p className="text-[10px] text-destructive m-0 mt-0.5">{errors.source}</p>}
                     </div>
@@ -160,7 +301,7 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                 </div>
 
                 {/* Details Grid (12 Mobile, 6 per side Desktop) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 pt-4 border-t border-border/40">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2 pt-2 border-t border-border/40">
 
                     {/* Name */}
                     <div className="space-y-1.5 flex flex-col">

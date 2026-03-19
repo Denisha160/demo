@@ -16,7 +16,7 @@ import {
 import ProfileTab from "./tabs/ProfileTab";
 import ContactsTab from "./tabs/contacts/ContactsTab";
 import FollowUpTab from "./tabs/follow-up/FollowUpTab";
-import VisitsTab from "./tabs/VisitsTab";
+import VisitsTab from "./tabs/visits/VisitsTab";
 import TasksTab from "./tabs/tasks/TasksTab";
 import CallLogsTab from "./tabs/callLogs/CallLogsTab";
 import ProductsTab from "./tabs/products/ProductsTab";

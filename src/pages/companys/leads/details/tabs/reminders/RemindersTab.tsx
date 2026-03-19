@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BellRing, Edit, Plus, Search, Trash2 } from "lucide-react";
+import { Edit, Plus, Search, Trash2 } from "lucide-react";
 
 import DataTable, { Column } from "@/components/DataTable";
 import {
@@ -21,16 +21,38 @@ const initialReminders: Reminder[] = [
     {
         id: "1",
         remind_date: "2026-03-20",
+        remind_time: "10:30",
         title: "Follow up with customer",
         description: "Call the customer and confirm interest in the final quotation.",
     },
     {
         id: "2",
         remind_date: "2026-03-22",
+        remind_time: "15:45",
         title: "Send brochure",
         description: "Share the latest product brochure and pricing details over email.",
     },
 ];
+
+const formatReminderDateTime = (date: string, time: string) => {
+    if (!date && !time) return "-";
+    if (!date) return time;
+    if (!time) return date;
+
+    const parsed = new Date(`${date}T${time}`);
+
+    if (Number.isNaN(parsed.getTime())) {
+        return `${date} ${time}`;
+    }
+
+    return new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    }).format(parsed);
+};
 
 const RemindersTab = () => {
     const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
@@ -45,7 +67,8 @@ const RemindersTab = () => {
         return (
             reminder.title.toLowerCase().includes(query) ||
             reminder.description.toLowerCase().includes(query) ||
-            reminder.remind_date.toLowerCase().includes(query)
+            reminder.remind_date.toLowerCase().includes(query) ||
+            reminder.remind_time.toLowerCase().includes(query)
         );
     });
 
@@ -88,7 +111,16 @@ const RemindersTab = () => {
         {
             key: "remind_date",
             header: "Reminder Date",
-            render: (item) => <span className="text-sm">{item.remind_date}</span>,
+            render: (item) => (
+                <div className="flex flex-col">
+                    <span className="text-sm font-medium text-foreground">
+                        {formatReminderDateTime(item.remind_date, item.remind_time)}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                        {item.remind_date} at {item.remind_time}
+                    </span>
+                </div>
+            ),
         },
         {
             key: "title",

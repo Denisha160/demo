@@ -16,9 +16,10 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-
+import { DatePicker } from "@/components/ui/date-picker";
 const reminderSchema = z.object({
     remind_date: z.string().min(1, "Reminder date is required"),
+    remind_time: z.string().min(1, "Reminder time is required"),
     title: z.string().min(1, "Title is required").max(200, "Title is too long"),
     description: z.string().min(1, "Description is required").max(1000, "Description is too long"),
 });
@@ -38,6 +39,7 @@ interface ReminderModalProps {
 }
 
 const getTodayDate = () => new Date().toISOString().split("T")[0];
+const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
 
 const ReminderModal = ({
     open,
@@ -50,6 +52,7 @@ const ReminderModal = ({
         resolver: zodResolver(reminderSchema),
         defaultValues: {
             remind_date: getTodayDate(),
+            remind_time: getCurrentTime(),
             title: "",
             description: "",
         },
@@ -61,6 +64,7 @@ const ReminderModal = ({
         if (reminderData) {
             form.reset({
                 remind_date: reminderData.remind_date || getTodayDate(),
+                remind_time: reminderData.remind_time || getCurrentTime(),
                 title: reminderData.title || "",
                 description: reminderData.description || "",
             });
@@ -69,6 +73,7 @@ const ReminderModal = ({
 
         form.reset({
             remind_date: getTodayDate(),
+            remind_time: getCurrentTime(),
             title: "",
             description: "",
         });
@@ -127,21 +132,44 @@ const ReminderModal = ({
         >
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
-                    <FormField
-                        control={form.control}
-                        name="remind_date"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-xs font-bold flex gap-1">
-                                    <span className="text-destructive">*</span> Reminder Date
-                                </FormLabel>
-                                <FormControl>
-                                    <Input type="date" className="h-9 text-xs" disabled={isSubmitting} {...field} />
-                                </FormControl>
-                                <FormMessage className="text-[10px]" />
-                            </FormItem>
-                        )}
-                    />
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField
+                            control={form.control}
+                            name="remind_date"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs font-bold flex gap-1">
+                                        <span className="text-destructive">*</span> Reminder Date
+                                    </FormLabel>
+                                    <FormControl>
+                                        <DatePicker
+                                            value={field.value}
+                                            onChange={(value: string) => field.onChange(value || null)}
+                                            className="h-8 text-sm rounded-sm"
+                                            disabled={isSubmitting}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-[10px]" />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="remind_time"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs font-bold flex gap-1">
+                                        <span className="text-destructive">*</span> Reminder Time
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input type="time" className="h-9 text-xs" disabled={isSubmitting} {...field} />
+                                    </FormControl>
+                                    <FormMessage className="text-[10px]" />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
                     <FormField
                         control={form.control}

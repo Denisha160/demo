@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const callLogSchema = z.object({
   call_type: z.string().min(1, "Call type is required"),
@@ -163,7 +164,12 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
                 <FormItem>
                   <FormLabel className="text-xs font-bold">Date</FormLabel>
                   <FormControl>
-                    <Input type="date" className="h-9 text-xs" disabled={isSubmitting} {...field} />
+                    <DatePicker
+                      value={field.value}
+                      onChange={(value: string) => field.onChange(value || null)}
+                      className="h-8 text-sm rounded-sm"
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>

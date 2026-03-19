@@ -20,7 +20,7 @@ import VisitsTab from "./tabs/VisitsTab";
 import TasksTab from "./tabs/tasks/TasksTab";
 import CallLogsTab from "./tabs/callLogs/CallLogsTab";
 import ProductsTab from "./tabs/ProductsTab";
-import AttachmentsTab from "./tabs/AttachmentsTab";
+import AttachmentsTab from "./attachments/AttachmentsTab";
 import ActivityTab from "./tabs/ActivityTab";
 import QuotationsTab from "./tabs/QuotationsTab";
 import RemindersTab from "./tabs/RemindersTab";

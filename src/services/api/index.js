@@ -386,3 +386,22 @@ export const listTransactions = (params) => {
 };
 
 // end region
+
+// ===== status ====
+
+export const listStatus = (params) => {
+  const url = `leads/lead-status`;
+  return axios({ method: "GET", url, params });
+}
+
+export const updateStatus = ({ id, ...data }) => {
+  const url = `leads/lead-status/${id}`;
+  return axios({ method: "PATCH", url, data });
+}
+
+export const deleteStatus = (id) => {
+  const url = `leads/lead-status/${id}`;
+  return axios({ method: "DELETE", url });
+}
+
+// end region

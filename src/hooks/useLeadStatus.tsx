@@ -1,0 +1,55 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
+import {
+    listStatus,
+    updateStatus,
+    deleteStatus,
+} from '@/services/api';
+import { queryKeys } from '@/lib/queryKeys';
+import type { LeadStatusListResponse, UpdateLeadStatusPayload } from '@/types/leadStatus';
+
+export function useLeadStatuses(filters?: Record<string, unknown>) {
+    return useQuery({
+        queryKey: queryKeys.leadStatus.list(filters),
+        queryFn: () => listStatus(filters),
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        select: (data): LeadStatusListResponse | undefined => data?.data,
+    });
+}
+
+export function useUpdateLeadStatus() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: UpdateLeadStatusPayload) => updateStatus(payload),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.leadStatus.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.leadStatus.detail(variables.id) });
+            toast.success('Lead Status updated successfully.');
+        },
+        onError: (error: unknown) => {
+            const err = error as { response?: { data?: { message?: string } }, message?: string };
+            const msg = err?.response?.data?.message || err?.message || 'Failed to update lead status.';
+            toast.error(msg);
+        },
+    });
+}
+
+export function useDeleteLeadStatus() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => deleteStatus(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.leadStatus.all });
+            toast.success('Lead Status deleted successfully.');
+        },
+        onError: (error: unknown) => {
+            const err = error as { response?: { data?: { message?: string } }, message?: string };
+            const msg = err?.response?.data?.message || err?.message || 'Failed to delete lead status.';
+            toast.error(msg);
+        },
+    });
+}

@@ -36,22 +36,16 @@ const StatusPage = () => {
     useEffect(() => {
         setSearchParams((prev) => {
             const next = new URLSearchParams(prev);
-
             if (debouncedSearch) next.set("search", debouncedSearch);
             else next.delete("search");
-
             if (page > 1) next.set("page", page.toString());
             else next.delete("page");
-
             if (limit !== 10) next.set("limit", limit.toString());
             else next.delete("limit");
-
             if (sortKey) next.set("sortKey", sortKey);
             else next.delete("sortKey");
-
             if (sortDirection) next.set("sortDirection", sortDirection);
             else next.delete("sortDirection");
-
             return next;
         }, { replace: true });
     }, [debouncedSearch, page, limit, sortKey, sortDirection, setSearchParams]);
@@ -84,12 +78,19 @@ const StatusPage = () => {
         }
     };
 
-    const handleSaveStatus = (formData: LeadStatusPayload) => {
+    const handleSaveStatus = (formData: LeadStatusPayload, setError: (field: any, err: any) => void) => {
         if (editingStatus) {
             updateStatusMutation.mutate({ id: editingStatus.id, ...formData }, {
                 onSuccess: () => {
                     setIsFormModalOpen(false);
                     setEditingStatus(null);
+                },
+                onError: (error: any) => {
+                    if (error?.code === 'validation_error' && error?.details?.body) {
+                        Object.entries(error.details.body).forEach(([key, msg]) => {
+                            setError(key, { type: 'server', message: msg });
+                        });
+                    }
                 }
             });
         }
@@ -218,7 +219,9 @@ const StatusPage = () => {
             {isFormModalOpen && (
                 <StatusFormModal
                     open={isFormModalOpen}
-                    onClose={() => setIsFormModalOpen(false)}
+                    onClose={() => {
+                        setIsFormModalOpen(false);
+                    }}
                     statusData={editingStatus}
                     onSave={handleSaveStatus}
                     isSubmitting={updateStatusMutation.isPending}

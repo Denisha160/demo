@@ -1,149 +1,185 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useForm, UseFormSetError } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 const statusSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().optional(),
   color: z.string().min(1, "Color is required"),
   is_active: z.boolean().default(true),
 });
 
-export interface StatusFormData {
-  name: string;
-  color: string;
-  is_active: boolean;
-}
+export type StatusFormData = z.infer<typeof statusSchema>;
 
 interface StatusFormModalProps {
   open: boolean;
   onClose: () => void;
-  statusData?: StatusFormData | null;
-  onSave: (data: StatusFormData) => void;
+  statusData?: any;
+  onSave: (data: StatusFormData, setError: UseFormSetError<StatusFormData>) => void;
   isSubmitting?: boolean;
 }
 
 const StatusFormModal = ({ open, onClose, statusData, onSave, isSubmitting }: StatusFormModalProps) => {
-  const [formData, setFormData] = useState<StatusFormData>({
-    name: "",
-    color: "#3b82f6",
-    is_active: true,
+  const form = useForm<StatusFormData>({
+    resolver: zodResolver(statusSchema),
+    defaultValues: {
+      name: "",
+      color: "#3b82f6",
+      is_active: true,
+    },
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
+  // Reset form when statusData changes or modal opens
   useEffect(() => {
-    if (open && statusData) {
-      setFormData({
-        name: statusData.name,
-        color: statusData.color,
-        is_active: statusData.is_active ?? true,
-      });
-      setErrors({});
+    if (open) {
+      if (statusData) {
+        form.reset({
+          name: statusData.name || "",
+          color: statusData.color || "#3b82f6",
+          is_active: statusData.is_active ?? true,
+        });
+      } else {
+        form.reset({
+          name: "",
+          color: "#3b82f6",
+          is_active: true,
+        });
+      }
     }
-  }, [open, statusData]);
+  }, [open, statusData, form]);
 
-  const handleSave = () => {
-    const result = statusSchema.safeParse(formData);
-    if (!result.success) {
-      const newErrors: Record<string, string> = {};
-      result.error.issues.forEach(issue => {
-        if (issue.path[0]) {
-          newErrors[issue.path[0].toString()] = issue.message;
-        }
-      });
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({});
-    onSave(formData);
+  const onSubmit = (data: StatusFormData) => {
+    onSave(data, form.setError);
   };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={() => {
+        form.reset();
+        onClose();
+      }}
       title="Edit Status"
       description="Update status details."
       maxWidth="sm:max-w-md"
       footer={
         <div className="flex justify-end gap-2 w-full">
-          <Button variant="outline" size="sm" onClick={onClose} className="h-9" disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              form.reset();
+              onClose();
+            }}
+            className="h-9"
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSave} className="h-9" disabled={isSubmitting}>
+          <Button
+            size="sm"
+            onClick={form.handleSubmit(onSubmit)}
+            className="h-9"
+            disabled={isSubmitting}
+          >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Update Status
+            {isSubmitting ? "Updating..." : "Update Status"}
           </Button>
         </div>
       }
     >
-      <div className="space-y-4 pt-2">
-        <div className="space-y-1.5">
-          <Label className="text-xs font-bold flex gap-1">
-            <span className="text-destructive">*</span> Name
-          </Label>
-          <Input
-            value={formData.name}
-            onChange={(e) => {
-              setFormData({ ...formData, name: e.target.value });
-              if (errors.name) setErrors({ ...errors, name: undefined });
-            }}
-            placeholder="e.g. New Lead"
-            className={`h-9 text-xs ${errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-            disabled={isSubmitting}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-bold flex gap-1">
+                  <span className="text-destructive">*</span> Name
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="e.g. New Lead"
+                    className="h-9 text-xs"
+                    disabled={isSubmitting}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-[10px]" />
+              </FormItem>
+            )}
           />
-          {errors.name && <p className="text-[10px] text-destructive">{errors.name}</p>}
-        </div>
 
-        <div className="space-y-1.5 flex flex-col">
-          <Label className="text-xs font-bold flex gap-1">
-            <span className="text-destructive">*</span> Color
-          </Label>
-          <div className="flex gap-2 items-center">
-            <Input
-              type="color"
-              value={formData.color}
-              onChange={(e) => {
-                setFormData({ ...formData, color: e.target.value });
-                if (errors.color) setErrors({ ...errors, color: undefined });
-              }}
-              className="w-14 h-9 p-1 cursor-pointer"
-              disabled={isSubmitting}
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-bold flex gap-1">
+                    <span className="text-destructive">*</span> Color
+                  </FormLabel>
+                  <div className="flex gap-2 items-center">
+                    <FormControl>
+                      <Input
+                        type="color"
+                        className="w-12 h-9 p-1 cursor-pointer shrink-0"
+                        disabled={isSubmitting}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        className="flex-1 h-9 text-xs uppercase"
+                        disabled={isSubmitting}
+                        value={field.value.toUpperCase()}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                  </div>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
             />
-            <Input
-              type="text"
-              value={formData.color.toUpperCase()}
-              onChange={(e) => {
-                setFormData({ ...formData, color: e.target.value });
-                if (errors.color) setErrors({ ...errors, color: undefined });
-              }}
-              placeholder="#000000"
-              className={`flex-1 h-9 text-xs uppercase ${errors.color ? 'border-destructive focus-visible:ring-destructive' : ''}`}
-              disabled={isSubmitting}
-            />
-          </div>
-          {errors.color && <p className="text-[10px] text-destructive">{errors.color}</p>}
-        </div>
 
-
-        <div className="flex items-center justify-between space-x-2 py-2">
-          <div className="flex flex-col space-y-1">
-            <Label className="text-xs font-bold">Active Status</Label>
-            <span className="text-[10px] text-muted-foreground">Enable or disable this status</span>
           </div>
-          <Switch
-            checked={formData.is_active}
-            onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-            disabled={isSubmitting}
+
+          <FormField
+            control={form.control}
+            name="is_active"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between space-x-2 py-2 border rounded-md px-3 bg-muted/20">
+                <div className="flex flex-col space-y-1">
+                  <FormLabel className="text-xs font-bold">Active Status</FormLabel>
+                  <span className="text-[10px] text-muted-foreground">Toggle visibility</span>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
           />
-        </div>
-      </div>
+        </form>
+      </Form>
     </Modal>
   );
 };

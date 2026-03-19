@@ -29,10 +29,10 @@ export function useUpdateLeadStatus() {
             queryClient.invalidateQueries({ queryKey: queryKeys.leadStatus.detail(variables.id) });
             toast.success('Lead Status updated successfully.');
         },
-        onError: (error: unknown) => {
-            const err = error as { response?: { data?: { message?: string } }, message?: string };
-            const msg = err?.response?.data?.message || err?.message || 'Failed to update lead status.';
-            toast.error(msg);
+        onError: (error: any) => {
+            if (error?.code !== 'validation_error') {
+                toast.error(error?.message || 'Failed to update lead status.');
+            }
         },
     });
 }
@@ -46,10 +46,8 @@ export function useDeleteLeadStatus() {
             queryClient.invalidateQueries({ queryKey: queryKeys.leadStatus.all });
             toast.success('Lead Status deleted successfully.');
         },
-        onError: (error: unknown) => {
-            const err = error as { response?: { data?: { message?: string } }, message?: string };
-            const msg = err?.response?.data?.message || err?.message || 'Failed to delete lead status.';
-            toast.error(msg);
+        onError: (error: any) => {
+            toast.error(error?.message || 'Failed to delete lead status.');
         },
     });
 }

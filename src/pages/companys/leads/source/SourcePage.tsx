@@ -3,10 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, Edit, X } from "lucide-react";
+import { Search, Trash2, Edit, X, Plus } from "lucide-react";
 import DataTable, { Column, SortDirection } from "@/components/DataTable";
 import SourceModal from "./SourceModal";
-import { useLeadSources, useUpdateLeadSource, useDeleteLeadSource } from "@/hooks/useLeadSource";
+import { useLeadSources, useCreateLeadSource, useUpdateLeadSource, useDeleteLeadSource } from "@/hooks/useLeadSource";
 import { LeadSource, LeadSourcePayload } from "@/types/leadSource";
 import StatusBadge from "@/components/StatusBadge";
 import {
@@ -68,6 +68,7 @@ const SourcePage = () => {
         limit,
     });
 
+    const createSourceMutation = useCreateLeadSource();
     const updateSourceMutation = useUpdateLeadSource();
     const { mutate: deleteSource, isPending: isDeleting } = useDeleteLeadSource();
 
@@ -77,6 +78,11 @@ const SourcePage = () => {
 
     const sources = listResponse?.items || [];
     const totalItems = listResponse?.pagination?.total || 0;
+
+    const handleCreate = () => {
+        setEditingSource(null);
+        setIsModalOpen(true);
+    };
 
     const handleEdit = (sourceItem: LeadSource) => {
         setEditingSource(sourceItem);
@@ -89,6 +95,19 @@ const SourcePage = () => {
                 onSuccess: () => {
                     setIsModalOpen(false);
                     setEditingSource(null);
+                },
+                onError: (error: any) => {
+                    if (error?.code === 'validation_error' && error?.details?.body) {
+                        Object.entries(error.details.body).forEach(([key, msg]) => {
+                            setError(key as any, { type: 'server', message: msg as string });
+                        });
+                    }
+                }
+            });
+        } else {
+            createSourceMutation.mutate(formData, {
+                onSuccess: () => {
+                    setIsModalOpen(false);
                 },
                 onError: (error: any) => {
                     if (error?.code === 'validation_error' && error?.details?.body) {
@@ -182,6 +201,11 @@ const SourcePage = () => {
                         </div>
                     )}
                 </div>
+
+                <Button size="sm" className="h-8 text-xs gap-1.5" onClick={handleCreate}>
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Source
+                </Button>
             </div>
 
             {/* Data Table */}
@@ -216,7 +240,7 @@ const SourcePage = () => {
                     }}
                     sourceData={editingSource}
                     onSave={handleSaveSource}
-                    isSubmitting={updateSourceMutation.isPending}
+                    isSubmitting={createSourceMutation.isPending || updateSourceMutation.isPending}
                 />
             )}
 

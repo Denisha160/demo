@@ -3,10 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, Edit, X } from "lucide-react";
+import { Search, Trash2, Edit, X, Plus } from "lucide-react";
 import DataTable, { Column, SortDirection } from "@/components/DataTable";
 import StatusFormModal from "./StatusFormModal";
-import { useLeadStatuses, useUpdateLeadStatus, useDeleteLeadStatus } from "@/hooks/useLeadStatus";
+import { useLeadStatuses, useCreateLeadStatus, useUpdateLeadStatus, useDeleteLeadStatus } from "@/hooks/useLeadStatus";
 import { LeadStatus, LeadStatusPayload } from "@/types/leadStatus";
 import StatusBadge from "@/components/StatusBadge";
 import {
@@ -68,6 +68,7 @@ const StatusPage = () => {
         limit,
     });
 
+    const createStatusMutation = useCreateLeadStatus();
     const updateStatusMutation = useUpdateLeadStatus();
     const { mutate: deleteStatus, isPending: isDeleting } = useDeleteLeadStatus();
 
@@ -77,6 +78,11 @@ const StatusPage = () => {
 
     const statuses = listResponse?.items || [];
     const totalItems = listResponse?.pagination?.total || 0;
+
+    const handleCreate = () => {
+        setEditingStatus(null);
+        setIsFormModalOpen(true);
+    };
 
     const handleEdit = (statusItem: LeadStatus) => {
         setEditingStatus(statusItem);
@@ -89,6 +95,19 @@ const StatusPage = () => {
                 onSuccess: () => {
                     setIsFormModalOpen(false);
                     setEditingStatus(null);
+                },
+                onError: (error: any) => {
+                    if (error?.code === 'validation_error' && error?.details?.body) {
+                        Object.entries(error.details.body).forEach(([key, msg]) => {
+                            setError(key, { type: 'server', message: msg });
+                        });
+                    }
+                }
+            });
+        } else {
+            createStatusMutation.mutate(formData, {
+                onSuccess: () => {
+                    setIsFormModalOpen(false);
                 },
                 onError: (error: any) => {
                     if (error?.code === 'validation_error' && error?.details?.body) {
@@ -195,6 +214,11 @@ const StatusPage = () => {
                         </div>
                     )}
                 </div>
+
+                <Button size="sm" className="h-8 text-xs gap-1.5" onClick={handleCreate}>
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Status
+                </Button>
             </div>
 
             {/* Data Table */}
@@ -229,7 +253,7 @@ const StatusPage = () => {
                     }}
                     statusData={editingStatus}
                     onSave={handleSaveStatus}
-                    isSubmitting={updateStatusMutation.isPending}
+                    isSubmitting={createStatusMutation.isPending || updateStatusMutation.isPending}
                 />
             )}
 

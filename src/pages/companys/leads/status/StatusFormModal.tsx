@@ -72,8 +72,8 @@ const StatusFormModal = ({ open, onClose, statusData, onSave, isSubmitting }: St
         form.reset();
         onClose();
       }}
-      title="Edit Status"
-      description="Update status details."
+      title={statusData ? "Edit Status" : "Add Status"}
+      description={statusData ? "Update status details." : "Create a new lead status."}
       maxWidth="sm:max-w-md"
       footer={
         <div className="flex justify-end gap-2 w-full">
@@ -96,7 +96,7 @@ const StatusFormModal = ({ open, onClose, statusData, onSave, isSubmitting }: St
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? "Updating..." : "Update Status"}
+            {isSubmitting ? (statusData ? "Updating..." : "Creating...") : (statusData ? "Update Status" : "Create Status")}
           </Button>
         </div>
       }

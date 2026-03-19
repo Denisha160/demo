@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
     listSource,
+    createSource,
     updateSource,
     deleteSource,
 } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
-import type { LeadSourceListResponse, UpdateLeadSourcePayload } from '@/types/leadSource';
+import type { LeadSourceListResponse, LeadSourcePayload, UpdateLeadSourcePayload } from '@/types/leadSource';
 
 export function useLeadSources(filters?: Record<string, unknown>) {
     return useQuery({
@@ -16,6 +17,23 @@ export function useLeadSources(filters?: Record<string, unknown>) {
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         select: (data): LeadSourceListResponse | undefined => data?.data,
+    });
+}
+
+export function useCreateLeadSource() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: LeadSourcePayload) => createSource(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.leadSource.all });
+            toast.success('Lead Source created successfully.');
+        },
+        onError: (error: any) => {
+            if (error?.code !== 'validation_error') {
+                toast.error(error?.message || 'Failed to create lead source.');
+            }
+        },
     });
 }
 

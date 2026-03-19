@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import {
     listStatus,
+    createStatus,
     updateStatus,
     deleteStatus,
 } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
-import type { LeadStatusListResponse, UpdateLeadStatusPayload } from '@/types/leadStatus';
+import type { LeadStatusListResponse, LeadStatusPayload, UpdateLeadStatusPayload } from '@/types/leadStatus';
 
 export function useLeadStatuses(filters?: Record<string, unknown>) {
     return useQuery({
@@ -16,6 +17,23 @@ export function useLeadStatuses(filters?: Record<string, unknown>) {
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         select: (data): LeadStatusListResponse | undefined => data?.data,
+    });
+}
+
+export function useCreateLeadStatus() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: LeadStatusPayload) => createStatus(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.leadStatus.all });
+            toast.success('Lead Status created successfully.');
+        },
+        onError: (error: any) => {
+            if (error?.code !== 'validation_error') {
+                toast.error(error?.message || 'Failed to create lead status.');
+            }
+        },
     });
 }
 

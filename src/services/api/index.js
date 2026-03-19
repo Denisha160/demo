@@ -394,6 +394,11 @@ export const listStatus = (params) => {
   return axios({ method: "GET", url, params });
 }
 
+export const createStatus = (data) => {
+  const url = `leads/lead-status`;
+  return axios({ method: "POST", url, data });
+}
+
 export const updateStatus = ({ id, ...data }) => {
   const url = `leads/lead-status/${id}`;
   return axios({ method: "PATCH", url, data });
@@ -404,11 +409,16 @@ export const deleteStatus = (id) => {
   return axios({ method: "DELETE", url });
 }
 
-// ===== Source =====
+// ===== source ====
 
 export const listSource = (params) => {
   const url = `leads/lead-source`;
   return axios({ method: "GET", url, params });
+}
+
+export const createSource = (data) => {
+  const url = `leads/lead-source`;
+  return axios({ method: "POST", url, data });
 }
 
 export const updateSource = ({ id, ...data }) => {

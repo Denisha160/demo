@@ -68,8 +68,8 @@ const SourceModal = ({ open, onClose, sourceData, onSave, isSubmitting }: Source
         form.reset();
         onClose();
       }}
-      title="Edit Source"
-      description="Update source details."
+      title={sourceData ? "Edit Source" : "Add Source"}
+      description={sourceData ? "Update source details." : "Create a new lead source."}
       maxWidth="sm:max-w-md"
       footer={
         <div className="flex justify-end gap-2 w-full">
@@ -92,7 +92,7 @@ const SourceModal = ({ open, onClose, sourceData, onSave, isSubmitting }: Source
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? "Updating..." : "Update Source"}
+            {isSubmitting ? (sourceData ? "Updating..." : "Creating...") : (sourceData ? "Update Source" : "Create Source")}
           </Button>
         </div>
       }

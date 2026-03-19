@@ -23,7 +23,7 @@ import ProductsTab from "./tabs/products/ProductsTab";
 import AttachmentsTab from "./attachments/AttachmentsTab";
 import ActivityTab from "./tabs/activity/ActivityTab";
 import QuotationsTab from "./tabs/QuotationsTab";
-import RemindersTab from "./tabs/RemindersTab";
+import RemindersTab from "./tabs/reminders/RemindersTab";
 
 const TABS = [
     { id: "profile", label: "Profile", icon: User },

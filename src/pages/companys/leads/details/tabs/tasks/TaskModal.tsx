@@ -35,8 +35,8 @@ const taskSchema = z.object({
 export type TaskFormData = z.infer<typeof taskSchema>;
 
 export interface Task extends TaskFormData {
-    id: string;
-    created_at: string;
+  id: string;
+  created_at: string;
 }
 
 interface TaskModalProps {
@@ -95,6 +95,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
         form.reset();
         onClose();
       }}
+      headerBg="bg-primary/10"
       title={taskData ? "Edit Task" : "Add Task"}
       description={taskData ? "Update task details." : "Create a new task for this lead."}
       maxWidth="sm:max-w-lg"

@@ -36,7 +36,7 @@ const callLogSchema = z.object({
 export type CallLogFormData = z.infer<typeof callLogSchema>;
 
 export interface CallLog extends CallLogFormData {
-    id: string;
+  id: string;
 }
 
 interface CallLogModalProps {
@@ -98,6 +98,7 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
         form.reset();
         onClose();
       }}
+      headerBg="bg-primary/10"
       title={callLogData ? "Edit Call Log" : "Add Call Log"}
       description={callLogData ? "Update call log details." : "Record a new call log for this lead."}
       maxWidth="sm:max-w-lg"

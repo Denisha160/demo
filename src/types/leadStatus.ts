@@ -9,12 +9,16 @@ export interface LeadStatus {
     updated_at?: string;
 }
 
-export interface UpdateLeadStatusPayload {
-    id: string;
-    name?: string;
+export interface LeadStatusPayload {
+    name: string;
     color?: string;
     description?: string;
+    display_order?: number;
     is_active?: boolean;
+}
+
+export interface UpdateLeadStatusPayload extends LeadStatusPayload {
+    id: string;
 }
 
 export interface LeadStatusListResponse {

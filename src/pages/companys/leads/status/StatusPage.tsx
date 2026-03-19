@@ -1,27 +1,77 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, Edit } from "lucide-react";
-import DataTable, { Column } from "@/components/DataTable";
+import { Search, Trash2, Edit, X } from "lucide-react";
+import DataTable, { Column, SortDirection } from "@/components/DataTable";
 import StatusFormModal from "./StatusFormModal";
 import { useLeadStatuses, useUpdateLeadStatus, useDeleteLeadStatus } from "@/hooks/useLeadStatus";
-import { LeadStatus } from "@/types/leadStatus";
+import { LeadStatus, LeadStatusPayload } from "@/types/leadStatus";
 import StatusBadge from "@/components/StatusBadge";
 
 const StatusPage = () => {
-    const [search, setSearch] = useState("");
-    const { data, isLoading } = useLeadStatuses();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const [search, setSearch] = useState(searchParams.get("search") || "");
+    const debouncedSearch = useDebounce(search, 500);
+
+    const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+    const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+    const [sortKey, setSortKey] = useState<string | null>(searchParams.get("sortKey"));
+    const [sortDirection, setSortDirection] = useState<SortDirection>(
+        (searchParams.get("sortDirection") as SortDirection) || null
+    );
+
+    const hasFilters = Boolean(search || sortKey);
+
+    const handleClearFilters = () => {
+        setSearch("");
+        setSortKey(null);
+        setSortDirection(null);
+        setPage(1);
+    };
+
+    // Synchronize states to URL
+    useEffect(() => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+
+            if (debouncedSearch) next.set("search", debouncedSearch);
+            else next.delete("search");
+
+            if (page > 1) next.set("page", page.toString());
+            else next.delete("page");
+
+            if (limit !== 10) next.set("limit", limit.toString());
+            else next.delete("limit");
+
+            if (sortKey) next.set("sortKey", sortKey);
+            else next.delete("sortKey");
+
+            if (sortDirection) next.set("sortDirection", sortDirection);
+            else next.delete("sortDirection");
+
+            return next;
+        }, { replace: true });
+    }, [debouncedSearch, page, limit, sortKey, sortDirection, setSearchParams]);
+
+    const { data: listResponse, isLoading } = useLeadStatuses({
+        search: debouncedSearch.trim() || undefined,
+        sort_by: sortKey || undefined,
+        sort_direction: sortDirection || undefined,
+        offset: (page - 1) * limit,
+        limit,
+    });
+
     const updateStatusMutation = useUpdateLeadStatus();
     const deleteStatusMutation = useDeleteLeadStatus();
 
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [editingStatus, setEditingStatus] = useState<LeadStatus | null>(null);
 
-    const statuses = data?.items || [];
-
-    const filteredStatuses = statuses.filter((s) =>
-        s.name.toLowerCase().includes(search.toLowerCase())
-    );
+    const statuses = listResponse?.items || [];
+    const totalItems = listResponse?.pagination?.total || 0;
 
     const handleEdit = (statusItem: LeadStatus) => {
         setEditingStatus(statusItem);
@@ -34,7 +84,7 @@ const StatusPage = () => {
         }
     };
 
-    const handleSaveStatus = (formData: any) => {
+    const handleSaveStatus = (formData: LeadStatusPayload) => {
         if (editingStatus) {
             updateStatusMutation.mutate({ id: editingStatus.id, ...formData }, {
                 onSuccess: () => {
@@ -74,7 +124,7 @@ const StatusPage = () => {
             key: "is_active",
             header: "Status",
             render: (item) => (
-                <StatusBadge 
+                <StatusBadge
                     status={item.is_active ? "Active" : "Inactive"}
                     variant={item.is_active ? "success" : "destructive"}
                 />
@@ -84,12 +134,12 @@ const StatusPage = () => {
             key: "actions",
             header: "Actions",
             render: (item) => (
-                <div className="flex bg-transparent items-center gap-2">
+                <div className="flex bg-transparent items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 hover:text-primary hover:bg-primary/10 rounded-sm"
-                        onClick={(e) => { e.stopPropagation(); handleEdit(item); }}
+                        onClick={() => handleEdit(item)}
                     >
                         <Edit className="h-4 w-4" />
                     </Button>
@@ -97,7 +147,7 @@ const StatusPage = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 hover:text-destructive hover:bg-destructive/10 rounded-sm text-destructive"
-                        onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                        onClick={() => handleDelete(item.id)}
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -117,10 +167,27 @@ const StatusPage = () => {
                         <Input
                             placeholder="Search Status..."
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setPage(1);
+                            }}
                             className="h-8 pl-7 text-xs rounded-sm w-full sm:w-[250px]"
                         />
                     </div>
+
+                    {hasFilters && (
+                        <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleClearFilters}
+                                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
+                            >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                Clear
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -128,9 +195,23 @@ const StatusPage = () => {
             <div className="bg-card rounded-md shadow-sm border border-border/50">
                 <DataTable
                     columns={columns}
-                    data={filteredStatuses}
-                    pageSize={10}
+                    data={statuses}
                     isLoading={isLoading}
+                    serverSide={true}
+                    serverTotal={totalItems}
+                    serverPage={page}
+                    serverSortKey={sortKey || undefined}
+                    serverSortDirection={sortDirection}
+                    onServerPageChange={setPage}
+                    onServerPageSizeChange={(newSize) => {
+                        setLimit(newSize);
+                        setPage(1);
+                    }}
+                    onServerSortChange={(key, direction) => {
+                        setSortKey(key);
+                        setSortDirection(direction);
+                        setPage(1);
+                    }}
                 />
             </div>
 

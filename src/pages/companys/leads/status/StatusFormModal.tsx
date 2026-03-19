@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 
 const statusSchema = z.object({
-  name: z.string().optional(),
+  name: z.string().min(1, "Status name is required").max(100, "Status name cannot exceed 100 characters"),
   color: z.string().min(1, "Color is required"),
   is_active: z.boolean().default(true),
 });

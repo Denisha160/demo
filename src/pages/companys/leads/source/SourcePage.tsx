@@ -1,79 +1,99 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Trash2, Edit } from "lucide-react";
-import DataTable, { Column } from "@/components/DataTable";
-import { Badge } from "@/components/ui/badge";
+import { Search, Trash2, Edit, X } from "lucide-react";
+import DataTable, { Column, SortDirection } from "@/components/DataTable";
 import SourceModal from "./SourceModal";
-
-export interface LeadSource {
-    id: string;
-    name: string;
-    category: string;
-    isActive: boolean;
-    displayOrder: number;
-    createdBy: string;
-    updatedBy: string;
-}
-
-const STATIC_SOURCES: LeadSource[] = [
-    {
-        id: "1",
-        name: "Organic Search",
-        category: "Inbound",
-        isActive: true,
-        displayOrder: 1,
-        createdBy: "System",
-        updatedBy: "System",
-    },
-    {
-        id: "2",
-        name: "Referral",
-        category: "Partner",
-        isActive: true,
-        displayOrder: 2,
-        createdBy: "Admin User",
-        updatedBy: "Admin User",
-    },
-    {
-        id: "3",
-        name: "Trade Show",
-        category: "Event",
-        isActive: false,
-        displayOrder: 3,
-        createdBy: "System",
-        updatedBy: "Jane Smith",
-    },
-];
+import { useLeadSources, useUpdateLeadSource, useDeleteLeadSource } from "@/hooks/useLeadSource";
+import { LeadSource, LeadSourcePayload } from "@/types/leadSource";
+import StatusBadge from "@/components/StatusBadge";
 
 const SourcePage = () => {
-    const [search, setSearch] = useState("");
-    const [sources, setSources] = useState<LeadSource[]>(STATIC_SOURCES);
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const [search, setSearch] = useState(searchParams.get("search") || "");
+    const debouncedSearch = useDebounce(search, 500);
+
+    const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+    const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+    const [sortKey, setSortKey] = useState<string | null>(searchParams.get("sortKey"));
+    const [sortDirection, setSortDirection] = useState<SortDirection>(
+        (searchParams.get("sortDirection") as SortDirection) || null
+    );
+
+    const hasFilters = Boolean(search || sortKey);
+
+    const handleClearFilters = () => {
+        setSearch("");
+        setSortKey(null);
+        setSortDirection(null);
+        setPage(1);
+    };
+
+    // Synchronize states to URL
+    useEffect(() => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            if (debouncedSearch) next.set("search", debouncedSearch);
+            else next.delete("search");
+            if (page > 1) next.set("page", page.toString());
+            else next.delete("page");
+            if (limit !== 10) next.set("limit", limit.toString());
+            else next.delete("limit");
+            if (sortKey) next.set("sortKey", sortKey);
+            else next.delete("sortKey");
+            if (sortDirection) next.set("sortDirection", sortDirection);
+            else next.delete("sortDirection");
+            return next;
+        }, { replace: true });
+    }, [debouncedSearch, page, limit, sortKey, sortDirection, setSearchParams]);
+
+    const { data: listResponse, isLoading } = useLeadSources({
+        search: debouncedSearch.trim() || undefined,
+        sort_by: sortKey || undefined,
+        sort_direction: sortDirection || undefined,
+        offset: (page - 1) * limit,
+        limit,
+    });
+
+    const updateSourceMutation = useUpdateLeadSource();
+    const deleteSourceMutation = useDeleteLeadSource();
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSource, setEditingSource] = useState<LeadSource | null>(null);
 
-    const filteredSources = sources.filter((s) =>
-        s.name.toLowerCase().includes(search.toLowerCase()) || 
-        s.category.toLowerCase().includes(search.toLowerCase())
-    );
+    const sources = listResponse?.items || [];
+    const totalItems = listResponse?.pagination?.total || 0;
 
     const handleEdit = (sourceItem: LeadSource) => {
         setEditingSource(sourceItem);
-        setIsFormModalOpen(true);
+        setIsModalOpen(true);
     };
 
     const handleDelete = (id: string) => {
-        setSources(sources.filter(s => s.id !== id));
+        if (window.confirm("Are you sure you want to delete this source?")) {
+            deleteSourceMutation.mutate(id);
+        }
     };
 
-    const handleSaveSource = (data: any) => {
+    const handleSaveSource = (formData: LeadSourcePayload, setError: (field: any, err: any) => void) => {
         if (editingSource) {
-            setSources(sources.map(s =>
-                s.id === editingSource.id ? { ...s, ...data, updatedBy: "Current User" } : s
-            ));
+            updateSourceMutation.mutate({ id: editingSource.id, ...formData }, {
+                onSuccess: () => {
+                    setIsModalOpen(false);
+                    setEditingSource(null);
+                },
+                onError: (error: any) => {
+                    if (error?.code === 'validation_error' && error?.details?.body) {
+                        Object.entries(error.details.body).forEach(([key, msg]) => {
+                            setError(key as any, { type: 'server', message: msg as string });
+                        });
+                    }
+                }
+            });
         }
-        setIsFormModalOpen(false);
-        setEditingSource(null);
     };
 
     const columns: Column<LeadSource>[] = [
@@ -84,42 +104,30 @@ const SourcePage = () => {
             className: "font-semibold",
         },
         {
-            key: "category",
-            header: "Category",
-            sortable: true,
-        },
-        {
-            key: "isActive",
-            header: "Status",
-            render: (item) => (
-                <Badge variant={item.isActive ? "success" : "secondary"} className="rounded-full px-2 py-0 text-[10px] uppercase tracking-wider font-bold">
-                    {item.isActive ? "Active" : "Inactive"}
-                </Badge>
-            )
-        },
-        {
-            key: "displayOrder",
+            key: "display_order",
             header: "Display Order",
             sortable: true,
         },
         {
-            key: "createdBy",
-            header: "Created By",
-        },
-        {
-            key: "updatedBy",
-            header: "Updated By",
+            key: "is_active",
+            header: "Status",
+            render: (item) => (
+                <StatusBadge
+                    status={item.is_active ? "Active" : "Inactive"}
+                    variant={item.is_active ? "success" : "destructive"}
+                />
+            )
         },
         {
             key: "actions",
             header: "Actions",
             render: (item) => (
-                <div className="flex bg-transparent items-center gap-2">
+                <div className="flex bg-transparent items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 hover:text-primary hover:bg-primary/10 rounded-sm"
-                        onClick={(e) => { e.stopPropagation(); handleEdit(item); }}
+                        onClick={() => handleEdit(item)}
                     >
                         <Edit className="h-4 w-4" />
                     </Button>
@@ -127,7 +135,7 @@ const SourcePage = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 hover:text-destructive hover:bg-destructive/10 rounded-sm text-destructive"
-                        onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                        onClick={() => handleDelete(item.id)}
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -145,12 +153,29 @@ const SourcePage = () => {
                     <div className="relative flex-1 sm:flex-initial">
                         <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                         <Input
-                            placeholder="Search Sources..."
+                            placeholder="Search Source..."
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setPage(1);
+                            }}
                             className="h-8 pl-7 text-xs rounded-sm w-full sm:w-[250px]"
                         />
                     </div>
+
+                    {hasFilters && (
+                        <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleClearFilters}
+                                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
+                            >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                Clear
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -158,17 +183,35 @@ const SourcePage = () => {
             <div className="bg-card rounded-md shadow-sm border border-border/50">
                 <DataTable
                     columns={columns}
-                    data={filteredSources}
-                    pageSize={10}
+                    data={sources}
+                    isLoading={isLoading}
+                    serverSide={true}
+                    serverTotal={totalItems}
+                    serverPage={page}
+                    serverSortKey={sortKey || undefined}
+                    serverSortDirection={sortDirection}
+                    onServerPageChange={setPage}
+                    onServerPageSizeChange={(newSize) => {
+                        setLimit(newSize);
+                        setPage(1);
+                    }}
+                    onServerSortChange={(key, direction) => {
+                        setSortKey(key);
+                        setSortDirection(direction);
+                        setPage(1);
+                    }}
                 />
             </div>
 
-            {isFormModalOpen && (
+            {isModalOpen && (
                 <SourceModal
-                    open={isFormModalOpen}
-                    onClose={() => setIsFormModalOpen(false)}
+                    open={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                    }}
                     sourceData={editingSource}
                     onSave={handleSaveSource}
+                    isSubmitting={updateSourceMutation.isPending}
                 />
             )}
         </div>

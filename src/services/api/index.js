@@ -404,4 +404,19 @@ export const deleteStatus = (id) => {
   return axios({ method: "DELETE", url });
 }
 
-// end region
+// ===== Source =====
+
+export const listSource = (params) => {
+  const url = `leads/lead-source`;
+  return axios({ method: "GET", url, params });
+}
+
+export const updateSource = ({ id, ...data }) => {
+  const url = `leads/lead-source/${id}`;
+  return axios({ method: "PATCH", url, data });
+}
+
+export const deleteSource = (id) => {
+  const url = `leads/lead-source/${id}`;
+  return axios({ method: "DELETE", url });
+}

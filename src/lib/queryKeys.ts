@@ -65,4 +65,9 @@ export const queryKeys = {
         list: (filters?: Record<string, unknown>) => [...queryKeys.leadStatus.all, 'list', filters] as const,
         detail: (id: string) => [...queryKeys.leadStatus.all, 'detail', id] as const,
     },
+    leadSource: {
+        all: ['leadSource'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.leadSource.all, 'list', filters] as const,
+        detail: (id: string) => [...queryKeys.leadSource.all, 'detail', id] as const,
+    },
 } as const;

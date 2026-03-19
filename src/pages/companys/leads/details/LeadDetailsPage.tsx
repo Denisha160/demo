@@ -17,7 +17,7 @@ import ProfileTab from "./tabs/ProfileTab";
 import ContactsTab from "./tabs/contacts/ContactsTab";
 import FollowUpTab from "./tabs/follow-up/FollowUpTab";
 import VisitsTab from "./tabs/VisitsTab";
-import TasksTab from "./tabs/TasksTab";
+import TasksTab from "./tabs/tasks/TasksTab";
 import CallLogsTab from "./tabs/CallLogsTab";
 import ProductsTab from "./tabs/ProductsTab";
 import AttachmentsTab from "./tabs/AttachmentsTab";

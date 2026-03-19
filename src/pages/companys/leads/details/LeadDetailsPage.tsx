@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-import ProfileTab from "./tabs/ProfileTab";
+import ProfileTab from "./tabs/profile/ProfileTab";
 import ContactsTab from "./tabs/contacts/ContactsTab";
 import FollowUpTab from "./tabs/follow-up/FollowUpTab";
 import VisitsTab from "./tabs/visits/VisitsTab";
@@ -24,6 +24,24 @@ import AttachmentsTab from "./attachments/AttachmentsTab";
 import ActivityTab from "./tabs/activity/ActivityTab";
 import QuotationsTab from "./tabs/QuotationsTab";
 import RemindersTab from "./tabs/reminders/RemindersTab";
+
+export interface LeadProfileFormValues {
+    name: string;
+    company: string;
+    email: string;
+    phone: string;
+    status: string;
+    source: string;
+    assignedTo: string;
+    country: string;
+    language: string;
+    website: string;
+    designation: string;
+    gstPan: string;
+    location: string;
+    address: string;
+    tags: string;
+}
 
 const TABS = [
     { id: "profile", label: "Profile", icon: User },
@@ -43,19 +61,27 @@ const LeadDetailsPage = () => {
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState("profile");
     const navigate = useNavigate();
-    const [newDeal, setNewDeal] = useState({
-        title: "",
-        company: "",
-        value: "",
-        contact: "",
+    const [leadProfile, setLeadProfile] = useState<LeadProfileFormValues>({
+        name: "Jerde Inc",
+        company: "Jerde Corporation",
+        email: "info@jerde.com",
+        phone: "+1 234 567 890",
+        status: "New",
+        source: "Organic",
+        assignedTo: "Charley Dicki",
+        country: "India",
+        language: "English (System)",
+        website: "https://jerde.com",
+        designation: "Senior Manager",
+        gstPan: "GSTIN1234567890 / ABCDE1234F",
+        location: "Mumbai, Maharashtra (400001)",
+        address: "123 Business Avenue, Suite 100, Tech City, Building 4, North Wing",
+        tags: "Priority, Follow-up, Tech, Enterprise",
     });
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case "profile": return <ProfileTab
-                newDeal={newDeal}
-                setNewDeal={setNewDeal}
-            />;
+            case "profile": return <ProfileTab leadProfile={leadProfile} setLeadProfile={setLeadProfile} />;
             case "contacts": return <ContactsTab />;
             case "follow-up": return <FollowUpTab />;
             case "visits": return <VisitsTab />;

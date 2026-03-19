@@ -9,6 +9,16 @@ import SourceModal from "./SourceModal";
 import { useLeadSources, useUpdateLeadSource, useDeleteLeadSource } from "@/hooks/useLeadSource";
 import { LeadSource, LeadSourcePayload } from "@/types/leadSource";
 import StatusBadge from "@/components/StatusBadge";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const SourcePage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -59,10 +69,11 @@ const SourcePage = () => {
     });
 
     const updateSourceMutation = useUpdateLeadSource();
-    const deleteSourceMutation = useDeleteLeadSource();
+    const { mutate: deleteSource, isPending: isDeleting } = useDeleteLeadSource();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSource, setEditingSource] = useState<LeadSource | null>(null);
+    const [sourceToDelete, setSourceToDelete] = useState<LeadSource | null>(null);
 
     const sources = listResponse?.items || [];
     const totalItems = listResponse?.pagination?.total || 0;
@@ -70,12 +81,6 @@ const SourcePage = () => {
     const handleEdit = (sourceItem: LeadSource) => {
         setEditingSource(sourceItem);
         setIsModalOpen(true);
-    };
-
-    const handleDelete = (id: string) => {
-        if (window.confirm("Are you sure you want to delete this source?")) {
-            deleteSourceMutation.mutate(id);
-        }
     };
 
     const handleSaveSource = (formData: LeadSourcePayload, setError: (field: any, err: any) => void) => {
@@ -135,7 +140,7 @@ const SourcePage = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 hover:text-destructive hover:bg-destructive/10 rounded-sm text-destructive"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setSourceToDelete(item)}
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -214,6 +219,35 @@ const SourcePage = () => {
                     isSubmitting={updateSourceMutation.isPending}
                 />
             )}
+
+            <AlertDialog open={!!sourceToDelete} onOpenChange={(open) => !open && setSourceToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the source "{sourceToDelete?.name}".
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isDeleting}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                if (sourceToDelete?.id) {
+                                    deleteSource(sourceToDelete.id, {
+                                        onSuccess: () => setSourceToDelete(null)
+                                    });
+                                }
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

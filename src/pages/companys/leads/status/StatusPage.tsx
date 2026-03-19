@@ -9,6 +9,16 @@ import StatusFormModal from "./StatusFormModal";
 import { useLeadStatuses, useUpdateLeadStatus, useDeleteLeadStatus } from "@/hooks/useLeadStatus";
 import { LeadStatus, LeadStatusPayload } from "@/types/leadStatus";
 import StatusBadge from "@/components/StatusBadge";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const StatusPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -59,10 +69,11 @@ const StatusPage = () => {
     });
 
     const updateStatusMutation = useUpdateLeadStatus();
-    const deleteStatusMutation = useDeleteLeadStatus();
+    const { mutate: deleteStatus, isPending: isDeleting } = useDeleteLeadStatus();
 
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [editingStatus, setEditingStatus] = useState<LeadStatus | null>(null);
+    const [statusToDelete, setStatusToDelete] = useState<LeadStatus | null>(null);
 
     const statuses = listResponse?.items || [];
     const totalItems = listResponse?.pagination?.total || 0;
@@ -70,12 +81,6 @@ const StatusPage = () => {
     const handleEdit = (statusItem: LeadStatus) => {
         setEditingStatus(statusItem);
         setIsFormModalOpen(true);
-    };
-
-    const handleDelete = (id: string) => {
-        if (window.confirm("Are you sure you want to delete this status?")) {
-            deleteStatusMutation.mutate(id);
-        }
     };
 
     const handleSaveStatus = (formData: LeadStatusPayload, setError: (field: any, err: any) => void) => {
@@ -148,7 +153,7 @@ const StatusPage = () => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 hover:text-destructive hover:bg-destructive/10 rounded-sm text-destructive"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setStatusToDelete(item)}
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -227,6 +232,35 @@ const StatusPage = () => {
                     isSubmitting={updateStatusMutation.isPending}
                 />
             )}
+
+            <AlertDialog open={!!statusToDelete} onOpenChange={(open) => !open && setStatusToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the status "{statusToDelete?.name}".
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isDeleting}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                if (statusToDelete?.id) {
+                                    deleteStatus(statusToDelete.id, {
+                                        onSuccess: () => setStatusToDelete(null)
+                                    });
+                                }
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

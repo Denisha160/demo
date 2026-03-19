@@ -5,9 +5,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, User, MessageSquare, ClipboardList, UserCheck, Settings } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select";
+import {
+    ClipboardList,
+    UserCheck,
+    User
+} from "lucide-react";
 import Modal from "@/components/Modal";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const followUpSchema = z.object({
     status: z.string().min(1, "Status is required"),
@@ -32,14 +43,21 @@ interface FollowUpModalProps {
     onSave: (data: FollowUp) => void;
 }
 
-const FollowUpModal = ({ open, onClose, followUpData, isEditing = false, onSave }: FollowUpModalProps) => {
+const FollowUpModal = ({
+    open,
+    onClose,
+    followUpData,
+    isEditing = false,
+    onSave
+}: FollowUpModalProps) => {
+
     const {
         register,
         handleSubmit,
         setValue,
         watch,
         reset,
-        formState: { errors }
+        formState: { errors, isSubmitting } // ✅ FIXED
     } = useForm<FollowUpFormData>({
         resolver: zodResolver(followUpSchema),
         defaultValues: {
@@ -48,21 +66,14 @@ const FollowUpModal = ({ open, onClose, followUpData, isEditing = false, onSave 
             purpose: "",
             assignedTo: "",
             createdBy: "",
-            date: new Date().toISOString().split('T')[0],
+            date: new Date().toISOString().split("T")[0],
         }
     });
 
     useEffect(() => {
         if (open) {
             if (isEditing && followUpData) {
-                reset({
-                    status: followUpData.status,
-                    followUpMethod: followUpData.followUpMethod,
-                    purpose: followUpData.purpose,
-                    assignedTo: followUpData.assignedTo,
-                    createdBy: followUpData.createdBy,
-                    date: followUpData.date,
-                });
+                reset(followUpData);
             } else {
                 reset({
                     status: "Pending",
@@ -70,7 +81,7 @@ const FollowUpModal = ({ open, onClose, followUpData, isEditing = false, onSave 
                     purpose: "",
                     assignedTo: "",
                     createdBy: "",
-                    date: new Date().toISOString().split('T')[0],
+                    date: new Date().toISOString().split("T")[0],
                 });
             }
         }
@@ -87,41 +98,42 @@ const FollowUpModal = ({ open, onClose, followUpData, isEditing = false, onSave 
 
     const status = watch("status");
     const followUpMethod = watch("followUpMethod");
+    const date = watch("date"); // ✅ important
 
     return (
         <Modal
             open={open}
             onClose={onClose}
-            headerBg="bg-primary/10"
-            maxWidth="sm:max-w-[700px]"
-            titleClassName="text-primary"
             title={isEditing ? "Edit Follow Up" : "Add Follow Up"}
-            description={`Enter follow up details below to ${isEditing ? 'update' : 'add'} it.`}
+            description="Enter follow up details"
             footer={
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="rounded-sm text-sm h-8" onClick={onClose}>
+                    <Button variant="outline" size="sm" onClick={onClose}>
                         Close
                     </Button>
-                    <Button
-                        type="submit"
-                        form="follow-up-form"
-                        size="sm"
-                        className="rounded-sm text-sm h-8 gap-1.5"
-                    >
-                        {isEditing ? "Update Follow Up" : "Save Follow Up"}
+                    <Button type="submit" form="follow-up-form" size="sm">
+                        {isEditing ? "Update" : "Save"}
                     </Button>
                 </div>
             }
         >
-            <form id="follow-up-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 pt-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form
+                id="follow-up-form"
+                onSubmit={handleSubmit(handleFormSubmit)}
+                className="space-y-4"
+            >
+                <div className="grid grid-cols-2 gap-4">
+
                     {/* Status */}
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold flex items-center gap-1 text-foreground">
-                            Status <span className="text-destructive">*</span>
-                        </Label>
-                        <Select value={status} onValueChange={(val) => setValue("status", val, { shouldValidate: true })}>
-                            <SelectTrigger className={`h-9 ${errors.status ? 'border-destructive focus:ring-destructive/20' : 'border-border'}`}>
+                    <div>
+                        <Label>Status</Label>
+                        <Select
+                            value={status}
+                            onValueChange={(val) =>
+                                setValue("status", val, { shouldValidate: true })
+                            }
+                        >
+                            <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -130,90 +142,58 @@ const FollowUpModal = ({ open, onClose, followUpData, isEditing = false, onSave 
                                 <SelectItem value="Cancelled">Cancelled</SelectItem>
                             </SelectContent>
                         </Select>
-                        {errors.status && <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">{errors.status.message}</p>}
+                        {errors.status && <p className="text-xs text-red-500">{errors.status.message}</p>}
                     </div>
 
-                    {/* Follow up Method */}
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold flex items-center gap-1 text-foreground">
-                            Follow Up Method <span className="text-destructive">*</span>
-                        </Label>
-                        <Select value={followUpMethod} onValueChange={(val) => setValue("followUpMethod", val, { shouldValidate: true })}>
-                            <SelectTrigger className={`h-9 ${errors.followUpMethod ? 'border-destructive focus:ring-destructive/20' : 'border-border'}`}>
+                    {/* Method */}
+                    <div>
+                        <Label>Method</Label>
+                        <Select
+                            value={followUpMethod}
+                            onValueChange={(val) =>
+                                setValue("followUpMethod", val, { shouldValidate: true })
+                            }
+                        >
+                            <SelectTrigger>
                                 <SelectValue placeholder="Select method" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Call">Call</SelectItem>
                                 <SelectItem value="Email">Email</SelectItem>
-                                <SelectItem value="Meeting">Meeting</SelectItem>
-                                <SelectItem value="WhatsApp">WhatsApp</SelectItem>
                             </SelectContent>
                         </Select>
-                        {errors.followUpMethod && <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">{errors.followUpMethod.message}</p>}
                     </div>
 
                     {/* Purpose */}
-                    <div className="space-y-1.5 sm:col-span-2">
-                        <Label className="text-xs font-semibold flex items-center gap-1 text-foreground">
-                            Purpose <span className="text-destructive">*</span>
-                        </Label>
-                        <div className="relative">
-                            <ClipboardList className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${errors.purpose ? 'text-destructive' : 'text-muted-foreground/60'}`} />
-                            <Input
-                                {...register("purpose")}
-                                placeholder="Enter purpose"
-                                className={`pl-9 h-9 border-border focus-visible:ring-primary/20 text-sm ${errors.purpose ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
-                            />
-                        </div>
-                        {errors.purpose && <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">{errors.purpose.message}</p>}
+                    <div className="col-span-2">
+                        <Label>Purpose</Label>
+                        <Input {...register("purpose")} placeholder="Enter purpose" />
                     </div>
 
-                    {/* Assigned To */}
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold flex items-center gap-1 text-foreground">
-                            Assigned To <span className="text-destructive">*</span>
-                        </Label>
-                        <div className="relative">
-                            <UserCheck className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${errors.assignedTo ? 'text-destructive' : 'text-muted-foreground/60'}`} />
-                            <Input
-                                {...register("assignedTo")}
-                                placeholder="Assign to user"
-                                className={`pl-9 h-9 border-border focus-visible:ring-primary/20 text-sm ${errors.assignedTo ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
-                            />
-                        </div>
-                        {errors.assignedTo && <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">{errors.assignedTo.message}</p>}
+                    {/* Assigned */}
+                    <div>
+                        <Label>Assigned To</Label>
+                        <Input {...register("assignedTo")} />
                     </div>
 
-                    {/* Created By */}
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold flex items-center gap-1 text-foreground">
-                            Created By <span className="text-destructive">*</span>
-                        </Label>
-                        <div className="relative">
-                            <User className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${errors.createdBy ? 'text-destructive' : 'text-muted-foreground/60'}`} />
-                            <Input
-                                {...register("createdBy")}
-                                placeholder="Created by user"
-                                className={`pl-9 h-9 border-border focus-visible:ring-primary/20 text-sm ${errors.createdBy ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
-                            />
-                        </div>
-                        {errors.createdBy && <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">{errors.createdBy.message}</p>}
+                    {/* Created */}
+                    <div>
+                        <Label>Created By</Label>
+                        <Input {...register("createdBy")} />
                     </div>
 
-                    {/* Date */}
-                    <div className="space-y-1.5 sm:col-span-2">
-                        <Label className="text-xs font-semibold flex items-center gap-1 text-foreground">
-                            Date
-                        </Label>
-                        <div className="relative">
-                            <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60`} />
-                            <Input
-                                type="date"
-                                {...register("date")}
-                                className={`pl-9 h-9 border-border focus-visible:ring-primary/20 text-sm`}
-                            />
-                        </div>
+                    {/* Date ✅ FIXED */}
+                    <div className="col-span-2">
+                        <Label>Date</Label>
+                        <DatePicker
+                            value={date} // ✅ string value
+                            onChange={(val: string) =>
+                                setValue("date", val, { shouldValidate: true })
+                            }
+                            disabled={isSubmitting}
+                        />
                     </div>
+
                 </div>
             </form>
         </Modal>

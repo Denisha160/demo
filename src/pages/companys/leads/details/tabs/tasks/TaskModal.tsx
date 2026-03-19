@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title cannot exceed 100 characters"),
@@ -248,11 +249,11 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
                 <FormItem>
                   <FormLabel className="text-xs font-bold">Due Date</FormLabel>
                   <FormControl>
-                    <Input
-                      type="date"
-                      className="h-9 text-xs"
+                    <DatePicker
+                      value={field.value}
+                      onChange={(value: string) => field.onChange(value || null)}
+                      className="h-8 text-sm rounded-sm"
                       disabled={isSubmitting}
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />

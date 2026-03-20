@@ -6,13 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { ComboboxWithAdd } from "@/components/ui/comboBoxWithAdd";
 import { PipelineColumn } from "../../../types/leads";
-import { Tag, Plus } from "lucide-react";
+import { Tag } from "lucide-react";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-const leadValidationSchema = z.object({
+const formSchema = z.object({
     status: z.string().min(1, { message: "Status is required" }),
     source: z.string().min(1, { message: "Source is required" }),
     title: z.string().min(1, { message: "Name is required" }),
+    email: z.string().min(1, "Email is required").email("Invalid email"),
+    phone: z
+        .string()
+        .min(1, "Phone is required")
+        .regex(/^\d+$/, "Only numbers allowed")
+        .length(10, "Must be 10 digits"),
 });
 
 interface LeadModalProps {
@@ -43,6 +51,8 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
     const [source, setSource] = useState("");
     const [assigned, setAssigned] = useState("charley");
     const [country, setCountry] = useState("");
+    const [state, setState] = useState("");
+    const [city, setCity] = useState("");
     const [language, setLanguage] = useState("system");
     const [errors, setErrors] = useState<{ status?: string, source?: string, title?: string }>({});
 
@@ -52,13 +62,35 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
             setSource("");
             setAssigned("charley");
             setCountry("");
-            setLanguage("system");
+            setCity("");
+            setState("");
             setErrors({});
         }
     }, [open]);
 
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            status: "",
+            source: "",
+            title: "",
+            email: "",
+            phone: "",
+            company: "",
+        },
+    });
+
+    useEffect(() => {
+        if (open) {
+            form.reset();
+        }
+    }, [open]);
+
+
+
+
     const handleSave = () => {
-        const result = leadValidationSchema.safeParse({ status, source, title: newDeal.title });
+        const result = formSchema.safeParse({ status, source, title: newDeal.title });
         if (!result.success) {
             const newErrors: Record<string, string> = {};
             result.error.issues.forEach(issue => {
@@ -184,49 +216,6 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                         />
                     </div>
 
-                    {/* Phone */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Phone
-                        </Label>
-                        <Input
-                            type="tel"
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* Alternative Phone Number */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Alternative Phone Number
-                        </Label>
-                        <Input
-                            type="tel"
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-
-                    {/* City */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            City
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* State */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            State
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
                     {/* Country */}
                     <div className="space-y-1.5 flex flex-col min-w-0">
                         <Label className="text-xs font-bold text-foreground">
@@ -248,26 +237,72 @@ const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNe
                         </div>
                     </div>
 
-                    {/* Language */}
-                    <div className="space-y-1.5 flex flex-col min-w-0">
+                    {/* City */}
+                    <div className="space-y-1.5 flex flex-col">
                         <Label className="text-xs font-bold text-foreground">
-                            Language
+                            City
                         </Label>
                         <div className="w-full flex">
                             <Combobox
                                 options={[
-                                    { value: "system", label: "System Default" },
-                                    { value: "en", label: "English" },
-                                    { value: "es", label: "Spanish" },
-                                    { value: "fr", label: "French" },
+                                    { value: "bangalore", label: "Bangalore" },
+                                    { value: "mumbai", label: "Mumbai" },
+                                    { value: "delhi", label: "Delhi" },
+                                    { value: "chennai", label: "Chennai" },
                                 ]}
-                                value={language}
-                                onValueChange={setLanguage}
-                                placeholder="Select Language"
+                                value={city}
+                                onValueChange={setCity}
+                                placeholder="Select City"
                                 className="h-9 w-full"
                             />
                         </div>
                     </div>
+
+                    {/* State */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            State
+                        </Label>
+                        <div className="w-full flex">
+                            <Combobox
+                                options={[
+                                    { value: "karnataka", label: "Karnataka" },
+                                    { value: "maharashtra", label: "Maharashtra" },
+                                    { value: "delhi", label: "Delhi" },
+                                    { value: "tamilnadu", label: "Tamil Nadu" },
+                                ]}
+                                value={state}
+                                onValueChange={setState}
+                                placeholder="Select State"
+                                className="h-9 w-full"
+                            />
+                        </div>
+                    </div>
+
+
+                    {/* Phone */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Phone
+                        </Label>
+                        <Input
+                            name="phone"
+                            type="tel"
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
+                    {/* Alternative Phone Number */}
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground">
+                            Alternative Phone Number
+                        </Label>
+                        <Input
+                            type="tel"
+                            className="h-9 text-xs border-border/60"
+                        />
+                    </div>
+
 
                     {/* Pincode */}
                     <div className="space-y-1.5 flex flex-col">

@@ -277,7 +277,7 @@ export const getLeadDetails = (leadId) => {
 };
 
 export const updateLead = ({ leadId, ...data }) => {
-  const url = `leads/${leadId}`;
+  const url = `leads/${leadId}/status`;
   return axios({ method: "PATCH", url, data });
 };
 

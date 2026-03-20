@@ -21,14 +21,10 @@ import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
 import { Deal, PipelineColumn } from "../../../types/leads";
 import { useCreateLead, useLeads, useUpdateLead } from "@/hooks/useLeads";
+import { useLeadStatuses } from "@/hooks/useLeadStatus";
+import type { LeadStatus } from "@/types/leadStatus";
 
-const COLUMN_META: Omit<PipelineColumn, "deals">[] = [
-  { id: "initial", title: "Initial Lead", variant: "default" },
-  { id: "verified", title: "Verified Lead", variant: "info" },
-  { id: "quotation", title: "Quotation", variant: "warning" },
-  { id: "won", title: "Won", variant: "success" },
-  { id: "lost", title: "Lost", variant: "destructive" },
-];
+const VARIANTS: PipelineColumn["variant"][] = ["default", "info", "warning", "success", "destructive"];
 
 const slugify = (value?: string) =>
   (value || "")
@@ -36,16 +32,14 @@ const slugify = (value?: string) =>
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 
-const getColumnIdFromLead = (lead: any) => {
-  const raw = slugify(lead?.stage || lead?.status || lead?.status_name);
+const getColumnIdFromLead = (lead: any, statuses: LeadStatus[]) => {
+  if (lead?.status_id && statuses.some((status) => status.id === lead.status_id)) {
+    return lead.status_id;
+  }
 
-  if (["initial", "initial_lead", "new"].includes(raw)) return "initial";
-  if (["verified", "verified_lead", "contacted", "qualified"].includes(raw)) return "verified";
-  if (["quotation", "proposal"].includes(raw)) return "quotation";
-  if (["won", "closed_won"].includes(raw)) return "won";
-  if (["lost", "closed_lost", "rejected"].includes(raw)) return "lost";
-
-  return "initial";
+  const rawStatusName = slugify(lead?.status?.name || lead?.status_name || lead?.status);
+  const matchedStatus = statuses.find((status) => slugify(status.name) === rawStatusName);
+  return matchedStatus?.id || statuses[0]?.id || "default";
 };
 
 const mapLeadToDeal = (lead: any): Deal => ({
@@ -73,19 +67,41 @@ const LeadsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [addModalCol, setAddModalCol] = useState<string | null>(null);
-  const [columnOrder, setColumnOrder] = useState(COLUMN_META.map((column) => column.id));
-  const [visibleStageIds, setVisibleStageIds] = useState<string[]>(COLUMN_META.map((column) => column.id));
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [visibleStageIds, setVisibleStageIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"pipeline" | "table">(() => {
     return (localStorage.getItem("leadsViewMode") as "pipeline" | "table") || "pipeline";
   });
 
   const { data: leads = [], isLoading } = useLeads();
+  const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLead();
+  const leadStatuses = statusResponse?.items || [];
 
   useEffect(() => {
     localStorage.setItem("leadsViewMode", viewMode);
   }, [viewMode]);
+
+  useEffect(() => {
+    if (!leadStatuses.length) return;
+
+    const sortedIds = [...leadStatuses]
+      .sort((a, b) => (a.display_order ?? Number.MAX_SAFE_INTEGER) - (b.display_order ?? Number.MAX_SAFE_INTEGER))
+      .map((status) => status.id);
+
+    setColumnOrder((prev) =>
+      prev.length
+        ? [...prev.filter((id) => sortedIds.includes(id)), ...sortedIds.filter((id) => !prev.includes(id))]
+        : sortedIds
+    );
+    setVisibleStageIds((prev) =>
+      prev.length
+        ? [...prev.filter((id) => sortedIds.includes(id)), ...sortedIds.filter((id) => !prev.includes(id))]
+        : sortedIds
+    );
+    setAddModalCol((prev) => prev || sortedIds[0] || null);
+  }, [leadStatuses]);
 
   const isDealVisible = useCallback(
     (deal: Deal) => {
@@ -107,28 +123,35 @@ const LeadsPage = () => {
   );
 
   const columns = useMemo(() => {
-    const leadGroups = COLUMN_META.reduce<Record<string, Deal[]>>((acc, column) => {
-      acc[column.id] = [];
+    const sortedStatuses = [...leadStatuses].sort(
+      (a, b) => (a.display_order ?? Number.MAX_SAFE_INTEGER) - (b.display_order ?? Number.MAX_SAFE_INTEGER)
+    );
+
+    const leadGroups = sortedStatuses.reduce<Record<string, Deal[]>>((acc, status) => {
+      acc[status.id] = [];
       return acc;
     }, {});
 
     leads.forEach((lead: any) => {
-      const columnId = getColumnIdFromLead(lead);
+      const columnId = getColumnIdFromLead(lead, sortedStatuses);
       leadGroups[columnId] = [...(leadGroups[columnId] || []), mapLeadToDeal(lead)];
     });
 
     return columnOrder
       .map((columnId) => {
-        const meta = COLUMN_META.find((column) => column.id === columnId);
-        if (!meta) return null;
+        const statusIndex = sortedStatuses.findIndex((status) => status.id === columnId);
+        const status = sortedStatuses.find((item) => item.id === columnId);
+        if (!status) return null;
 
         return {
-          ...meta,
+          id: status.id,
+          title: status.name,
+          variant: VARIANTS[statusIndex % VARIANTS.length] || "default",
           deals: (leadGroups[columnId] || []).filter(isDealVisible),
         } satisfies PipelineColumn;
       })
       .filter(Boolean) as PipelineColumn[];
-  }, [columnOrder, isDealVisible, leads]);
+  }, [columnOrder, isDealVisible, leadStatuses, leads]);
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, type } = result;
@@ -160,20 +183,13 @@ const LeadsPage = () => {
     updateLeadMutation.mutate(
       {
         leadId: movedDeal.id,
-        status: destCol.title,
-        stage: destCol.id,
-        stage_name: destCol.title,
+        status_id: destCol.id,
       },
-      {
-        onSuccess: () => {
-          toast.success(`Lead moved to ${destCol.title}`);
-        },
-      }
     );
   };
 
   const handleAddLead = (data: LeadFormData, setError: (field: any, err: any) => void) => {
-    const column = COLUMN_META.find((item) => item.id === addModalCol);
+    const column = columns.find((item) => item.id === addModalCol);
 
     createLeadMutation.mutate(
       {
@@ -183,6 +199,7 @@ const LeadsPage = () => {
         company_name: data.company,
         email: data.email,
         phone: data.phone,
+        status_id: addModalCol || column?.id,
         status: data.status || column?.title || "Initial Lead",
         stage: addModalCol || "initial",
         source: data.source,
@@ -246,7 +263,7 @@ const LeadsPage = () => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="text-xs font-semibold">Filter Stages</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {COLUMN_META.map((column) => (
+                  {columns.map((column) => (
                     <DropdownMenuCheckboxItem
                       key={column.id}
                       checked={visibleStageIds.includes(column.id)}
@@ -292,7 +309,7 @@ const LeadsPage = () => {
 
         <div className="flex items-center">
           <Button
-            onClick={() => setAddModalCol("initial")}
+            onClick={() => setAddModalCol(columns[0]?.id || null)}
             size="sm"
             className="h-9 w-full px-4 font-semibold shadow-sm transition-all hover:shadow-md active:scale-95 lg:w-auto"
           >
@@ -318,7 +335,7 @@ const LeadsPage = () => {
         onClose={() => setAddModalCol(null)}
         onSave={handleAddLead}
         addModalCol={addModalCol}
-        columns={columns.length ? columns : COLUMN_META.map((column) => ({ ...column, deals: [] }))}
+        columns={columns}
         isSubmitting={createLeadMutation.isPending}
       />
     </div>

@@ -10,7 +10,7 @@ import {
 import { CategoryDrawer } from "@/components/Drawers/CategoryDrawer";
 import { FragranceDrawer } from "@/components/Drawers/FragranceDrawer";
 import { BrandDrawer } from "@/components/Drawers/BrandDrawer";
-
+import { Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +29,7 @@ import { Fragrance } from "@/types/fragrance";
 import { ApiErrorResponse } from "@/types/user";
 
 import { useProduct, useCreateProduct, useUpdateProduct, useDeleteProductPhoto } from "@/hooks/useProducts";
+import { useCurrentUser } from "@/hooks/useAuth";
 import { useCategoriesCombobox, Category } from "@/hooks/useProductCategories";
 import { usePackagesCombobox } from "@/hooks/usePackages";
 import { useBrandCombobox } from "@/hooks/useBrands";
@@ -84,9 +85,10 @@ const removeObjectState = <T extends Record<string, unknown>>(setter: React.Disp
 // --- Zod Validation Schema ---
 const productSchema = z.object({
     product_name: z.string().min(2, "Product name is required (min 2 characters)"),
+    secret_name: z.string().optional().nullable(),
     code: z.string().optional().nullable(),
     category_id: z.preprocess((val) => val === '' ? null : val, z.string().uuid("Please select a valid category").optional().nullable()),
-    product_type: z.enum(["RAW_MATERIAL", "FINISHED_GOOD"]),
+    product_type: z.enum(["RAW_MATERIAL", "SEMI_FINISHED", "FINISHED_GOOD"]),
     is_brand: z.boolean(),
     brand_id: z.string().uuid("Please select a valid brand").optional().nullable(),
     fragrance_id: z.string().uuid("Please select a valid fragrance").optional().nullable(),
@@ -167,9 +169,14 @@ interface ProductTabProps {
         brand: { open: boolean, setOpen: (v: boolean) => void };
     };
     packageModal?: { open: boolean, setOpen: (v: boolean) => void };
+    adminFeature?: {
+        isRoot: boolean;
+        showSecret: boolean;
+        setShowSecret: (v: boolean) => void;
+    }
 }
 
-const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comboboxes, drawers }: ProductTabProps) => (
+const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comboboxes, drawers, adminFeature }: ProductTabProps) => (
     <div className="p-1 space-y-4">
         <div className="flex items-center gap-2 mb-4">
             <Package className="h-4 w-4 text-primary" />
@@ -177,10 +184,44 @@ const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comb
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            <ProductInput
-                label="Product Name" value={productData.product_name ?? ""}
-                error={errors.product_name} onChange={(val) => handleChange("product_name", val)} placeholder="Enter product name"
-            />
+            <div className="space-y-2 relative">
+                <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Product Name</Label>
+                    {adminFeature?.isRoot && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className={`h-5 px-1.5 text-[9px] gap-1 hover:bg-primary/10 ${adminFeature.showSecret ? 'text-primary' : 'text-muted-foreground'}`}
+                            onClick={() => adminFeature.setShowSecret(!adminFeature.showSecret)}
+                        >
+                            <Lock className="h-2.5 w-2.5" />
+                            {adminFeature.showSecret ? "Hide Secret" : "Add Secret"}
+                        </Button>
+                    )}
+                </div>
+                <Input
+                    value={productData.product_name ?? ""}
+                    onChange={(e) => handleChange("product_name", e.target.value)}
+                    placeholder="Enter product name"
+                    className={`text-sm ${errors.product_name ? 'border-destructive' : ''}`}
+                />
+                {errors.product_name && <p className="text-[10px] text-destructive mt-1">{errors.product_name}</p>}
+
+                {adminFeature?.isRoot && adminFeature.showSecret && (
+                    <div className="mt-2 animate-in slide-in-from-top-1 duration-200">
+                        <Label className="text-[10px] font-semibold text-primary uppercase tracking-wide flex items-center gap-1">
+                            <Lock className="h-2.5 w-2.5" /> Secret Name
+                        </Label>
+                        <Input
+                            value={productData.secret_name ?? ""}
+                            onChange={(e) => handleChange("secret_name", e.target.value)}
+                            placeholder="Enter backend/secret name"
+                            className="text-sm border-primary/30 focus-visible:ring-primary/30 bg-primary/5"
+                        />
+                    </div>
+                )}
+            </div>
             <ProductInput
                 label="Product Code" value={productData.code ?? ""}
                 error={errors.code} onChange={(val) => handleChange("code", val)} placeholder="Auto or Manual"
@@ -194,6 +235,7 @@ const BasicInfoTab = ({ productData, errors, apiError, isNew, handleChange, comb
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="FINISHED_GOOD" className="text-xs">Finished Good</SelectItem>
+                        <SelectItem value="SEMI_FINISHED" className="text-xs">Semi Finished</SelectItem>
                         <SelectItem value="RAW_MATERIAL" className="text-xs">Raw Material</SelectItem>
                     </SelectContent>
                 </Select>
@@ -348,78 +390,79 @@ const UnitsMeasurementsTab = ({ productData, errors, handleChange, handleNumberC
             )}
 
             {/* Merged Dimensions Input */}
-            <div className="lg:col-span-3 space-y-2">
-                <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                    Dimensions (L × W × H)
-                </Label>
+            {productData.product_type !== 'RAW_MATERIAL' && (
+                <div className="lg:col-span-3 space-y-2">
+                    <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                        Dimensions (L × W × H)
+                    </Label>
 
-                <div className="flex items-center gap-2">
-                    {/* Length */}
-                    <Input
-                        type="number"
-                        step="any"
-                        value={productData.length?.toString() || ""}
-                        onChange={(e) => handleNumberChange("length", e.target.value)}
-                        placeholder="L"
-                        className="text-sm"
+                    <div className="flex items-center gap-2">
+                        {/* Length */}
+                        <Input
+                            type="number"
+                            step="any"
+                            value={productData.length?.toString() || ""}
+                            onChange={(e) => handleNumberChange("length", e.target.value)}
+                            placeholder="L"
+                            className="text-sm"
+                        />
+
+                        <span className="text-muted-foreground text-sm">×</span>
+
+                        {/* Width */}
+                        <Input
+                            type="number"
+                            step="any"
+                            value={productData.width?.toString() || ""}
+                            onChange={(e) => handleNumberChange("width", e.target.value)}
+                            placeholder="W"
+                            className="text-sm"
+                        />
+
+                        <span className="text-muted-foreground text-sm">×</span>
+
+                        {/* Height */}
+                        <Input
+                            type="number"
+                            step="any"
+                            value={productData.height?.toString() || ""}
+                            onChange={(e) => handleNumberChange("height", e.target.value)}
+                            placeholder="H"
+                            className="text-sm"
+                        />
+
+                        {/* Unit */}
+                        <Select
+                            value={productData.dimension_unit || "cm"}
+                            onValueChange={(val) => handleChange("dimension_unit", val)}
+                        >
+                            <SelectTrigger className="h-9 text-sm w-[90px]">
+                                <SelectValue placeholder="Unit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="mm" className="text-xs">mm</SelectItem>
+                                <SelectItem value="cm" className="text-xs">cm</SelectItem>
+                                <SelectItem value="m" className="text-xs">m</SelectItem>
+                                <SelectItem value="in" className="text-xs">in</SelectItem>
+                                <SelectItem value="ft" className="text-xs">ft</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <ProductInput
+                        label="Size Value" type="number" value={productData.size_value ?? ""}
+                        onChange={(val) => handleNumberChange("size_value", val)} placeholder="e.g. 500"
                     />
-
-                    <span className="text-muted-foreground text-sm">×</span>
-
-                    {/* Width */}
-                    <Input
-                        type="number"
-                        step="any"
-                        value={productData.width?.toString() || ""}
-                        onChange={(e) => handleNumberChange("width", e.target.value)}
-                        placeholder="W"
-                        className="text-sm"
-                    />
-
-                    <span className="text-muted-foreground text-sm">×</span>
-
-                    {/* Height */}
-                    <Input
-                        type="number"
-                        step="any"
-                        value={productData.height?.toString() || ""}
-                        onChange={(e) => handleNumberChange("height", e.target.value)}
-                        placeholder="H"
-                        className="text-sm"
-                    />
-
-                    {/* Unit */}
-                    <Select
-                        value={productData.dimension_unit || "cm"}
-                        onValueChange={(val) => handleChange("dimension_unit", val)}
-                    >
-                        <SelectTrigger className="h-9 text-sm w-[90px]">
-                            <SelectValue placeholder="Unit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="mm" className="text-xs">mm</SelectItem>
-                            <SelectItem value="cm" className="text-xs">cm</SelectItem>
-                            <SelectItem value="m" className="text-xs">m</SelectItem>
-                            <SelectItem value="in" className="text-xs">in</SelectItem>
-                            <SelectItem value="ft" className="text-xs">ft</SelectItem>
-                        </SelectContent>
-                    </Select>
                 </div>
-            </div>
-
-            <ProductInput
-                label="Size Value" type="number" value={productData.size_value ?? ""}
-                onChange={(val) => handleNumberChange("size_value", val)} placeholder="e.g. 500"
-            />
+            )}
         </div>
     </div>
 );
 
 const PackagingTab = ({ productData, errors, handleChange, comboboxes, packageModal }: ProductTabProps) => {
-    if (productData.product_type !== "FINISHED_GOOD") {
+    if (productData.product_type === "RAW_MATERIAL") {
         return (
             <div className="p-8 text-center text-muted-foreground bg-muted/10 rounded-lg border border-dashed">
-                Packaging settings are only available for Finished Goods.
+                Packaging settings are only available for Finished Goods and Semi Finished items.
             </div>
         );
     }
@@ -666,13 +709,13 @@ const KitsTab = ({ productId, productType, isNew }: { productId?: string; produc
         );
     }
 
-    if (productType !== "FINISHED_GOOD") {
+    if (productType === "RAW_MATERIAL") {
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/10 rounded-lg border border-dashed border-border">
                 <Layers className="h-8 w-8 text-muted-foreground opacity-30 mb-3" />
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Kits Unavailable</h3>
                 <p className="text-[11px] text-muted-foreground mt-1 max-w-xs leading-relaxed">
-                    Only <span className="text-primary font-bold">Finished Goods</span> can be bundled into kits. Raw materials should be managed via Recipes.
+                    Raw materials cannot be bundled into kits. Manage them via Recipes for Finished or Semi-Finished goods.
                 </p>
             </div>
         );
@@ -782,13 +825,13 @@ const RecipesTab = ({ productId, productType, isNew, sellingPrice }: { productId
         );
     }
 
-    if (productType !== "FINISHED_GOOD") {
+    if (productType === "RAW_MATERIAL") {
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center bg-muted/10 rounded-lg border border-dashed border-border">
                 <Activity className="h-8 w-8 text-muted-foreground opacity-30 mb-3" />
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-widest">Recipes Unavailable</h3>
                 <p className="text-[11px] text-muted-foreground mt-1 max-w-xs leading-relaxed">
-                    Recipes are only applicable to <span className="text-primary font-bold">Finished Goods</span>. Raw materials are used as components within recipes.
+                    Recipes are only applicable to <span className="text-primary font-bold">Finished Goods</span> and <span className="text-primary font-bold">Semi Finished Items</span>. Raw materials are used as components within recipes.
                 </p>
             </div>
         );
@@ -922,11 +965,13 @@ const ProductFormPage = () => {
     const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
     const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
     const { mutate: deletePhoto } = useDeleteProductPhoto();
+    const currentUser = useCurrentUser();
+    const isRoot = currentUser?.is_root_user || false;
     const isSaving = isCreating || isUpdating;
 
     // --- State Initialization ---
     const [productData, setProductData] = useState<Partial<Product>>({
-        id: isNew ? crypto.randomUUID() : (id as string),
+        ...(isNew ? {} : { id: id as string }),
         code: "", product_name: "", category_id: null, product_type: "FINISHED_GOOD",
         is_brand: false, base_unit: "pcs", unit_category: "count",
         weight: null, length: null, width: null, height: null, size_value: null,
@@ -937,6 +982,7 @@ const ProductFormPage = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [apiError, setApiError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState("measurements");
+    const [showSecretInput, setShowSecretInput] = useState(false);
 
     // UI states
     const [imagePreviews, setImagePreviews] = useState<{ id?: string; url: string }[]>([]);
@@ -1003,8 +1049,12 @@ const ProductFormPage = () => {
     // Sync fetched data to local state
     useEffect(() => {
         if (fetchedProduct && !isNew) {
-            setProductData(fetchedProduct);
+            setProductData({
+                ...fetchedProduct,
+                secret_name: fetchedProduct.secret_name || (fetchedProduct.metadata?.secret_name as string) || ""
+            });
             const initial = getInitialMetadata(fetchedProduct);
+            if (fetchedProduct.secret_name || fetchedProduct.metadata?.secret_name) setShowSecretInput(true);
             setMetaColors(initial.colors);
             setMetaFeatures(initial.features);
             setMetaParams(initial.params);
@@ -1058,8 +1108,13 @@ const ProductFormPage = () => {
     const handleReset = useCallback(() => {
         setErrors({}); setApiError(null);
         if (fetchedProduct && !isNew) {
-            setProductData(fetchedProduct);
+            setProductData({
+                ...fetchedProduct,
+                secret_name: fetchedProduct.secret_name || (fetchedProduct.metadata?.secret_name as string) || ""
+            });
             const initial = getInitialMetadata(fetchedProduct);
+            if (fetchedProduct.secret_name || fetchedProduct.metadata?.secret_name) setShowSecretInput(true);
+            else setShowSecretInput(false);
             setMetaColors(initial.colors); setMetaFeatures(initial.features);
             setMetaParams(initial.params); setMetaAttrs(initial.attrs);
 
@@ -1071,12 +1126,13 @@ const ProductFormPage = () => {
             }
         } else {
             setProductData({
-                id: crypto.randomUUID(), product_type: "FINISHED_GOOD",
+                product_type: "FINISHED_GOOD",
                 base_unit: "pcs", unit_category: "count", is_active: true,
             });
             setMetaColors(['']); setMetaFeatures(['']);
             setMetaParams([{ key: '', value: '' }]); setMetaAttrs([{ key: '', value: '' }]);
             setImagePreviews([]);
+            setShowSecretInput(false);
         }
     }, [fetchedProduct, isNew, getInitialMetadata]);
 
@@ -1114,7 +1170,7 @@ const ProductFormPage = () => {
                     ...(finalColors.length > 0 && { colors: finalColors }),
                     ...(finalFeatures.length > 0 && { features: finalFeatures }),
                     ...(Object.keys(parameters).length > 0 && { parameters }),
-                    ...(Object.keys(attributes).length > 0 && { attributes })
+                    ...(Object.keys(attributes).length > 0 && { attributes }),
                 },
             };
 
@@ -1189,7 +1245,12 @@ const ProductFormPage = () => {
             fragrance: { open: isFragranceDrawerOpen, setOpen: setIsFragranceDrawerOpen },
             brand: { open: isBrandDrawerOpen, setOpen: setIsBrandDrawerOpen },
         },
-        packageModal: { open: isPackageModalOpen, setOpen: setIsPackageModalOpen }
+        packageModal: { open: isPackageModalOpen, setOpen: setIsPackageModalOpen },
+        adminFeature: {
+            isRoot,
+            showSecret: showSecretInput,
+            setShowSecret: setShowSecretInput
+        }
     };
 
     // --- Render ---
@@ -1318,23 +1379,29 @@ const ProductFormPage = () => {
                                 Units & Measurements
                                 {errors.base_unit || errors.weight ? <span className="ml-2 h-2 w-2 rounded-full bg-destructive" /> : null}
                             </TabsTrigger>
-                            <TabsTrigger value="packaging" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
-                                Packaging
-                                {errors.packaging_id ? <span className="ml-2 h-2 w-2 rounded-full bg-destructive" /> : null}
-                            </TabsTrigger>
+                            {productData.product_type !== "RAW_MATERIAL" && (
+                                <TabsTrigger value="packaging" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
+                                    Packaging
+                                    {errors.packaging_id ? <span className="ml-2 h-2 w-2 rounded-full bg-destructive" /> : null}
+                                </TabsTrigger>
+                            )}
                             <TabsTrigger value="pricing" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
                                 Pricing & Tax
                                 {errors.cost_price || errors.selling_price ? <span className="ml-2 h-2 w-2 rounded-full bg-destructive" /> : null}
                             </TabsTrigger>
-                            <TabsTrigger value="specifications" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
-                                Specifications
-                            </TabsTrigger>
-                            <TabsTrigger value="kits" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
-                                Kits
-                            </TabsTrigger>
-                            <TabsTrigger value="recipes" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
-                                Recipes
-                            </TabsTrigger>
+                            {productData.product_type !== "RAW_MATERIAL" && (
+                                <>
+                                    <TabsTrigger value="specifications" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
+                                        Specifications
+                                    </TabsTrigger>
+                                    <TabsTrigger value="kits" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
+                                        Kits
+                                    </TabsTrigger>
+                                    <TabsTrigger value="recipes" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-4 py-2 text-xs uppercase tracking-wider font-semibold">
+                                        Recipes
+                                    </TabsTrigger>
+                                </>
+                            )}
                         </TabsList>
 
                         <div className="min-h-[300px]">

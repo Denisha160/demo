@@ -1,4 +1,4 @@
-export type ProductType = 'RAW_MATERIAL' | 'FINISHED_GOOD';
+export type ProductType = 'RAW_MATERIAL' | 'SEMI_FINISHED' | 'FINISHED_GOOD';
 export type UnitCategory = 'weight' | 'volume' | 'count';
 export type BaseUnit = 'kg' | 'g' | 'ltr' | 'ml' | 'pcs';
 export type DimensionUnit = 'mm' | 'cm' | 'm' | 'in' | 'ft';
@@ -14,6 +14,7 @@ export interface Product {
     id: string;
     code: string;
     product_name: string;
+    secret_name: string | null;
     category_id: string | null;
     product_type: ProductType;
     is_brand: boolean;

@@ -54,7 +54,6 @@ const formSchema = z.object({
   website: z.string().optional().or(z.literal("")),
   gst_number: z.string().optional().or(z.literal("")),
   priority: z.string().optional().or(z.literal("")),
-  lead_type: z.string().optional().or(z.literal("")),
   assigned_to: z.string().optional().or(z.literal("")),
   interested_category_id: z.string().optional().or(z.literal("")),
   tags: z.string().optional().or(z.literal("")),
@@ -98,8 +97,7 @@ const LeadModal = ({
       designation: "",
       website: "",
       gst_number: "",
-      priority: "MEDIUM",
-      lead_type: "LEAD",
+      priority: "HOT",
       assigned_to: "",
       interested_category_id: "",
       tags: "",
@@ -148,8 +146,7 @@ const LeadModal = ({
       designation: "",
       website: "",
       gst_number: "",
-      priority: "MEDIUM",
-      lead_type: "LEAD",
+      priority: "HOT",
       assigned_to: "",
       interested_category_id: "",
       tags: "",
@@ -224,8 +221,7 @@ const LeadModal = ({
               options={[
                 { value: "HOT", label: "Hot" },
                 { value: "WARM", label: "Warm" },
-                { value: "COLD", label: "Cold" },
-                { value: "MEDIUM", label: "Medium" }
+                { value: "COLD", label: "Cold" }
               ]}
               value={form.watch("priority")}
               onValueChange={(value) => form.setValue("priority", value, { shouldValidate: true, shouldDirty: true })}
@@ -324,18 +320,6 @@ const LeadModal = ({
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-foreground">GST Number</Label>
             <Input className="h-9 text-xs border-border/60 uppercase" {...form.register("gst_number")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Lead Type</Label>
-            <Combobox
-              options={[
-                { value: "LEAD", label: "Lead" },
-                { value: "PROSPECT", label: "Prospect" },
-              ]}
-              value={form.watch("lead_type")}
-              onValueChange={(value) => form.setValue("lead_type", value, { shouldValidate: true, shouldDirty: true })}
-            />
           </div>
 
           <div className="space-y-1.5">

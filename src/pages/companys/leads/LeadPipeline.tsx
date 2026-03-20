@@ -1,5 +1,13 @@
-import { Droppable, Draggable, DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { useEffect, useState } from "react";
+import {
+    DragDropContext,
+    Draggable,
+    Droppable,
+    type DropResult,
+} from "@hello-pangea/dnd";
+import { GripVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
 import { PipelineColumn } from "../../../types/leads";
 
@@ -8,93 +16,199 @@ interface LeadPipelineProps {
     onDragEnd: (result: DropResult) => void;
 }
 
+const INITIAL_VISIBLE_DEALS = 10;
+const LOAD_MORE_STEP = 10;
+
 const LeadPipeline = ({ displayedColumns, onDragEnd }: LeadPipelineProps) => {
     const navigate = useNavigate();
+    const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>({});
+
+    useEffect(() => {
+        setVisibleCounts((prev) => {
+            const next: Record<string, number> = {};
+
+            displayedColumns.forEach((column) => {
+                const previousCount = prev[column.id] ?? INITIAL_VISIBLE_DEALS;
+                next[column.id] = Math.min(
+                    Math.max(previousCount, INITIAL_VISIBLE_DEALS),
+                    column.deals.length || INITIAL_VISIBLE_DEALS
+                );
+            });
+
+            return next;
+        });
+    }, [displayedColumns]);
+
+    const handleLoadMore = (columnId: string, totalDeals: number) => {
+        setVisibleCounts((prev) => ({
+            ...prev,
+            [columnId]: Math.min((prev[columnId] ?? INITIAL_VISIBLE_DEALS) + LOAD_MORE_STEP, totalDeals),
+        }));
+    };
+
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide min-h-[calc(100vh-200px)]">
-                {displayedColumns.map((col) => (
-                    <div key={col.id} className="flex-shrink-0 w-[280px]">
-                        <div className="group/column flex flex-col h-full bg-secondary/20 rounded-xl overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] border border-border/5">
-                            <div className="relative flex items-center justify-between p-3.5 bg-background/80 backdrop-blur-xl border-b border-border/10 transition-colors">
-                                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover/column:opacity-100 transition-opacity duration-500" />
-                                <div className="flex items-center gap-2.5">
-                                    <div className="transform transition-transform duration-300 group-hover/column:scale-105">
-                                        <StatusBadge status={col.title} variant={col.variant} />
-                                    </div>
-                                    <div className="flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-secondary/80 border border-border/40 text-[11px] font-extrabold text-foreground/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]">
-                                        {col.deals.length}
-                                    </div>
-                                </div>
+            <Droppable droppableId="pipeline-columns" direction="horizontal" type="COLUMN">
+                {(boardProvided) => (
+                    <div
+                        ref={boardProvided.innerRef}
+                        {...boardProvided.droppableProps}
+                        className="flex h-full min-h-0 gap-3 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide"
+                    >
+                        {displayedColumns.map((col, columnIndex) => {
+                            const visibleDeals = col.deals.slice(
+                                0,
+                                visibleCounts[col.id] ?? INITIAL_VISIBLE_DEALS
+                            );
+                            const canLoadMore = visibleDeals.length < col.deals.length;
 
-                            </div>
+                            return (
+                                <Draggable
+                                    key={col.id}
+                                    draggableId={col.id}
+                                    index={columnIndex}
+                                >
+                                    {(columnProvided, columnSnapshot) => (
+                                        <div
+                                            ref={columnProvided.innerRef}
+                                            {...columnProvided.draggableProps}
+                                            style={columnProvided.draggableProps.style}
+                                            className={`flex h-full min-h-0 w-[300px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/40 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-shadow ${columnSnapshot.isDragging
+                                                ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
+                                                : ""
+                                                }`}
+                                        >
+                                            <div
+                                                {...columnProvided.dragHandleProps}
+                                                className="flex cursor-grab items-center justify-between border-b border-border/20 bg-background/90 px-3.5 py-3 backdrop-blur-xl active:cursor-grabbing"
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <GripVertical className="h-4 w-4 text-muted-foreground/70" />
+                                                    <StatusBadge status={col.title} variant={col.variant} />
+                                                    <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full border border-border/40 bg-secondary/80 px-1.5 text-[11px] font-extrabold text-foreground/70">
+                                                        {col.deals.length}
+                                                    </div>
+                                                </div>
 
-                            <Droppable droppableId={col.id}>
-                                {(provided, snapshot) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={`p-3 flex-1 space-y-3 transition-colors duration-300 rounded-b-xl ${snapshot.isDraggingOver ? "bg-primary/10" : "bg-transparent"}`}
-                                    >
-                                        {col.deals.map((deal, i) => (
-                                            <Draggable key={deal.id} draggableId={deal.id} index={i}>
-                                                {(provided, snapshot) => (
+                                                <span className="text-[11px] font-medium text-muted-foreground">
+                                                    Drag column
+                                                </span>
+                                            </div>
+
+                                            <Droppable droppableId={col.id} type="DEAL">
+                                                {(dealProvided, dealSnapshot) => (
                                                     <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        style={{
-                                                            ...provided.draggableProps.style,
-                                                        }}
-                                                        className={`group relative bg-card rounded-xl p-4 transition-all duration-300 ease-out cursor-pointer active:cursor-grabbing ${snapshot.isDragging
-                                                            ? "shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40 scale-[1.04] rotate-2 z-50 opacity-95"
-                                                            : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:-translate-y-1 hover:ring-1 hover:ring-primary/20"
+                                                        ref={dealProvided.innerRef}
+                                                        {...dealProvided.droppableProps}
+                                                        className={`flex min-h-0 flex-1 flex-col transition-colors ${dealSnapshot.isDraggingOver ? "bg-primary/5" : "bg-transparent"
                                                             }`}
                                                     >
-                                                        <div onClick={() => navigate(deal.id)} className="flex flex-col gap-1.5 focus:outline-none h-full">
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="flex justify-between items-start gap-2">
-                                                                    <p className="text-[14px] font-semibold text-foreground leading-tight line-clamp-2 transition-colors group-hover:text-primary">
-                                                                        {deal.title}
-                                                                    </p>
-                                                                    <span className="text-[10px] text-muted-foreground/80 tabular-nums whitespace-nowrap bg-secondary/60 px-2 py-0.5 rounded-full font-medium">
-                                                                        {deal.date}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-[11px] text-muted-foreground truncate mt-1">{deal.company}</p>
+                                                        <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-thin">
+                                                            <div className="space-y-3">
+                                                                {visibleDeals.map((deal, i) => (
+                                                                    <Draggable
+                                                                        key={deal.id}
+                                                                        draggableId={deal.id}
+                                                                        index={i}
+                                                                    >
+                                                                        {(dealDragProvided, dealDragSnapshot) => (
+                                                                            <div
+                                                                                ref={dealDragProvided.innerRef}
+                                                                                {...dealDragProvided.draggableProps}
+                                                                                {...dealDragProvided.dragHandleProps}
+                                                                                style={dealDragProvided.draggableProps.style}
+                                                                                className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${dealDragSnapshot.isDragging
+                                                                                    ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
+                                                                                    : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
+                                                                                    }`}
+                                                                            >
+                                                                                <div
+                                                                                    onClick={() => navigate(deal.id)}
+                                                                                    className="flex h-full flex-col gap-1.5 focus:outline-none"
+                                                                                >
+                                                                                    <div className="min-w-0 flex-1">
+                                                                                        <div className="flex items-start justify-between gap-2">
+                                                                                            <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
+                                                                                                {deal.title}
+                                                                                            </p>
+                                                                                            <span className="whitespace-nowrap rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground/80">
+                                                                                                {deal.date}
+                                                                                            </span>
+                                                                                        </div>
 
-                                                                {deal.quotationStatus && (
-                                                                    <div className="mt-2.5 flex items-center gap-1.5">
-                                                                        <StatusBadge
-                                                                            status={deal.quotationStatus === "approved" ? "Quotation Approved" : "Quotation Rejected"}
-                                                                            variant={deal.quotationStatus === "approved" ? "success" : "destructive"}
-                                                                        />
-                                                                    </div>
-                                                                )}
+                                                                                        <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                                                                                            {deal.company}
+                                                                                        </p>
 
-                                                                <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-border/10">
-                                                                    <span className="text-[12px] font-bold text-foreground bg-primary/5 px-2 py-0.5 rounded-md text-primary">{deal.value}</span>
-                                                                    <div className="flex items-center gap-1.5 overflow-hidden bg-secondary/30 px-1.5 py-0.5 rounded-full">
-                                                                        <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center text-[9px] font-bold text-primary">
-                                                                            {deal.contact.charAt(0)}
-                                                                        </div>
-                                                                        <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[80px]">{deal.contact}</span>
-                                                                    </div>
-                                                                </div>
+                                                                                        {deal.quotationStatus && (
+                                                                                            <div className="mt-2.5 flex items-center gap-1.5">
+                                                                                                <StatusBadge
+                                                                                                    status={
+                                                                                                        deal.quotationStatus === "approved"
+                                                                                                            ? "Quotation Approved"
+                                                                                                            : "Quotation Rejected"
+                                                                                                    }
+                                                                                                    variant={
+                                                                                                        deal.quotationStatus === "approved"
+                                                                                                            ? "success"
+                                                                                                            : "destructive"
+                                                                                                    }
+                                                                                                />
+                                                                                            </div>
+                                                                                        )}
+
+                                                                                        <div className="mt-3.5 flex items-center justify-between border-t border-border/10 pt-3">
+                                                                                            <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
+                                                                                                {deal.value}
+                                                                                            </span>
+                                                                                            <div className="flex items-center gap-1.5 overflow-hidden rounded-full bg-secondary/30 px-1.5 py-0.5">
+                                                                                                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[9px] font-bold text-primary">
+                                                                                                    {deal.contact.charAt(0)}
+                                                                                                </div>
+                                                                                                <span className="max-w-[80px] truncate text-[10px] font-medium text-muted-foreground">
+                                                                                                    {deal.contact}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ))}
+                                                                {dealProvided.placeholder}
                                                             </div>
+                                                        </div>
+
+                                                        <div className="border-t border-border/20 bg-background/80 p-3">
+                                                            {canLoadMore ? (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-9 w-full"
+                                                                    onClick={() => handleLoadMore(col.id, col.deals.length)}
+                                                                >
+                                                                    Load More
+                                                                </Button>
+                                                            ) : (
+                                                                <div className="text-center text-xs text-muted-foreground">
+                                                                    All leads loaded
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </Droppable>
-                        </div>
+                                            </Droppable>
+                                        </div>
+                                    )}
+                                </Draggable>
+                            );
+                        })}
+                        {boardProvided.placeholder}
                     </div>
-                ))}
-            </div>
+                )}
+            </Droppable>
         </DragDropContext>
     );
 };

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { toast } from "react-toastify";
-import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import { DropResult } from "@hello-pangea/dnd";
 import { parseISO, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { Plus, Search, Filter, List, Kanban } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -89,8 +89,23 @@ const LeadsPage = () => {
     }, [searchTerm, dateRange]);
 
     const onDragEnd = (result: DropResult) => {
-        const { source, destination } = result;
+        const { source, destination, type } = result;
         if (!destination) return;
+
+        if (type === "COLUMN") {
+            setColumns((prev) => {
+                const next = [...prev];
+                const [movedColumn] = next.splice(source.index, 1);
+
+                if (!movedColumn) {
+                    return prev;
+                }
+
+                next.splice(destination.index, 0, movedColumn);
+                return next;
+            });
+            return;
+        }
 
         const newCols = [...columns];
         const srcCol = newCols.find((c) => c.id === source.droppableId)!;
@@ -157,8 +172,8 @@ const LeadsPage = () => {
     }, [columns, isDealVisible, visibleStageIds]);
 
     return (
-        <div className="w-full mx-auto space-y-2 animate-fade-in">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-2">
+        <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full flex-col overflow-hidden animate-fade-in">
+            <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:flex-initial">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
@@ -241,11 +256,15 @@ const LeadsPage = () => {
                 </div>
             </div>
 
-            {viewMode === "pipeline" ? (
-                <LeadPipeline displayedColumns={displayedColumns} onDragEnd={onDragEnd} />
-            ) : (
-                <LeadTable displayedColumns={displayedColumns} />
-            )}
+            <div className="min-h-0 flex-1 overflow-hidden pt-2">
+                {viewMode === "pipeline" ? (
+                    <LeadPipeline displayedColumns={displayedColumns} onDragEnd={onDragEnd} />
+                ) : (
+                    <div className="h-full overflow-auto">
+                        <LeadTable displayedColumns={displayedColumns} />
+                    </div>
+                )}
+            </div>
 
             <LeadModal
                 open={!!addModalCol}

@@ -1,235 +1,222 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
-
 import DataTable, { Column } from "@/components/DataTable";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 import ReminderModal, { Reminder, ReminderFormData } from "./ReminderModal";
+import {
+  useCreateLeadReminder,
+  useDeleteLeadReminder,
+  useLeadReminders,
+  useUpdateLeadReminder,
+} from "@/hooks/useLeadReminders";
 
-const initialReminders: Reminder[] = [
-    {
-        id: "1",
-        remind_date: "2026-03-20",
-        remind_time: "10:30",
-        title: "Follow up with customer",
-        description: "Call the customer and confirm interest in the final quotation.",
-    },
-    {
-        id: "2",
-        remind_date: "2026-03-22",
-        remind_time: "15:45",
-        title: "Send brochure",
-        description: "Share the latest product brochure and pricing details over email.",
-    },
-];
-
-const formatReminderDateTime = (date: string, time: string) => {
-    if (!date && !time) return "-";
-    if (!date) return time;
-    if (!time) return date;
-
-    const parsed = new Date(`${date}T${time}`);
-
-    if (Number.isNaN(parsed.getTime())) {
-        return `${date} ${time}`;
-    }
-
-    return new Intl.DateTimeFormat("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    }).format(parsed);
+const applyServerValidationErrors = (
+  error: any,
+  setError: (field: any, err: any) => void
+) => {
+  if (error?.code === "validation_error" && error?.details?.body) {
+    Object.entries(error.details.body).forEach(([key, message]) => {
+      setError(key as any, { type: "server", message: String(message) });
+    });
+  }
 };
 
-const RemindersTab = () => {
-    const [reminders, setReminders] = useState<Reminder[]>(initialReminders);
-    const [search, setSearch] = useState("");
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
-    const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(null);
+const formatReminderDateTime = (date: string, time: string) => {
+  if (!date && !time) return "-";
+  if (!date) return time;
+  if (!time) return date;
 
-    const filteredReminders = reminders.filter((reminder) => {
+  const parsed = new Date(`${date}T${time}`);
+  if (Number.isNaN(parsed.getTime())) return `${date} ${time}`;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsed);
+};
+
+interface RemindersTabProps {
+  leadId: string;
+}
+
+const RemindersTab = ({ leadId }: RemindersTabProps) => {
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(null);
+
+  const { data: reminders = [], isLoading } = useLeadReminders(leadId);
+  const createReminderMutation = useCreateLeadReminder(leadId);
+  const updateReminderMutation = useUpdateLeadReminder(leadId);
+  const deleteReminderMutation = useDeleteLeadReminder(leadId);
+
+  const filteredReminders = useMemo(
+    () =>
+      reminders.filter((reminder: Reminder) => {
         const query = search.toLowerCase();
-
         return (
-            reminder.title.toLowerCase().includes(query) ||
-            reminder.description.toLowerCase().includes(query) ||
-            reminder.remind_date.toLowerCase().includes(query) ||
-            reminder.remind_time.toLowerCase().includes(query)
+          reminder.title.toLowerCase().includes(query) ||
+          reminder.description.toLowerCase().includes(query) ||
+          reminder.remind_date.toLowerCase().includes(query) ||
+          reminder.remind_time.toLowerCase().includes(query)
         );
-    });
+      }),
+    [reminders, search]
+  );
 
-    const handleCreate = () => {
-        setEditingReminder(null);
-        setIsModalOpen(true);
-    };
-
-    const handleEdit = (reminder: Reminder) => {
-        setEditingReminder(reminder);
-        setIsModalOpen(true);
-    };
-
-    const handleDelete = (id: string) => {
-        setReminders((prev) => prev.filter((reminder) => reminder.id !== id));
-        setReminderToDelete(null);
-    };
-
-    const handleSaveReminder = (formData: ReminderFormData) => {
-        if (editingReminder) {
-            setReminders((prev) =>
-                prev.map((reminder) =>
-                    reminder.id === editingReminder.id ? { ...reminder, ...formData } : reminder,
-                ),
-            );
-        } else {
-            const newReminder: Reminder = {
-                id: crypto.randomUUID(),
-                ...formData,
-            };
-
-            setReminders((prev) => [newReminder, ...prev]);
+  const handleSaveReminder = (formData: ReminderFormData, setError: (field: any, err: any) => void) => {
+    if (editingReminder) {
+      updateReminderMutation.mutate(
+        { reminderId: editingReminder.id, ...formData },
+        {
+          onSuccess: () => {
+            setIsModalOpen(false);
+            setEditingReminder(null);
+          },
+          onError: (error) => applyServerValidationErrors(error, setError),
         }
+      );
+      return;
+    }
 
-        setIsModalOpen(false);
-        setEditingReminder(null);
-    };
+    createReminderMutation.mutate(formData, {
+      onSuccess: () => setIsModalOpen(false),
+      onError: (error) => applyServerValidationErrors(error, setError),
+    });
+  };
 
-    const columns: Column<Reminder>[] = [
-        {
-            key: "remind_date",
-            header: "Reminder Date",
-            render: (item) => (
-                <div className="flex flex-col">
-                    <span className="text-sm font-medium text-foreground">
-                        {formatReminderDateTime(item.remind_date, item.remind_time)}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground">
-                        {item.remind_date} at {item.remind_time}
-                    </span>
-                </div>
-            ),
-        },
-        {
-            key: "title",
-            header: "Title",
-            render: (item) => (
-                <div className="flex items-start gap-2">
-
-                    <div className="flex flex-col">
-                        <span className="font-medium text-sm text-foreground">{item.title}</span>
-                        <span className="text-[11px] text-muted-foreground line-clamp-2">
-                            {item.description}
-                        </span>
-                    </div>
-                </div>
-            ),
-        },
-        {
-            key: "description",
-            header: "Description",
-            render: (item) => (
-                <span className="text-xs text-muted-foreground line-clamp-2 max-w-md">
-                    {item.description}
-                </span>
-            ),
-        },
-        {
-            key: "id",
-            header: "Actions",
-            render: (item) => (
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-sm hover:bg-primary/10 hover:text-primary"
-                        onClick={() => handleEdit(item)}
-                    >
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => setReminderToDelete(item)}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            ),
-        },
-    ];
-
-    return (
-        <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 w-full animate-fade-in">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <Button size="sm" className="h-9 gap-2 px-4" onClick={handleCreate}>
-                    <Plus className="h-4 w-4" />
-                    Add Reminder
-                </Button>
-
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                        placeholder="Search reminders..."
-                        className="h-9 w-[250px] pl-9 text-sm"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                </div>
-            </div>
-
-            <DataTable columns={columns} data={filteredReminders} pageSize={10} />
-
-            {isModalOpen && (
-                <ReminderModal
-                    open={isModalOpen}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        setEditingReminder(null);
-                    }}
-                    reminderData={editingReminder}
-                    onSave={handleSaveReminder}
-                />
-            )}
-
-            <AlertDialog
-                open={!!reminderToDelete}
-                onOpenChange={(open) => !open && setReminderToDelete(null)}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete the reminder for "{reminderToDelete?.title}".
-                            This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={() => reminderToDelete && handleDelete(reminderToDelete.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+  const columns: Column<Reminder>[] = [
+    {
+      key: "remind_date",
+      header: "Reminder Date",
+      render: (item) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-foreground">{formatReminderDateTime(item.remind_date, item.remind_time)}</span>
+          <span className="text-[11px] text-muted-foreground">{item.remind_date} at {item.remind_time}</span>
         </div>
-    );
+      ),
+    },
+    {
+      key: "title",
+      header: "Title",
+      render: (item) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-foreground">{item.title}</span>
+          <span className="line-clamp-2 text-[11px] text-muted-foreground">{item.description}</span>
+        </div>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      render: (item) => <span className="max-w-md line-clamp-2 text-xs text-muted-foreground">{item.description}</span>,
+    },
+    {
+      key: "id",
+      header: "Actions",
+      render: (item) => (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-sm hover:bg-primary/10 hover:text-primary"
+            onClick={() => {
+              setEditingReminder(item);
+              setIsModalOpen(true);
+            }}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => setReminderToDelete(item)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 w-full animate-fade-in">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Button size="sm" className="h-9 gap-2 px-4" onClick={() => setIsModalOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Add Reminder
+        </Button>
+
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search reminders..."
+            className="h-9 w-[250px] pl-9 text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <DataTable columns={columns} data={filteredReminders} pageSize={10} />
+      {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading reminders...</p>}
+
+      {isModalOpen && (
+        <ReminderModal
+          open={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingReminder(null);
+          }}
+          reminderData={editingReminder}
+          onSave={handleSaveReminder}
+          isSubmitting={createReminderMutation.isPending || updateReminderMutation.isPending}
+        />
+      )}
+
+      <AlertDialog open={!!reminderToDelete} onOpenChange={(open) => !open && setReminderToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the reminder for "{reminderToDelete?.title}".
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteReminderMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                reminderToDelete &&
+                deleteReminderMutation.mutate(reminderToDelete.id, {
+                  onSuccess: () => setReminderToDelete(null),
+                })
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteReminderMutation.isPending}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
 };
 
 export default RemindersTab;

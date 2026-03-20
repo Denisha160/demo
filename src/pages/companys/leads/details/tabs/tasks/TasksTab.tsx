@@ -52,7 +52,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
     () =>
       tasks.filter((task: Task) =>
         task.title.toLowerCase().includes(search.toLowerCase()) ||
-        task.assigned_to.toLowerCase().includes(search.toLowerCase())
+        String(task.assigned_to_name || task.assigned_to || "").toLowerCase().includes(search.toLowerCase())
       ),
     [tasks, search]
   );
@@ -74,7 +74,11 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
     if (editingTask) {
       updateTaskMutation.mutate(
-        { taskId: editingTask.id, ...formData },
+        {
+          taskId: editingTask.id,
+          ...formData,
+          assigned_to_id: formData.assigned_to,
+        },
         {
           onSuccess: () => {
             setIsModalOpen(false);
@@ -86,7 +90,10 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
       return;
     }
 
-    createTaskMutation.mutate(formData, {
+    createTaskMutation.mutate({
+      ...formData,
+      assigned_to_id: formData.assigned_to,
+    }, {
       onSuccess: () => setIsModalOpen(false),
       onError: (error) => applyServerValidationErrors(error, setError),
     });
@@ -143,7 +150,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
     {
       key: "assigned_to",
       header: "Assigned To",
-      render: (item) => <span className="text-sm">{item.assigned_to}</span>,
+      render: (item) => <span className="text-sm">{item.assigned_to_name || item.assigned_to}</span>,
     },
     {
       key: "due_date",

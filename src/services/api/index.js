@@ -358,6 +358,51 @@ export const deleteLeadVisit = ({ leadId, visitId }) => {
 
 // end region
 
+// region Lead Attachments
+// ===================== Lead Attachments =====================
+
+export const uploadLeadAttachment = (leadId, formData) => {
+  const url = `leads/${leadId}/attachments`;
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const deleteLeadAttachment = (attachmentId) => {
+  const url = `leads/attachments/${attachmentId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Reminders
+// ===================== Lead Reminders =====================
+
+export const listLeadReminders = (leadId, params) => {
+  const url = `leads/${leadId}/reminders`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadReminder = (leadId, data) => {
+  const url = `leads/${leadId}/reminders`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadReminder = ({ leadId, reminderId, ...data }) => {
+  const url = `leads/${leadId}/reminders/${reminderId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadReminder = ({ leadId, reminderId }) => {
+  const url = `leads/${leadId}/reminders/${reminderId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
 // region BOM
 // ===================== BOM =====================
 

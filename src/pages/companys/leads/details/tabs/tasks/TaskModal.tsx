@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Combobox } from "@/components/ui/combobox";
+import { useUsers } from "@/hooks/useUsers";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title cannot exceed 100 characters"),
@@ -38,6 +40,7 @@ export type TaskFormData = z.infer<typeof taskSchema>;
 export interface Task extends TaskFormData {
   id: string;
   created_at: string;
+  assigned_to_name?: string;
 }
 
 interface TaskModalProps {
@@ -49,6 +52,13 @@ interface TaskModalProps {
 }
 
 const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalProps) => {
+  const { data: usersResponse } = useUsers({ limit: 100 });
+  const users = usersResponse?.items || usersResponse || [];
+  const userOptions = users.map((user: any) => ({
+    value: user.id,
+    label: user.name,
+  }));
+
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
@@ -230,11 +240,13 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
                     <span className="text-destructive">*</span> Assigned To
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="User name"
-                      className="h-9 text-xs"
+                    <Combobox
+                      options={userOptions}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Search and select a user..."
                       disabled={isSubmitting}
-                      {...field}
+                      className={form.formState.errors.assigned_to ? "border-destructive" : ""}
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />

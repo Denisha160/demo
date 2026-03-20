@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import Modal from "@/components/Modal";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Combobox } from "@/components/ui/combobox";
+import { useUsers } from "@/hooks/useUsers";
 
 const followUpSchema = z.object({
     status: z.string().min(1, "Status is required"),
@@ -26,13 +28,16 @@ const followUpSchema = z.object({
     purpose: z.string().min(1, "Purpose is required"),
     assignedTo: z.string().min(1, "Assigned to is required"),
     createdBy: z.string().min(1, "Created by is required"),
-    date: z.string().optional(),
+    scheduled_at: z.string().optional(),
 });
 
 export type FollowUpFormData = z.infer<typeof followUpSchema>;
 
 export interface FollowUp extends FollowUpFormData {
     id: string;
+    assigned_to_name?: string;
+    assigned_to?: string;
+    created_by?: string;
 }
 
 interface FollowUpModalProps {
@@ -52,6 +57,12 @@ const FollowUpModal = ({
     onSave,
     isSubmitting = false,
 }: FollowUpModalProps) => {
+    const { data: usersResponse } = useUsers({ limit: 100 });
+    const users = usersResponse?.items || usersResponse || [];
+    const userOptions = users.map((user: any) => ({
+        value: user.id,
+        label: user.name,
+    }));
 
     const {
         register,
@@ -69,14 +80,21 @@ const FollowUpModal = ({
             purpose: "",
             assignedTo: "",
             createdBy: "",
-            date: new Date().toISOString().split("T")[0],
+            scheduled_at: new Date().toISOString().split("T")[0],
         }
     });
 
     useEffect(() => {
         if (open) {
             if (isEditing && followUpData) {
-                reset(followUpData);
+                reset({
+                    status: followUpData.status || "Pending",
+                    followUpMethod: followUpData.followUpMethod || "Call",
+                    purpose: followUpData.purpose || "",
+                    assignedTo: followUpData.assignedTo || followUpData.assigned_to || "",
+                    createdBy: followUpData.createdBy || followUpData.created_by || "",
+                    scheduled_at: followUpData.scheduled_at || new Date().toISOString().split("T")[0],
+                });
             } else {
                 reset({
                     status: "Pending",
@@ -84,7 +102,7 @@ const FollowUpModal = ({
                     purpose: "",
                     assignedTo: "",
                     createdBy: "",
-                    date: new Date().toISOString().split("T")[0],
+                    scheduled_at: new Date().toISOString().split("T")[0],
                 });
             }
         }
@@ -96,7 +114,7 @@ const FollowUpModal = ({
 
     const status = watch("status");
     const followUpMethod = watch("followUpMethod");
-    const date = watch("date"); // ✅ important
+    const date = watch("scheduled_at"); // ✅ important
 
     return (
         <Modal
@@ -173,7 +191,14 @@ const FollowUpModal = ({
                     {/* Assigned */}
                     <div>
                         <Label>Assigned To</Label>
-                        <Input {...register("assignedTo")} />
+                        <Combobox
+                            options={userOptions}
+                            value={watch("assignedTo")}
+                            onValueChange={(value) => setValue("assignedTo", value, { shouldValidate: true })}
+                            placeholder="Search and select a user..."
+                            disabled={isSubmitting}
+                            className={errors.assignedTo ? "border-destructive" : ""}
+                        />
                         {errors.assignedTo && <p className="text-xs text-red-500">{errors.assignedTo.message}</p>}
                     </div>
 
@@ -190,11 +215,11 @@ const FollowUpModal = ({
                         <DatePicker
                             value={date} // ✅ string value
                             onChange={(val: string) =>
-                                setValue("date", val, { shouldValidate: true })
+                                setValue("scheduled_at", val, { shouldValidate: true })
                             }
                             disabled={isSubmitting}
                         />
-                        {errors.date && <p className="text-xs text-red-500">{errors.date.message}</p>}
+                        {errors.scheduled_at && <p className="text-xs text-red-500">{errors.scheduled_at.message}</p>}
                     </div>
 
                 </div>

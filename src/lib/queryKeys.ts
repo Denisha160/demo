@@ -77,5 +77,7 @@ export const queryKeys = {
         followUps: (leadId: string) => [...queryKeys.leads.detail(leadId), 'follow-ups'] as const,
         tasks: (leadId: string) => [...queryKeys.leads.detail(leadId), 'tasks'] as const,
         visits: (leadId: string) => [...queryKeys.leads.detail(leadId), 'visits'] as const,
+        reminders: (leadId: string) => [...queryKeys.leads.detail(leadId), 'reminders'] as const,
+        attachments: (leadId: string) => [...queryKeys.leads.detail(leadId), 'attachments'] as const,
     },
 } as const;

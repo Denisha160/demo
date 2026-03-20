@@ -117,10 +117,10 @@ const LeadDetailsPage = () => {
             case "tasks": return id ? <TasksTab leadId={id} /> : null;
             case "call-logs": return <CallLogsTab />;
             case "products": return <ProductsTab />;
-            case "attachments": return <AttachmentsTab />;
+            case "attachments": return id ? <AttachmentsTab leadId={id} /> : null;
             case "activity": return <ActivityTab />;
             case "quotations": return <QuotationsTab />;
-            case "reminders": return <RemindersTab />;
+            case "reminders": return id ? <RemindersTab leadId={id} /> : null;
             default: return null;
         }
     };

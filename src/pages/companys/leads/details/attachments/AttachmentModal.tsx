@@ -18,7 +18,7 @@ export interface Attachment {
 interface AttachmentModalProps {
     open: boolean;
     onClose: () => void;
-    onSave: (attachment: Attachment) => void;
+    onSave: (file: File, attachment: Attachment) => void;
     isSubmitting?: boolean;
 }
 
@@ -72,7 +72,7 @@ const AttachmentModal = ({ open, onClose, onSave, isSubmitting }: AttachmentModa
             date: new Date().toISOString().split('T')[0],
         };
 
-        onSave(newAttachment);
+        onSave(selectedFile, newAttachment);
         onClose();
     };
 

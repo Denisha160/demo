@@ -28,7 +28,8 @@ const applyServerValidationErrors = (
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
-      setError(key as any, { type: "server", message: String(message) });
+      const fieldKey = key === "assigned_to" ? "assignedTo" : key === "created_by" ? "createdBy" : key;
+      setError(fieldKey as any, { type: "server", message: String(message) });
     });
   }
 };
@@ -52,7 +53,7 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
     () =>
       followUps.filter((item: FollowUp) =>
         item.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.assignedTo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(item.assignedTo || item.assigned_to_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.status.toLowerCase().includes(searchTerm.toLowerCase())
       ),
     [followUps, searchTerm]
@@ -68,7 +69,12 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
 
     if (editingFollowUp) {
       updateFollowUpMutation.mutate(
-        { followupId: editingFollowUp.id, ...data },
+        {
+          followupId: editingFollowUp.id,
+          ...data,
+          assigned_to: data.assignedTo,
+          assigned_to_id: data.assignedTo,
+        },
         {
           onSuccess: () => {
             setOpen(false);
@@ -80,7 +86,11 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
       return;
     }
 
-    createFollowUpMutation.mutate(data, {
+    createFollowUpMutation.mutate({
+      ...data,
+      assigned_to: data.assignedTo,
+      assigned_to_id: data.assignedTo,
+    }, {
       onSuccess: () => {
         setOpen(false);
       },
@@ -107,7 +117,11 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
     },
     { key: "followUpMethod", header: "Method" },
     { key: "purpose", header: "Purpose" },
-    { key: "assignedTo", header: "Assigned To" },
+    {
+      key: "assignedTo",
+      header: "Assigned To",
+      render: (item) => <span className="text-sm">{item.assigned_to_name || item.assignedTo}</span>,
+    },
     { key: "createdBy", header: "Created By" },
     {
       key: "id",

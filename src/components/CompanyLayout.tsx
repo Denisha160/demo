@@ -7,7 +7,7 @@ import {
   Package, Hash, Award, Wind, FileChartColumn, Landmark, FileScan
 } from "lucide-react";
 
-import { useLogout, useCurrentUser } from "@/hooks/useAuth";
+import { useLogout, useCurrentUser, useHasPermission } from "@/hooks/useAuth";
 import { createPortal } from "react-dom";
 import { getCompanyTheme } from "@/data/companyData";
 import { useCompanies } from "@/hooks/useCompanies";
@@ -22,6 +22,7 @@ interface NavItemEntry {
   label: string;
   icon: React.ElementType;
   path?: string;
+  permission?: string | string[];
   children?: NavItemEntry[];
 }
 
@@ -31,36 +32,35 @@ const navItems: NavItemEntry[] = [
     label: "CRM",
     icon: Blocks,
     children: [
-      { label: "Leads", icon: Box, path: "leads" },
+      { label: "Leads", icon: Box, path: "leads"},
       { label: "Status", icon: List, path: "status" },
       { label: "Sources", icon: Package, path: "source" },
       { label: "Quotations", icon: Package, path: "quotations" },
       { label: "Visites", icon: Package, path: "visites" },
       { label: "Reminders", icon: Package, path: "reminders" },
       { label: "Follow-ups", icon: Package, path: "followups" },
-
     ]
   },
-  { label: "Salesmen", icon: UserCheck, path: "salesmen" },
-  { label: "Employees", icon: Users, path: "employees" },
-  { label: "Attendance", icon: Clock, path: "attendance" },
-  { label: "Suppliers", icon: Truck, path: "suppliers" },
-  { label: "Parties", icon: Users, path: "parties" },
+  // { label: "Salesmen", icon: UserCheck, path: "salesmen"},
+  // { label: "Employees", icon: Users, path: "employees"},
+  // { label: "Attendance", icon: Clock, path: "attendance" },  
+  // { label: "Suppliers", icon: Truck, path: "suppliers" },
+  // { label: "Parties", icon: Users, path: "parties" },
   {
     label: "Product Setup",
     icon: Blocks,
     children: [
-      { label: "Products", icon: Box, path: "products" },
-      { label: "Recipes", icon: List, path: "recipes" },
-      { label: "Kits", icon: Package, path: "kits" },
-      { label: "Categories", icon: Tags, path: "product-categories" },
-      { label: "Brands", icon: Award, path: "brands" },
-      { label: "Fragrances", icon: Wind, path: "fragrances" },
+      { label: "Products", icon: Box, path: "products", permission: "product.read" },
+      { label: "Recipes", icon: List, path: "recipes", permission: "product-bom.read" },
+      { label: "Kits", icon: Package, path: "kits", permission: "product-kit.read" },
+      { label: "Categories", icon: Tags, path: "product-categories", permission: "product-category.read" },
+      { label: "Brands", icon: Award, path: "brands", permission: "product-brand.read" },
+      { label: "Fragrances", icon: Wind, path: "fragrances", permission: "product-fragrance.read" },
     ]
   },
-  { label: "Batches", icon: Blocks, path: "batches" },
-  { label: "Serial Numbers", icon: Hash, path: "serials" },
-  { label: "Accounts", icon: Landmark, path: "accounts" },
+  { label: "Batches", icon: Blocks, path: "batches", permission: "inventory-batch.read" },
+  { label: "Serial Numbers", icon: Hash, path: "serials", permission: "inventory-serial.read" },
+  // { label: "Accounts", icon: Landmark, path: "accounts" },
 ];
 
 
@@ -142,6 +142,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const user = useCurrentUser();
+  const { hasPermission } = useHasPermission();
   const { data: companiesData, isLoading: isLoadingCompanies } = useCompanies();
   const companies = useMemo(() => companiesData?.items || [], [companiesData?.items]);
 
@@ -294,16 +295,27 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
         {/* Navigation */}
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
+          {navItems.filter(item => {
+            if (item.permission) {
+              return hasPermission(item.permission);
+            }
+            if (item.children) {
+              return item.children.some(child => !child.permission || hasPermission(child.permission));
+            }
+            return true;
+          }).map((item) => {
             const active = item.children
               ? item.children.some(child => getFullActive(child.path))
               : getFullActive(item.path);
 
             if (item.children) {
+              const visibleChildren = item.children.filter(child => !child.permission || hasPermission(child.permission));
+              if (visibleChildren.length === 0) return null;
+
               return (
                 <NavGroup
                   key={item.label}
-                  item={item as NavItemEntry & { children: NavItemEntry[] }}
+                  item={{ ...item, children: visibleChildren }}
                   active={active}
                   onCloseSidebar={() => setSidebarOpen(false)}
                   currentCompany={currentCompany}

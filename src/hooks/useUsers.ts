@@ -47,7 +47,14 @@ export const useCreateUser = () => {
         onError: (error: unknown) => {
             const err = error as ApiErrorResponse;
             const errorData = (err?.response?.data || err?.details || err || {}) as ApiErrorResponse;
-            const message = errorData?.message || errorData?.error?.message || "Failed to create user.";
+            
+            let message = errorData?.message || errorData?.error?.message || "Failed to create user.";
+            
+            if (errorData?.code === "validation_error" && errorData.details?.body) {
+                const firstError = Object.values(errorData.details.body)[0];
+                if (firstError) message = firstError;
+            }
+            
             toast.error(message);
         }
     });
@@ -62,7 +69,6 @@ export const useUpdateUser = () => {
             return response;
         },
         onSuccess: (_data, variables) => {
-            // Only invalidate list specifically instead of ALL user keys, which would include detail twice
             queryClient.invalidateQueries({ queryKey: ['users', 'list'] });
             queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(variables.id) });
             toast.success("User updated successfully!");
@@ -70,7 +76,15 @@ export const useUpdateUser = () => {
         onError: (error: unknown) => {
             const err = error as ApiErrorResponse;
             const errorData = (err?.response?.data || err?.details || err || {}) as ApiErrorResponse;
-            const message = errorData?.message || errorData?.error?.message || "Failed to update user.";
+            
+            let message = errorData?.message || errorData?.error?.message || "Failed to update user.";
+            
+            // If it's a validation error, try to show the first detail for better immediate feedback
+            if (errorData?.code === "validation_error" && errorData.details?.body) {
+                const firstError = Object.values(errorData.details.body)[0];
+                if (firstError) message = firstError;
+            }
+            
             toast.error(message);
         }
     });

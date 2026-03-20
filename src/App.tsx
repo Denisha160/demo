@@ -54,6 +54,7 @@ import AccountPage from "./pages/common/account/AccountPage";
 import AccountViewPage from "./pages/common/account/AccountViewPage";
 import StatusPage from "./pages/companys/leads/status/StatusPage";
 import SourcePage from "./pages/companys/leads/source/SourcePage";
+import InventoryDetailPage from "@/pages/admin/inventory/InventoryDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -116,6 +117,40 @@ const App = () => (
 
         <Route path="/dashboard" element={<PrivateRoute><DashboardRedirect /></PrivateRoute>} />
 
+        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route index element={<Navigate to="companies" replace />} />
+          <Route path="tasks" element={<Tasks />} />
+          <Route path="inbox" element={<InboxPage />} />
+          <Route path="products" element={<Products />} />
+          <Route path="products/new" element={<ProductFormPage />} />
+          <Route path="products/:id" element={<ProductFormPage />} />
+          <Route path="packages" element={<PackagesPage />} />
+          <Route path="recipes" element={<BomPage />} />
+          <Route path="kits" element={<KitsPage />} />
+          <Route path="kits/new" element={<KitFormPage />} />
+          <Route path="kits/edit/:id" element={<KitFormPage />} />
+          <Route path="product-categories" element={<ProductCategoriesPage />} />
+          <Route path="product-categories/:id" element={<CategoryDetailPage />} />
+          <Route path="brands" element={<BrandsPage />} />
+          <Route path="fragrances" element={<FragrancesPage />} />
+          <Route path="users" element={<Users />} />
+          <Route path="users/:id" element={<UserDetail />} />
+          <Route path="roles" element={<Roles />} />
+          <Route path="roles/:id" element={<RoleDetail />} />
+          <Route path="companies" element={<CompaniesPage />} />
+          <Route path="companies/:id" element={<CompanyDetailPage />} />
+          <Route path="batches" element={<BatchesPage />} />
+          <Route path="batches/new" element={<BatchFormPage />} />
+          <Route path="batches/edit/:id" element={<BatchFormPage />} />
+          <Route path="serials" element={<SerialNumbersPage />} />
+          <Route path="serials/generate" element={<GenerateSerialsPage />} />
+          <Route path="inventory" element={<InventoriesPage />} />
+          <Route path="inventory/:type/:id" element={<InventoryDetailPage />} />
+          <Route path="accounts" element={<AccountPage />} />
+          <Route path="accounts/:id" element={<AccountViewPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+
         {/* Company Routes – protected */}
         <Route path="/:companyId" element={<PrivateRoute><CompanyLayout /></PrivateRoute>}>
           <Route index element={<Navigate to="dashboard" replace />} />
@@ -149,44 +184,11 @@ const App = () => (
           <Route path="serials" element={<SerialNumbersPage />} />
           <Route path="serials/generate" element={<GenerateSerialsPage />} />
           <Route path="inventory" element={<InventoriesPage />} />
+          <Route path="inventory/:type/:id" element={<InventoryDetailPage />} />
           <Route path="accounts" element={<AccountPage />} />
           <Route path="accounts/:id" element={<AccountViewPage />} />
           <Route path="status" element={<StatusPage />} />
           <Route path="source" element={<SourcePage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-
-        {/* Admin Routes – protected + root-user only */}
-        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-          <Route index element={<Navigate to="companies" replace />} />
-          <Route path="tasks" element={<Tasks />} />
-          <Route path="inbox" element={<InboxPage />} />
-          <Route path="products" element={<Products />} />
-          <Route path="products/new" element={<ProductFormPage />} />
-          <Route path="products/:id" element={<ProductFormPage />} />
-          <Route path="packages" element={<PackagesPage />} />
-          <Route path="recipes" element={<BomPage />} />
-          <Route path="kits" element={<KitsPage />} />
-          <Route path="kits/new" element={<KitFormPage />} />
-          <Route path="kits/edit/:id" element={<KitFormPage />} />
-          <Route path="product-categories" element={<ProductCategoriesPage />} />
-          <Route path="product-categories/:id" element={<CategoryDetailPage />} />
-          <Route path="brands" element={<BrandsPage />} />
-          <Route path="fragrances" element={<FragrancesPage />} />
-          <Route path="users" element={<Users />} />
-          <Route path="users/:id" element={<UserDetail />} />
-          <Route path="roles" element={<Roles />} />
-          <Route path="roles/:id" element={<RoleDetail />} />
-          <Route path="companies" element={<CompaniesPage />} />
-          <Route path="companies/:id" element={<CompanyDetailPage />} />
-          <Route path="batches" element={<BatchesPage />} />
-          <Route path="batches/new" element={<BatchFormPage />} />
-          <Route path="batches/edit/:id" element={<BatchFormPage />} />
-          <Route path="serials" element={<SerialNumbersPage />} />
-          <Route path="serials/generate" element={<GenerateSerialsPage />} />
-          <Route path="inventory" element={<InventoriesPage />} />
-          <Route path="accounts" element={<AccountPage />} />
-          <Route path="accounts/:id" element={<AccountViewPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

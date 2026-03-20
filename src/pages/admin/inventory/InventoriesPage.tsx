@@ -4,16 +4,20 @@ import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, History, Box, Package, LayoutGrid, X } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
-import { useInventories, useInventoryTransactions } from "@/hooks/useInventory";
-import { Inventory, InventoryTransaction } from "@/types/inventory";
+import { Search, History, Box, LayoutGrid, X } from "lucide-react";
+import { useNavigate, useParams, useLocation, useSearchParams } from "react-router-dom";
+import { useInventories } from "@/hooks/useInventory";
+import { Inventory } from "@/types/inventory";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { format } from "date-fns";
 
 const InventoriesPage = () => {
+  const navigate = useNavigate();
+  const { companyId } = useParams();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const isAdmin = location.pathname.startsWith("/admin");
+  const routePrefix = isAdmin ? "/admin" : `/${companyId}`;
 
   // Filters and Pagination State
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -25,9 +29,6 @@ const InventoriesPage = () => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
     (searchParams.get("sortDirection") as "asc" | "desc") || "asc"
   );
-
-  // Transaction History Modal State
-  const [historyItem, setHistoryItem] = useState<Inventory | null>(null);
 
   const hasFilters = Boolean(search || filterType !== "all");
 
@@ -71,12 +72,15 @@ const InventoriesPage = () => {
       header: "Item Info",
       sortable: true,
       render: (item) => (
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-muted rounded-md text-muted-foreground">
-            {item.inventory_type === 'PRODUCT' ? <Box className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+        <div 
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => navigate(`${routePrefix}/inventory/${item.inventory_type.toLowerCase()}/${item.product_id || item.kit_id}`)}
+        >
+          <div className="p-2 bg-muted rounded-md text-muted-foreground group-hover:bg-primary/10 transition-colors">
+            {item.inventory_type === 'PRODUCT' ? <Box className="h-4 w-4 group-hover:text-primary transition-colors" /> : <LayoutGrid className="h-4 w-4 group-hover:text-primary transition-colors" />}
           </div>
           <div>
-            <p className="font-medium text-sm">{item.name}</p>
+            <p className="font-medium text-sm group-hover:text-primary transition-colors">{item.name}</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.code || "NO CODE"}</p>
           </div>
         </div>
@@ -108,24 +112,24 @@ const InventoriesPage = () => {
       )
     },
     {
-        key: "total_in",
-        header: "Total In/Out",
-        render: (item) => (
-          <div className="text-[11px] leading-tight flex flex-col">
-            <span className="text-muted-foreground">In: <span className="text-emerald-600 font-medium">+{item.total_in || 0}</span></span>
-            <span className="text-muted-foreground">Out: <span className="text-rose-600 font-medium">-{item.total_out || 0}</span></span>
-          </div>
-        )
+      key: "total_in",
+      header: "Total In/Out",
+      render: (item) => (
+        <div className="text-[11px] leading-tight flex flex-col">
+          <span className="text-muted-foreground">In: <span className="text-emerald-600 font-medium">+{item.total_in || 0}</span></span>
+          <span className="text-muted-foreground">Out: <span className="text-rose-600 font-medium">-{item.total_out || 0}</span></span>
+        </div>
+      )
     },
     {
       key: "actions",
       header: "",
       render: (item) => (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8 w-8 p-0" 
-          onClick={() => setHistoryItem(item)}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={() => navigate(`${routePrefix}/inventory/${item.inventory_type.toLowerCase()}/${item.product_id || item.kit_id}`)}
           title="Transaction History"
         >
           <History className="h-4 w-4 text-muted-foreground" />
@@ -197,105 +201,7 @@ const InventoriesPage = () => {
           setPage(1);
         }}
       />
-
-      <TransactionHistoryModal 
-        item={historyItem} 
-        onClose={() => setHistoryItem(null)} 
-      />
     </div>
-  );
-};
-
-interface TransactionHistoryModalProps {
-  item: Inventory | null;
-  onClose: () => void;
-}
-
-const TransactionHistoryModal = ({ item, onClose }: TransactionHistoryModalProps) => {
-  const [page, setPage] = useState(1);
-  const limit = 10;
-
-  const { data: transactionResponse, isLoading } = useInventoryTransactions({
-    product_id: item?.product_id,
-    kit_id: item?.kit_id,
-    offset: (page - 1) * limit,
-    limit,
-  });
-
-  const transactions = transactionResponse?.items || [];
-  const totalTransactions = transactionResponse?.pagination?.total || 0;
-
-  const columns: Column<InventoryTransaction>[] = [
-    {
-      key: "created_at",
-      header: "Date",
-      render: (t) => <span className="text-[11px]">{format(new Date(t.created_at), "MMM dd, yyyy HH:mm")}</span>
-    },
-    {
-      key: "type",
-      header: "Type",
-      render: (t) => (
-        <StatusBadge 
-          status={t.type === 'in' ? 'STOCK IN' : 'STOCK OUT'} 
-          variant={t.type === 'in' ? 'success' : 'destructive'} 
-        />
-      )
-    },
-    {
-      key: "quantity",
-      header: "Qty",
-      render: (t) => (
-        <span className={`font-medium ${t.type === 'in' ? 'text-emerald-600' : 'text-rose-600'}`}>
-          {t.type === 'in' ? '+' : '-'}{t.quantity}
-        </span>
-      )
-    },
-    {
-      key: "after_stock",
-      header: "Balance",
-      render: (t) => <span className="font-medium">{t.after_stock}</span>
-    },
-    {
-      key: "remark",
-      header: "Notes",
-      render: (t) => (
-        <div className="flex flex-col">
-            <span className="text-[11px] text-muted-foreground">{t.remark || "—"}</span>
-            {t.batch_number && <span className="text-[9px] text-primary bg-primary/5 px-1 rounded inline-block w-fit">Batch: {t.batch_number}</span>}
-        </div>
-      )
-    },
-    {
-      key: "user_name",
-      header: "User",
-      render: (t) => <span className="text-[11px] font-medium">{t.user_name}</span>
-    }
-  ];
-
-  return (
-    <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[800px] h-[80vh] flex flex-col p-4">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <History className="h-5 w-5 text-primary" />
-            Transaction History - {item?.name}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-auto mt-4">
-          <DataTable
-            data={transactions}
-            columns={columns}
-            pageSize={limit}
-            isLoading={isLoading}
-            serverSide={true}
-            serverTotal={totalTransactions}
-            serverPage={page}
-            onServerPageChange={setPage}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 };
 

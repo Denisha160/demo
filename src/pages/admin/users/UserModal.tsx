@@ -24,10 +24,20 @@ const userSchema = z.object({
     phone_number: z.string().regex(/^[0-9+\-\s]{10,15}$/, "Invalid phone number"),
     employee_code: z.string().min(3, "Employee code must be at least 3 characters"),
     date_of_joining: z.string().min(1, "Date of joining is required"),
+    department: z.string().optional().nullable(),
+    region: z.string().optional().nullable(),
+    work_shift: z.enum(["morning", "evening", "night", "rotating"]).optional().nullable(),
+    gender: z.enum(["male", "female", "other", "prefer_not_to_say"]).optional().nullable(),
+    marital_status: z.enum(["single", "married", "divorced", "widowed"]).optional().nullable(),
+    anniversary_date: z.string().optional().nullable(),
+    personal_email: z.string().email("Invalid personal email").optional().nullable().or(z.literal("")),
+    address: z.string().optional().nullable(),
+    pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN number format (e.g., ABCDE1234F)").optional().nullable().or(z.literal("")),
+    gst_number: z.string().regex(/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/, "Invalid GST number format").optional().nullable().or(z.literal("")),
+    basic_salary: z.coerce.number().optional().nullable(),
+    opening_balance: z.coerce.number().optional().nullable(),
     password: z.string().min(6, "Password must be at least 6 characters").optional(),
-    department: z.string().optional(),
     is_active: z.boolean().optional(),
-    basic_salary: z.number().optional(),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -103,7 +113,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
                     const err = error as ApiErrorResponse;
                     const errorData = (err?.details || err?.response?.data || err || {}) as ApiErrorResponse;
 
-                    if (errorData?.code === "duplicate_key_value") {
+                    if (errorData?.code === "duplicate_key_value" || errorData?.code === "CONFLICT" || errorData?.code === "conflict") {
                         const msg = errorData.message || "A duplicate record exists.";
                         setApiError(msg);
 

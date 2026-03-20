@@ -80,4 +80,8 @@ export const queryKeys = {
         reminders: (leadId: string) => [...queryKeys.leads.detail(leadId), 'reminders'] as const,
         attachments: (leadId: string) => [...queryKeys.leads.detail(leadId), 'attachments'] as const,
     },
+    locations: {
+        all: ['locations'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.locations.all, 'list', filters] as const,
+    },
 } as const;

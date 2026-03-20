@@ -14,7 +14,19 @@ const userSchema = z.object({
     phone_number: z.string().regex(/^[0-9+\-\s]{10,15}$/, "Invalid phone number"),
     employee_code: z.string().min(3, "Employee code must be at least 3 characters"),
     date_of_joining: z.string().min(1, "Date of joining is required"),
-    password: z.string().min(6, "Password must be at least 6 characters").optional(),
+    department: z.string().optional().nullable(),
+    region: z.string().optional().nullable(),
+    work_shift: z.enum(["morning", "evening", "night", "rotating"]).optional().nullable(),
+    gender: z.enum(["male", "female", "other", "prefer_not_to_say"]).optional().nullable(),
+    marital_status: z.enum(["single", "married", "divorced", "widowed"]).optional().nullable(),
+    anniversary_date: z.string().optional().nullable(),
+    personal_email: z.string().email("Invalid personal email").optional().nullable().or(z.literal("")),
+    address: z.string().optional().nullable(),
+    pan_number: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN number format (e.g., ABCDE1234F)").optional().nullable().or(z.literal("")),
+    gst_number: z.string().regex(/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/, "Invalid GST number format").optional().nullable().or(z.literal("")),
+    basic_salary: z.coerce.number().optional().nullable(),
+    opening_balance: z.coerce.number().optional().nullable(),
+    password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
 });
 
 interface OverviewTabProps {
@@ -116,11 +128,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(({
         try {
             // Validate basic data
             userSchema.parse({
-                name: userData.name,
-                email: userData.email,
-                phone_number: userData.phone_number,
-                employee_code: userData.employee_code,
-                date_of_joining: userData.date_of_joining,
+                ...userData,
                 password: password || undefined,
             });
 
@@ -179,7 +187,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(({
 
                     if (errorData?.code === "validation_error" && errorData.details?.body) {
                         setErrors(errorData.details.body);
-                    } else if (errorData?.code === "duplicate_key_value") {
+                    } else if (errorData?.code === "duplicate_key_value" || errorData?.code === "CONFLICT" || errorData?.code === "conflict") {
                         const msg = errorData.message || "A duplicate record exists.";
                         setApiError(msg);
 

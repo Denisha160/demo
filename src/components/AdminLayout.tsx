@@ -3,9 +3,9 @@ import { Link, useLocation, Outlet } from "react-router-dom";
 import {
     PanelLeftClose, PanelLeft, CheckSquare, Inbox, Building2, Layers,
     ShieldCheck, Users, Tags, Box, Archive, List, Package, LogOut,
-    Menu, ChevronDown, Blocks, Hash, Award, Wind, Landmark
+    Menu, ChevronDown, Blocks, Hash, Award, Wind, Landmark, MapPin
 } from "lucide-react";
-import { useLogout, useCurrentUser } from "@/hooks/useAuth";
+import { useLogout, useCurrentUser, useHasPermission } from "@/hooks/useAuth";
 import { createPortal } from 'react-dom';
 
 interface AdminLayoutProps {
@@ -16,32 +16,34 @@ interface NavItemEntry {
     label: string;
     icon: React.ElementType;
     path?: string;
+    permission?: string | string[];
     children?: NavItemEntry[];
 }
 
 const navItems: NavItemEntry[] = [
     { label: "Companies", icon: Building2, path: "/admin/companies" },
-    { label: "Inbox", icon: Inbox, path: "/admin/inbox" },
-    { label: "Tasks", icon: CheckSquare, path: "/admin/tasks" },
-    { label: "Users", icon: Users, path: "/admin/users" },
-    { label: "Roles", icon: ShieldCheck, path: "/admin/roles" },
+    // { label: "Inbox", icon: Inbox, path: "/admin/inbox" },
+    // { label: "Tasks", icon: CheckSquare, path: "/admin/tasks" },
+    { label: "Users", icon: Users, path: "/admin/users", permission: "user.read" },
+    { label: "Roles", icon: ShieldCheck, path: "/admin/roles", permission: "role.read" },
+    { label: "Inventory", icon: Archive, path: "/admin/inventory", permission: "inventory.read" },
     {
         label: "Product Setup",
         icon: Blocks,
         children: [
-            { label: "Products", icon: Box, path: "/admin/products" },
-            { label: "Recipes", icon: List, path: "/admin/recipes" },
-            { label: "Packages", icon: Archive, path: "/admin/packages" },
-            { label: "Kits", icon: Package, path: "/admin/kits" },
-            { label: "Categories", icon: Tags, path: "/admin/product-categories" },
-            { label: "Brands", icon: Award, path: "/admin/brands" },
-            { label: "Fragrances", icon: Wind, path: "/admin/fragrances" },
+            { label: "Products", icon: Box, path: "/admin/products", permission: "product.read" },
+            { label: "Recipes", icon: List, path: "/admin/recipes", permission: "product-bom.read" },
+            { label: "Packages", icon: Archive, path: "/admin/packages", permission: "product-package.read" },
+            { label: "Kits", icon: Package, path: "/admin/kits", permission: "product-kit.read" },
+            { label: "Categories", icon: Tags, path: "/admin/product-categories", permission: "product-category.read" },
+            { label: "Brands", icon: Award, path: "/admin/brands", permission: "product-brand.read" },
+            { label: "Fragrances", icon: Wind, path: "/admin/fragrances", permission: "product-fragrance.read" },
         ]
     },
-    { label: "Batches", icon: Layers, path: "/admin/batches" },
-    { label: "Serial Numbers", icon: Hash, path: "/admin/serials" },
-    { label: "Inventory", icon: Archive, path: "/admin/inventory" },
-    { label: "Accounts", icon: Landmark, path: "/admin/accounts" },
+    { label: "Batches", icon: Layers, path: "/admin/batches", permission: "inventory-batch.read" },
+    { label: "Serial Numbers", icon: Hash, path: "/admin/serials", permission: "inventory-serial.read" },
+    // { label: "Accounts", icon: Landmark, path: "/admin/accounts" },
+    // { label: "Locations", icon: MapPin, path: "/admin/locations" },
 ];
 
 // Admin theme - single consistent color
@@ -116,6 +118,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
 
     const { mutate: logout, isPending: isLoggingOut } = useLogout();
     const user = useCurrentUser();
+    const { hasPermission } = useHasPermission();
 
     // Set admin theme on mount
     useEffect(() => {
@@ -189,16 +192,27 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
 
                 {/* Navigation */}
                 <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-                    {navItems.map((item) => {
+                    {navItems.filter(item => {
+                        if (item.permission) {
+                            return hasPermission(item.permission);
+                        }
+                        if (item.children) {
+                            return item.children.some(child => !child.permission || hasPermission(child.permission));
+                        }
+                        return true;
+                    }).map((item) => {
                         const active = item.children
                             ? item.children.some(child => location.pathname === child.path || location.pathname.startsWith(`${child.path}/`))
                             : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
 
                         if (item.children) {
+                            const visibleChildren = item.children.filter(child => !child.permission || hasPermission(child.permission));
+                            if (visibleChildren.length === 0) return null;
+
                             return (
                                 <NavGroup
                                     key={item.label}
-                                    item={item}
+                                    item={{ ...item, children: visibleChildren }}
                                     active={active}
                                     onCloseSidebar={() => setSidebarOpen(false)}
                                 />

@@ -105,7 +105,32 @@ export function usePermissions() {
         queryKey: queryKeys.auth.permissions(),
         queryFn: getPermissions,
         retry: false,
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 5 * 60 * 1000,
         enabled: !!Cookies.get(AUTH_TOKEN_KEY),
     });
+}
+
+export function useHasPermission() {
+    const { data: permissions, isLoading } = usePermissions();
+    const user = useCurrentUser();
+
+    const hasPermission = (permission: string | string[]) => {
+        if (user?.is_root_user) return true;
+        if (!permissions) return false;
+
+        const perms: string[] = Array.isArray(permissions) 
+            ? permissions 
+            : (permissions as { items?: string[] }).items || [];
+        
+        if (Array.isArray(permission)) {
+            return permission.some(p => perms.includes(p));
+        }
+        return perms.includes(permission);
+    };
+
+    return { 
+        hasPermission, 
+        isLoading, 
+        permissions: (Array.isArray(permissions) ? permissions : (permissions as { items?: string[] })?.items || []) as string[]
+    };
 }

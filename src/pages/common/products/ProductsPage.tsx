@@ -123,7 +123,11 @@ const ProductsPage = () => {
                     onClick={() => navigate(`${routePrefix}/products/${item.id}`)}
                 >
                     <div className="p-2 bg-muted rounded-md group-hover:bg-primary/10 transition-colors">
-                        {item.product_type === 'RAW_MATERIAL' ? <Layers className="h-4 w-4 group-hover:text-primary transition-colors" /> : <Package className="h-4 w-4 group-hover:text-primary transition-colors" />}
+                        {item.product_type === 'FINISHED_GOOD' ? (
+                            <Package className="h-4 w-4 group-hover:text-primary transition-colors" />
+                        ) : (
+                            <Layers className="h-4 w-4 group-hover:text-primary transition-colors" />
+                        )}
                     </div>
                     <div>
                         <p className="font-medium text-sm group-hover:text-primary transition-colors">{item.product_name}</p>
@@ -225,6 +229,7 @@ const ProductsPage = () => {
                         <SelectContent>
                             <SelectItem value="all">All Types</SelectItem>
                             <SelectItem value="RAW_MATERIAL">Raw Material</SelectItem>
+                            <SelectItem value="SEMI_FINISHED">Semi Finished</SelectItem>
                             <SelectItem value="FINISHED_GOOD">Finished Good</SelectItem>
                         </SelectContent>
                     </Select>

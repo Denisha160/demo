@@ -28,6 +28,20 @@ interface NavItemEntry {
 const navItems: NavItemEntry[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "dashboard" },
   { label: "Leads", icon: Kanban, path: "leads" },
+  {
+    label: "CRM",
+    icon: Blocks,
+    children: [
+      { label: "Leads", icon: Box, path: "leads" },
+      { label: "Status", icon: List, path: "status" },
+      { label: "Sources", icon: Package, path: "source" },
+      { label: "Quotations", icon: Package, path: "quotations" },
+      { label: "Visites", icon: Package, path: "visites" },
+      { label: "Reminders", icon: Package, path: "reminders" },
+      { label: "Follow-ups", icon: Package, path: "followups" },
+
+    ]
+  },
   { label: "Salesmen", icon: UserCheck, path: "salesmen" },
   { label: "Employees", icon: Users, path: "employees" },
   { label: "Attendance", icon: Clock, path: "attendance" },
@@ -48,8 +62,6 @@ const navItems: NavItemEntry[] = [
   { label: "Batches", icon: Blocks, path: "batches" },
   { label: "Serial Numbers", icon: Hash, path: "serials" },
   { label: "Accounts", icon: Landmark, path: "accounts" },
-  { label: "Status", icon: FileChartColumn, path: "status" },
-  { label: "Sources", icon: FileScan, path: "source" },
 ];
 
 

@@ -20,7 +20,7 @@ import LeadModal, { LeadFormData } from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
 import { Deal, PipelineColumn } from "../../../types/leads";
-import { useCreateLead, useLeads, useUpdateLead } from "@/hooks/useLeads";
+import { useCreateLead, useLeads, useUpdateLeadStatus } from "@/hooks/useLeads";
 import { useLeadStatuses } from "@/hooks/useLeadStatus";
 import type { LeadStatus } from "@/types/leadStatus";
 
@@ -77,7 +77,7 @@ const LeadsPage = () => {
   const { data: leads = [], isLoading } = useLeads();
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const createLeadMutation = useCreateLead();
-  const updateLeadMutation = useUpdateLead();
+  const updateLeadMutation = useUpdateLeadStatus();
   const leadStatuses = statusResponse?.items || [];
 
   useEffect(() => {

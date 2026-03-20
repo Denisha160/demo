@@ -277,6 +277,11 @@ export const getLeadDetails = (leadId) => {
 };
 
 export const updateLead = ({ leadId, ...data }) => {
+  const url = `leads/${leadId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const updateLeadStatus = ({ leadId, ...data }) => {
   const url = `leads/${leadId}/status`;
   return axios({ method: "PATCH", url, data });
 };

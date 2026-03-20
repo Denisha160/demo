@@ -178,7 +178,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                         type="submit"
                         size="sm"
                         className="h-9 px-5"
-                        disabled={!isDirty || !isValid || isSaving}
+                    // disabled={!isDirty || !isValid || isSaving}
                     >
                         {isSaving ? "Saving..." : "Save"}
                     </Button>

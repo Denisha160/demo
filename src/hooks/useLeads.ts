@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { createLead, getLeadDetails, listLeads, updateLead } from "@/services/api";
+import { createLead, getLeadDetails, listLeads, updateLead, updateLeadStatus } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
 const normalizeList = <T,>(response: any): T[] => {
   if (Array.isArray(response?.data?.lead)) return response.data.lead;
+  if (Array.isArray(response?.data?.items)) return response.data.items;
   if (Array.isArray(response?.data)) return response.data;
   if (Array.isArray(response?.items)) return response.items;
   return [];
@@ -64,6 +65,26 @@ export function useUpdateLead() {
   return useMutation({
     mutationFn: ({ leadId, ...payload }: { leadId: string } & Record<string, unknown>) =>
       updateLead({ leadId, ...payload }),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(variables.leadId) });
+      toast.success("Lead updated successfully.");
+    },
+    onError: (error: any) => {
+      if (error?.code !== "validation_error") {
+        toast.error(error?.message || "Failed to update lead.");
+      }
+    },
+  });
+}
+
+
+export function useUpdateLeadStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ leadId, ...payload }: { leadId: string } & Record<string, unknown>) =>
+      updateLeadStatus({ leadId, ...payload }),
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(variables.leadId) });

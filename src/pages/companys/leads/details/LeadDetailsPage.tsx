@@ -64,7 +64,7 @@ const LeadDetailsPage = () => {
         name: "Jerde Inc",
         company: "Jerde Corporation",
         email: "info@jerde.com",
-        phone: "+1 234 567 890",
+        phone: "9876543210",
         status: "New",
         source: "Organic",
         assignedTo: "Charley Dicki",

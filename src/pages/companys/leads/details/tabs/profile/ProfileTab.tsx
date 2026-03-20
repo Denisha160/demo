@@ -33,18 +33,17 @@ const leadSchema = z.object({
         .min(1, "Phone is required")
         .regex(/^\d+$/, "Only numbers allowed")
         .length(10, "Must be 10 digits"),
-
-    company: z.string().optional(),
-    status: z.string().optional(),
-    source: z.string().optional(),
-    assignedTo: z.string().optional(),
-    country: z.string().optional(),
-    website: z.string().optional(),
-    designation: z.string().optional(),
-    gstPan: z.string().optional(),
-    location: z.string().optional(),
-    tags: z.string().optional(),
-    address: z.string().optional(),
+    company: z.string(),
+    status: z.string(),
+    source: z.string(),
+    assignedTo: z.string(),
+    country: z.string(),
+    website: z.string(),
+    designation: z.string(),
+    gstPan: z.string(),
+    location: z.string(),
+    tags: z.string(),
+    address: z.string(),
 });
 
 const fieldGroups = [
@@ -90,7 +89,7 @@ const fieldGroups = [
 ];
 
 const ProfileTab = ({ leadProfile, setLeadProfile }: ProfileTabProps) => {
-    const form = useForm<z.infer<typeof leadSchema>>({
+    const form = useForm<LeadProfileFormValues>({
         resolver: zodResolver(leadSchema),
         defaultValues: leadProfile,
         mode: "onChange",
@@ -98,9 +97,9 @@ const ProfileTab = ({ leadProfile, setLeadProfile }: ProfileTabProps) => {
 
     useEffect(() => {
         form.reset(leadProfile);
-    }, [leadProfile]);
+    }, [form, leadProfile]);
 
-    const onSubmit = (data: z.infer<typeof leadSchema>) => {
+    const onSubmit = (data: LeadProfileFormValues) => {
         setLeadProfile(data);
     };
 

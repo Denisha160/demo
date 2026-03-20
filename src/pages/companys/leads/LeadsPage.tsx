@@ -189,33 +189,9 @@ const LeadsPage = () => {
     );
   };
 
-  const handleAddLead = (data: LeadFormData, setError: (field: any, err: any) => void) => {
-    const column = columns.find((item) => item.id === createLeadStatusId);
-
+  const handleAddLead = (data: any, setError: (field: any, err: any) => void) => {
     createLeadMutation.mutate(
-      {
-        name: data.title,
-        title: data.title,
-        company: data.company,
-        company_name: data.company,
-        email: data.email,
-        phone: data.phone,
-        status_id: createLeadStatusId || column?.id,
-        status: data.status || column?.title || "Initial Lead",
-        stage: createLeadStatusId || column?.id,
-        source: data.source,
-        assigned_to: data.assigned_to,
-        country: data.country,
-        state: data.state,
-        city: data.city,
-        tags: data.tags,
-        designation: data.designation,
-        website: data.website,
-        gst_pan: data.gst_pan,
-        address: data.address,
-        pincode: data.pincode,
-        alternative_phone: data.alternative_phone,
-      },
+      data,
       {
         onSuccess: () => {
           setIsLeadModalOpen(false);

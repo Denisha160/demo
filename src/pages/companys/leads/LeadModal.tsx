@@ -13,29 +13,51 @@ import { PipelineColumn } from "../../../types/leads";
 import { useLeadSources } from "@/hooks/useLeadSource";
 import { useLeadStatuses } from "@/hooks/useLeadStatus";
 import { useUsers } from "@/hooks/useUsers";
+import { useCategoriesCombobox } from "@/hooks/useProductCategories";
+
+const InterestedCategorySelect = ({ value, onValueChange }: { value?: string, onValueChange: (val: string) => void }) => {
+  const { data: categories = [], isLoading } = useCategoriesCombobox();
+  const options = categories.map((cat: any) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
+
+  return (
+    <Combobox
+      options={options}
+      value={value}
+      onValueChange={onValueChange}
+      placeholder={isLoading ? "Loading..." : "Select Category"}
+    />
+  );
+};
 
 const formSchema = z.object({
-  status: z.string().min(1, { message: "Status is required" }),
-  source: z.string().min(1, { message: "Source is required" }),
-  title: z.string().min(1, { message: "Name is required" }),
-  company: z.string().optional().or(z.literal("")),
+  status_id: z.string().min(1, { message: "Status is required" }),
+  source_id: z.string().min(1, { message: "Source is required" }),
+  name: z.string().min(1, { message: "Name is required" }),
+  company_name: z.string().optional().or(z.literal("")),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z
     .string()
     .min(1, "Phone is required")
-    .regex(/^\d+$/, "Only numbers allowed")
+    .regex(/^\+?\d+$/, "Only numbers and + allowed")
     .min(10, "Must be at least 10 digits"),
-  assigned_to: z.string().optional().or(z.literal("")),
-  country: z.string().optional().or(z.literal("")),
-  state: z.string().optional().or(z.literal("")),
+  alternate_phone: z.string().optional().or(z.literal("")),
+  address_line1: z.string().optional().or(z.literal("")),
+  address_line2: z.string().optional().or(z.literal("")),
   city: z.string().optional().or(z.literal("")),
-  tags: z.string().optional().or(z.literal("")),
+  state: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
+  pincode: z.string().optional().or(z.literal("")),
   designation: z.string().optional().or(z.literal("")),
   website: z.string().optional().or(z.literal("")),
-  gst_pan: z.string().optional().or(z.literal("")),
-  address: z.string().optional().or(z.literal("")),
-  pincode: z.string().optional().or(z.literal("")),
-  alternative_phone: z.string().optional().or(z.literal("")),
+  gst_number: z.string().optional().or(z.literal("")),
+  priority: z.string().optional().or(z.literal("")),
+  lead_type: z.string().optional().or(z.literal("")),
+  assigned_to: z.string().optional().or(z.literal("")),
+  interested_category_id: z.string().optional().or(z.literal("")),
+  tags: z.string().optional().or(z.literal("")),
 });
 
 export type LeadFormData = z.infer<typeof formSchema>;
@@ -60,23 +82,27 @@ const LeadModal = ({
   const form = useForm<LeadFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      status: "",
-      source: "",
-      title: "",
-      company: "",
+      status_id: "",
+      source_id: "",
+      name: "",
+      company_name: "",
       email: "",
       phone: "",
-      assigned_to: "",
-      country: "",
-      state: "",
+      alternate_phone: "",
+      address_line1: "",
+      address_line2: "",
       city: "",
-      tags: "",
+      state: "",
+      country: "",
+      pincode: "",
       designation: "",
       website: "",
-      gst_pan: "",
-      address: "",
-      pincode: "",
-      alternative_phone: "",
+      gst_number: "",
+      priority: "MEDIUM",
+      lead_type: "LEAD",
+      assigned_to: "",
+      interested_category_id: "",
+      tags: "",
     },
   });
 
@@ -91,13 +117,13 @@ const LeadModal = ({
 
   const statusOptions =
     statusResponse?.items?.map((item: any) => ({
-      value: item.name,
+      value: item.id,
       label: item.name,
     })) || [];
 
   const sourceOptions =
     sourceResponse?.items?.map((item: any) => ({
-      value: item.name,
+      value: item.id,
       label: item.name,
     })) || [];
 
@@ -106,35 +132,40 @@ const LeadModal = ({
 
     const defaultColumn = columns.find((column) => column.id === addModalCol);
     form.reset({
-      status: defaultColumn?.title || "",
-      source: "",
-      title: "",
-      company: "",
+      status_id: defaultColumn?.id || "",
+      source_id: "",
+      name: "",
+      company_name: "",
       email: "",
       phone: "",
-      assigned_to: "",
-      country: "",
-      state: "",
+      alternate_phone: "",
+      address_line1: "",
+      address_line2: "",
       city: "",
-      tags: "",
+      state: "",
+      country: "",
+      pincode: "",
       designation: "",
       website: "",
-      gst_pan: "",
-      address: "",
-      pincode: "",
-      alternative_phone: "",
+      gst_number: "",
+      priority: "MEDIUM",
+      lead_type: "LEAD",
+      assigned_to: "",
+      interested_category_id: "",
+      tags: "",
     });
   }, [open, addModalCol, columns, form]);
 
   const handleSubmit = (data: LeadFormData) => {
     const payload = {
       ...data,
+      interested_category_id: data.interested_category_id ? [data.interested_category_id] : [],
       tags: data.tags
         ? data.tags.split(",").map((tag) => tag.trim()).filter(Boolean)
         : [],
     };
 
-    onSave(payload as any, form.setError); // 👈 pass array to API
+    onSave(payload as any, form.setError);
   };
 
   return (
@@ -158,35 +189,49 @@ const LeadModal = ({
       }
     >
       <form className="custom-scrollbar h-[60vh] space-y-4 overflow-y-auto pr-2 pt-2" onSubmit={form.handleSubmit(handleSubmit)}>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-foreground flex items-center gap-1">
               <span className="text-destructive">*</span> Status
             </Label>
-            <ComboboxWithAdd
+            <Combobox
               options={statusOptions}
-              value={form.watch("status")}
-              onValueChange={(value) => form.setValue("status", value, { shouldValidate: true, shouldDirty: true })}
-              onOptionsChange={() => undefined}
+              value={form.watch("status_id")}
+              onValueChange={(value) => form.setValue("status_id", value, { shouldValidate: true, shouldDirty: true })}
               placeholder="Select Status"
               className="h-9 w-full"
             />
-            {form.formState.errors.status && <p className="text-[10px] text-destructive">{form.formState.errors.status.message}</p>}
+            {form.formState.errors.status_id && <p className="text-[10px] text-destructive">{form.formState.errors.status_id.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-foreground flex items-center gap-1">
               <span className="text-destructive">*</span> Source
             </Label>
-            <ComboboxWithAdd
+            <Combobox
               options={sourceOptions}
-              value={form.watch("source")}
-              onValueChange={(value) => form.setValue("source", value, { shouldValidate: true, shouldDirty: true })}
-              onOptionsChange={() => undefined}
+              value={form.watch("source_id")}
+              onValueChange={(value) => form.setValue("source_id", value, { shouldValidate: true, shouldDirty: true })}
               placeholder="Select Source"
               className="h-9 w-full"
             />
-            {form.formState.errors.source && <p className="text-[10px] text-destructive">{form.formState.errors.source.message}</p>}
+            {form.formState.errors.source_id && <p className="text-[10px] text-destructive">{form.formState.errors.source_id.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Priority</Label>
+            <Combobox
+              options={[
+                { value: "HOT", label: "Hot" },
+                { value: "WARM", label: "Warm" },
+                { value: "COLD", label: "Cold" },
+                { value: "MEDIUM", label: "Medium" }
+              ]}
+              value={form.watch("priority")}
+              onValueChange={(value) => form.setValue("priority", value, { shouldValidate: true, shouldDirty: true })}
+              placeholder="Select Priority"
+              className="h-9 w-full"
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -220,14 +265,25 @@ const LeadModal = ({
             <Label className="text-xs font-bold text-foreground flex items-center gap-1">
               <span className="text-destructive">*</span> Name
             </Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("title")} />
-            {form.formState.errors.title && <p className="text-[10px] text-destructive">{form.formState.errors.title.message}</p>}
+            <Input className="h-9 text-xs border-border/60" {...form.register("name")} />
+            {form.formState.errors.name && <p className="text-[10px] text-destructive">{form.formState.errors.name.message}</p>}
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-foreground">Email Address</Label>
             <Input type="email" className="h-9 text-xs border-border/60" {...form.register("email")} />
             {form.formState.errors.email && <p className="text-[10px] text-destructive">{form.formState.errors.email.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Phone</Label>
+            <Input type="tel" className="h-9 text-xs border-border/60" {...form.register("phone")} />
+            {form.formState.errors.phone && <p className="text-[10px] text-destructive">{form.formState.errors.phone.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Alternative Phone</Label>
+            <Input type="tel" className="h-9 text-xs border-border/60" {...form.register("alternate_phone")} />
           </div>
 
           <div className="space-y-1.5">
@@ -246,24 +302,13 @@ const LeadModal = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Phone</Label>
-            <Input type="tel" className="h-9 text-xs border-border/60" {...form.register("phone")} />
-            {form.formState.errors.phone && <p className="text-[10px] text-destructive">{form.formState.errors.phone.message}</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Alternative Phone Number</Label>
-            <Input type="tel" className="h-9 text-xs border-border/60" {...form.register("alternative_phone")} />
-          </div>
-
-          <div className="space-y-1.5">
             <Label className="text-xs font-bold text-foreground">Pincode</Label>
             <Input className="h-9 text-xs border-border/60" {...form.register("pincode")} />
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-foreground">Company Name</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("company")} />
+            <Input className="h-9 text-xs border-border/60" {...form.register("company_name")} />
           </div>
 
           <div className="space-y-1.5">
@@ -277,13 +322,38 @@ const LeadModal = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">GST / PAN</Label>
-            <Input className="h-9 text-xs border-border/60 uppercase" {...form.register("gst_pan")} />
+            <Label className="text-xs font-bold text-foreground">GST Number</Label>
+            <Input className="h-9 text-xs border-border/60 uppercase" {...form.register("gst_number")} />
           </div>
 
-          <div className="space-y-1.5 md:col-span-2">
-            <Label className="text-xs font-bold text-foreground">Address</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("address")} />
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Lead Type</Label>
+            <Combobox
+              options={[
+                { value: "LEAD", label: "Lead" },
+                { value: "PROSPECT", label: "Prospect" },
+              ]}
+              value={form.watch("lead_type")}
+              onValueChange={(value) => form.setValue("lead_type", value, { shouldValidate: true, shouldDirty: true })}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Interested Category</Label>
+            <InterestedCategorySelect
+              value={form.watch("interested_category_id")}
+              onValueChange={(value) => form.setValue("interested_category_id", value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Address Line 1</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("address_line1")} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Address Line 2</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("address_line2")} />
           </div>
         </div>
       </form>

@@ -124,20 +124,41 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       return;
     }
 
-    const payload = {
-      ...formData,
+    const payload: any = {
+      title: formData.title,
+      description: formData.description,
+      visit_type: formData.visit_type,
+      status: formData.status,
       scheduled_time: toIsoDateTime(formData.scheduled_time),
       actual_check_in: toIsoDateTime(formData.actual_check_in),
       actual_check_out: toIsoDateTime(formData.actual_check_out),
+      location_address: formData.location_address,
       location_latitude: toNullableNumber(formData.location_latitude),
       location_longitude: toNullableNumber(formData.location_longitude),
       customer_rating: toNullableNumber(formData.customer_rating),
-      image_url: formData.image_url || formData.visit_image || "",
+      contact_person_name: formData.contact_person_name,
+      contact_person_designation: formData.contact_person_designation,
+      contact_person_phone: formData.contact_person_phone,
+      outcome_summary: formData.outcome_summary,
+      next_steps: formData.next_steps,
     };
+
+    let dataToSubmit: any = payload;
+
+    if (formData.visit_image_file) {
+      const formDataObj = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formDataObj.append(key, String(value));
+        }
+      });
+      formDataObj.append("visit_image", formData.visit_image_file);
+      dataToSubmit = formDataObj;
+    }
 
     if (editingVisit) {
       updateVisitMutation.mutate(
-        { visitId: editingVisit.id, ...payload },
+        { visitId: editingVisit.id, ...dataToSubmit },
         {
           onSuccess: () => {
             setIsModalOpen(false);
@@ -149,7 +170,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       return;
     }
 
-    createVisitMutation.mutate(payload, {
+    createVisitMutation.mutate(dataToSubmit, {
       onSuccess: () => setIsModalOpen(false),
       onError: (error) => applyServerValidationErrors(error, setError),
     });
@@ -176,9 +197,9 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       header: "Visit Details",
       render: (item) => (
         <div className="flex items-start gap-3">
-          {item.visit_image ? (
+          {item.image_url ? (
             <img
-              src={item.visit_image}
+              src={item.image_url}
               alt={item.visit_image_name || item.title}
               className="h-12 w-12 rounded-md border border-border/60 object-cover"
             />

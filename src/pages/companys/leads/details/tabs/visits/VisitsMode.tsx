@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { compressImage } from "@/utils/imageCompression";
 
 const visitSchema = z.object({
     title: z.string().min(1, "Title is required").max(200, "Title is too long"),
@@ -44,6 +45,7 @@ const visitSchema = z.object({
     contact_person_name: z.string().optional().or(z.literal("")),
     contact_person_designation: z.string().optional().or(z.literal("")),
     contact_person_phone: z.string().optional().or(z.literal("")),
+    visit_image_file: z.any().optional(),
 });
 
 export type VisitFormData = z.infer<typeof visitSchema>;
@@ -168,23 +170,39 @@ const VisitsModal = ({
         if (fileInputRef.current) fileInputRef.current.value = "";
     }, [open, visitData, form]);
 
-    const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            form.setValue("visit_image", String(reader.result || ""), { shouldDirty: true });
-            form.setValue("image_url", String(reader.result || ""), { shouldDirty: true });
-            form.setValue("visit_image_name", file.name, { shouldDirty: true });
-        };
-        reader.readAsDataURL(file);
+        try {
+            const compressedFile = await compressImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                form.setValue("visit_image", String(reader.result || ""), { shouldDirty: true });
+                form.setValue("image_url", String(reader.result || ""), { shouldDirty: true });
+                form.setValue("visit_image_name", compressedFile.name, { shouldDirty: true });
+                form.setValue("visit_image_file", compressedFile, { shouldDirty: true });
+            };
+            reader.readAsDataURL(compressedFile);
+        } catch (error) {
+            console.error("Image compression failed", error);
+            // Fallback to original file if compression fails
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                form.setValue("visit_image", String(reader.result || ""), { shouldDirty: true });
+                form.setValue("image_url", String(reader.result || ""), { shouldDirty: true });
+                form.setValue("visit_image_name", file.name, { shouldDirty: true });
+                form.setValue("visit_image_file", file, { shouldDirty: true });
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleRemoveImage = () => {
         form.setValue("visit_image", "", { shouldDirty: true });
         form.setValue("image_url", "", { shouldDirty: true });
         form.setValue("visit_image_name", "", { shouldDirty: true });
+        form.setValue("visit_image_file", null, { shouldDirty: true });
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 

@@ -51,6 +51,17 @@ interface TaskModalProps {
   isSubmitting?: boolean;
 }
 
+const getDateOnly = (value?: string | null) => {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalProps) => {
   const { data: usersResponse } = useUsers({ limit: 100 });
   const users = usersResponse?.items || usersResponse || [];
@@ -65,7 +76,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
       title: "",
       description: "",
       status: "TODO",
-      priority: "medium",
+      priority: "MEDIUM",
       assigned_to: "",
       due_date: "",
     },
@@ -78,16 +89,16 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
           title: taskData.title || "",
           description: taskData.description || "",
           status: taskData.status || "TODO",
-          priority: taskData.priority || "medium",
+          priority: taskData.priority || "MEDIUM",
           assigned_to: taskData.assigned_to || "",
-          due_date: taskData.due_date || "",
+          due_date: getDateOnly(taskData.due_date),
         });
       } else {
         form.reset({
           title: "",
           description: "",
           status: "TODO",
-          priority: "medium",
+          priority: "MEDIUM",
           assigned_to: "",
           due_date: "",
         });

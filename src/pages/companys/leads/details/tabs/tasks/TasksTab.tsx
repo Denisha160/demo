@@ -33,6 +33,22 @@ const applyServerValidationErrors = (
   }
 };
 
+const toIsoDate = (value?: string) => {
+  if (!value) return null;
+  if (value.includes("T")) return value;
+  return `${value}T00:00:00.000Z`;
+};
+
+const formatDate = (value?: string) => {
+  if (!value) return "No date";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 interface TasksTabProps {
   leadId: string;
 }
@@ -77,6 +93,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
         {
           taskId: editingTask.id,
           ...formData,
+          due_date: toIsoDate(formData.due_date),
         },
         {
           onSuccess: () => {
@@ -91,6 +108,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
     createTaskMutation.mutate({
       ...formData,
+      due_date: toIsoDate(formData.due_date),
     }, {
       onSuccess: () => setIsModalOpen(false),
       onError: (error) => applyServerValidationErrors(error, setError),
@@ -99,13 +117,13 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
   const getPriorityVariant = (priority: string) => {
     switch (priority) {
-      case "urgent":
+      case "URGENT":
         return "destructive";
-      case "high":
+      case "HIGH":
         return "warning";
-      case "medium":
+      case "MEDIUM":
         return "info";
-      case "low":
+      case "LOW":
         return "success";
       default:
         return "default";
@@ -154,7 +172,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
     {
       key: "due_date",
       header: "Due Date",
-      render: (item) => <span className="text-sm">{item.due_date || "No date"}</span>,
+      render: (item) => <span className="text-sm">{formatDate(item.due_date)}</span>,
     },
     {
       key: "status",

@@ -44,7 +44,7 @@ export function useCreateLeadFollowUp(leadId?: string) {
     mutationFn: (payload: Record<string, unknown>) => createLeadFollowUp(leadId, payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.followUps(leadId || "") });
-      toast.success(response?.message || "Follow up created successfully.");
+      toast.success("Follow up created successfully.");
     },
     onError: (error: unknown) => {
       const apiError = error as { code?: string };
@@ -63,7 +63,7 @@ export function useUpdateLeadFollowUp(leadId?: string) {
       updateLeadFollowUp({ leadId, followupId, ...payload }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.followUps(leadId || "") });
-      toast.success(response?.message || "Follow up updated successfully.");
+      toast.success("Follow up updated successfully.");
     },
     onError: (error: unknown) => {
       const apiError = error as { code?: string };
@@ -81,7 +81,7 @@ export function useDeleteLeadFollowUp(leadId?: string) {
     mutationFn: (followupId: string) => deleteLeadFollowUp({ leadId, followupId }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.followUps(leadId || "") });
-      toast.success(response?.message || "Follow up deleted successfully.");
+      toast.success("Follow up deleted successfully.");
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, "Failed to delete follow up."));

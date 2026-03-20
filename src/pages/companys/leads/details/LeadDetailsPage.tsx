@@ -43,6 +43,29 @@ export interface LeadProfileFormValues {
     tags: string;
 }
 
+interface LeadDetailsData {
+    id?: string;
+    name?: string;
+    title?: string;
+    company?: string;
+    company_name?: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    source?: string;
+    assignedTo?: string;
+    assigned_to?: string;
+    country?: string;
+    website?: string;
+    designation?: string;
+    gstPan?: string;
+    gst_pan?: string;
+    location?: string;
+    address?: string;
+    tags?: string[] | string;
+    attachments?: any[];
+}
+
 const TABS = [
     { id: "profile", label: "Profile", icon: User },
     { id: "contacts", label: "Contacts", icon: Users },
@@ -57,7 +80,7 @@ const TABS = [
     { id: "reminders", label: "Reminder", icon: Bell },
 ];
 
-const mapLeadToProfile = (lead: any): LeadProfileFormValues => ({
+const mapLeadToProfile = (lead: LeadDetailsData | null | undefined): LeadProfileFormValues => ({
     name: lead?.name || lead?.title || "",
     company: lead?.company || lead?.company_name || "",
     email: lead?.email || "",
@@ -78,7 +101,7 @@ const LeadDetailsPage = () => {
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState("profile");
     const navigate = useNavigate();
-    const { data: lead, isLoading } = useLead(id);
+    const { data: lead, isLoading } = useLead<LeadDetailsData>(id);
     const updateLeadMutation = useUpdateLead();
     const leadProfile = useMemo(() => mapLeadToProfile(lead), [lead]);
 
@@ -110,7 +133,7 @@ const LeadDetailsPage = () => {
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case "profile": return <ProfileTab leadProfile={leadProfile} setLeadProfile={setLeadProfile} />;
+            case "profile": return <ProfileTab leadProfile={leadProfile} setLeadProfile={setLeadProfile} isSaving={updateLeadMutation.isPending} />;
             case "contacts": return <ContactsTab />;
             case "follow-up": return id ? <FollowUpTab leadId={id} /> : null;
             case "visits": return id ? <VisitsTab leadId={id} /> : null;

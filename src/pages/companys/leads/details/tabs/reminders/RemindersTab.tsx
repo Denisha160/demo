@@ -27,11 +27,11 @@ const applyServerValidationErrors = (
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
-      const fieldKey =
-        key === "remind_at"
-          ? "remind_date"
-          : key;
-      setError(fieldKey as any, { type: "server", message: String(message) });
+      if (key === "remind_at") {
+        setError("remind_date" as any, { type: "server", message: String(message) });
+        return;
+      }
+      setError(key as any, { type: "server", message: String(message) });
     });
   }
 };
@@ -111,11 +111,17 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
   );
 
   const handleSaveReminder = (formData: ReminderFormData, setError: (field: any, err: any) => void) => {
-    const remind_at = `${formData.remind_date}T${formData.remind_time}:00`;
+    const remind_at = `${formData.remind_date}T${formData.remind_time.length === 5 ? `${formData.remind_time}:00` : formData.remind_time}`;
+    const payload = {
+      title: formData.title,
+      description: formData.description,
+      remind_at,
+      remind_time: formData.remind_time.length === 5 ? `${formData.remind_time}:00` : formData.remind_time,
+    };
 
     if (editingReminder) {
       updateReminderMutation.mutate(
-        { reminderId: editingReminder.id, ...formData, remind_at },
+        { reminderId: editingReminder.id, ...payload },
         {
           onSuccess: () => {
             setIsModalOpen(false);
@@ -127,7 +133,7 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
       return;
     }
 
-    createReminderMutation.mutate({ ...formData, remind_at }, {
+    createReminderMutation.mutate(payload, {
       onSuccess: () => setIsModalOpen(false),
       onError: (error) => applyServerValidationErrors(error, setError),
     });

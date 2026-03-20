@@ -44,7 +44,7 @@ export function useCreateLeadVisit(leadId?: string) {
     mutationFn: (payload: Record<string, unknown>) => createLeadVisit(leadId, payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.visits(leadId || "") });
-      toast.success(response?.message || "Visit created successfully.");
+      toast.success("Visit created successfully.");
     },
     onError: (error: unknown) => {
       const apiError = error as { code?: string };
@@ -63,7 +63,7 @@ export function useUpdateLeadVisit(leadId?: string) {
       updateLeadVisit({ leadId, visitId, ...payload }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.visits(leadId || "") });
-      toast.success(response?.message || "Visit updated successfully.");
+      toast.success("Visit updated successfully.");
     },
     onError: (error: unknown) => {
       const apiError = error as { code?: string };
@@ -81,7 +81,7 @@ export function useDeleteLeadVisit(leadId?: string) {
     mutationFn: (visitId: string) => deleteLeadVisit({ leadId, visitId }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.visits(leadId || "") });
-      toast.success(response?.message || "Visit deleted successfully.");
+      toast.success("Visit deleted successfully.");
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, "Failed to delete visit."));

@@ -27,7 +27,7 @@ export function useLeads(params?: Record<string, unknown>) {
   });
 }
 
-export function useLead(leadId?: string) {
+export function useLead<T = any>(leadId?: string) {
   return useQuery({
     queryKey: queryKeys.leads.detail(leadId || ""),
     queryFn: () => getLeadDetails(leadId),
@@ -35,7 +35,7 @@ export function useLead(leadId?: string) {
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    select: (data) => normalizeDetail(data),
+    select: (data): T | null => normalizeDetail<T>(data),
   });
 }
 
@@ -46,7 +46,7 @@ export function useCreateLead() {
     mutationFn: (payload: Record<string, unknown>) => createLead(payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
-      toast.success(response?.message || "Lead created successfully.");
+      toast.success("Lead created successfully.");
     },
     onError: (error: any) => {
       if (error?.code !== "validation_error") {
@@ -65,7 +65,7 @@ export function useUpdateLead() {
     onSuccess: (response, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(variables.leadId) });
-      toast.success(response?.message || "Lead updated successfully.");
+      toast.success("Lead updated successfully.");
     },
     onError: (error: any) => {
       if (error?.code !== "validation_error") {

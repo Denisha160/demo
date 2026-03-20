@@ -9,7 +9,7 @@ import {
 import { queryKeys } from "@/lib/queryKeys";
 
 const normalizeList = <T,>(response: any): T[] => {
-  if (Array.isArray(response?.data?.items)) return response.data.items;
+  if (Array.isArray(response?.data?.reminders)) return response.data.reminders;
   if (Array.isArray(response?.data)) return response.data;
   if (Array.isArray(response?.items)) return response.items;
   return [];
@@ -34,7 +34,7 @@ export function useCreateLeadReminder(leadId?: string) {
     mutationFn: (payload: Record<string, unknown>) => createLeadReminder(leadId, payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.reminders(leadId || "") });
-      toast.success(response?.message || "Reminder created successfully.");
+      toast.success("Reminder created successfully.");
     },
     onError: (error: any) => {
       if (error?.code !== "validation_error") {
@@ -52,7 +52,7 @@ export function useUpdateLeadReminder(leadId?: string) {
       updateLeadReminder({ leadId, reminderId, ...payload }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.reminders(leadId || "") });
-      toast.success(response?.message || "Reminder updated successfully.");
+      toast.success("Reminder updated successfully.");
     },
     onError: (error: any) => {
       if (error?.code !== "validation_error") {
@@ -69,7 +69,7 @@ export function useDeleteLeadReminder(leadId?: string) {
     mutationFn: (reminderId: string) => deleteLeadReminder({ leadId, reminderId }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.reminders(leadId || "") });
-      toast.success(response?.message || "Reminder deleted successfully.");
+      toast.success("Reminder deleted successfully.");
     },
     onError: (error: any) => {
       toast.error(error?.message || "Failed to delete reminder.");

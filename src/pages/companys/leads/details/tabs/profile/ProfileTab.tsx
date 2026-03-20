@@ -23,6 +23,7 @@ import type { LeadProfileFormValues } from "../../LeadDetailsPage";
 interface ProfileTabProps {
     leadProfile: LeadProfileFormValues;
     setLeadProfile: (profile: LeadProfileFormValues) => void;
+    isSaving?: boolean;
 }
 
 const leadSchema = z.object({
@@ -88,7 +89,7 @@ const fieldGroups = [
     },
 ];
 
-const ProfileTab = ({ leadProfile, setLeadProfile }: ProfileTabProps) => {
+const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTabProps) => {
     const form = useForm<LeadProfileFormValues>({
         resolver: zodResolver(leadSchema),
         defaultValues: leadProfile,
@@ -148,6 +149,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile }: ProfileTabProps) => {
                                                             {...formField}
                                                             placeholder={field.placeholder}
                                                             className="min-h-[100px] text-sm"
+                                                            disabled={isSaving}
                                                         />
                                                     ) : (
                                                         <Input
@@ -155,6 +157,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile }: ProfileTabProps) => {
                                                             type={field.type || "text"}
                                                             placeholder={field.placeholder}
                                                             className="h-10 text-sm"
+                                                            disabled={isSaving}
                                                         />
                                                     )}
                                                 </FormControl>
@@ -175,9 +178,9 @@ const ProfileTab = ({ leadProfile, setLeadProfile }: ProfileTabProps) => {
                         type="submit"
                         size="sm"
                         className="h-9 px-5"
-                        disabled={!isDirty || !isValid}
+                        disabled={!isDirty || !isValid || isSaving}
                     >
-                        Save
+                        {isSaving ? "Saving..." : "Save"}
                     </Button>
                 </div>
             </form>

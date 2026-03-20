@@ -44,7 +44,7 @@ export function useCreateLeadTask(leadId?: string) {
     mutationFn: (payload: Record<string, unknown>) => createLeadTask(leadId, payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.tasks(leadId || "") });
-      toast.success(response?.message || "Task created successfully.");
+      toast.success("Task created successfully.");
     },
     onError: (error: unknown) => {
       const apiError = error as { code?: string };
@@ -63,7 +63,7 @@ export function useUpdateLeadTask(leadId?: string) {
       updateLeadTask({ leadId, taskId, ...payload }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.tasks(leadId || "") });
-      toast.success(response?.message || "Task updated successfully.");
+      toast.success("Task updated successfully.");
     },
     onError: (error: unknown) => {
       const apiError = error as { code?: string };
@@ -81,7 +81,7 @@ export function useDeleteLeadTask(leadId?: string) {
     mutationFn: (taskId: string) => deleteLeadTask({ leadId, taskId }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.tasks(leadId || "") });
-      toast.success(response?.message || "Task deleted successfully.");
+      toast.success("Task deleted successfully.");
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, "Failed to delete task."));

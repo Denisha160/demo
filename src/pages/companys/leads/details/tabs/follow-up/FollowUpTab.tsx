@@ -111,7 +111,13 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
       render: (item) => (
         <StatusBadge
           status={item.status}
-          variant={item.status === "Completed" ? "success" : item.status === "Pending" ? "warning" : "destructive"}
+          variant={
+            item.status === "COMPLETED"
+              ? "success"
+              : item.status === "TODO" || item.status === "IN_PROGRESS" || item.status === "IN_REVIEW"
+                ? "warning"
+                : "destructive"
+          }
         />
       ),
     },

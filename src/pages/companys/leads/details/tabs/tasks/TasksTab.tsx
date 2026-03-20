@@ -116,13 +116,14 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case "completed":
+      case "COMPLETED":
         return "success";
-      case "in_progress":
+      case "IN_PROGRESS":
+      case "IN_REVIEW":
         return "info";
-      case "pending":
+      case "TODO":
         return "warning";
-      case "cancelled":
+      case "CANCELLED":
         return "destructive";
       default:
         return "default";

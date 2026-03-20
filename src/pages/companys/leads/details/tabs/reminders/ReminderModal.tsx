@@ -17,6 +17,34 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { DatePicker } from "@/components/ui/date-picker";
+const toDateAndTime = (remindAt?: string) => {
+    if (!remindAt) {
+        return {
+            remind_date: getTodayDate(),
+            remind_time: getCurrentTime(),
+        };
+    }
+
+    const parsed = new Date(remindAt);
+    if (Number.isNaN(parsed.getTime())) {
+        return {
+            remind_date: getTodayDate(),
+            remind_time: getCurrentTime(),
+        };
+    }
+
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, "0");
+    const day = String(parsed.getDate()).padStart(2, "0");
+    const hours = String(parsed.getHours()).padStart(2, "0");
+    const minutes = String(parsed.getMinutes()).padStart(2, "0");
+
+    return {
+        remind_date: `${year}-${month}-${day}`,
+        remind_time: `${hours}:${minutes}`,
+    };
+};
+
 const reminderSchema = z.object({
     remind_date: z.string().min(1, "Reminder date is required"),
     remind_time: z.string().min(1, "Reminder time is required"),
@@ -28,6 +56,7 @@ export type ReminderFormData = z.infer<typeof reminderSchema>;
 
 export interface Reminder extends ReminderFormData {
     id: string;
+    remind_at?: string;
 }
 
 interface ReminderModalProps {
@@ -62,9 +91,10 @@ const ReminderModal = ({
         if (!open) return;
 
         if (reminderData) {
+            const remindAtParts = toDateAndTime(reminderData.remind_at);
             form.reset({
-                remind_date: reminderData.remind_date || getTodayDate(),
-                remind_time: reminderData.remind_time || getCurrentTime(),
+                remind_date: reminderData.remind_date || remindAtParts.remind_date,
+                remind_time: reminderData.remind_time || remindAtParts.remind_time,
                 title: reminderData.title || "",
                 description: reminderData.description || "",
             });

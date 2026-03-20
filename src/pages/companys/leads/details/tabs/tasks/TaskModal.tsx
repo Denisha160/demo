@@ -64,7 +64,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
     defaultValues: {
       title: "",
       description: "",
-      status: "pending",
+      status: "TODO",
       priority: "medium",
       assigned_to: "",
       due_date: "",
@@ -77,7 +77,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
         form.reset({
           title: taskData.title || "",
           description: taskData.description || "",
-          status: taskData.status || "pending",
+          status: taskData.status || "TODO",
           priority: taskData.priority || "medium",
           assigned_to: taskData.assigned_to || "",
           due_date: taskData.due_date || "",
@@ -86,7 +86,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
         form.reset({
           title: "",
           description: "",
-          status: "pending",
+          status: "TODO",
           priority: "medium",
           assigned_to: "",
           due_date: "",
@@ -194,10 +194,11 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="TODO">TODO</SelectItem>
+                      <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
+                      <SelectItem value="IN_REVIEW">IN_REVIEW</SelectItem>
+                      <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                      <SelectItem value="CANCELLED">CANCELLED</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage className="text-[10px]" />

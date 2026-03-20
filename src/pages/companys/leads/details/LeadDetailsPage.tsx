@@ -20,7 +20,7 @@ import VisitsTab from "./tabs/visits/VisitsTab";
 import TasksTab from "./tabs/tasks/TasksTab";
 import CallLogsTab from "./tabs/callLogs/CallLogsTab";
 import ProductsTab from "./tabs/products/ProductsTab";
-import AttachmentsTab from "./attachments/AttachmentsTab";
+import AttachmentsTab from "./tabs/attachments/AttachmentsTab";
 import ActivityTab from "./tabs/activity/ActivityTab";
 import QuotationsTab from "./tabs/quotations/QuotationsTab";
 import RemindersTab from "./tabs/reminders/RemindersTab";
@@ -117,7 +117,7 @@ const LeadDetailsPage = () => {
             case "tasks": return id ? <TasksTab leadId={id} /> : null;
             case "call-logs": return <CallLogsTab />;
             case "products": return <ProductsTab />;
-            case "attachments": return id ? <AttachmentsTab leadId={id} /> : null;
+            case "attachments": return id ? <AttachmentsTab leadId={id} initialAttachments={lead?.attachments || []} /> : null;
             case "activity": return <ActivityTab />;
             case "quotations": return <QuotationsTab />;
             case "reminders": return id ? <RemindersTab leadId={id} /> : null;

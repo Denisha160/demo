@@ -66,7 +66,8 @@ const applyServerValidationErrors = (
 const LeadsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [addModalCol, setAddModalCol] = useState<string | null>(null);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [createLeadStatusId, setCreateLeadStatusId] = useState<string | null>(null);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [visibleStageIds, setVisibleStageIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"pipeline" | "table">(() => {
@@ -100,7 +101,7 @@ const LeadsPage = () => {
         ? [...prev.filter((id) => sortedIds.includes(id)), ...sortedIds.filter((id) => !prev.includes(id))]
         : sortedIds
     );
-    setAddModalCol((prev) => prev || sortedIds[0] || null);
+    setCreateLeadStatusId((prev) => prev || sortedIds[0] || null);
   }, [leadStatuses]);
 
   const isDealVisible = useCallback(
@@ -189,7 +190,7 @@ const LeadsPage = () => {
   };
 
   const handleAddLead = (data: LeadFormData, setError: (field: any, err: any) => void) => {
-    const column = columns.find((item) => item.id === addModalCol);
+    const column = columns.find((item) => item.id === createLeadStatusId);
 
     createLeadMutation.mutate(
       {
@@ -199,9 +200,9 @@ const LeadsPage = () => {
         company_name: data.company,
         email: data.email,
         phone: data.phone,
-        status_id: addModalCol || column?.id,
+        status_id: createLeadStatusId || column?.id,
         status: data.status || column?.title || "Initial Lead",
-        stage: addModalCol || "initial",
+        stage: createLeadStatusId || column?.id,
         source: data.source,
         assigned_to: data.assigned_to,
         country: data.country,
@@ -217,7 +218,7 @@ const LeadsPage = () => {
       },
       {
         onSuccess: () => {
-          setAddModalCol(null);
+          setIsLeadModalOpen(false);
         },
         onError: (error) => applyServerValidationErrors(error, setError),
       }
@@ -309,7 +310,10 @@ const LeadsPage = () => {
 
         <div className="flex items-center">
           <Button
-            onClick={() => setAddModalCol(columns[0]?.id || null)}
+            onClick={() => {
+              setCreateLeadStatusId(columns[0]?.id || createLeadStatusId || null);
+              setIsLeadModalOpen(true);
+            }}
             size="sm"
             className="h-9 w-full px-4 font-semibold shadow-sm transition-all hover:shadow-md active:scale-95 lg:w-auto"
           >
@@ -331,10 +335,10 @@ const LeadsPage = () => {
       </div>
 
       <LeadModal
-        open={!!addModalCol}
-        onClose={() => setAddModalCol(null)}
+        open={isLeadModalOpen}
+        onClose={() => setIsLeadModalOpen(false)}
         onSave={handleAddLead}
-        addModalCol={addModalCol}
+        addModalCol={createLeadStatusId}
         columns={columns}
         isSubmitting={createLeadMutation.isPending}
       />

@@ -75,7 +75,7 @@ const FollowUpModal = ({
     } = useForm<FollowUpFormData>({
         resolver: zodResolver(followUpSchema),
         defaultValues: {
-            status: "Pending",
+            status: "TODO",
             followUpMethod: "Call",
             purpose: "",
             assignedTo: "",
@@ -88,7 +88,7 @@ const FollowUpModal = ({
         if (open) {
             if (isEditing && followUpData) {
                 reset({
-                    status: followUpData.status || "Pending",
+                    status: followUpData.status || "TODO",
                     followUpMethod: followUpData.followUpMethod || "Call",
                     purpose: followUpData.purpose || "",
                     assignedTo: followUpData.assignedTo || followUpData.assigned_to || "",
@@ -97,7 +97,7 @@ const FollowUpModal = ({
                 });
             } else {
                 reset({
-                    status: "Pending",
+                    status: "TODO",
                     followUpMethod: "Call",
                     purpose: "",
                     assignedTo: "",
@@ -153,9 +153,11 @@ const FollowUpModal = ({
                                 <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Pending">Pending</SelectItem>
-                                <SelectItem value="Completed">Completed</SelectItem>
-                                <SelectItem value="Cancelled">Cancelled</SelectItem>
+                                <SelectItem value="TODO">TODO</SelectItem>
+                                <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
+                                <SelectItem value="IN_REVIEW">IN_REVIEW</SelectItem>
+                                <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                                <SelectItem value="CANCELLED">CANCELLED</SelectItem>
                             </SelectContent>
                         </Select>
                         {errors.status && <p className="text-xs text-red-500">{errors.status.message}</p>}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Upload, FileIcon, Trash2, Eye, FileText, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,20 @@ import { useDeleteLeadAttachment, useUploadLeadAttachment } from "@/hooks/useLea
 
 interface AttachmentsTabProps {
   leadId: string;
+  initialAttachments?: any[];
 }
 
-const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
+const mapAttachment = (attachment: any): Attachment => ({
+  id: String(attachment?.id || ""),
+  fileName: attachment?.fileName || attachment?.file_name || attachment?.name || "Attachment",
+  fileType: attachment?.fileType || attachment?.file_type || attachment?.mime_type || "application/octet-stream",
+  fileSize: attachment?.fileSize || attachment?.file_size || attachment?.size || "-",
+  url: attachment?.url || attachment?.file_url || attachment?.download_url || "#",
+  uploadedBy: attachment?.uploadedBy || attachment?.uploaded_by_name || attachment?.uploaded_by || "-",
+  date: (attachment?.date || attachment?.created_at || new Date().toISOString()).slice(0, 10),
+});
+
+const AttachmentsTab = ({ leadId, initialAttachments = [] }: AttachmentsTabProps) => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,8 +39,13 @@ const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
   const uploadAttachmentMutation = useUploadLeadAttachment(leadId);
   const deleteAttachmentMutation = useDeleteLeadAttachment(leadId);
 
-  const filteredAttachments = attachments.filter((file) =>
-    file.fileName.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    setAttachments(initialAttachments.map(mapAttachment));
+  }, [initialAttachments]);
+
+  const filteredAttachments = useMemo(
+    () => attachments.filter((file) => file.fileName.toLowerCase().includes(search.toLowerCase())),
+    [attachments, search]
   );
 
   const handleSaveAttachment = (newAttachment: Attachment) => {
@@ -135,7 +151,7 @@ const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
 
             uploadAttachmentMutation.mutate(formData, {
               onSuccess: (response) => {
-                handleSaveAttachment(response?.data || attachment);
+                handleSaveAttachment(mapAttachment(response?.data || attachment));
                 setIsModalOpen(false);
               },
             });

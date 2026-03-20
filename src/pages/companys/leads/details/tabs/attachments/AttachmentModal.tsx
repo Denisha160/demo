@@ -73,7 +73,6 @@ const AttachmentModal = ({ open, onClose, onSave, isSubmitting }: AttachmentModa
         };
 
         onSave(selectedFile, newAttachment);
-        onClose();
     };
 
     return (

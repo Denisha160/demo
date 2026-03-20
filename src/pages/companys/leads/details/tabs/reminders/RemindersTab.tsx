@@ -27,9 +27,39 @@ const applyServerValidationErrors = (
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
-      setError(key as any, { type: "server", message: String(message) });
+      const fieldKey =
+        key === "remind_at"
+          ? "remind_date"
+          : key;
+      setError(fieldKey as any, { type: "server", message: String(message) });
     });
   }
+};
+
+const mapReminder = (reminder: any): Reminder => {
+  const remindAt = reminder?.remind_at;
+  let remindDate = reminder?.remind_date || "";
+  let remindTime = reminder?.remind_time || "";
+
+  if (remindAt) {
+    const parsed = new Date(remindAt);
+    if (!Number.isNaN(parsed.getTime())) {
+      const year = parsed.getFullYear();
+      const month = String(parsed.getMonth() + 1).padStart(2, "0");
+      const day = String(parsed.getDate()).padStart(2, "0");
+      const hours = String(parsed.getHours()).padStart(2, "0");
+      const minutes = String(parsed.getMinutes()).padStart(2, "0");
+      remindDate = remindDate || `${year}-${month}-${day}`;
+      remindTime = remindTime || `${hours}:${minutes}`;
+    }
+  }
+
+  return {
+    ...reminder,
+    remind_at: remindAt,
+    remind_date: remindDate,
+    remind_time: remindTime,
+  };
 };
 
 const formatReminderDateTime = (date: string, time: string) => {
@@ -64,9 +94,11 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
   const updateReminderMutation = useUpdateLeadReminder(leadId);
   const deleteReminderMutation = useDeleteLeadReminder(leadId);
 
+  const reminderItems = useMemo(() => reminders.map((reminder: any) => mapReminder(reminder)), [reminders]);
+
   const filteredReminders = useMemo(
     () =>
-      reminders.filter((reminder: Reminder) => {
+      reminderItems.filter((reminder: Reminder) => {
         const query = search.toLowerCase();
         return (
           reminder.title.toLowerCase().includes(query) ||
@@ -75,13 +107,15 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
           reminder.remind_time.toLowerCase().includes(query)
         );
       }),
-    [reminders, search]
+    [reminderItems, search]
   );
 
   const handleSaveReminder = (formData: ReminderFormData, setError: (field: any, err: any) => void) => {
+    const remind_at = `${formData.remind_date}T${formData.remind_time}:00`;
+
     if (editingReminder) {
       updateReminderMutation.mutate(
-        { reminderId: editingReminder.id, ...formData },
+        { reminderId: editingReminder.id, ...formData, remind_at },
         {
           onSuccess: () => {
             setIsModalOpen(false);
@@ -93,7 +127,7 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
       return;
     }
 
-    createReminderMutation.mutate(formData, {
+    createReminderMutation.mutate({ ...formData, remind_at }, {
       onSuccess: () => setIsModalOpen(false),
       onError: (error) => applyServerValidationErrors(error, setError),
     });

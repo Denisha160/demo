@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormSetError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,8 @@ interface FollowUpModalProps {
     onClose: () => void;
     followUpData?: FollowUp | null;
     isEditing?: boolean;
-    onSave: (data: FollowUp) => void;
+    onSave: (data: FollowUpFormData, setError: UseFormSetError<FollowUpFormData>) => void;
+    isSubmitting?: boolean;
 }
 
 const FollowUpModal = ({
@@ -48,16 +49,18 @@ const FollowUpModal = ({
     onClose,
     followUpData,
     isEditing = false,
-    onSave
+    onSave,
+    isSubmitting = false,
 }: FollowUpModalProps) => {
 
     const {
         register,
         handleSubmit,
         setValue,
+        setError,
         watch,
         reset,
-        formState: { errors, isSubmitting } // ✅ FIXED
+        formState: { errors }
     } = useForm<FollowUpFormData>({
         resolver: zodResolver(followUpSchema),
         defaultValues: {
@@ -88,12 +91,7 @@ const FollowUpModal = ({
     }, [open, isEditing, followUpData, reset]);
 
     const handleFormSubmit = (data: FollowUpFormData) => {
-        const finalData: FollowUp = {
-            ...data,
-            id: followUpData?.id || Math.random().toString(36).substr(2, 9),
-        };
-        onSave(finalData);
-        onClose();
+        onSave(data, setError);
     };
 
     const status = watch("status");
@@ -111,7 +109,7 @@ const FollowUpModal = ({
                     <Button variant="outline" size="sm" onClick={onClose}>
                         Close
                     </Button>
-                    <Button type="submit" form="follow-up-form" size="sm">
+                    <Button type="submit" form="follow-up-form" size="sm" disabled={isSubmitting}>
                         {isEditing ? "Update" : "Save"}
                     </Button>
                 </div>
@@ -162,24 +160,28 @@ const FollowUpModal = ({
                                 <SelectItem value="Email">Email</SelectItem>
                             </SelectContent>
                         </Select>
+                        {errors.followUpMethod && <p className="text-xs text-red-500">{errors.followUpMethod.message}</p>}
                     </div>
 
                     {/* Purpose */}
                     <div className="col-span-2">
                         <Label>Purpose</Label>
                         <Input {...register("purpose")} placeholder="Enter purpose" />
+                        {errors.purpose && <p className="text-xs text-red-500">{errors.purpose.message}</p>}
                     </div>
 
                     {/* Assigned */}
                     <div>
                         <Label>Assigned To</Label>
                         <Input {...register("assignedTo")} />
+                        {errors.assignedTo && <p className="text-xs text-red-500">{errors.assignedTo.message}</p>}
                     </div>
 
                     {/* Created */}
                     <div>
                         <Label>Created By</Label>
                         <Input {...register("createdBy")} />
+                        {errors.createdBy && <p className="text-xs text-red-500">{errors.createdBy.message}</p>}
                     </div>
 
                     {/* Date ✅ FIXED */}
@@ -192,6 +194,7 @@ const FollowUpModal = ({
                             }
                             disabled={isSubmitting}
                         />
+                        {errors.date && <p className="text-xs text-red-500">{errors.date.message}</p>}
                     </div>
 
                 </div>

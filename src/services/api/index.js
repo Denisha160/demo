@@ -258,6 +258,81 @@ export const deletePackage = (id) => {
 
 // end region
 
+// region Lead Follow Ups
+// ===================== Lead Follow Ups =====================
+
+export const listLeadFollowUps = (leadId, params) => {
+  const url = `leads/${leadId}/follow-ups`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadFollowUp = (leadId, data) => {
+  const url = `leads/${leadId}/follow-ups`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadFollowUp = ({ leadId, followupId, ...data }) => {
+  const url = `leads/${leadId}/follow-ups/${followupId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadFollowUp = ({ leadId, followupId }) => {
+  const url = `leads/${leadId}/follow-ups/${followupId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Tasks
+// ===================== Lead Tasks =====================
+
+export const listLeadTasks = (leadId, params) => {
+  const url = `leads/${leadId}/tasks`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadTask = (leadId, data) => {
+  const url = `leads/${leadId}/tasks`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadTask = ({ leadId, taskId, ...data }) => {
+  const url = `leads/${leadId}/tasks/${taskId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadTask = ({ leadId, taskId }) => {
+  const url = `leads/${leadId}/tasks/${taskId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Visits
+// ===================== Lead Visits =====================
+
+export const listLeadVisits = (leadId, params) => {
+  const url = `leads/${leadId}/visits`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadVisit = (leadId, data) => {
+  const url = `leads/${leadId}/visits`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadVisit = ({ leadId, visitId, ...data }) => {
+  const url = `leads/${leadId}/visits/${visitId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadVisit = ({ leadId, visitId }) => {
+  const url = `leads/${leadId}/visits/${visitId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
 // region BOM
 // ===================== BOM =====================
 

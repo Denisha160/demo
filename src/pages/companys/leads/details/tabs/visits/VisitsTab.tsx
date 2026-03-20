@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
 import { CalendarDays, Edit, MapPin, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
@@ -67,8 +66,11 @@ const getStatusVariant = (status: string) => {
   }
 };
 
-const VisitsTab = () => {
-  const { id: leadId } = useParams();
+interface VisitsTabProps {
+  leadId: string;
+}
+
+const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);

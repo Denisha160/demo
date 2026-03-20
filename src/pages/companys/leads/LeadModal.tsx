@@ -1,4 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useForm, UseFormSetError } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Tag } from "lucide-react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,391 +10,272 @@ import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { ComboboxWithAdd } from "@/components/ui/comboBoxWithAdd";
 import { PipelineColumn } from "../../../types/leads";
-import { Tag } from "lucide-react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useLeadSources } from "@/hooks/useLeadSource";
+import { useLeadStatuses } from "@/hooks/useLeadStatus";
 
 const formSchema = z.object({
-    status: z.string().min(1, { message: "Status is required" }),
-    source: z.string().min(1, { message: "Source is required" }),
-    title: z.string().min(1, { message: "Name is required" }),
-    email: z.string().min(1, "Email is required").email("Invalid email"),
-    phone: z
-        .string()
-        .min(1, "Phone is required")
-        .regex(/^\d+$/, "Only numbers allowed")
-        .length(10, "Must be 10 digits"),
+  status: z.string().min(1, { message: "Status is required" }),
+  source: z.string().min(1, { message: "Source is required" }),
+  title: z.string().min(1, { message: "Name is required" }),
+  company: z.string().optional().or(z.literal("")),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  phone: z
+    .string()
+    .min(1, "Phone is required")
+    .regex(/^\d+$/, "Only numbers allowed")
+    .min(10, "Must be at least 10 digits"),
+  assigned_to: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
+  state: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  tags: z.string().optional().or(z.literal("")),
+  designation: z.string().optional().or(z.literal("")),
+  website: z.string().optional().or(z.literal("")),
+  gst_pan: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  pincode: z.string().optional().or(z.literal("")),
+  alternative_phone: z.string().optional().or(z.literal("")),
 });
 
+export type LeadFormData = z.infer<typeof formSchema>;
+
 interface LeadModalProps {
-    open: boolean;
-    onClose: () => void;
-    onSave: () => void;
-    addModalCol: string | null;
-    columns: PipelineColumn[];
-    newDeal: { title: string; company: string; value: string; contact: string };
-    setNewDeal: (deal: { title: string; company: string; value: string; contact: string }) => void;
+  open: boolean;
+  onClose: () => void;
+  onSave: (data: LeadFormData, setError: UseFormSetError<LeadFormData>) => void;
+  addModalCol: string | null;
+  columns: PipelineColumn[];
+  isSubmitting?: boolean;
 }
 
-const LeadModal = ({ open, onClose, onSave, addModalCol, columns, newDeal, setNewDeal }: LeadModalProps) => {
+const LeadModal = ({
+  open,
+  onClose,
+  onSave,
+  addModalCol,
+  columns,
+  isSubmitting = false,
+}: LeadModalProps) => {
+  const form = useForm<LeadFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      status: "",
+      source: "",
+      title: "",
+      company: "",
+      email: "",
+      phone: "",
+      assigned_to: "",
+      country: "",
+      state: "",
+      city: "",
+      tags: "",
+      designation: "",
+      website: "",
+      gst_pan: "",
+      address: "",
+      pincode: "",
+      alternative_phone: "",
+    },
+  });
 
-    const [statusOptions, setStatusOptions] = useState([
-        { value: "new", label: "New" },
-        { value: "contacted", label: "Contacted" },
-        { value: "qualified", label: "Qualified" },
-    ]);
+  const { data: statusResponse } = useLeadStatuses({ limit: 100 });
+  const { data: sourceResponse } = useLeadSources({ limit: 100 });
 
-    const [sourceOptions, setSourceOptions] = useState([
-        { value: "organic", label: "Organic Search" },
-        { value: "referral", label: "Referral" },
-        { value: "social", label: "Social Media" },
-    ]);
+  const statusOptions =
+    statusResponse?.items?.map((item: any) => ({
+      value: item.name,
+      label: item.name,
+    })) || [];
 
-    const [status, setStatus] = useState("");
-    const [source, setSource] = useState("");
-    const [assigned, setAssigned] = useState("charley");
-    const [country, setCountry] = useState("");
-    const [state, setState] = useState("");
-    const [city, setCity] = useState("");
-    const [language, setLanguage] = useState("system");
-    const [errors, setErrors] = useState<{ status?: string, source?: string, title?: string }>({});
+  const sourceOptions =
+    sourceResponse?.items?.map((item: any) => ({
+      value: item.name,
+      label: item.name,
+    })) || [];
 
-    useEffect(() => {
-        if (open) {
-            setStatus("");
-            setSource("");
-            setAssigned("charley");
-            setCountry("");
-            setCity("");
-            setState("");
-            setErrors({});
-        }
-    }, [open]);
+  useEffect(() => {
+    if (!open) return;
 
-    const form = useForm({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            status: "",
-            source: "",
-            title: "",
-            email: "",
-            phone: "",
-            company: "",
-        },
+    const defaultColumn = columns.find((column) => column.id === addModalCol);
+    form.reset({
+      status: defaultColumn?.title || "",
+      source: "",
+      title: "",
+      company: "",
+      email: "",
+      phone: "",
+      assigned_to: "",
+      country: "",
+      state: "",
+      city: "",
+      tags: "",
+      designation: "",
+      website: "",
+      gst_pan: "",
+      address: "",
+      pincode: "",
+      alternative_phone: "",
     });
+  }, [open, addModalCol, columns, form]);
 
-    useEffect(() => {
-        if (open) {
-            form.reset();
-        }
-    }, [open]);
+  const handleSubmit = (data: LeadFormData) => {
+    onSave(data, form.setError);
+  };
 
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Create Lead"
+      description={addModalCol ? `Stage: ${columns.find((c) => c.id === addModalCol)?.title}` : ""}
+      headerBg="bg-primary/5"
+      maxWidth="sm:max-w-[800px] md:max-w-[900px]"
+      titleClassName="text-primary font-bold"
+      footer={
+        <div className="flex w-full gap-2 sm:w-auto">
+          <Button variant="outline" size="sm" className="h-9 px-6 text-xs font-semibold rounded-sm" onClick={onClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button size="sm" className="h-9 px-8 text-xs font-semibold rounded-sm" onClick={form.handleSubmit(handleSubmit)} disabled={isSubmitting}>
+            Save Lead
+          </Button>
+        </div>
+      }
+    >
+      <form className="custom-scrollbar h-[60vh] space-y-4 overflow-y-auto pr-2 pt-2" onSubmit={form.handleSubmit(handleSubmit)}>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1">
+              <span className="text-destructive">*</span> Status
+            </Label>
+            <ComboboxWithAdd
+              options={statusOptions}
+              value={form.watch("status")}
+              onValueChange={(value) => form.setValue("status", value, { shouldValidate: true, shouldDirty: true })}
+              onOptionsChange={() => undefined}
+              placeholder="Select Status"
+              className="h-9 w-full"
+            />
+            {form.formState.errors.status && <p className="text-[10px] text-destructive">{form.formState.errors.status.message}</p>}
+          </div>
 
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1">
+              <span className="text-destructive">*</span> Source
+            </Label>
+            <ComboboxWithAdd
+              options={sourceOptions}
+              value={form.watch("source")}
+              onValueChange={(value) => form.setValue("source", value, { shouldValidate: true, shouldDirty: true })}
+              onOptionsChange={() => undefined}
+              placeholder="Select Source"
+              className="h-9 w-full"
+            />
+            {form.formState.errors.source && <p className="text-[10px] text-destructive">{form.formState.errors.source.message}</p>}
+          </div>
 
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Assigned</Label>
+            <Combobox
+              options={[
+                { value: "charley", label: "Charley Dicki" },
+                { value: "john", label: "John Doe" },
+                { value: "jane", label: "Jane Smith" },
+              ]}
+              value={form.watch("assigned_to")}
+              onValueChange={(value) => form.setValue("assigned_to", value, { shouldDirty: true })}
+              placeholder="Select User"
+              className="h-9 w-full"
+            />
+          </div>
+        </div>
 
-    const handleSave = () => {
-        const result = formSchema.safeParse({ status, source, title: newDeal.title });
-        if (!result.success) {
-            const newErrors: Record<string, string> = {};
-            result.error.issues.forEach(issue => {
-                newErrors[issue.path[0] as string] = issue.message;
-            });
-            setErrors(newErrors);
-            return;
-        }
-        setErrors({});
-        onSave();
-    };
+        <div className="space-y-1.5 border-t border-border/40 pt-2">
+          <Label className="text-xs font-bold text-foreground flex items-center gap-1.5 pb-2">
+            <Tag className="h-4 w-4 text-muted-foreground" /> Tags
+          </Label>
+          <Input
+            placeholder="Tag"
+            className="h-9 rounded-none border-0 border-l-[3px] border-primary bg-transparent pl-3 text-sm shadow-none focus-visible:ring-0"
+            {...form.register("tags")}
+          />
+        </div>
 
-    return (
-        <Modal
-            open={open}
-            onClose={onClose}
-            title="Create Lead"
-            description={addModalCol ? `Stage: ${columns.find((c) => c.id === addModalCol)?.title}` : ""}
-            headerBg="bg-primary/5"
-            maxWidth="sm:max-w-[800px] md:max-w-[900px]"
-            titleClassName="text-primary font-bold"
-            footer={
-                <div className="flex gap-2 w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="h-9 px-6 text-xs font-semibold rounded-sm" onClick={onClose}>Cancel</Button>
-                    <Button size="sm" className="h-9 px-8 text-xs font-semibold rounded-sm" onClick={handleSave}>Save Lead</Button>
-                </div>
-            }
-        >
-            <div className="space-y-2 pt-2 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="grid grid-cols-1 gap-x-2 gap-y-2 border-t border-border/40 pt-2 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1">
+              <span className="text-destructive">*</span> Name
+            </Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("title")} />
+            {form.formState.errors.title && <p className="text-[10px] text-destructive">{form.formState.errors.title.message}</p>}
+          </div>
 
-                {/* Top Row: Status, Source, Assigned */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-1.5 flex flex-col w-full">
-                        <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-                            <span className="text-destructive">*</span> Status
-                        </Label>
-                        <ComboboxWithAdd
-                            options={statusOptions}
-                            value={status}
-                            onValueChange={(val) => { setStatus(val); if (errors.status) setErrors({ ...errors, status: undefined }); }}
-                            onOptionsChange={setStatusOptions}
-                            placeholder="Select Status"
-                            className={`h-9 w-full ${errors.status ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
-                        />
-                        {errors.status && <p className="text-[10px] text-destructive m-0 mt-0.5">{errors.status}</p>}
-                    </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Email Address</Label>
+            <Input type="email" className="h-9 text-xs border-border/60" {...form.register("email")} />
+            {form.formState.errors.email && <p className="text-[10px] text-destructive">{form.formState.errors.email.message}</p>}
+          </div>
 
-                    <div className="space-y-1.5 flex flex-col w-full">
-                        <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-                            <span className="text-destructive">*</span> Source
-                        </Label>
-                        <ComboboxWithAdd
-                            options={sourceOptions}
-                            value={source}
-                            onValueChange={(val) => { setSource(val); if (errors.source) setErrors({ ...errors, source: undefined }); }}
-                            onOptionsChange={setSourceOptions}
-                            placeholder="Select Source"
-                            className={`h-9 w-full ${errors.source ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
-                        />
-                        {errors.source && <p className="text-[10px] text-destructive m-0 mt-0.5">{errors.source}</p>}
-                    </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Country</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("country")} />
+          </div>
 
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Assigned
-                        </Label>
-                        <Combobox
-                            options={[
-                                { value: "charley", label: "Charley Dicki" },
-                                { value: "john", label: "John Doe" },
-                                { value: "jane", label: "Jane Smith" },
-                            ]}
-                            value={assigned}
-                            onValueChange={setAssigned}
-                            placeholder="Select User"
-                            className="h-9 w-full"
-                        />
-                    </div>
-                </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">City</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("city")} />
+          </div>
 
-                {/* Tags Section */}
-                <div className="space-y-1.5 pt-2 border-t border-border/40">
-                    <Label className="text-xs font-bold text-foreground flex items-center gap-1.5 pb-2">
-                        <Tag className="h-4 w-4 text-muted-foreground" /> Tags
-                    </Label>
-                    <div className="relative">
-                        <Input
-                            placeholder="Tag"
-                            className="h-9 text-sm border-0 border-l-[3px] border-primary rounded-none shadow-none focus-visible:ring-0 bg-transparent pl-3"
-                        />
-                    </div>
-                </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">State</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("state")} />
+          </div>
 
-                {/* Details Grid (12 Mobile, 6 per side Desktop) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2 pt-2 border-t border-border/40">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Phone</Label>
+            <Input type="tel" className="h-9 text-xs border-border/60" {...form.register("phone")} />
+            {form.formState.errors.phone && <p className="text-[10px] text-destructive">{form.formState.errors.phone.message}</p>}
+          </div>
 
-                    {/* Name */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-                            <span className="text-destructive">*</span> Name
-                        </Label>
-                        <Input
-                            value={newDeal.title}
-                            onChange={(e) => {
-                                setNewDeal({ ...newDeal, title: e.target.value });
-                                if (errors.title) setErrors({ ...errors, title: undefined });
-                            }}
-                            className={`h-9 text-xs border-border/60 ${errors.title ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
-                        />
-                        {errors.title && <p className="text-[10px] text-destructive m-0 mt-0.5">{errors.title}</p>}
-                    </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Alternative Phone Number</Label>
+            <Input type="tel" className="h-9 text-xs border-border/60" {...form.register("alternative_phone")} />
+          </div>
 
-                    {/* Email Address */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Email Address
-                        </Label>
-                        <Input
-                            type="email"
-                            value={newDeal.contact}
-                            onChange={(e) => setNewDeal({ ...newDeal, contact: e.target.value })}
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Pincode</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("pincode")} />
+          </div>
 
-                    {/* Country */}
-                    <div className="space-y-1.5 flex flex-col min-w-0">
-                        <Label className="text-xs font-bold text-foreground">
-                            Country
-                        </Label>
-                        <div className="w-full flex">
-                            <Combobox
-                                options={[
-                                    { value: "in", label: "India" },
-                                    { value: "us", label: "United States" },
-                                    { value: "uk", label: "United Kingdom" },
-                                    { value: "ca", label: "Canada" },
-                                ]}
-                                value={country}
-                                onValueChange={setCountry}
-                                placeholder="Select Country"
-                                className="h-9 w-full"
-                            />
-                        </div>
-                    </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Company Name</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("company")} />
+          </div>
 
-                    {/* City */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            City
-                        </Label>
-                        <div className="w-full flex">
-                            <Combobox
-                                options={[
-                                    { value: "bangalore", label: "Bangalore" },
-                                    { value: "mumbai", label: "Mumbai" },
-                                    { value: "delhi", label: "Delhi" },
-                                    { value: "chennai", label: "Chennai" },
-                                ]}
-                                value={city}
-                                onValueChange={setCity}
-                                placeholder="Select City"
-                                className="h-9 w-full"
-                            />
-                        </div>
-                    </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Designation</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("designation")} />
+          </div>
 
-                    {/* State */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            State
-                        </Label>
-                        <div className="w-full flex">
-                            <Combobox
-                                options={[
-                                    { value: "karnataka", label: "Karnataka" },
-                                    { value: "maharashtra", label: "Maharashtra" },
-                                    { value: "delhi", label: "Delhi" },
-                                    { value: "tamilnadu", label: "Tamil Nadu" },
-                                ]}
-                                value={state}
-                                onValueChange={setState}
-                                placeholder="Select State"
-                                className="h-9 w-full"
-                            />
-                        </div>
-                    </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">Website</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("website")} />
+          </div>
 
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-foreground">GST / PAN</Label>
+            <Input className="h-9 text-xs border-border/60 uppercase" {...form.register("gst_pan")} />
+          </div>
 
-                    {/* Phone */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Phone
-                        </Label>
-                        <Input
-                            name="phone"
-                            type="tel"
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* Alternative Phone Number */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Alternative Phone Number
-                        </Label>
-                        <Input
-                            type="tel"
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-
-                    {/* Pincode */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Pincode
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* Company Name */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Company Name
-                        </Label>
-                        <Input
-                            value={newDeal.company}
-                            onChange={(e) => setNewDeal({ ...newDeal, company: e.target.value })}
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* Designation */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Designation
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* Website */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            Website
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* GST Number */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            GST Number
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* PAN Number */}
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label className="text-xs font-bold text-foreground">
-                            PAN Number
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60 uppercase"
-                        />
-                    </div>
-
-
-                    {/* Address Line 1 */}
-                    <div className="space-y-1.5 flex flex-col md:col-span-2">
-                        <Label className="text-xs font-bold text-foreground">
-                            Address Line 1
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                    {/* Address Line 2 */}
-                    <div className="space-y-1.5 flex flex-col md:col-span-2">
-                        <Label className="text-xs font-bold text-foreground">
-                            Address Line 2
-                        </Label>
-                        <Input
-                            className="h-9 text-xs border-border/60"
-                        />
-                    </div>
-
-                </div>
-            </div>
-        </Modal>
-    );
+          <div className="space-y-1.5 md:col-span-2">
+            <Label className="text-xs font-bold text-foreground">Address</Label>
+            <Input className="h-9 text-xs border-border/60" {...form.register("address")} />
+          </div>
+        </div>
+      </form>
+    </Modal>
+  );
 };
 
 export default LeadModal;

@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
 import { Edit2, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
@@ -34,8 +33,11 @@ const applyServerValidationErrors = (
   }
 };
 
-const FollowUpTab = () => {
-  const { id: leadId } = useParams();
+interface FollowUpTabProps {
+  leadId: string;
+}
+
+const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingFollowUp, setEditingFollowUp] = useState<FollowUp | null>(null);

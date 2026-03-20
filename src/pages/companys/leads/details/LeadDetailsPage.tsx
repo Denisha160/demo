@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     User, Users, Clock, MapPin, ClipboardList,
@@ -24,6 +24,7 @@ import AttachmentsTab from "./attachments/AttachmentsTab";
 import ActivityTab from "./tabs/activity/ActivityTab";
 import QuotationsTab from "./tabs/quotations/QuotationsTab";
 import RemindersTab from "./tabs/reminders/RemindersTab";
+import { useLead, useUpdateLead } from "@/hooks/useLeads";
 
 export interface LeadProfileFormValues {
     name: string;
@@ -56,34 +57,64 @@ const TABS = [
     { id: "reminders", label: "Reminder", icon: Bell },
 ];
 
+const mapLeadToProfile = (lead: any): LeadProfileFormValues => ({
+    name: lead?.name || lead?.title || "",
+    company: lead?.company || lead?.company_name || "",
+    email: lead?.email || "",
+    phone: lead?.phone || "",
+    status: lead?.status || "",
+    source: lead?.source || "",
+    assignedTo: lead?.assignedTo || lead?.assigned_to || "",
+    country: lead?.country || "",
+    website: lead?.website || "",
+    designation: lead?.designation || "",
+    gstPan: lead?.gstPan || lead?.gst_pan || "",
+    location: lead?.location || "",
+    address: lead?.address || "",
+    tags: Array.isArray(lead?.tags) ? lead.tags.join(", ") : lead?.tags || "",
+});
+
 const LeadDetailsPage = () => {
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState("profile");
     const navigate = useNavigate();
-    const [leadProfile, setLeadProfile] = useState<LeadProfileFormValues>({
-        name: "Jerde Inc",
-        company: "Jerde Corporation",
-        email: "info@jerde.com",
-        phone: "9876543210",
-        status: "New",
-        source: "Organic",
-        assignedTo: "Charley Dicki",
-        country: "India",
-        website: "https://jerde.com",
-        designation: "Senior Manager",
-        gstPan: "GSTIN1234567890 / ABCDE1234F",
-        location: "Mumbai, Maharashtra (400001)",
-        address: "123 Business Avenue, Suite 100, Tech City, Building 4, North Wing",
-        tags: "Priority, Follow-up, Tech, Enterprise",
-    });
+    const { data: lead, isLoading } = useLead(id);
+    const updateLeadMutation = useUpdateLead();
+    const leadProfile = useMemo(() => mapLeadToProfile(lead), [lead]);
+
+    const setLeadProfile = (profile: LeadProfileFormValues) => {
+        if (!id) return;
+
+        updateLeadMutation.mutate({
+            leadId: id,
+            name: profile.name,
+            company: profile.company,
+            company_name: profile.company,
+            email: profile.email,
+            phone: profile.phone,
+            status: profile.status,
+            source: profile.source,
+            assignedTo: profile.assignedTo,
+            assigned_to: profile.assignedTo,
+            country: profile.country,
+            website: profile.website,
+            designation: profile.designation,
+            gstPan: profile.gstPan,
+            gst_pan: profile.gstPan,
+            location: profile.location,
+            address: profile.address,
+            tags: profile.tags,
+            title: profile.name,
+        });
+    };
 
     const renderTabContent = () => {
         switch (activeTab) {
             case "profile": return <ProfileTab leadProfile={leadProfile} setLeadProfile={setLeadProfile} />;
             case "contacts": return <ContactsTab />;
-            case "follow-up": return <FollowUpTab />;
-            case "visits": return <VisitsTab />;
-            case "tasks": return <TasksTab />;
+            case "follow-up": return id ? <FollowUpTab leadId={id} /> : null;
+            case "visits": return id ? <VisitsTab leadId={id} /> : null;
+            case "tasks": return id ? <TasksTab leadId={id} /> : null;
             case "call-logs": return <CallLogsTab />;
             case "products": return <ProductsTab />;
             case "attachments": return <AttachmentsTab />;
@@ -110,7 +141,7 @@ const LeadDetailsPage = () => {
                 </div>
 
                 <h1 className="text-xl md:text-2xl font-bold text-foreground">
-                    #{id || "21"} Jerde Inc
+                    #{id || "21"} {isLoading ? "Loading..." : (leadProfile.name || "Lead Details")}
                 </h1>
             </div>
 

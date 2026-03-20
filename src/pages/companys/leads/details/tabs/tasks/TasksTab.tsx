@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
@@ -34,8 +33,11 @@ const applyServerValidationErrors = (
   }
 };
 
-const TasksTab = () => {
-  const { id: leadId } = useParams();
+interface TasksTabProps {
+  leadId: string;
+}
+
+const TasksTab = ({ leadId }: TasksTabProps) => {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);

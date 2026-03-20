@@ -258,6 +258,31 @@ export const deletePackage = (id) => {
 
 // end region
 
+// region Leads
+// ===================== Leads =====================
+
+export const listLeads = (params) => {
+  const url = `leads`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLead = (data) => {
+  const url = `leads`;
+  return axios({ method: "POST", url, data });
+};
+
+export const getLeadDetails = (leadId) => {
+  const url = `leads/${leadId}`;
+  return axios({ method: "GET", url });
+};
+
+export const updateLead = ({ leadId, ...data }) => {
+  const url = `leads/${leadId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+// end region
+
 // region Lead Follow Ups
 // ===================== Lead Follow Ups =====================
 

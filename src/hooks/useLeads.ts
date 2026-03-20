@@ -4,13 +4,15 @@ import { createLead, getLeadDetails, listLeads, updateLead } from "@/services/ap
 import { queryKeys } from "@/lib/queryKeys";
 
 const normalizeList = <T,>(response: any): T[] => {
-  if (Array.isArray(response?.data?.items)) return response.data.items;
+  if (Array.isArray(response?.data?.lead)) return response.data.lead;
   if (Array.isArray(response?.data)) return response.data;
   if (Array.isArray(response?.items)) return response.items;
   return [];
 };
 
 const normalizeDetail = <T,>(response: any): T | null => {
+  if (response?.data?.lead && !Array.isArray(response.data.lead)) return response.data.lead;
+  if (response?.lead && !Array.isArray(response.lead)) return response.lead;
   if (response?.data && !Array.isArray(response.data)) return response.data;
   if (response && !Array.isArray(response)) return response;
   return null;

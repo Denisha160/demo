@@ -51,17 +51,28 @@ interface LeadDetailsData {
     company_name?: string;
     email?: string;
     phone?: string;
+    alternate_phone?: string;
     status?: string;
+    status_name?: string;
     source?: string;
+    source_name?: string;
     assignedTo?: string;
     assigned_to?: string;
+    assigned_to_name?: string;
     country?: string;
+    state?: string;
+    city?: string;
+    pincode?: string;
     website?: string;
     designation?: string;
     gstPan?: string;
     gst_pan?: string;
+    gst_number?: string;
+    pan_number?: string;
     location?: string;
     address?: string;
+    address_line1?: string;
+    address_line2?: string;
     tags?: string[] | string;
     attachments?: any[];
 }
@@ -85,16 +96,18 @@ const mapLeadToProfile = (lead: LeadDetailsData | null | undefined): LeadProfile
     company: lead?.company || lead?.company_name || "",
     email: lead?.email || "",
     phone: lead?.phone || "",
-    status: lead?.status || "",
-    source: lead?.source || "",
-    assignedTo: lead?.assignedTo || lead?.assigned_to || "",
+    status: lead?.status_name || lead?.status || "",
+    source: lead?.source_name || lead?.source || "",
+    assignedTo: lead?.assigned_to_name || lead?.assignedTo || lead?.assigned_to || "",
     country: lead?.country || "",
     website: lead?.website || "",
     designation: lead?.designation || "",
-    gstPan: lead?.gstPan || lead?.gst_pan || "",
-    location: lead?.location || "",
-    address: lead?.address || "",
-    tags: Array.isArray(lead?.tags) ? lead.tags.join(", ") : lead?.tags || "",
+    gstPan: lead?.gstPan || lead?.gst_pan || lead?.gst_number || lead?.pan_number || "",
+    location: lead?.location || [lead?.city, lead?.state, lead?.pincode].filter(Boolean).join(", "),
+    address: lead?.address || [lead?.address_line1, lead?.address_line2].filter(Boolean).join(", "),
+    tags: Array.isArray(lead?.tags)
+        ? lead.tags.map((tag: any) => (typeof tag === "string" ? tag : tag?.name)).filter(Boolean).join(", ")
+        : lead?.tags || "",
 });
 
 const LeadDetailsPage = () => {
@@ -108,24 +121,27 @@ const LeadDetailsPage = () => {
     const setLeadProfile = (profile: LeadProfileFormValues) => {
         if (!id) return;
 
+        const [address_line1 = "", ...restAddress] = (profile.address || "").split(",");
+        const [city = "", state = "", pincode = ""] = (profile.location || "").split(",").map((item) => item.trim());
+
         updateLeadMutation.mutate({
             leadId: id,
             name: profile.name,
-            company: profile.company,
             company_name: profile.company,
             email: profile.email,
             phone: profile.phone,
-            status: profile.status,
-            source: profile.source,
-            assignedTo: profile.assignedTo,
-            assigned_to: profile.assignedTo,
+            status_name: profile.status,
+            source_name: profile.source,
+            assigned_to_name: profile.assignedTo,
             country: profile.country,
             website: profile.website,
             designation: profile.designation,
-            gstPan: profile.gstPan,
-            gst_pan: profile.gstPan,
-            location: profile.location,
-            address: profile.address,
+            gst_number: profile.gstPan,
+            city,
+            state,
+            pincode,
+            address_line1: address_line1.trim(),
+            address_line2: restAddress.join(",").trim(),
             tags: profile.tags,
             title: profile.name,
         });

@@ -27,7 +27,6 @@ interface NavItemEntry {
 
 const navItems: NavItemEntry[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "dashboard" },
-  { label: "Leads", icon: Kanban, path: "leads" },
   {
     label: "CRM",
     icon: Blocks,

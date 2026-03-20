@@ -9,10 +9,20 @@ import {
 import { queryKeys } from "@/lib/queryKeys";
 
 const normalizeList = <T,>(response: any): T[] => {
+  if (Array.isArray(response?.data?.followups)) return response.data.followups;
+  if (Array.isArray(response?.followups)) return response.followups;
   if (Array.isArray(response?.data?.items)) return response.data.items;
   if (Array.isArray(response?.data)) return response.data;
   if (Array.isArray(response?.items)) return response.items;
   return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: string }).message;
+    if (message) return message;
+  }
+  return fallback;
 };
 
 export function useLeadFollowUps(leadId?: string, params?: Record<string, unknown>) {
@@ -36,9 +46,10 @@ export function useCreateLeadFollowUp(leadId?: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.followUps(leadId || "") });
       toast.success(response?.message || "Follow up created successfully.");
     },
-    onError: (error: any) => {
-      if (error?.code !== "validation_error") {
-        toast.error(error?.message || "Failed to create follow up.");
+    onError: (error: unknown) => {
+      const apiError = error as { code?: string };
+      if (apiError?.code !== "validation_error") {
+        toast.error(getErrorMessage(error, "Failed to create follow up."));
       }
     },
   });
@@ -54,9 +65,10 @@ export function useUpdateLeadFollowUp(leadId?: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.followUps(leadId || "") });
       toast.success(response?.message || "Follow up updated successfully.");
     },
-    onError: (error: any) => {
-      if (error?.code !== "validation_error") {
-        toast.error(error?.message || "Failed to update follow up.");
+    onError: (error: unknown) => {
+      const apiError = error as { code?: string };
+      if (apiError?.code !== "validation_error") {
+        toast.error(getErrorMessage(error, "Failed to update follow up."));
       }
     },
   });
@@ -71,8 +83,8 @@ export function useDeleteLeadFollowUp(leadId?: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.followUps(leadId || "") });
       toast.success(response?.message || "Follow up deleted successfully.");
     },
-    onError: (error: any) => {
-      toast.error(error?.message || "Failed to delete follow up.");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to delete follow up."));
     },
   });
 }

@@ -9,10 +9,20 @@ import {
 import { queryKeys } from "@/lib/queryKeys";
 
 const normalizeList = <T,>(response: any): T[] => {
+  if (Array.isArray(response?.data?.visits)) return response.data.visits;
+  if (Array.isArray(response?.visits)) return response.visits;
   if (Array.isArray(response?.data?.items)) return response.data.items;
   if (Array.isArray(response?.data)) return response.data;
   if (Array.isArray(response?.items)) return response.items;
   return [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: string }).message;
+    if (message) return message;
+  }
+  return fallback;
 };
 
 export function useLeadVisits(leadId?: string, params?: Record<string, unknown>) {
@@ -36,9 +46,10 @@ export function useCreateLeadVisit(leadId?: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.visits(leadId || "") });
       toast.success(response?.message || "Visit created successfully.");
     },
-    onError: (error: any) => {
-      if (error?.code !== "validation_error") {
-        toast.error(error?.message || "Failed to create visit.");
+    onError: (error: unknown) => {
+      const apiError = error as { code?: string };
+      if (apiError?.code !== "validation_error") {
+        toast.error(getErrorMessage(error, "Failed to create visit."));
       }
     },
   });
@@ -54,9 +65,10 @@ export function useUpdateLeadVisit(leadId?: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.visits(leadId || "") });
       toast.success(response?.message || "Visit updated successfully.");
     },
-    onError: (error: any) => {
-      if (error?.code !== "validation_error") {
-        toast.error(error?.message || "Failed to update visit.");
+    onError: (error: unknown) => {
+      const apiError = error as { code?: string };
+      if (apiError?.code !== "validation_error") {
+        toast.error(getErrorMessage(error, "Failed to update visit."));
       }
     },
   });
@@ -71,8 +83,8 @@ export function useDeleteLeadVisit(leadId?: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.visits(leadId || "") });
       toast.success(response?.message || "Visit deleted successfully.");
     },
-    onError: (error: any) => {
-      toast.error(error?.message || "Failed to delete visit.");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to delete visit."));
     },
   });
 }

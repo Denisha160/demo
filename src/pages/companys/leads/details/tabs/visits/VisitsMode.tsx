@@ -26,13 +26,13 @@ import { Textarea } from "@/components/ui/textarea";
 
 const visitSchema = z.object({
     title: z.string().min(1, "Title is required").max(200, "Title is too long"),
-    description: z.string().min(1, "Description is required"),
+    description: z.string().optional().or(z.literal("")),
     visit_type: z.string().min(1, "Visit type is required"),
     status: z.string().min(1, "Status is required"),
-    scheduled_time: z.string().min(1, "Scheduled time is required"),
+    scheduled_time: z.string().optional().or(z.literal("")),
     actual_check_in: z.string().optional().or(z.literal("")),
     actual_check_out: z.string().optional().or(z.literal("")),
-    location_address: z.string().min(1, "Location address is required"),
+    location_address: z.string().optional().or(z.literal("")),
     location_latitude: z.string().optional().or(z.literal("")),
     location_longitude: z.string().optional().or(z.literal("")),
     visit_image: z.string().optional().or(z.literal("")),
@@ -40,9 +40,10 @@ const visitSchema = z.object({
     outcome_summary: z.string().optional().or(z.literal("")),
     next_steps: z.string().optional().or(z.literal("")),
     customer_rating: z.string().optional().or(z.literal("")),
-    contact_person_name: z.string().min(1, "Contact person name is required"),
+    image_url: z.string().optional().or(z.literal("")),
+    contact_person_name: z.string().optional().or(z.literal("")),
     contact_person_designation: z.string().optional().or(z.literal("")),
-    contact_person_phone: z.string().min(1, "Contact person phone is required"),
+    contact_person_phone: z.string().optional().or(z.literal("")),
 });
 
 export type VisitFormData = z.infer<typeof visitSchema>;
@@ -63,6 +64,19 @@ const getDefaultDateTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16);
+};
+
+const toDateTimeLocal = (value?: string) => {
+    if (!value) return "";
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "";
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, "0");
+    const day = String(parsed.getDate()).padStart(2, "0");
+    const hours = String(parsed.getHours()).padStart(2, "0");
+    const minutes = String(parsed.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const VisitsModal = ({
@@ -91,6 +105,7 @@ const VisitsModal = ({
             location_longitude: "",
             visit_image: "",
             visit_image_name: "",
+            image_url: "",
             outcome_summary: "",
             next_steps: "",
             customer_rating: "",
@@ -109,17 +124,18 @@ const VisitsModal = ({
                 description: visitData.description || "",
                 visit_type: visitData.visit_type || "site_visit",
                 status: visitData.status || "SCHEDULED",
-                scheduled_time: visitData.scheduled_time || getDefaultDateTime(),
-                actual_check_in: visitData.actual_check_in || "",
-                actual_check_out: visitData.actual_check_out || "",
+                scheduled_time: toDateTimeLocal(visitData.scheduled_time),
+                actual_check_in: toDateTimeLocal(visitData.actual_check_in),
+                actual_check_out: toDateTimeLocal(visitData.actual_check_out),
                 location_address: visitData.location_address || "",
-                location_latitude: visitData.location_latitude || "",
-                location_longitude: visitData.location_longitude || "",
-                visit_image: visitData.visit_image || "",
+                location_latitude: visitData.location_latitude ? String(visitData.location_latitude) : "",
+                location_longitude: visitData.location_longitude ? String(visitData.location_longitude) : "",
+                visit_image: visitData.visit_image || visitData.image_url || "",
                 visit_image_name: visitData.visit_image_name || "",
+                image_url: visitData.image_url || "",
                 outcome_summary: visitData.outcome_summary || "",
                 next_steps: visitData.next_steps || "",
-                customer_rating: visitData.customer_rating || "",
+                customer_rating: visitData.customer_rating ? String(visitData.customer_rating) : "",
                 contact_person_name: visitData.contact_person_name || "",
                 contact_person_designation: visitData.contact_person_designation || "",
                 contact_person_phone: visitData.contact_person_phone || "",
@@ -140,6 +156,7 @@ const VisitsModal = ({
             location_longitude: "",
             visit_image: "",
             visit_image_name: "",
+            image_url: "",
             outcome_summary: "",
             next_steps: "",
             customer_rating: "",
@@ -158,6 +175,7 @@ const VisitsModal = ({
         const reader = new FileReader();
         reader.onloadend = () => {
             form.setValue("visit_image", String(reader.result || ""), { shouldDirty: true });
+            form.setValue("image_url", String(reader.result || ""), { shouldDirty: true });
             form.setValue("visit_image_name", file.name, { shouldDirty: true });
         };
         reader.readAsDataURL(file);
@@ -165,6 +183,7 @@ const VisitsModal = ({
 
     const handleRemoveImage = () => {
         form.setValue("visit_image", "", { shouldDirty: true });
+        form.setValue("image_url", "", { shouldDirty: true });
         form.setValue("visit_image_name", "", { shouldDirty: true });
         if (fileInputRef.current) fileInputRef.current.value = "";
     };

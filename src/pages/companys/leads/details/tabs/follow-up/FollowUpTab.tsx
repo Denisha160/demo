@@ -28,9 +28,42 @@ const applyServerValidationErrors = (
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
-      const fieldKey = key === "assigned_to" ? "assignedTo" : key === "created_by" ? "createdBy" : key;
-      setError(fieldKey as any, { type: "server", message: String(message) });
+      setError(key as any, { type: "server", message: String(message) });
     });
+  }
+};
+
+const toIsoDateTime = (value?: string) => {
+  if (!value) return "";
+  if (value.includes("T")) return value;
+  return `${value}T00:00:00.000Z`;
+};
+
+const formatDateTime = (value?: string) => {
+  if (!value) return "-";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsed);
+};
+
+const getStatusVariant = (status: string) => {
+  switch (status) {
+    case "COMPLETED":
+      return "success";
+    case "SCHEDULED":
+    case "RESCHEDULED":
+      return "warning";
+    case "CANCELLED":
+      return "destructive";
+    default:
+      return "default";
   }
 };
 
@@ -44,36 +77,36 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
   const [editingFollowUp, setEditingFollowUp] = useState<FollowUp | null>(null);
   const [followUpToDelete, setFollowUpToDelete] = useState<FollowUp | null>(null);
 
-  const { data: followUps = [], isLoading } = useLeadFollowUps(leadId);
+  const { data: followups = [], isLoading } = useLeadFollowUps(leadId);
   const createFollowUpMutation = useCreateLeadFollowUp(leadId);
   const updateFollowUpMutation = useUpdateLeadFollowUp(leadId);
   const deleteFollowUpMutation = useDeleteLeadFollowUp(leadId);
 
   const filteredData = useMemo(
     () =>
-      followUps.filter((item: FollowUp) =>
-        item.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(item.assignedTo || item.assigned_to_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.status.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [followUps, searchTerm]
+      followups.filter((item: FollowUp) => {
+        const query = searchTerm.toLowerCase();
+        return (
+          (item.purpose || "").toLowerCase().includes(query) ||
+          (item.assigned_to_name || "").toLowerCase().includes(query) ||
+          (item.follow_up_method || "").toLowerCase().includes(query) ||
+          item.status.toLowerCase().includes(query)
+        );
+      }),
+    [followups, searchTerm]
   );
 
-  const handleSave = (
-    data: FollowUpFormData,
-    setError: (field: any, err: any) => void
-  ) => {
-    if (!leadId) {
-      return;
-    }
+  const handleSave = (data: FollowUpFormData, setError: (field: any, err: any) => void) => {
+    const payload = {
+      ...data,
+      scheduled_at: toIsoDateTime(data.scheduled_at),
+    };
 
     if (editingFollowUp) {
       updateFollowUpMutation.mutate(
         {
           followupId: editingFollowUp.id,
-          ...data,
-          assigned_to: data.assignedTo,
-          assigned_to_id: data.assignedTo,
+          ...payload,
         },
         {
           onSuccess: () => {
@@ -86,49 +119,43 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
       return;
     }
 
-    createFollowUpMutation.mutate({
-      ...data,
-      assigned_to: data.assignedTo,
-      assigned_to_id: data.assignedTo,
-    }, {
-      onSuccess: () => {
-        setOpen(false);
-      },
+    createFollowUpMutation.mutate(payload, {
+      onSuccess: () => setOpen(false),
       onError: (error) => applyServerValidationErrors(error, setError),
     });
   };
 
-  const handleEdit = (item: FollowUp) => {
-    setEditingFollowUp(item);
-    setOpen(true);
-  };
-
   const columns: Column<FollowUp>[] = [
-    { key: "date", header: "Date" },
+    {
+      key: "scheduled_at",
+      header: "Scheduled At",
+      render: (item) => <span className="text-sm">{formatDateTime(item.scheduled_at)}</span>,
+    },
     {
       key: "status",
       header: "Status",
-      render: (item) => (
-        <StatusBadge
-          status={item.status}
-          variant={
-            item.status === "COMPLETED"
-              ? "success"
-              : item.status === "TODO" || item.status === "IN_PROGRESS" || item.status === "IN_REVIEW"
-                ? "warning"
-                : "destructive"
-          }
-        />
-      ),
+      render: (item) => <StatusBadge status={item.status} variant={getStatusVariant(item.status)} />,
     },
-    { key: "followUpMethod", header: "Method" },
-    { key: "purpose", header: "Purpose" },
     {
-      key: "assignedTo",
-      header: "Assigned To",
-      render: (item) => <span className="text-sm">{item.assigned_to_name || item.assignedTo}</span>,
+      key: "follow_up_method",
+      header: "Method",
+      render: (item) => <span className="text-sm">{item.follow_up_method || "-"}</span>,
     },
-    { key: "createdBy", header: "Created By" },
+    {
+      key: "purpose",
+      header: "Purpose",
+      render: (item) => <span className="text-sm">{item.purpose || "-"}</span>,
+    },
+    {
+      key: "assigned_to_name",
+      header: "Assigned To",
+      render: (item) => <span className="text-sm">{item.assigned_to_name || "-"}</span>,
+    },
+    {
+      key: "remarks",
+      header: "Remarks",
+      render: (item) => <span className="max-w-xs line-clamp-2 text-xs text-muted-foreground">{item.remarks || "-"}</span>,
+    },
     {
       key: "id",
       header: "Actions",
@@ -138,7 +165,10 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-primary"
-            onClick={() => handleEdit(item)}
+            onClick={() => {
+              setEditingFollowUp(item);
+              setOpen(true);
+            }}
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -208,9 +238,12 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteFollowUpMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => followUpToDelete && deleteFollowUpMutation.mutate(followUpToDelete.id, {
-                onSuccess: () => setFollowUpToDelete(null),
-              })}
+              onClick={() =>
+                followUpToDelete &&
+                deleteFollowUpMutation.mutate(followUpToDelete.id, {
+                  onSuccess: () => setFollowUpToDelete(null),
+                })
+              }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteFollowUpMutation.isPending}
             >

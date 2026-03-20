@@ -33,6 +33,18 @@ const applyServerValidationErrors = (
   }
 };
 
+const toIsoDateTime = (value?: string) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+};
+
+const toNullableNumber = (value?: string) => {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
 const formatDateTime = (value?: string) => {
   if (!value) return "-";
 
@@ -112,9 +124,20 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       return;
     }
 
+    const payload = {
+      ...formData,
+      scheduled_time: toIsoDateTime(formData.scheduled_time),
+      actual_check_in: toIsoDateTime(formData.actual_check_in),
+      actual_check_out: toIsoDateTime(formData.actual_check_out),
+      location_latitude: toNullableNumber(formData.location_latitude),
+      location_longitude: toNullableNumber(formData.location_longitude),
+      customer_rating: toNullableNumber(formData.customer_rating),
+      image_url: formData.image_url || formData.visit_image || "",
+    };
+
     if (editingVisit) {
       updateVisitMutation.mutate(
-        { visitId: editingVisit.id, ...formData },
+        { visitId: editingVisit.id, ...payload },
         {
           onSuccess: () => {
             setIsModalOpen(false);
@@ -126,7 +149,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       return;
     }
 
-    createVisitMutation.mutate(formData, {
+    createVisitMutation.mutate(payload, {
       onSuccess: () => setIsModalOpen(false),
       onError: (error) => applyServerValidationErrors(error, setError),
     });

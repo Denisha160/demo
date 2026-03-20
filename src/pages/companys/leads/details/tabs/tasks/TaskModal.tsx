@@ -219,10 +219,10 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
+                      <SelectItem value="LOW">Low</SelectItem>
+                      <SelectItem value="MEDIUM">Medium</SelectItem>
+                      <SelectItem value="HIGH">High</SelectItem>
+                      <SelectItem value="URGENT">Urgent</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage className="text-[10px]" />

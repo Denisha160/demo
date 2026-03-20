@@ -77,7 +77,6 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
         {
           taskId: editingTask.id,
           ...formData,
-          assigned_to_id: formData.assigned_to,
         },
         {
           onSuccess: () => {
@@ -92,7 +91,6 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
     createTaskMutation.mutate({
       ...formData,
-      assigned_to_id: formData.assigned_to,
     }, {
       onSuccess: () => setIsModalOpen(false),
       onError: (error) => applyServerValidationErrors(error, setError),

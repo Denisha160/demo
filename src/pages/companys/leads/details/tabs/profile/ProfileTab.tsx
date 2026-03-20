@@ -1,9 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+"use client";
+
+import { useEffect } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 import type { LeadProfileFormValues } from "../../LeadDetailsPage";
 
 interface ProfileTabProps {
@@ -11,16 +25,29 @@ interface ProfileTabProps {
     setLeadProfile: (profile: LeadProfileFormValues) => void;
 }
 
-const fieldGroups: Array<{
-    title: string;
-    fields: Array<{
-        key: keyof LeadProfileFormValues;
-        label: string;
-        placeholder: string;
-        type?: string;
-        multiline?: boolean;
-    }>;
-}> = [
+const leadSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().min(1, "Email is required").email("Invalid email"),
+    phone: z
+        .string()
+        .min(1, "Phone is required")
+        .regex(/^\d+$/, "Only numbers allowed")
+        .length(10, "Must be 10 digits"),
+
+    company: z.string().optional(),
+    status: z.string().optional(),
+    source: z.string().optional(),
+    assignedTo: z.string().optional(),
+    country: z.string().optional(),
+    website: z.string().optional(),
+    designation: z.string().optional(),
+    gstPan: z.string().optional(),
+    location: z.string().optional(),
+    tags: z.string().optional(),
+    address: z.string().optional(),
+});
+
+const fieldGroups = [
     {
         title: "Basic Info",
         fields: [
@@ -37,7 +64,6 @@ const fieldGroups: Array<{
         fields: [
             { key: "assignedTo", label: "Assigned To", placeholder: "Assign a user" },
             { key: "country", label: "Country", placeholder: "Enter country" },
-            { key: "language", label: "Language", placeholder: "Enter language" },
             { key: "website", label: "Website", placeholder: "Enter website URL", type: "url" },
         ],
     },
@@ -64,83 +90,99 @@ const fieldGroups: Array<{
 ];
 
 const ProfileTab = ({ leadProfile, setLeadProfile }: ProfileTabProps) => {
-    const [draftProfile, setDraftProfile] = useState<LeadProfileFormValues>(leadProfile);
+    const form = useForm<z.infer<typeof leadSchema>>({
+        resolver: zodResolver(leadSchema),
+        defaultValues: leadProfile,
+        mode: "onChange",
+    });
 
     useEffect(() => {
-        setDraftProfile(leadProfile);
+        form.reset(leadProfile);
     }, [leadProfile]);
 
-    const isDirty = useMemo(
-        () => JSON.stringify(draftProfile) !== JSON.stringify(leadProfile),
-        [draftProfile, leadProfile],
-    );
-
-    const handleChange = (key: keyof LeadProfileFormValues, value: string) => {
-        setDraftProfile((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
+    const onSubmit = (data: z.infer<typeof leadSchema>) => {
+        setLeadProfile(data);
     };
 
-    const handleSave = () => {
-        setLeadProfile(draftProfile);
-    };
+    const isDirty = form.formState.isDirty;
+    const isValid = form.formState.isValid;
 
     return (
-        <div className="w-full animate-fade-in rounded-2xl border border-border/50 bg-card p-6 shadow-sm">
-            <div className="mb-6">
-                <h3 className="text-xl font-semibold text-foreground">Lead Profile</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Update any lead information below. The save button stays disabled until something changes.
-                </p>
-            </div>
+        <Form {...form}>
+            <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="w-full animate-fade-in rounded-2xl border border-border/50 bg-card p-6 shadow-sm"
+            >
+                <div className="mb-6">
+                    <h3 className="text-xl font-semibold text-foreground">
+                        Lead Profile
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Update any lead information below.
+                    </p>
+                </div>
 
-            <div className="space-y-8">
-                {fieldGroups.map((group) => (
-                    <div key={group.title} className="space-y-4">
-                        <h4 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-                            {group.title}
-                        </h4>
+                <div className="space-y-8">
+                    {fieldGroups.map((group) => (
+                        <div key={group.title} className="space-y-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {group.fields.map((field) => (
+                                    <FormField
+                                        key={field.key}
+                                        control={form.control}
+                                        name={field.key as any}
+                                        render={({ field: formField }) => (
+                                            <FormItem
+                                                className={
+                                                    field.multiline
+                                                        ? "md:col-span-2 lg:col-span-3"
+                                                        : ""
+                                                }
+                                            >
+                                                <FormLabel className="text-xs font-bold">
+                                                    {field.label}
+                                                </FormLabel>
 
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {group.fields.map((field) => (
-                                <div
-                                    key={field.key}
-                                    className={field.multiline ? "md:col-span-2 lg:col-span-3" : ""}
-                                >
-                                    <Label className="mb-2 block text-xs font-bold text-foreground">
-                                        {field.label}
-                                    </Label>
+                                                <FormControl>
+                                                    {field.multiline ? (
+                                                        <Textarea
+                                                            {...formField}
+                                                            placeholder={field.placeholder}
+                                                            className="min-h-[100px] text-sm"
+                                                        />
+                                                    ) : (
+                                                        <Input
+                                                            {...formField}
+                                                            type={field.type || "text"}
+                                                            placeholder={field.placeholder}
+                                                            className="h-10 text-sm"
+                                                        />
+                                                    )}
+                                                </FormControl>
 
-                                    {field.multiline ? (
-                                        <Textarea
-                                            value={draftProfile[field.key]}
-                                            onChange={(event) => handleChange(field.key, event.target.value)}
-                                            placeholder={field.placeholder}
-                                            className="min-h-[100px] resize-none text-sm"
-                                        />
-                                    ) : (
-                                        <Input
-                                            type={field.type || "text"}
-                                            value={draftProfile[field.key]}
-                                            onChange={(event) => handleChange(field.key, event.target.value)}
-                                            placeholder={field.placeholder}
-                                            className="h-10 text-sm"
-                                        />
-                                    )}
-                                </div>
-                            ))}
+                                                {/* ✅ Error message */}
+                                                <FormMessage className="text-[10px]" />
+                                            </FormItem>
+                                        )}
+                                    />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
 
-            <div className="mt-8 flex justify-end border-t border-border/50 pt-6">
-                <Button size="sm" className="h-9 px-5" onClick={handleSave} disabled={!isDirty}>
-                    Save
-                </Button>
-            </div>
-        </div>
+                <div className="mt-8 flex justify-end border-t border-border/50 pt-6">
+                    <Button
+                        type="submit"
+                        size="sm"
+                        className="h-9 px-5"
+                        disabled={!isDirty || !isValid}
+                    >
+                        Save
+                    </Button>
+                </div>
+            </form>
+        </Form>
     );
 };
 

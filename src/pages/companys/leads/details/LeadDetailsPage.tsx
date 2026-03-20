@@ -34,7 +34,6 @@ export interface LeadProfileFormValues {
     source: string;
     assignedTo: string;
     country: string;
-    language: string;
     website: string;
     designation: string;
     gstPan: string;
@@ -70,7 +69,6 @@ const LeadDetailsPage = () => {
         source: "Organic",
         assignedTo: "Charley Dicki",
         country: "India",
-        language: "English (System)",
         website: "https://jerde.com",
         designation: "Senior Manager",
         gstPan: "GSTIN1234567890 / ABCDE1234F",

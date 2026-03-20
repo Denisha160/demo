@@ -1263,7 +1263,7 @@ const ProductFormPage = () => {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div className="min-w-0">
-                        <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary flex items-center gap-2">
+                        <h2 className="text-sm font-bold text-primary leading-none truncate uppercase tracking-widest flex items-center gap-2">
                             <Box className="w-4 h-4" />
                             {isNew ? "Create New Product" : "Product Detail"}
                         </h2>

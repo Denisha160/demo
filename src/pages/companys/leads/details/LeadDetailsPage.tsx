@@ -22,7 +22,7 @@ import CallLogsTab from "./tabs/callLogs/CallLogsTab";
 import ProductsTab from "./tabs/products/ProductsTab";
 import AttachmentsTab from "./attachments/AttachmentsTab";
 import ActivityTab from "./tabs/activity/ActivityTab";
-import QuotationsTab from "./tabs/QuotationsTab";
+import QuotationsTab from "./tabs/quotations/QuotationsTab";
 import RemindersTab from "./tabs/reminders/RemindersTab";
 
 export interface LeadProfileFormValues {

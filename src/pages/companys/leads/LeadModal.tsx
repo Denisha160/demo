@@ -12,6 +12,7 @@ import { ComboboxWithAdd } from "@/components/ui/comboBoxWithAdd";
 import { PipelineColumn } from "../../../types/leads";
 import { useLeadSources } from "@/hooks/useLeadSource";
 import { useLeadStatuses } from "@/hooks/useLeadStatus";
+import { useUsers } from "@/hooks/useUsers";
 
 const formSchema = z.object({
   status: z.string().min(1, { message: "Status is required" }),
@@ -81,6 +82,12 @@ const LeadModal = ({
 
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const { data: sourceResponse } = useLeadSources({ limit: 100 });
+  const { data: usersResponse } = useUsers({ limit: 100 });
+  const users = usersResponse?.items || usersResponse || [];
+  const userOptions = users.map((user: any) => ({
+    value: user.id,
+    label: user.name,
+  }));
 
   const statusOptions =
     statusResponse?.items?.map((item: any) => ({
@@ -120,7 +127,14 @@ const LeadModal = ({
   }, [open, addModalCol, columns, form]);
 
   const handleSubmit = (data: LeadFormData) => {
-    onSave(data, form.setError);
+    const payload = {
+      ...data,
+      tags: data.tags
+        ? data.tags.split(",").map((tag) => tag.trim()).filter(Boolean)
+        : [],
+    };
+
+    onSave(payload as any, form.setError); // 👈 pass array to API
   };
 
   return (
@@ -178,15 +192,14 @@ const LeadModal = ({
           <div className="space-y-1.5">
             <Label className="text-xs font-bold text-foreground">Assigned</Label>
             <Combobox
-              options={[
-                { value: "charley", label: "Charley Dicki" },
-                { value: "john", label: "John Doe" },
-                { value: "jane", label: "Jane Smith" },
-              ]}
+              options={userOptions}
               value={form.watch("assigned_to")}
-              onValueChange={(value) => form.setValue("assigned_to", value, { shouldDirty: true })}
-              placeholder="Select User"
-              className="h-9 w-full"
+              onValueChange={(value) =>
+                form.setValue("assigned_to", value, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
             />
           </div>
         </div>

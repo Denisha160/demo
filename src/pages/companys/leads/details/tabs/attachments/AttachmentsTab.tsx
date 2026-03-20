@@ -14,43 +14,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDeleteLeadAttachment, useUploadLeadAttachment } from "@/hooks/useLeadAttachments";
-
-interface AttachmentsTabProps {
-  leadId: string;
-  initialAttachments?: any[];
-}
+import { useDeleteLeadAttachment, useUploadLeadAttachment, useGetLeadAttachments } from "@/hooks/useLeadAttachments";
+import { formatFileSize } from "@/utils/imageCompression";
 
 const mapAttachment = (attachment: any): Attachment => ({
   id: String(attachment?.id || ""),
   fileName: attachment?.fileName || attachment?.file_name || attachment?.name || "Attachment",
   fileType: attachment?.fileType || attachment?.file_type || attachment?.mime_type || "application/octet-stream",
-  fileSize: attachment?.fileSize || attachment?.file_size || attachment?.size || "-",
+  fileSize: formatFileSize(Number(attachment?.file_size_bytes || attachment?.fileSize || attachment?.file_size || attachment?.size || 0)),
   url: attachment?.url || attachment?.file_url || attachment?.download_url || "#",
   uploadedBy: attachment?.uploadedBy || attachment?.uploaded_by_name || attachment?.uploaded_by || "-",
   date: (attachment?.date || attachment?.created_at || new Date().toISOString()).slice(0, 10),
 });
 
-const AttachmentsTab = ({ leadId, initialAttachments = [] }: AttachmentsTabProps) => {
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [attachmentToDelete, setAttachmentToDelete] = useState<Attachment | null>(null);
+
+  const { data: attachmentsData, isLoading } = useGetLeadAttachments(leadId, { search });
   const uploadAttachmentMutation = useUploadLeadAttachment(leadId);
   const deleteAttachmentMutation = useDeleteLeadAttachment(leadId);
 
-  useEffect(() => {
-    setAttachments(initialAttachments.map(mapAttachment));
-  }, [initialAttachments]);
+  const attachments = useMemo(() => {
+    return (attachmentsData?.data?.items || []).map(mapAttachment);
+  }, [attachmentsData]);
 
-  const filteredAttachments = useMemo(
-    () => attachments.filter((file) => file.fileName.toLowerCase().includes(search.toLowerCase())),
-    [attachments, search]
-  );
+  const filteredAttachments = attachments;
 
-  const handleSaveAttachment = (newAttachment: Attachment) => {
-    setAttachments((prev) => [newAttachment, ...prev]);
-  };
 
   const getFileIcon = (type: string) => {
     if (type.startsWith("image/")) return <ImageIcon className="h-4 w-4 text-blue-500" />;
@@ -139,20 +130,21 @@ const AttachmentsTab = ({ leadId, initialAttachments = [] }: AttachmentsTabProps
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredAttachments} pageSize={10} />
+      <DataTable columns={columns} data={filteredAttachments} pageSize={10} isLoading={isLoading} />
 
       {isModalOpen && (
         <AttachmentModal
           open={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSave={(file, attachment) => {
+          onSave={async (file, onProgress) => {
             const formData = new FormData();
             formData.append("file", file);
 
-            uploadAttachmentMutation.mutate(formData, {
-              onSuccess: (response) => {
-                handleSaveAttachment(mapAttachment(response?.data || attachment));
-                setIsModalOpen(false);
+            await uploadAttachmentMutation.mutateAsync({
+              formData,
+              onUploadProgress: (progressEvent) => {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                onProgress(percentCompleted);
               },
             });
           }}
@@ -176,7 +168,6 @@ const AttachmentsTab = ({ leadId, initialAttachments = [] }: AttachmentsTabProps
                 attachmentToDelete &&
                 deleteAttachmentMutation.mutate(attachmentToDelete.id, {
                   onSuccess: () => {
-                    setAttachments((prev) => prev.filter((file) => file.id !== attachmentToDelete.id));
                     setAttachmentToDelete(null);
                   },
                 })

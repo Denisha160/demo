@@ -366,15 +366,22 @@ export const deleteLeadVisit = ({ leadId, visitId }) => {
 // region Lead Attachments
 // ===================== Lead Attachments =====================
 
-export const uploadLeadAttachment = (leadId, formData) => {
+export const listLeadAttachments = (leadId, params) => {
+  const url = `leads/${leadId}/attachments`;
+  return axios({ method: "GET", url, params });
+};
+
+export const uploadLeadAttachment = (leadId, formData, onUploadProgress) => {
   const url = `leads/${leadId}/attachments`;
   return axios({
     method: "POST",
     url,
     data: formData,
     headers: { "Content-Type": "multipart/form-data" },
+    onUploadProgress,
   });
 };
+
 
 export const deleteLeadAttachment = (attachmentId) => {
   const url = `leads/attachments/${attachmentId}`;

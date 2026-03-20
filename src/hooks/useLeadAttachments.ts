@@ -1,7 +1,14 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-toastify";
-import { deleteLeadAttachment, uploadLeadAttachment } from "@/services/api";
+import { deleteLeadAttachment, listLeadAttachments, uploadLeadAttachment } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+export function useGetLeadAttachments(leadId: string, params?: any) {
+  return useQuery({
+    queryKey: [...queryKeys.leads.attachments(leadId), params],
+    queryFn: () => listLeadAttachments(leadId, params),
+    enabled: !!leadId,
+  });
+}
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -15,12 +22,13 @@ export function useUploadLeadAttachment(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (formData: FormData) => uploadLeadAttachment(leadId, formData),
-    onSuccess: (response) => {
+    mutationFn: ({ formData, onUploadProgress }: { formData: FormData; onUploadProgress?: (progressEvent: any) => void }) => 
+      uploadLeadAttachment(leadId, formData, onUploadProgress),
+    onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.attachments(leadId || "") });
       toast.success(response?.message || "Attachment uploaded successfully.");
     },
-    onError: (error: unknown) => {
+    onError: (error: any) => {
       toast.error(getErrorMessage(error, "Failed to upload attachment."));
     },
   });

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { DropResult } from "@hello-pangea/dnd";
-import { parseISO, startOfDay, endOfDay, isWithinInterval } from "date-fns";
+import { parseISO, startOfDay, endOfDay, isWithinInterval, format } from "date-fns";
 import { Plus, Search, Filter, List, Kanban } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
 import { Deal, PipelineColumn } from "../../../types/leads";
 import { useCreateLead, useLeads, useUpdateLeadStatus } from "@/hooks/useLeads";
-import { useLeadStatuses } from "@/hooks/useLeadStatus";
+import { useLeadStatuses, useUpdateLeadStatusOrder } from "@/hooks/useLeadStatus";
 import type { LeadStatus } from "@/types/leadStatus";
 
 const VARIANTS: PipelineColumn["variant"][] = ["default", "info", "warning", "success", "destructive"];
@@ -42,7 +42,7 @@ const getColumnIdFromLead = (lead: any, statuses: LeadStatus[]) => {
   return matchedStatus?.id || statuses[0]?.id || "default";
 };
 
-const mapLeadToDeal = (lead: any): Deal => ({
+const mapLeadToDeal = (lead: any): Deal & { isVerified?: boolean; isCustomer?: boolean } => ({
   id: String(lead?.id || ""),
   title: lead?.name || lead?.title || "Untitled Lead",
   company: lead?.company || lead?.company_name || "-",
@@ -50,6 +50,8 @@ const mapLeadToDeal = (lead: any): Deal => ({
   contact: lead?.contact || lead?.email || lead?.phone || "-",
   date: (lead?.created_at || lead?.date || new Date().toISOString()).slice(0, 10),
   quotationStatus: lead?.quotationStatus || lead?.quotation_status,
+  isVerified: !!lead?.is_verified,
+  isCustomer: !!lead?.customer_id || lead?.lead_type === "CUSTOMER",
 });
 
 const applyServerValidationErrors = (
@@ -74,10 +76,23 @@ const LeadsPage = () => {
     return (localStorage.getItem("leadsViewMode") as "pipeline" | "table") || "pipeline";
   });
 
-  const { data: leads = [], isLoading } = useLeads();
+  const filters = useMemo(() => {
+    const f: any = {};
+    if (searchTerm) f.search = searchTerm;
+    if (dateRange?.from) f.start_date = format(dateRange.from, "yyyy-MM-dd");
+    if (dateRange?.to) {
+      f.end_date = format(dateRange.to, "yyyy-MM-dd");
+    } else if (dateRange?.from) {
+      f.end_date = format(dateRange.from, "yyyy-MM-dd");
+    }
+    return f;
+  }, [searchTerm, dateRange]);
+
+  const { data: leads = [], isLoading } = useLeads(filters);
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLeadStatus();
+  const updateStatusOrderMutation = useUpdateLeadStatusOrder();
   const leadStatuses = statusResponse?.items || [];
 
   useEffect(() => {
@@ -159,12 +174,25 @@ const LeadsPage = () => {
     if (!destination) return;
 
     if (type === "COLUMN") {
-      setColumnOrder((prev) => {
-        const next = [...prev];
-        const [movedColumn] = next.splice(source.index, 1);
-        if (!movedColumn) return prev;
-        next.splice(destination.index, 0, movedColumn);
-        return next;
+      if (source.index === 0 || destination.index === 0) return;
+
+      updateStatusOrderMutation.mutate({
+        orders: [
+          {
+            id: result.draggableId,
+            display_order: destination.index + 1
+          }
+        ]
+      }, {
+        onSuccess: () => {
+          setColumnOrder((prev) => {
+            const next = [...prev];
+            const [movedColumn] = next.splice(source.index, 1);
+            if (!movedColumn) return prev;
+            next.splice(destination.index, 0, movedColumn);
+            return next;
+          });
+        }
       });
       return;
     }
@@ -301,7 +329,7 @@ const LeadsPage = () => {
 
       <div className="min-h-0 flex-1 overflow-hidden pt-2">
         {viewMode === "pipeline" ? (
-          <LeadPipeline displayedColumns={displayedColumns} onDragEnd={onDragEnd} />
+          <LeadPipeline displayedColumns={displayedColumns} onDragEnd={onDragEnd} isUpdatingOrder={updateStatusOrderMutation.isPending} />
         ) : (
           <div className="h-full overflow-auto">
             <LeadTable displayedColumns={displayedColumns} />

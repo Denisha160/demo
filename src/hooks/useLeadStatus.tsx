@@ -5,6 +5,7 @@ import {
     createStatus,
     updateStatus,
     deleteStatus,
+    updateLeadStatusOrder,
 } from '@/services/api';
 import { queryKeys } from '@/lib/queryKeys';
 import type { LeadStatusListResponse, LeadStatusPayload, UpdateLeadStatusPayload } from '@/types/leadStatus';
@@ -66,6 +67,23 @@ export function useDeleteLeadStatus() {
         },
         onError: (error: any) => {
             toast.error(error?.message || 'Failed to delete lead status.');
+        },
+    });
+}
+
+export function useUpdateLeadStatusOrder() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: { orders: { id: string; display_order: number }[] }) => updateLeadStatusOrder(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.leadStatus.all });
+            toast.success('Status order updated successfully.');
+        },
+        onError: (error: any) => {
+            if (error?.code !== 'validation_error') {
+                toast.error(error?.message || 'Failed to update status order.');
+            }
         },
     });
 }

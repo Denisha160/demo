@@ -5,7 +5,7 @@ import {
     Droppable,
     type DropResult,
 } from "@hello-pangea/dnd";
-import { GripVertical } from "lucide-react";
+import { GripVertical, CheckCircle, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
@@ -14,12 +14,13 @@ import { PipelineColumn } from "../../../types/leads";
 interface LeadPipelineProps {
     displayedColumns: PipelineColumn[];
     onDragEnd: (result: DropResult) => void;
+    isUpdatingOrder?: boolean;
 }
 
 const INITIAL_VISIBLE_DEALS = 10;
 const LOAD_MORE_STEP = 10;
 
-const LeadPipeline = ({ displayedColumns, onDragEnd }: LeadPipelineProps) => {
+const LeadPipeline = ({ displayedColumns, onDragEnd, isUpdatingOrder }: LeadPipelineProps) => {
     const navigate = useNavigate();
     const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>({});
 
@@ -53,7 +54,7 @@ const LeadPipeline = ({ displayedColumns, onDragEnd }: LeadPipelineProps) => {
                     <div
                         ref={boardProvided.innerRef}
                         {...boardProvided.droppableProps}
-                        className="flex h-full min-h-0 gap-3 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide"
+                        className={`flex h-full min-h-0 gap-3 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide ${isUpdatingOrder ? "opacity-30 pointer-events-none" : ""}`}
                     >
                         {displayedColumns.map((col, columnIndex) => {
                             const visibleDeals = col.deals.slice(
@@ -67,6 +68,7 @@ const LeadPipeline = ({ displayedColumns, onDragEnd }: LeadPipelineProps) => {
                                     key={col.id}
                                     draggableId={col.id}
                                     index={columnIndex}
+                                    isDragDisabled={columnIndex === 0}
                                 >
                                     {(columnProvided, columnSnapshot) => (
                                         <div
@@ -83,7 +85,11 @@ const LeadPipeline = ({ displayedColumns, onDragEnd }: LeadPipelineProps) => {
                                                 className="flex cursor-grab items-center justify-between border-b border-border/20 bg-background/90 px-3.5 py-3 backdrop-blur-xl active:cursor-grabbing"
                                             >
                                                 <div className="flex items-center gap-2.5">
-                                                    <GripVertical className="h-4 w-4 text-muted-foreground/70" />
+                                                    {columnIndex === 0 ? (
+                                                        <div className="w-4" />
+                                                    ) : (
+                                                        <GripVertical className="h-4 w-4 text-muted-foreground/70" />
+                                                    )}
                                                     <StatusBadge status={col.title} variant={col.variant} />
                                                     <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full border border-border/40 bg-secondary/80 px-1.5 text-[11px] font-extrabold text-foreground/70">
                                                         {col.deals.length}
@@ -128,8 +134,10 @@ const LeadPipeline = ({ displayedColumns, onDragEnd }: LeadPipelineProps) => {
                                                                                 >
                                                                                     <div className="min-w-0 flex-1">
                                                                                         <div className="flex items-start justify-between gap-2">
-                                                                                            <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
-                                                                                                {deal.title}
+                                                                                            <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary flex items-center gap-1.5">
+                                                                                                <span className="truncate max-w-[140px] block">{deal.title}</span>
+                                                                                                {(deal as any).isVerified && <span title="Verified"><ShieldCheck className="h-4 w-4 shrink-0 text-green-500" /></span>}
+                                                                                                {(deal as any).isCustomer && <span title="Customer"><CheckCircle className="h-4 w-4 shrink-0 text-blue-500" /></span>}
                                                                                             </p>
                                                                                             <span className="whitespace-nowrap rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground/80">
                                                                                                 {deal.date}

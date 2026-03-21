@@ -581,6 +581,10 @@ export const deleteStatus = (id) => {
   return axios({ method: "DELETE", url });
 }
 
+export const updateLeadStatusOrder = (data) => {
+  return axios({ method: "PATCH", url: "lead-status/order", data });
+};
+
 // ===== source ====
 
 export const listSource = (params) => {

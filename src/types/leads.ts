@@ -5,6 +5,9 @@ export interface Deal {
     value: string;
     contact: string;
     date: string; // YYYY-MM-DD
+    priority?: string;
+    isVerified?: boolean;
+    isCustomer?: boolean;
     stage?: string; // Optional stage for table view
     stageVariant?: "default" | "info" | "warning" | "success" | "destructive";
     quotationStatus?: "approved" | "rejected" | "pending";

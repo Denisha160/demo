@@ -49,6 +49,7 @@ const mapLeadToDeal = (lead: any): Deal & { isVerified?: boolean; isCustomer?: b
   value: lead?.value ? String(lead.value) : lead?.budget ? String(lead.budget) : "-",
   contact: lead?.contact || lead?.email || lead?.phone || "-",
   date: (lead?.created_at || lead?.date || new Date().toISOString()).slice(0, 10),
+  priority: lead?.priority || "NORMAL",
   quotationStatus: lead?.quotationStatus || lead?.quotation_status,
   isVerified: !!lead?.is_verified,
   isCustomer: !!lead?.customer_id || lead?.lead_type === "CUSTOMER",

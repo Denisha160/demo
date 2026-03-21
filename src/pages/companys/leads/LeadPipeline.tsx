@@ -136,8 +136,8 @@ const LeadPipeline = ({ displayedColumns, onDragEnd, isUpdatingOrder }: LeadPipe
                                                                                         <div className="flex items-start justify-between gap-2">
                                                                                             <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary flex items-center gap-1.5">
                                                                                                 <span className="truncate max-w-[140px] block">{deal.title}</span>
-                                                                                                {(deal as any).isVerified && <span title="Verified"><ShieldCheck className="h-4 w-4 shrink-0 text-green-500" /></span>}
-                                                                                                {(deal as any).isCustomer && <span title="Customer"><CheckCircle className="h-4 w-4 shrink-0 text-blue-500" /></span>}
+                                                                                                {deal.isVerified && <span title="Verified"><ShieldCheck className="h-4 w-4 shrink-0 text-green-500" /></span>}
+                                                                                                {deal.isCustomer && <span title="Customer"><CheckCircle className="h-4 w-4 shrink-0 text-blue-500" /></span>}
                                                                                             </p>
                                                                                             <span className="whitespace-nowrap rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground/80">
                                                                                                 {deal.date}
@@ -148,26 +148,10 @@ const LeadPipeline = ({ displayedColumns, onDragEnd, isUpdatingOrder }: LeadPipe
                                                                                             {deal.company}
                                                                                         </p>
 
-                                                                                        {deal.quotationStatus && (
-                                                                                            <div className="mt-2.5 flex items-center gap-1.5">
-                                                                                                <StatusBadge
-                                                                                                    status={
-                                                                                                        deal.quotationStatus === "approved"
-                                                                                                            ? "Quotation Approved"
-                                                                                                            : "Quotation Rejected"
-                                                                                                    }
-                                                                                                    variant={
-                                                                                                        deal.quotationStatus === "approved"
-                                                                                                            ? "success"
-                                                                                                            : "destructive"
-                                                                                                    }
-                                                                                                />
-                                                                                            </div>
-                                                                                        )}
 
                                                                                         <div className="mt-3.5 flex items-center justify-between border-t border-border/10 pt-3">
                                                                                             <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
-                                                                                                {deal.value}
+                                                                                                {deal.priority}
                                                                                             </span>
                                                                                             <div className="flex items-center gap-1.5 overflow-hidden rounded-full bg-secondary/30 px-1.5 py-0.5">
                                                                                                 <div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[9px] font-bold text-primary">

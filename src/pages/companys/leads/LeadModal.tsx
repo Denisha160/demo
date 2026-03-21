@@ -9,6 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { ComboboxWithAdd } from "@/components/ui/comboBoxWithAdd";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { PipelineColumn } from "../../../types/leads";
 import { useLeadSources } from "@/hooks/useLeadSource";
 import { useLeadStatuses } from "@/hooks/useLeadStatus";
@@ -17,21 +25,20 @@ import { useCategoriesCombobox } from "@/hooks/useProductCategories";
 import { TagSelector } from "@/components/ui/tag-selector";
 import { useLeadTags } from "@/hooks/useLeadTags";
 
-const InterestedCategorySelect = ({ value, onValueChange }: { value?: string, onValueChange: (val: string) => void }) => {
+const InterestedCategorySelect = ({ value = [], onValueChange }: { value?: any[], onValueChange: (val: any[]) => void }) => {
   const { data: categories = [], isLoading } = useCategoriesCombobox();
-  const options = categories
+  const suggestions = categories
     .filter((cat: any) => !!cat.parent_name)
     .map((cat: any) => ({
-      value: cat.id,
-      label: cat.name,
+      id: String(cat.id),
+      name: cat.name,
     }));
 
   return (
-    <Combobox
-      options={options}
+    <TagSelector
+      suggestions={suggestions}
       value={value}
-      onValueChange={onValueChange}
-      placeholder={isLoading ? "Loading..." : "Select Category"}
+      onChange={onValueChange}
     />
   );
 };
@@ -58,7 +65,7 @@ const formSchema = z.object({
   gst_number: z.string().optional().refine(val => !val || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/.test(val), "Invalid GST Number format").or(z.literal("")),
   priority: z.string().optional().or(z.literal("")),
   assigned_to: z.string().optional().or(z.literal("")),
-  interested_category_id: z.string().optional().or(z.literal("")),
+  interested_category_id: z.array(z.object({ id: z.string().optional(), name: z.string() })).optional(),
   tags: z.array(z.object({ id: z.string().optional(), name: z.string() })).optional(),
 });
 
@@ -102,7 +109,7 @@ const LeadModal = ({
       gst_number: "",
       priority: "HOT",
       assigned_to: "",
-      interested_category_id: "",
+      interested_category_id: [],
       tags: [],
     },
   });
@@ -163,7 +170,7 @@ const LeadModal = ({
       gst_number: "",
       priority: "HOT",
       assigned_to: "",
-      interested_category_id: "",
+      interested_category_id: [],
       tags: [],
     });
   }, [open, addModalCol, columns, form]);
@@ -171,7 +178,9 @@ const LeadModal = ({
   const handleSubmit = (data: LeadFormData) => {
     const payload = {
       ...data,
-      interested_category_id: data.interested_category_id ? [data.interested_category_id] : [],
+      interested_category_id: data.interested_category_id?.length
+        ? data.interested_category_id.map((c: any) => c.id ? String(c.id) : c.name)
+        : [],
       tags: data.tags?.length
         ? data.tags.map((t: any) => (t.id ? String(t.id) : t.name))
         : [],
@@ -200,162 +209,338 @@ const LeadModal = ({
         </div>
       }
     >
-      <form className="custom-scrollbar h-[60vh] space-y-4 overflow-y-auto pr-2 pt-2" onSubmit={form.handleSubmit(handleSubmit)}>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-              <span className="text-destructive">*</span> Status
-            </Label>
-            <Combobox
-              options={statusOptions}
-              value={form.watch("status_id")}
-              onValueChange={(value) => form.setValue("status_id", value, { shouldValidate: true, shouldDirty: true })}
-              placeholder="Select Status"
-              className="h-9 w-full"
+      <Form {...form}>
+        <form className="custom-scrollbar h-[60vh] space-y-4 overflow-y-auto pr-2 pt-2" onSubmit={form.handleSubmit(handleSubmit)}>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+            <FormField
+              control={form.control}
+              name="status_id"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
+                    <span className="text-destructive">*</span> Status
+                  </FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={statusOptions}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select Status"
+                      className="h-9 w-full"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
             />
-            {form.formState.errors.status_id && <p className="text-[10px] text-destructive">{form.formState.errors.status_id.message}</p>}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-              <span className="text-destructive">*</span> Source
-            </Label>
-            <Combobox
-              options={sourceOptions}
-              value={form.watch("source_id")}
-              onValueChange={(value) => form.setValue("source_id", value, { shouldValidate: true, shouldDirty: true })}
-              placeholder="Select Source"
-              className="h-9 w-full"
+            <FormField
+              control={form.control}
+              name="source_id"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
+                    <span className="text-destructive">*</span> Source
+                  </FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={sourceOptions}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select Source"
+                      className="h-9 w-full"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
             />
-            {form.formState.errors.source_id && <p className="text-[10px] text-destructive">{form.formState.errors.source_id.message}</p>}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Priority</Label>
-            <Combobox
-              options={[
-                { value: "HOT", label: "Hot" },
-                { value: "WARM", label: "Warm" },
-                { value: "COLD", label: "Cold" }
-              ]}
-              value={form.watch("priority")}
-              onValueChange={(value) => form.setValue("priority", value, { shouldValidate: true, shouldDirty: true })}
-              placeholder="Select Priority"
-              className="h-9 w-full"
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Priority</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={[
+                        { value: "HOT", label: "Hot" },
+                        { value: "WARM", label: "Warm" },
+                        { value: "COLD", label: "Cold" }
+                      ]}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select Priority"
+                      className="h-9 w-full"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Assigned</Label>
-            <Combobox
-              options={userOptions}
-              value={form.watch("assigned_to")}
-              onValueChange={(value) =>
-                form.setValue("assigned_to", value, {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                })
-              }
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1.5 border-t border-border/40 pt-2">
-          <Label className="text-xs font-bold text-foreground flex items-center gap-1.5 pb-2">
-            <Tag className="h-4 w-4 text-muted-foreground" /> Tags
-          </Label>
-          <TagSelector
-            suggestions={tagSuggestions}
-            value={(form.watch("tags") as any) || []}
-            onChange={(tags) => form.setValue("tags", tags as any, { shouldValidate: true, shouldDirty: true })}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-x-2 gap-y-2 border-t border-border/40 pt-2 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-              <span className="text-destructive">*</span> Name
-            </Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("name")} />
-            {form.formState.errors.name && <p className="text-[10px] text-destructive">{form.formState.errors.name.message}</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Email Address</Label>
-            <Input type="email" className="h-9 text-xs border-border/60" {...form.register("email")} />
-            {form.formState.errors.email && <p className="text-[10px] text-destructive">{form.formState.errors.email.message}</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Phone</Label>
-            <Input type="tel" className="h-9 text-xs border-border/60" {...form.register("phone")} />
-            {form.formState.errors.phone && <p className="text-[10px] text-destructive">{form.formState.errors.phone.message}</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Alternative Phone</Label>
-            <Input type="tel" className="h-9 text-xs border-border/60" {...form.register("alternate_phone")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Country</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("country")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">City</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("city")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">State</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("state")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Pincode</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("pincode")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Company Name</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("company_name")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Designation</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("designation")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Website</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("website")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">GST Number</Label>
-            <Input className="h-9 text-xs border-border/60 uppercase" {...form.register("gst_number")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Interested Category</Label>
-            <InterestedCategorySelect
-              value={form.watch("interested_category_id")}
-              onValueChange={(value) => form.setValue("interested_category_id", value)}
+            <FormField
+              control={form.control}
+              name="assigned_to"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Assigned To</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={userOptions}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select Assignee"
+                      className="h-9 w-full"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Address Line 1</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("address_line1")} />
+          <div className="space-y-1.5 border-t border-border/40 pt-2">
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1.5 pb-2">
+                    <Tag className="h-4 w-4 text-muted-foreground" /> Tags
+                  </FormLabel>
+                  <FormControl>
+                    <TagSelector
+                      suggestions={tagSuggestions}
+                      value={field.value as any || []}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">Address Line 2</Label>
-            <Input className="h-9 text-xs border-border/60" {...form.register("address_line2")} />
+          <div className="grid grid-cols-1 gap-x-2 gap-y-2 border-t border-border/40 pt-2 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
+                    <span className="text-destructive">*</span> Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Name" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Email Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Email Address" type="email" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Phone Number" type="tel" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="alternate_phone"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Alternative Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Alternative Phone Number" type="tel" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Country</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Country Name" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">City</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter City Name" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">State</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter State Name" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="pincode"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Pincode</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Pincode" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="company_name"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Company Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Company Name" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="designation"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Designation</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Designation" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="website"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Website</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Website URL" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="gst_number"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">GST Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter GST Number" className="h-9 text-xs border-border/60 uppercase" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="interested_category_id"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Interested Category</FormLabel>
+                  <FormControl>
+                    <InterestedCategorySelect
+                      value={field.value as any}
+                      onValueChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address_line1"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Address Line 1</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Address Line 1" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="address_line2"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">Address Line 2</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter Address Line 2" className="h-9 text-xs border-border/60" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
           </div>
-        </div>
-      </form>
+        </form>
+      </Form>
     </Modal>
   );
 };

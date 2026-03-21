@@ -14,6 +14,16 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import ProfileTab from "./tabs/profile/ProfileTab";
 import ContactsTab from "./tabs/contacts/ContactsTab";
@@ -81,6 +91,7 @@ interface LeadDetailsData {
     attachments?: any[];
     is_verified?: boolean;
     customer_id?: string | null;
+    lead_type?: string;
 }
 
 const TABS = [
@@ -124,11 +135,14 @@ const LeadDetailsPage = () => {
     const updateLeadMutation = useUpdateLead();
     const convertMutation = useConvertLead();
     const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+    const [convertModalOpen, setConvertModalOpen] = useState(false);
     const leadProfile = useMemo(() => mapLeadToProfile(lead), [lead]);
 
     const handleConvert = () => {
-        if (id && window.confirm("Are you sure you want to convert this lead to a customer?")) {
-            convertMutation.mutate(id);
+        if (id) {
+            convertMutation.mutate(id, {
+                onSuccess: () => setConvertModalOpen(false)
+            });
         }
     };
 
@@ -186,15 +200,15 @@ const LeadDetailsPage = () => {
                 <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
                     {isLoading ? "Loading..." : (leadProfile.name || "Lead Details")}
                     {lead?.is_verified && <span title="Verified"><ShieldCheck className="h-6 w-6 text-green-500" /></span>}
-                    {(lead?.customer_id || convertMutation.isSuccess) && <span title="Converted to Customer"><CheckCircle className="h-6 w-6 text-blue-500" /></span>}
+                    {(lead?.customer_id || lead?.lead_type === "CUSTOMER" || convertMutation.isSuccess) && <span title="Converted to Customer"><CheckCircle className="h-6 w-6 text-blue-500" /></span>}
                 </h1>
                 
-                {id && !lead?.customer_id && !convertMutation.isSuccess && (
+                {id && !lead?.customer_id && lead?.lead_type !== "CUSTOMER" && !convertMutation.isSuccess && (
                   <div className="flex items-center gap-2">
                     {!lead?.is_verified ? (
                       <Button size="sm" onClick={() => setVerifyModalOpen(true)}>Verify Lead</Button>
                     ) : (
-                      <Button size="sm" onClick={handleConvert} disabled={convertMutation.isPending}>Convert to Customer</Button>
+                      <Button size="sm" onClick={() => setConvertModalOpen(true)} disabled={convertMutation.isPending}>Convert to Customer</Button>
                     )}
                   </div>
                 )}
@@ -276,6 +290,27 @@ const LeadDetailsPage = () => {
                     leadId={id}
                 />
             )}
+
+            <AlertDialog open={convertModalOpen} onOpenChange={setConvertModalOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently convert this lead to a customer.
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={convertMutation.isPending}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConvert}
+                            disabled={convertMutation.isPending}
+                        >
+                            Convert
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     User, Users, Clock, MapPin, ClipboardList,
-    PhoneCall, Package, Paperclip, Activity, FileText, Bell
+    PhoneCall, Package, Paperclip, Activity, FileText, Bell,
+    CheckCircle, ShieldCheck
 } from "lucide-react";
 
 import {
@@ -12,6 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 import ProfileTab from "./tabs/profile/ProfileTab";
 import ContactsTab from "./tabs/contacts/ContactsTab";
@@ -25,6 +27,8 @@ import ActivityTab from "./tabs/activity/ActivityTab";
 import QuotationsTab from "./tabs/quotations/QuotationsTab";
 import RemindersTab from "./tabs/reminders/RemindersTab";
 import { useLead, useUpdateLead } from "@/hooks/useLeads";
+import VerifyLeadModal from "./VerifyLeadModal";
+import { useConvertLead } from "@/hooks/useLeadVerification";
 
 export interface LeadProfileFormValues {
     name: string;
@@ -75,6 +79,8 @@ interface LeadDetailsData {
     address_line2?: string;
     tags?: string[] | string;
     attachments?: any[];
+    is_verified?: boolean;
+    customer_id?: string | null;
 }
 
 const TABS = [
@@ -116,7 +122,15 @@ const LeadDetailsPage = () => {
     const navigate = useNavigate();
     const { data: lead, isLoading } = useLead<LeadDetailsData>(id);
     const updateLeadMutation = useUpdateLead();
+    const convertMutation = useConvertLead();
+    const [verifyModalOpen, setVerifyModalOpen] = useState(false);
     const leadProfile = useMemo(() => mapLeadToProfile(lead), [lead]);
+
+    const handleConvert = () => {
+        if (id && window.confirm("Are you sure you want to convert this lead to a customer?")) {
+            convertMutation.mutate(id);
+        }
+    };
 
     const setLeadProfile = (profile: LeadProfileFormValues) => {
         if (!id) return;
@@ -168,20 +182,22 @@ const LeadDetailsPage = () => {
         <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in">
 
             {/* Header */}
-            <div className="mb-4 px-1">
-                <div className="text-[13px] font-medium text-muted-foreground mb-1">
-                    Customer from Lead -{" "}
-                    <span
-                        onClick={() => navigate(-1)}
-                        className="text-primary hover:underline cursor-pointer"
-                    >
-                        View
-                    </span>
-                </div>
-
-                <h1 className="text-xl md:text-2xl font-bold text-foreground">
-                    #{id || "21"} {isLoading ? "Loading..." : (leadProfile.name || "Lead Details")}
+            <div className="mb-4 px-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+                    {isLoading ? "Loading..." : (leadProfile.name || "Lead Details")}
+                    {lead?.is_verified && <span title="Verified"><ShieldCheck className="h-6 w-6 text-green-500" /></span>}
+                    {(lead?.customer_id || convertMutation.isSuccess) && <span title="Converted to Customer"><CheckCircle className="h-6 w-6 text-blue-500" /></span>}
                 </h1>
+                
+                {id && !lead?.customer_id && !convertMutation.isSuccess && (
+                  <div className="flex items-center gap-2">
+                    {!lead?.is_verified ? (
+                      <Button size="sm" onClick={() => setVerifyModalOpen(true)}>Verify Lead</Button>
+                    ) : (
+                      <Button size="sm" onClick={handleConvert} disabled={convertMutation.isPending}>Convert to Customer</Button>
+                    )}
+                  </div>
+                )}
             </div>
 
             {/* Mobile Dropdown */}
@@ -252,6 +268,14 @@ const LeadDetailsPage = () => {
                     {renderTabContent()}
                 </div>
             </div>
+
+            {id && (
+                <VerifyLeadModal
+                    open={verifyModalOpen}
+                    onClose={() => setVerifyModalOpen(false)}
+                    leadId={id}
+                />
+            )}
         </div>
     );
 };

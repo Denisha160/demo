@@ -291,6 +291,16 @@ export const updateLeadStatus = ({ leadId, ...data }) => {
   return axios({ method: "PATCH", url, data });
 };
 
+export const verifyLead = (leadId, data) => {
+  const url = `leads/${leadId}/verification`;
+  return axios({ method: "POST", url, data });
+};
+
+export const convertLead = (leadId) => {
+  const url = `leads/${leadId}/convert-to-customer`;
+  return axios({ method: "POST", url });
+};
+
 // end region
 
 // region Lead Follow Ups

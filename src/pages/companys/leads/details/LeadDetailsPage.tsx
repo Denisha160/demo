@@ -45,16 +45,16 @@ export interface LeadProfileFormValues {
     company: string;
     email: string;
     phone: string;
-    status: string;
-    source: string;
-    assignedTo: string;
+    status_id: string;
+    source_id: string;
+    assigned_to: string;
     country: string;
     website: string;
     designation: string;
     gstPan: string;
     location: string;
     address: string;
-    tags: string;
+    tags: { id?: string; name: string }[];
 }
 
 interface LeadDetailsData {
@@ -87,7 +87,7 @@ interface LeadDetailsData {
     address?: string;
     address_line1?: string;
     address_line2?: string;
-    tags?: string[] | string;
+    tags?: any[] | string;
     attachments?: any[];
     is_verified?: boolean;
     customer_id?: string | null;
@@ -113,9 +113,9 @@ const mapLeadToProfile = (lead: LeadDetailsData | null | undefined): LeadProfile
     company: lead?.company || lead?.company_name || "",
     email: lead?.email || "",
     phone: lead?.phone || "",
-    status: lead?.status_name || lead?.status || "",
-    source: lead?.source_name || lead?.source || "",
-    assignedTo: lead?.assigned_to_name || lead?.assignedTo || lead?.assigned_to || "",
+    status_id: (lead as any)?.status_id || lead?.status || "",
+    source_id: (lead as any)?.source_id || lead?.source || "",
+    assigned_to: lead?.assigned_to || lead?.assignedTo || "",
     country: lead?.country || "",
     website: lead?.website || "",
     designation: lead?.designation || "",
@@ -123,8 +123,8 @@ const mapLeadToProfile = (lead: LeadDetailsData | null | undefined): LeadProfile
     location: lead?.location || [lead?.city, lead?.state, lead?.pincode].filter(Boolean).join(", "),
     address: lead?.address || [lead?.address_line1, lead?.address_line2].filter(Boolean).join(", "),
     tags: Array.isArray(lead?.tags)
-        ? lead.tags.map((tag: any) => (typeof tag === "string" ? tag : tag?.name)).filter(Boolean).join(", ")
-        : lead?.tags || "",
+        ? lead.tags.map((tag: any) => typeof tag === "string" ? { name: tag } : { id: tag?.id ? String(tag.id) : undefined, name: tag?.name }).filter((t: any) => !!t.name)
+        : [],
 });
 
 const LeadDetailsPage = () => {
@@ -158,9 +158,9 @@ const LeadDetailsPage = () => {
             company_name: profile.company,
             email: profile.email,
             phone: profile.phone,
-            status_name: profile.status,
-            source_name: profile.source,
-            assigned_to_name: profile.assignedTo,
+            status_id: profile.status_id,
+            source_id: profile.source_id,
+            assigned_to: profile.assigned_to,
             country: profile.country,
             website: profile.website,
             designation: profile.designation,
@@ -170,8 +170,7 @@ const LeadDetailsPage = () => {
             pincode,
             address_line1: address_line1.trim(),
             address_line2: restAddress.join(",").trim(),
-            tags: profile.tags,
-            title: profile.name,
+            tags: profile.tags.map((t) => t.id ? String(t.id) : t.name),
         });
     };
 

@@ -19,10 +19,12 @@ import { useLeadTags } from "@/hooks/useLeadTags";
 
 const InterestedCategorySelect = ({ value, onValueChange }: { value?: string, onValueChange: (val: string) => void }) => {
   const { data: categories = [], isLoading } = useCategoriesCombobox();
-  const options = categories.map((cat: any) => ({
-    value: cat.id,
-    label: cat.name,
-  }));
+  const options = categories
+    .filter((cat: any) => !!cat.parent_name)
+    .map((cat: any) => ({
+      value: cat.id,
+      label: cat.name,
+    }));
 
   return (
     <Combobox

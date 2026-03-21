@@ -266,6 +266,11 @@ export const listLeads = (params) => {
   return axios({ method: "GET", url, params });
 };
 
+export const listLeadTags = (params) => {
+  const url = `leads/tags`;
+  return axios({ method: "GET", url, params });
+};
+
 export const createLead = (data) => {
   const url = `leads`;
   return axios({ method: "POST", url, data });

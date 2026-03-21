@@ -14,6 +14,8 @@ import { useLeadSources } from "@/hooks/useLeadSource";
 import { useLeadStatuses } from "@/hooks/useLeadStatus";
 import { useUsers } from "@/hooks/useUsers";
 import { useCategoriesCombobox } from "@/hooks/useProductCategories";
+import { TagSelector } from "@/components/ui/tag-selector";
+import { useLeadTags } from "@/hooks/useLeadTags";
 
 const InterestedCategorySelect = ({ value, onValueChange }: { value?: string, onValueChange: (val: string) => void }) => {
   const { data: categories = [], isLoading } = useCategoriesCombobox();
@@ -41,9 +43,8 @@ const formSchema = z.object({
   phone: z
     .string()
     .min(1, "Phone is required")
-    .regex(/^\+?\d+$/, "Only numbers and + allowed")
-    .min(10, "Must be at least 10 digits"),
-  alternate_phone: z.string().optional().or(z.literal("")),
+    .regex(/^[0-9]{10}$/, "Phone must be exactly 10 digits"),
+  alternate_phone: z.string().optional().refine(val => !val || /^[0-9]{10}$/.test(val), "Must be exactly 10 digits").or(z.literal("")),
   address_line1: z.string().optional().or(z.literal("")),
   address_line2: z.string().optional().or(z.literal("")),
   city: z.string().optional().or(z.literal("")),
@@ -52,11 +53,11 @@ const formSchema = z.object({
   pincode: z.string().optional().or(z.literal("")),
   designation: z.string().optional().or(z.literal("")),
   website: z.string().optional().or(z.literal("")),
-  gst_number: z.string().optional().or(z.literal("")),
+  gst_number: z.string().optional().refine(val => !val || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/.test(val), "Invalid GST Number format").or(z.literal("")),
   priority: z.string().optional().or(z.literal("")),
   assigned_to: z.string().optional().or(z.literal("")),
   interested_category_id: z.string().optional().or(z.literal("")),
-  tags: z.string().optional().or(z.literal("")),
+  tags: z.array(z.object({ id: z.string().optional(), name: z.string() })).optional(),
 });
 
 export type LeadFormData = z.infer<typeof formSchema>;
@@ -100,9 +101,21 @@ const LeadModal = ({
       priority: "HOT",
       assigned_to: "",
       interested_category_id: "",
-      tags: "",
+      tags: [],
     },
   });
+
+  const { data: leadTagsData } = useLeadTags();
+  const leadTags = Array.isArray(leadTagsData)
+    ? leadTagsData
+    : Array.isArray((leadTagsData as any)?.items)
+      ? (leadTagsData as any).items
+      : [];
+
+  const tagSuggestions = leadTags.map((tag: any) => ({
+    id: String(tag.id),
+    name: tag.name,
+  }));
 
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const { data: sourceResponse } = useLeadSources({ limit: 100 });
@@ -149,7 +162,7 @@ const LeadModal = ({
       priority: "HOT",
       assigned_to: "",
       interested_category_id: "",
-      tags: "",
+      tags: [],
     });
   }, [open, addModalCol, columns, form]);
 
@@ -157,8 +170,8 @@ const LeadModal = ({
     const payload = {
       ...data,
       interested_category_id: data.interested_category_id ? [data.interested_category_id] : [],
-      tags: data.tags
-        ? data.tags.split(",").map((tag) => tag.trim()).filter(Boolean)
+      tags: data.tags?.length
+        ? data.tags.map((t: any) => (t.id ? String(t.id) : t.name))
         : [],
     };
 
@@ -249,10 +262,10 @@ const LeadModal = ({
           <Label className="text-xs font-bold text-foreground flex items-center gap-1.5 pb-2">
             <Tag className="h-4 w-4 text-muted-foreground" /> Tags
           </Label>
-          <Input
-            placeholder="Tag"
-            className="h-9 rounded-none border-0 border-l-[3px] border-primary bg-transparent pl-3 text-sm shadow-none focus-visible:ring-0"
-            {...form.register("tags")}
+          <TagSelector
+            suggestions={tagSuggestions}
+            value={(form.watch("tags") as any) || []}
+            onChange={(tags) => form.setValue("tags", tags as any, { shouldValidate: true, shouldDirty: true })}
           />
         </div>
 

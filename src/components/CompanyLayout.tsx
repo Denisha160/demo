@@ -32,7 +32,7 @@ const navItems: NavItemEntry[] = [
     label: "CRM",
     icon: Blocks,
     children: [
-      { label: "Leads", icon: Box, path: "leads"},
+      { label: "Leads", icon: Box, path: "leads" },
       { label: "Status", icon: List, path: "status" },
       { label: "Sources", icon: Package, path: "source" },
       { label: "Quotations", icon: Package, path: "quotations" },
@@ -285,7 +285,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             {/* Sidebar Hide Button */}
             <button
               onClick={() => { setSidebarCollapsed(true); setSidebarOpen(false); }}
-              className="h-9 w-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
+              className="h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
               title="Hide sidebar"
             >
               <PanelLeftClose className="h-4 w-4" />

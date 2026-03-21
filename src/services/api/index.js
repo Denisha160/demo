@@ -582,7 +582,7 @@ export const deleteStatus = (id) => {
 }
 
 export const updateLeadStatusOrder = (data) => {
-  return axios({ method: "PATCH", url: "lead-status/order", data });
+  return axios({ method: "PATCH", url: "leads/lead-status/order", data });
 };
 
 // ===== source ====

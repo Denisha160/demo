@@ -149,29 +149,42 @@ const LeadDetailsPage = () => {
     const setLeadProfile = (profile: LeadProfileFormValues) => {
         if (!id) return;
 
-        const [address_line1 = "", ...restAddress] = (profile.address || "").split(",");
-        const [city = "", state = "", pincode = ""] = (profile.location || "").split(",").map((item) => item.trim());
+        const payload: { leadId: string; [key: string]: any } = { leadId: id };
 
-        updateLeadMutation.mutate({
-            leadId: id,
-            name: profile.name,
-            company_name: profile.company,
-            email: profile.email,
-            phone: profile.phone,
-            status_id: profile.status_id,
-            source_id: profile.source_id,
-            assigned_to: profile.assigned_to,
-            country: profile.country,
-            website: profile.website,
-            designation: profile.designation,
-            gst_number: profile.gstPan,
-            city,
-            state,
-            pincode,
-            address_line1: address_line1.trim(),
-            address_line2: restAddress.join(",").trim(),
-            tags: profile.tags.map((t) => t.id ? String(t.id) : t.name),
-        });
+        if (profile.name !== leadProfile.name) payload.name = profile.name;
+        if (profile.company !== leadProfile.company) payload.company_name = profile.company;
+        if (profile.email !== leadProfile.email) payload.email = profile.email;
+        if (profile.phone !== leadProfile.phone) payload.phone = profile.phone;
+        if (profile.status_id !== leadProfile.status_id) payload.status_id = profile.status_id;
+        if (profile.source_id !== leadProfile.source_id) payload.source_id = profile.source_id;
+        if (profile.assigned_to !== leadProfile.assigned_to) payload.assigned_to = profile.assigned_to;
+        if (profile.country !== leadProfile.country) payload.country = profile.country;
+        if (profile.website !== leadProfile.website) payload.website = profile.website;
+        if (profile.designation !== leadProfile.designation) payload.designation = profile.designation;
+        if (profile.gstPan !== leadProfile.gstPan) payload.gst_number = profile.gstPan;
+
+        if (profile.location !== leadProfile.location) {
+            const [city = "", state = "", pincode = ""] = (profile.location || "").split(",").map((item) => item.trim());
+            payload.city = city;
+            payload.state = state;
+            payload.pincode = pincode;
+        }
+
+        if (profile.address !== leadProfile.address) {
+            const [address_line1 = "", ...restAddress] = (profile.address || "").split(",");
+            payload.address_line1 = address_line1.trim();
+            payload.address_line2 = restAddress.join(",").trim();
+        }
+
+        const newTags = profile.tags.map((t) => t.id ? String(t.id) : t.name).sort();
+        const oldTags = leadProfile.tags.map((t) => t.id ? String(t.id) : t.name).sort();
+        if (JSON.stringify(newTags) !== JSON.stringify(oldTags)) {
+            payload.tags = profile.tags.map((t) => t.id ? String(t.id) : t.name);
+        }
+
+        if (Object.keys(payload).length > 1) {
+            updateLeadMutation.mutate(payload);
+        }
     };
 
     const renderTabContent = () => {

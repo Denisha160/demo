@@ -155,7 +155,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-bold flex gap-1">
-                  <span className="text-destructive">*</span> Title
+                  Title <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -176,7 +176,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-bold flex gap-1">
-                  <span className="text-destructive">*</span> Description
+                  Description  <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Textarea
@@ -249,7 +249,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold flex gap-1">
-                    <span className="text-destructive">*</span> Assigned To
+                    Assigned To <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Combobox

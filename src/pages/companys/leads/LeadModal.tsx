@@ -227,7 +227,7 @@ const LeadModal = ({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
-                    <span className="text-destructive">*</span> Status
+                    Status <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Combobox
@@ -249,7 +249,7 @@ const LeadModal = ({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
-                    <span className="text-destructive">*</span> Source
+                    Source <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Combobox
@@ -343,7 +343,7 @@ const LeadModal = ({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
-                    <span className="text-destructive">*</span> Name
+                    Name  <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter Name" className="h-9 text-xs border-border/60" {...field} />
@@ -372,7 +372,9 @@ const LeadModal = ({
               name="phone"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Phone</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
+                    Phone <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter Phone Number" type="tel" className="h-9 text-xs border-border/60" {...field} />
                   </FormControl>

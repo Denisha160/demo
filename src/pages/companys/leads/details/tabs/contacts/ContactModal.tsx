@@ -165,7 +165,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                             name="fullName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Full Name *</FormLabel>
+                                    <FormLabel>Full Name <span className="text-destructive">*</span> </FormLabel>
                                     <FormControl>
                                         <Input placeholder="Enter full name" {...field} />
                                     </FormControl>
@@ -180,7 +180,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                         name="email"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Email *</FormLabel>
+                                <FormLabel>Email</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Enter email address" {...field} />
                                 </FormControl>
@@ -194,7 +194,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                         name="phone"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Phone *</FormLabel>
+                                <FormLabel>Phone</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Enter phone number" {...field} />
                                 </FormControl>
@@ -208,7 +208,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                         name="designation"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Designation *</FormLabel>
+                                <FormLabel>Designation</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Enter designation" {...field} />
                                 </FormControl>
@@ -222,7 +222,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                         name="department"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Department *</FormLabel>
+                                <FormLabel>Department</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Enter department" {...field} />
                                 </FormControl>

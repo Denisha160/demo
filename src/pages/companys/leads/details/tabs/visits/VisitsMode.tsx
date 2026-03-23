@@ -294,7 +294,7 @@ const VisitsModal = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold flex gap-1">
-                                        <span className="text-destructive">*</span> Title
+                                        Title <span className="text-destructive">*</span>
                                     </FormLabel>
                                     <FormControl>
                                         <Input placeholder="Visit title" className="h-9 text-xs" disabled={isSubmitting} {...field} />
@@ -310,7 +310,7 @@ const VisitsModal = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold flex gap-1">
-                                        <span className="text-destructive">*</span> Visit Type
+                                        Visit Type <span className="text-destructive">*</span>
                                     </FormLabel>
                                     <FormControl>
                                         <Input placeholder="Site Visit, Meeting, etc." className="h-9 text-xs" disabled={isSubmitting} {...field} />
@@ -391,7 +391,7 @@ const VisitsModal = ({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="text-xs font-bold flex gap-1">
-                                    <span className="text-destructive">*</span> Description
+                                    Description
                                 </FormLabel>
                                 <FormControl>
                                     <Textarea
@@ -413,7 +413,7 @@ const VisitsModal = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold flex gap-1">
-                                        <span className="text-destructive">*</span> Status
+                                        Status
                                     </FormLabel>
                                     <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                                         <FormControl>
@@ -442,7 +442,7 @@ const VisitsModal = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold flex gap-1">
-                                        <span className="text-destructive">*</span> Scheduled Time
+                                        Scheduled Time
                                     </FormLabel>
                                     <FormControl>
                                         <Input type="datetime-local" className="h-9 text-xs" disabled={isSubmitting} {...field} />
@@ -489,7 +489,7 @@ const VisitsModal = ({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="text-xs font-bold flex gap-1">
-                                    <span className="text-destructive">*</span> Location Address
+                                    Location Address
                                 </FormLabel>
                                 <FormControl>
                                     <Textarea
@@ -602,7 +602,7 @@ const VisitsModal = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold flex gap-1">
-                                        <span className="text-destructive">*</span> Contact Person Name
+                                        Contact Person Name
                                     </FormLabel>
                                     <FormControl>
                                         <Input placeholder="Enter contact person name" className="h-9 text-xs" disabled={isSubmitting} {...field} />
@@ -632,7 +632,7 @@ const VisitsModal = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold flex gap-1">
-                                        <span className="text-destructive">*</span> Contact Phone
+                                        Contact Phone
                                     </FormLabel>
                                     <FormControl>
                                         <Input placeholder="Enter phone number" className="h-9 text-xs" disabled={isSubmitting} {...field} />

@@ -169,7 +169,7 @@ const ReminderModal = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold flex gap-1">
-                                        <span className="text-destructive">*</span> Reminder Date
+                                        Reminder Date   <span className="text-destructive">*</span>
                                     </FormLabel>
                                     <FormControl>
                                         <DatePicker
@@ -190,7 +190,7 @@ const ReminderModal = ({
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold flex gap-1">
-                                        <span className="text-destructive">*</span> Reminder Time
+                                        Reminder Time <span className="text-destructive">*</span>
                                     </FormLabel>
                                     <FormControl>
                                         <Input type="time" className="h-9 text-xs" disabled={isSubmitting} {...field} />
@@ -207,7 +207,7 @@ const ReminderModal = ({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="text-xs font-bold flex gap-1">
-                                    <span className="text-destructive">*</span> Title
+                                    Title <span className="text-destructive">*</span>
                                 </FormLabel>
                                 <FormControl>
                                     <Input
@@ -228,7 +228,7 @@ const ReminderModal = ({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel className="text-xs font-bold flex gap-1">
-                                    <span className="text-destructive">*</span> Description
+                                    Description  <span className="text-destructive">*</span>
                                 </FormLabel>
                                 <FormControl>
                                     <Textarea

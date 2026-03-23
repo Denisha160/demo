@@ -11,6 +11,10 @@ export interface Deal {
     stage?: string; // Optional stage for table view
     stageVariant?: "default" | "info" | "warning" | "success" | "destructive";
     quotationStatus?: "approved" | "rejected" | "pending";
+    status_id?: string;
+    status_name?: string;
+    status_color?: string;
+    tags?: { id: string, name: string }[];
 }
 
 export interface PipelineColumn {

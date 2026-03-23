@@ -24,6 +24,9 @@ import { useUsers } from "@/hooks/useUsers";
 import { useCategoriesCombobox } from "@/hooks/useProductCategories";
 import { TagSelector } from "@/components/ui/tag-selector";
 import { useLeadTags } from "@/hooks/useLeadTags";
+import { useCountries, useStates, useCities } from "@/hooks/useCityStateCountry";
+import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const InterestedCategorySelect = ({ value = [], onValueChange }: { value?: any[], onValueChange: (val: any[]) => void }) => {
   const { data: categories = [], isLoading } = useCategoriesCombobox();
@@ -62,9 +65,9 @@ const formSchema = z.object({
   alternate_phone: z.string().optional().refine(val => !val || /^[0-9]{10}$/.test(val), "Must be exactly 10 digits").or(z.literal("")),
   address_line1: z.string().optional().or(z.literal("")),
   address_line2: z.string().optional().or(z.literal("")),
-  city: z.string().optional().or(z.literal("")),
-  state: z.string().optional().or(z.literal("")),
-  country: z.string().optional().or(z.literal("")),
+  city_id: z.string().optional().or(z.literal("")),
+  state_id: z.string().optional().or(z.literal("")),
+  country_id: z.string().optional().or(z.literal("")),
   pincode: z.string().optional().or(z.literal("")),
   designation: z.string().optional().or(z.literal("")),
   website: z.string().optional().or(z.literal("")),
@@ -107,9 +110,9 @@ const LeadModal = ({
       alternate_phone: "",
       address_line1: "",
       address_line2: "",
-      city: "",
-      state: "",
-      country: "",
+      city_id: "",
+      state_id: "",
+      country_id: "",
       pincode: "",
       designation: "",
       website: "",
@@ -137,6 +140,35 @@ const LeadModal = ({
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const { data: sourceResponse } = useLeadSources({ limit: 100 });
   const { data: usersResponse } = useUsers({ limit: 100 });
+  const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
+  const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+  const [countrySearch, setCountrySearch] = useState("");
+  const [stateSearch, setStateSearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  
+  const debouncedCountrySearch = useDebounce(countrySearch, 500);
+  const debouncedStateSearch = useDebounce(stateSearch, 500);
+  const debouncedCitySearch = useDebounce(citySearch, 500);
+
+  const { data: countriesData } = useCountries({ search: debouncedCountrySearch, combobox: true, limit: 100 });
+  const { data: statesData } = useStates(selectedCountryId || undefined, { search: debouncedStateSearch, combobox: true, limit: 100 });
+  const { data: citiesData } = useCities(selectedStateId || undefined, { search: debouncedCitySearch, combobox: true, limit: 100 });
+
+  const countryOptions = (countriesData as any)?.items?.map((item: any) => ({
+    value: item.id,
+    label: item.name,
+  })) || [];
+
+  const stateOptions = (statesData as any)?.items?.map((item: any) => ({
+    value: item.id,
+    label: item.name,
+  })) || [];
+
+  const cityOptions = (citiesData as any)?.items?.map((item: any) => ({
+    value: item.id,
+    label: item.name,
+  })) || [];
+
   const users = usersResponse?.items || usersResponse || [];
   const userOptions = users.map((user: any) => ({
     value: user.id,
@@ -169,9 +201,9 @@ const LeadModal = ({
       alternate_phone: "",
       address_line1: "",
       address_line2: "",
-      city: "",
-      state: "",
-      country: "",
+      city_id: "",
+      state_id: "",
+      country_id: "",
       pincode: "",
       designation: "",
       website: "",
@@ -182,6 +214,11 @@ const LeadModal = ({
       interested_category_id: [],
       tags: [],
     });
+    setSelectedCountryId(null);
+    setSelectedStateId(null);
+    setCountrySearch("");
+    setStateSearch("");
+    setCitySearch("");
   }, [open, addModalCol, columns, form]);
 
   const handleSubmit = (data: LeadFormData) => {
@@ -399,12 +436,26 @@ const LeadModal = ({
 
             <FormField
               control={form.control}
-              name="country"
+              name="country_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground">Country</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Country Name" className="h-9 text-xs border-border/60" {...field} />
+                    <Combobox
+                      options={countryOptions}
+                      value={field.value}
+                      searchValue={countrySearch}
+                      onSearchChange={setCountrySearch}
+                      onValueChange={(id) => {
+                        field.onChange(id);
+                        setSelectedCountryId(id);
+                        setSelectedStateId(null);
+                        form.setValue("state_id", "");
+                        form.setValue("city_id", "");
+                      }}
+                      placeholder="Select Country"
+                      className="h-9 w-full"
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -413,26 +464,49 @@ const LeadModal = ({
 
             <FormField
               control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">City</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter City Name" className="h-9 text-xs border-border/60" {...field} />
-                  </FormControl>
-                  <FormMessage className="text-[10px]" />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="state"
+              name="state_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground">State</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter State Name" className="h-9 text-xs border-border/60" {...field} />
+                    <Combobox
+                      options={stateOptions}
+                      value={field.value}
+                      searchValue={stateSearch}
+                      onSearchChange={setStateSearch}
+                      onValueChange={(id) => {
+                        field.onChange(id);
+                        setSelectedStateId(id);
+                        form.setValue("city_id", "");
+                        setCitySearch("");
+                      }}
+                      placeholder={selectedCountryId ? "Select State" : "Select Country first"}
+                      className="h-9 w-full"
+                      disabled={!selectedCountryId}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="city_id"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">City</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={cityOptions}
+                      value={field.value}
+                      searchValue={citySearch}
+                      onSearchChange={setCitySearch}
+                      onValueChange={field.onChange}
+                      placeholder={selectedStateId ? "Select City" : "Select State first"}
+                      className="h-9 w-full"
+                      disabled={!selectedStateId}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>

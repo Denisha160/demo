@@ -51,9 +51,9 @@ export interface LeadProfileFormValues {
     source_id: string;
     assigned_to: string;
     priority: string;
-    country: string;
-    state: string;
-    city: string;
+    country_id: string;
+    state_id: string;
+    city_id: string;
     pincode: string;
     website: string;
     designation: string;
@@ -84,6 +84,9 @@ interface LeadDetailsData {
     country?: string;
     state?: string;
     city?: string;
+    country_id?: string;
+    state_id?: string;
+    city_id?: string;
     pincode?: string;
     website?: string;
     designation?: string;
@@ -128,9 +131,9 @@ const mapLeadToProfile = (lead: LeadDetailsData | null | undefined): LeadProfile
     source_id: (lead as any)?.source_id || lead?.source || "",
     assigned_to: lead?.assigned_to || lead?.assignedTo || "",
     priority: (lead as any)?.priority || "HOT",
-    country: lead?.country || "",
-    state: lead?.state || "",
-    city: lead?.city || "",
+    country_id: (lead as any)?.country_id || "",
+    state_id: (lead as any)?.state_id || "",
+    city_id: (lead as any)?.city_id || "",
     pincode: lead?.pincode || "",
     website: lead?.website || "",
     designation: lead?.designation || "",
@@ -186,9 +189,9 @@ const LeadDetailsPage = () => {
         if (profile.source_id !== leadProfile.source_id) payload.source_id = profile.source_id;
         if (profile.assigned_to !== leadProfile.assigned_to) payload.assigned_to = profile.assigned_to;
         if (profile.priority !== leadProfile.priority) payload.priority = profile.priority;
-        if (profile.country !== leadProfile.country) payload.country = profile.country;
-        if (profile.state !== leadProfile.state) payload.state = profile.state;
-        if (profile.city !== leadProfile.city) payload.city = profile.city;
+        if (profile.country_id !== leadProfile.country_id) payload.country_id = profile.country_id;
+        if (profile.state_id !== leadProfile.state_id) payload.state_id = profile.state_id;
+        if (profile.city_id !== leadProfile.city_id) payload.city_id = profile.city_id;
         if (profile.pincode !== leadProfile.pincode) payload.pincode = profile.pincode;
         if (profile.website !== leadProfile.website) payload.website = profile.website;
         if (profile.designation !== leadProfile.designation) payload.designation = profile.designation;

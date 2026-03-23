@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useMemo } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -25,6 +23,9 @@ import { useLeadStatuses } from "@/hooks/useLeadStatus";
 import { useLeadSources } from "@/hooks/useLeadSource";
 import { useUsers } from "@/hooks/useUsers";
 import { useLeadTags } from "@/hooks/useLeadTags"; import { useCategoriesCombobox } from "@/hooks/useProductCategories";
+import { useCountries, useStates, useCities } from "@/hooks/useCityStateCountry";
+import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const InterestedCategorySelect = ({ value = [], onValueChange, disabled }: { value?: any[], onValueChange: (val: any[]) => void, disabled?: boolean }) => {
     const { data: categories = [] } = useCategoriesCombobox();
@@ -72,9 +73,9 @@ const leadSchema = z.object({
     source_id: z.string().optional(),
     assigned_to: z.string().optional(),
     priority: z.string().optional(),
-    country: z.string().optional(),
-    state: z.string().optional(),
-    city: z.string().optional(),
+    country_id: z.string().optional(),
+    state_id: z.string().optional(),
+    city_id: z.string().optional(),
     pincode: z.string().optional(),
     website: z.string().optional(),
     designation: z.string().optional(),
@@ -97,6 +98,36 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
     const users = usersResponse?.items || usersResponse || [];
     const userOptions = users.map((user: any) => ({ value: user.id, label: user.name }));
 
+    const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
+    const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+    const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
+    const [countrySearch, setCountrySearch] = useState("");
+    const [stateSearch, setStateSearch] = useState("");
+    const [citySearch, setCitySearch] = useState("");
+
+    const debouncedCountrySearch = useDebounce(countrySearch, 500);
+    const debouncedStateSearch = useDebounce(stateSearch, 500);
+    const debouncedCitySearch = useDebounce(citySearch, 500);
+
+    const { data: countriesData } = useCountries({ search: debouncedCountrySearch, combobox: true, limit: 250 });
+    const { data: statesData } = useStates(selectedCountryId || undefined, { search: debouncedStateSearch, combobox: true, limit: 1000 });
+    const { data: citiesData } = useCities(selectedStateId || undefined, { search: debouncedCitySearch, combobox: true, limit: 500 });
+
+    const countryOptions = (countriesData as any)?.items?.map((item: any) => ({
+        value: item.id,
+        label: item.name,
+    })) || [];
+
+    const stateOptions = (statesData as any)?.items?.map((item: any) => ({
+        value: item.id,
+        label: item.name,
+    })) || [];
+
+    const cityOptions = (citiesData as any)?.items?.map((item: any) => ({
+        value: item.id,
+        label: item.name,
+    })) || [];
+
     const tagSuggestions = useMemo(() => {
         const tags = Array.isArray(tagsResponse)
             ? tagsResponse
@@ -115,6 +146,25 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
     useEffect(() => {
         form.reset(leadProfile);
     }, [form, leadProfile]);
+
+    useEffect(() => {
+        if (leadProfile.country_id && leadProfile.country_id !== selectedCountryId) {
+            setSelectedCountryId(leadProfile.country_id);
+        }
+    }, [leadProfile.country_id, selectedCountryId]);
+
+    useEffect(() => {
+        if (leadProfile.state_id && leadProfile.state_id !== selectedStateId) {
+            setSelectedStateId(leadProfile.state_id);
+        }
+    }, [leadProfile.state_id, selectedStateId]);
+
+    useEffect(() => {
+        if (leadProfile.city_id && leadProfile.city_id !== selectedCityId) {
+            setSelectedCityId(leadProfile.city_id);
+        }
+    }, [leadProfile.city_id, selectedCityId]);
+
 
     const onSubmit = (data: LeadProfileFormValues) => {
         setLeadProfile(data);
@@ -292,12 +342,28 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                             <FormField
                                 control={form.control}
-                                name="country"
+                                name="country_id"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Country</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter country" {...field} />
+                                            <Combobox
+                                                options={countryOptions}
+                                                value={field.value}
+                                                searchValue={countrySearch}
+                                                onSearchChange={setCountrySearch}
+                                                onValueChange={(id) => {
+                                                    field.onChange(id);
+                                                    setSelectedCountryId(id);
+                                                    setSelectedStateId(null);
+                                                    setSelectedCityId(null);
+                                                    form.setValue("state_id", "");
+                                                    form.setValue("city_id", "");
+                                                }}
+                                                placeholder="Select Country"
+                                                className="h-9 w-full"
+                                                disabled={isSaving}
+                                            />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -306,12 +372,27 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                             <FormField
                                 control={form.control}
-                                name="state"
+                                name="state_id"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">State</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter state" {...field} />
+                                            <Combobox
+                                                options={stateOptions}
+                                                value={field.value}
+                                                searchValue={stateSearch}
+                                                onSearchChange={setStateSearch}
+                                                onValueChange={(id) => {
+                                                    field.onChange(id);
+                                                    setSelectedStateId(id);
+                                                    setSelectedCityId(null);
+                                                    form.setValue("city_id", "");
+                                                    setCitySearch("");
+                                                }}
+                                                placeholder={selectedCountryId ? "Select State" : "Select Country first"}
+                                                className="h-9 w-full"
+                                                disabled={isSaving || !selectedCountryId}
+                                            />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -320,12 +401,25 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                             <FormField
                                 control={form.control}
-                                name="city"
+                                name="city_id"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">City</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter city" {...field} />
+                                            <Combobox
+                                                options={cityOptions}
+                                                value={field.value}
+                                                searchValue={citySearch}
+                                                onSearchChange={setCitySearch}
+                                                onValueChange={(id) => {
+                                                    field.onChange(id);
+                                                    setSelectedCityId(id);
+                                                    setCitySearch("");
+                                                }}
+                                                placeholder={selectedStateId ? "Select City" : "Select State first"}
+                                                className="h-9 w-full"
+                                                disabled={isSaving || !selectedStateId}
+                                            />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -421,19 +515,6 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                 )}
                             />
 
-                            <FormField
-                                control={form.control}
-                                name="pan_number"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-xs font-bold">PAN Card Number</FormLabel>
-                                        <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm uppercase" placeholder="Enter PAN Number" {...field} />
-                                        </FormControl>
-                                        <FormMessage className="text-[10px]" />
-                                    </FormItem>
-                                )}
-                            />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">

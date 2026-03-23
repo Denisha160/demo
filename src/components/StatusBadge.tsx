@@ -1,6 +1,7 @@
 interface StatusBadgeProps {
   status: string;
   variant?: string | "default" | "success" | "warning" | "destructive" | "info";
+  color?: string;
   className?: string;
 }
 
@@ -12,8 +13,11 @@ const variantClasses = {
   info: "bg-primary/10 text-primary",
 };
 
-const StatusBadge = ({ status, variant = "default", className = "" }: StatusBadgeProps) => (
-  <span className={`inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium rounded-sm ${variantClasses[variant as keyof typeof variantClasses] || variantClasses.default} ${className}`}>
+const StatusBadge = ({ status, variant = "default", color, className = "" }: StatusBadgeProps) => (
+  <span 
+    className={`inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium rounded-sm ${variantClasses[variant as keyof typeof variantClasses] || variantClasses.default} ${className}`}
+    style={color ? { backgroundColor: `${color}15`, color: color } : {}}
+  >
     {status}
   </span>
 );

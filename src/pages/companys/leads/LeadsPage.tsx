@@ -53,6 +53,10 @@ const mapLeadToDeal = (lead: any): Deal & { isVerified?: boolean; isCustomer?: b
   quotationStatus: lead?.quotationStatus || lead?.quotation_status,
   isVerified: !!lead?.is_verified,
   isCustomer: !!lead?.customer_id || lead?.lead_type === "CUSTOMER",
+  status_id: lead?.status_id,
+  status_name: lead?.status_name,
+  status_color: lead?.status_color,
+  tags: lead?.tags,
 });
 
 const applyServerValidationErrors = (

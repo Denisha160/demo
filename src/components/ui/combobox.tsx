@@ -34,6 +34,8 @@ interface ComboboxProps {
     disabled?: boolean;
     searchValue?: string;
     onSearchChange?: (search: string) => void;
+    /** Stable label to display when the selected value is not in the options list (common with server-side search) */
+    selectedLabel?: string;
 }
 
 const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
@@ -50,12 +52,13 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             disabled = false,
             searchValue,
             onSearchChange,
+            selectedLabel: propSelectedLabel,
         },
         ref
     ) => {
         const [open, setOpen] = React.useState(false);
 
-        const selectedLabel = options.find((o) => o.value === value)?.label;
+        const selectedLabel = options.find((o) => o.value === value)?.label ?? propSelectedLabel;
 
         const handleSelect = (selectedValue: string) => {
             onValueChange(selectedValue === value ? "" : selectedValue);

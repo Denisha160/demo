@@ -525,7 +525,7 @@ export const deleteBOM = (bom_id) => {
 
 // end region
 
-// start region
+// region Kits  
 // ===================== Kits =====================
 
 export const listKits = (params) => {
@@ -570,7 +570,7 @@ export const listKitsByProduct = (productId) => {
 
 // end region
 
-// start region
+// start region 
 // ===================== Batches =====================
 
 export const listBatch = (params) => {
@@ -686,4 +686,9 @@ export const listAllReminders = (params) => {
 
 export const listAllTasks = (params) => {
   return axios({ method: "GET", url: `tasks`, params });
+};
+
+export const listCityStateCountry = (params) => {
+  const url = `city-state-country`;
+  return axios({ method: "GET", url, params });
 };

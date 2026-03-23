@@ -23,7 +23,7 @@ const followUpSchema = z.object({
   follow_up_method: z.string().optional().or(z.literal("")),
   purpose: z.string().optional().or(z.literal("")),
   remarks: z.string().optional().or(z.literal("")),
-  assigned_to: z.string().optional().or(z.literal("")),
+  assigned_to: z.string().min(1, "Assigned To is required"),
   scheduled_at: z.string().min(1, "Scheduled date is required"),
 });
 
@@ -145,7 +145,7 @@ const FollowUpModal = ({
       <form id="follow-up-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label>Status</Label>
+            <Label>Status <span className="text-red-500">*</span></Label>
             <Select value={status} onValueChange={(val) => setValue("status", val, { shouldValidate: true })}>
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
@@ -183,7 +183,7 @@ const FollowUpModal = ({
           </div>
 
           <div>
-            <Label>Assigned To</Label>
+            <Label>Assigned To <span className="text-red-500">*</span></Label>
             <Combobox
               options={userOptions}
               value={watch("assigned_to")}
@@ -196,7 +196,7 @@ const FollowUpModal = ({
           </div>
 
           <div>
-            <Label>Scheduled Date</Label>
+            <Label>Scheduled Date <span className="text-red-500">*</span></Label>
             <DatePicker
               value={scheduledAt}
               onChange={(val: string) => setValue("scheduled_at", val || "", { shouldValidate: true })}

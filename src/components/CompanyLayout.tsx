@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Kanban, LogOut, Menu, ChevronDown,
-  Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List,
-  UserCheck, Truck, Clock, Tags, Blocks,
-  Package, Hash, Award, Wind, FileChartColumn, Landmark, FileScan
+  LayoutDashboard, LogOut, Menu, ChevronDown,
+  Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List, Clock, Tags, Blocks,
+  Package, Hash, Award, Wind, ClipboardList, MapPin, FileText
 } from "lucide-react";
 
 import { useLogout, useCurrentUser, useHasPermission } from "@/hooks/useAuth";
@@ -35,11 +34,11 @@ const navItems: NavItemEntry[] = [
       { label: "Leads", icon: Box, path: "leads" },
       { label: "Status", icon: List, path: "status" },
       { label: "Sources", icon: Package, path: "source" },
-      { label: "Quotations", icon: Package, path: "quotations" },
-      { label: "Visites", icon: Package, path: "visits" },
-      { label: "Reminders", icon: Package, path: "reminders" },
-      { label: "Follow-ups", icon: Package, path: "followups" },
-      { label: "Taks", icon: Package, path: "tasks" },
+      { label: "Quotations", icon: FileText, path: "quotations" },
+      { label: "Visites", icon: MapPin, path: "visits" },
+      { label: "Reminders", icon: Bell, path: "reminders" },
+      { label: "Follow-ups", icon: Clock, path: "followups" },
+      { label: "Taks", icon: ClipboardList, path: "tasks" },
     ]
   },
   // { label: "Salesmen", icon: UserCheck, path: "salesmen"},

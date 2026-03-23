@@ -75,11 +75,14 @@ const LeadPipeline = ({ displayedColumns, onDragEnd, isUpdatingOrder }: LeadPipe
                                             ref={columnProvided.innerRef}
                                             {...columnProvided.draggableProps}
                                             style={columnProvided.draggableProps.style}
-                                            className={`flex h-full min-h-0 w-[300px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/40 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-shadow ${columnSnapshot.isDragging
+                                            className={`group/column relative flex h-full min-h-0 w-[300px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${columnSnapshot.isDragging
                                                 ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
-                                                : ""
+                                                : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
                                                 }`}
                                         >
+                                            {/* Top side hover highlight */}
+                                            <div className="absolute inset-x-0 top-0 h-0.5 z-10 bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 transition-opacity duration-300 group-hover/column:opacity-100" />
+
                                             <div
                                                 {...columnProvided.dragHandleProps}
                                                 className="flex cursor-grab items-center justify-between border-b border-border/20 bg-background/90 px-3.5 py-3 backdrop-blur-xl active:cursor-grabbing"

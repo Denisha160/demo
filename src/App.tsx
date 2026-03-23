@@ -55,6 +55,10 @@ import AccountViewPage from "./pages/common/account/AccountViewPage";
 import StatusPage from "./pages/companys/leads/status/StatusPage";
 import SourcePage from "./pages/companys/leads/source/SourcePage";
 import InventoryDetailPage from "@/pages/admin/inventory/InventoryDetailPage";
+import VisitsPage from "./pages/companys/leads/visits/VisitsPage";
+import TasksPage from "./pages/companys/leads/tasks/TasksPage";
+import RemindersPage from "./pages/companys/leads/reminders/RemindersPage";
+import FollowUpsPage from "./pages/companys/leads/followups/FollowUps";
 
 const queryClient = new QueryClient();
 
@@ -189,6 +193,10 @@ const App = () => (
           <Route path="accounts/:id" element={<AccountViewPage />} />
           <Route path="status" element={<StatusPage />} />
           <Route path="source" element={<SourcePage />} />
+          <Route path="visits" element={<VisitsPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="reminders" element={<RemindersPage />} />
+          <Route path="followups" element={<FollowUpsPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

@@ -36,9 +36,10 @@ const navItems: NavItemEntry[] = [
       { label: "Status", icon: List, path: "status" },
       { label: "Sources", icon: Package, path: "source" },
       { label: "Quotations", icon: Package, path: "quotations" },
-      { label: "Visites", icon: Package, path: "visites" },
+      { label: "Visites", icon: Package, path: "visits" },
       { label: "Reminders", icon: Package, path: "reminders" },
       { label: "Follow-ups", icon: Package, path: "followups" },
+      { label: "Taks", icon: Package, path: "tasks" },
     ]
   },
   // { label: "Salesmen", icon: UserCheck, path: "salesmen"},

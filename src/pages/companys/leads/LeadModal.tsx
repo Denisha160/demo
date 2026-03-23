@@ -500,7 +500,7 @@ const LeadModal = ({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground">GST Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter GST Number" className="h-9 text-xs border-border/60 uppercase" {...field} />
+                    <Input placeholder="Enter GST Number" className="h-9 text-xs border-border/60" {...field} />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -531,7 +531,7 @@ const LeadModal = ({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground">PAN Card Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter PAN Number" className="h-9 text-xs border-border/60 uppercase" {...field} />
+                    <Input placeholder="Enter PAN Number" className="h-9 text-xs border-border/60" {...field} />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>

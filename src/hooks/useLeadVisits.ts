@@ -9,12 +9,13 @@ import {
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
-const normalizeList = <T,>(response: any): T[] => {
-  if (Array.isArray(response?.data?.visits)) return response.data.visits;
-  if (Array.isArray(response?.visits)) return response.visits;
-  if (Array.isArray(response?.data?.items)) return response.data.items;
-  if (Array.isArray(response?.data)) return response.data;
-  if (Array.isArray(response?.items)) return response.items;
+const normalizeList = <T,>(response: unknown): T[] => {
+  const r = response as any;
+  if (Array.isArray(r?.data?.visits)) return r.data.visits;
+  if (Array.isArray(r?.visits)) return r.visits;
+  if (Array.isArray(r?.data?.items)) return r.data.items;
+  if (Array.isArray(r?.data)) return r.data;
+  if (Array.isArray(r?.items)) return r.items;
   return [];
 };
 
@@ -71,8 +72,8 @@ export function useUpdateLeadVisit(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ visitId, ...payload }: { visitId: string } & Record<string, unknown>) =>
-      updateLeadVisit({ leadId, visitId, ...payload }),
+    mutationFn: ({ visitId, data }: { visitId: string; data: Record<string, unknown> | FormData }) =>
+      updateLeadVisit({ leadId, visitId, data }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.visits(leadId || "") });
       toast.success("Visit updated successfully.");

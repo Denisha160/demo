@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardStats } from "@/services/api";
+import { DashboardStatsResponse } from "@/types/analytics";
 
 export const useAnalytics = () => {
   return useQuery({
@@ -10,6 +11,6 @@ export const useAnalytics = () => {
       return response;
     },
     // The server response is { data: { counters, dealsByStage, ... } }
-    select: (response: any) => response.data,
+    select: (response: DashboardStatsResponse) => response.data,
   });
 };

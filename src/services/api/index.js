@@ -376,7 +376,7 @@ export const createLeadVisit = (leadId, data) => {
   return axios({ method: "POST", url, data });
 };
 
-export const updateLeadVisit = ({ leadId, visitId, ...data }) => {
+export const updateLeadVisit = ({ leadId, visitId, data }) => {
   const url = `leads/${leadId}/visits/${visitId}`;
   return axios({ method: "PATCH", url, data });
 };

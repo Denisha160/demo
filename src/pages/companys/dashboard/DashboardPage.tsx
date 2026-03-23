@@ -77,7 +77,7 @@ const Dashboard = () => {
           title="Total Contacts"
           value={totalContacts.toLocaleString()}
           change={`${counters?.totalLeads || 0} Leads / ${counters?.totalCustomers || 0} Customers`}
-          changeType="default"
+          changeType="neutral"
           icon={<Users className="h-4 w-4" />}
         />
         <StatCard

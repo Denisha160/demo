@@ -5,6 +5,7 @@ import {
   deleteLeadFollowUp,
   listLeadFollowUps,
   updateLeadFollowUp,
+  listAllFollowUps,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -30,6 +31,17 @@ export function useLeadFollowUps(leadId?: string, params?: Record<string, unknow
     queryKey: queryKeys.leads.followUps(leadId || ""),
     queryFn: () => listLeadFollowUps(leadId, params),
     enabled: !!leadId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    select: (data) => normalizeList(data),
+  });
+}
+
+export function useAllFollowUps(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: queryKeys.allFollowUps.list(params),
+    queryFn: () => listAllFollowUps(params),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

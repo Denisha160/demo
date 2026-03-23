@@ -5,6 +5,7 @@ import {
   deleteLeadVisit,
   listLeadVisits,
   updateLeadVisit,
+  listAllVisits,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -30,6 +31,17 @@ export function useLeadVisits(leadId?: string, params?: Record<string, unknown>)
     queryKey: queryKeys.leads.visits(leadId || ""),
     queryFn: () => listLeadVisits(leadId, params),
     enabled: !!leadId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    select: (data) => normalizeList(data),
+  });
+}
+
+export function useAllVisits(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: queryKeys.allVisits.list(params),
+    queryFn: () => listAllVisits(params),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

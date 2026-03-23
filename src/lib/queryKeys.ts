@@ -84,4 +84,20 @@ export const queryKeys = {
         all: ['locations'] as const,
         list: (filters?: Record<string, unknown>) => [...queryKeys.locations.all, 'list', filters] as const,
     },
+    allVisits: {
+        all: ['allVisits'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.allVisits.all, 'list', filters] as const,
+    },
+    allFollowUps: {
+        all: ['allFollowUps'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.allFollowUps.all, 'list', filters] as const,
+    },
+    allReminders: {
+        all: ['allReminders'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.allReminders.all, 'list', filters] as const,
+    },
+    allTasks: {
+        all: ['allTasks'] as const,
+        list: (filters?: Record<string, unknown>) => [...queryKeys.allTasks.all, 'list', filters] as const,
+    },
 } as const;

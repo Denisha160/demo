@@ -5,6 +5,7 @@ import {
   deleteLeadTask,
   listLeadTasks,
   updateLeadTask,
+  listAllTasks,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -30,6 +31,17 @@ export function useLeadTasks(leadId?: string, params?: Record<string, unknown>) 
     queryKey: queryKeys.leads.tasks(leadId || ""),
     queryFn: () => listLeadTasks(leadId, params),
     enabled: !!leadId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    select: (data) => normalizeList(data),
+  });
+}
+
+export function useAllTasks(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: queryKeys.allTasks.list(params),
+    queryFn: () => listAllTasks(params),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

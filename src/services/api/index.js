@@ -606,3 +606,19 @@ export const deleteSource = (id) => {
   const url = `leads/lead-source/${id}`;
   return axios({ method: "DELETE", url });
 }
+
+export const listAllVisits = (params) => {
+  return axios({ method: "GET", url: `visits`, params });
+};
+
+export const listAllFollowUps = (params) => {
+  return axios({ method: "GET", url: `followups`, params });
+};
+
+export const listAllReminders = (params) => {
+  return axios({ method: "GET", url: `reminders`, params });
+};
+
+export const listAllTasks = (params) => {
+  return axios({ method: "GET", url: `tasks`, params });
+};

@@ -5,6 +5,7 @@ import {
   deleteLeadReminder,
   listLeadReminders,
   updateLeadReminder,
+  listAllReminders,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -20,6 +21,17 @@ export function useLeadReminders(leadId?: string, params?: Record<string, unknow
     queryKey: queryKeys.leads.reminders(leadId || ""),
     queryFn: () => listLeadReminders(leadId, params),
     enabled: !!leadId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    select: (data) => normalizeList(data),
+  });
+}
+
+export function useAllReminders(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: queryKeys.allReminders.list(params),
+    queryFn: () => listAllReminders(params),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

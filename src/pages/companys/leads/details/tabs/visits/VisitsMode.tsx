@@ -97,7 +97,7 @@ const VisitsModal = ({
         defaultValues: {
             title: "",
             description: "",
-            visit_type: "site_visit",
+            visit_type: "Site Visit",
             status: "SCHEDULED",
             scheduled_time: getDefaultDateTime(),
             actual_check_in: "",
@@ -124,7 +124,7 @@ const VisitsModal = ({
             form.reset({
                 title: visitData.title || "",
                 description: visitData.description || "",
-                visit_type: visitData.visit_type || "site_visit",
+                visit_type: visitData.visit_type || "Site Visit",
                 status: visitData.status || "SCHEDULED",
                 scheduled_time: toDateTimeLocal(visitData.scheduled_time),
                 actual_check_in: toDateTimeLocal(visitData.actual_check_in),
@@ -148,7 +148,7 @@ const VisitsModal = ({
         form.reset({
             title: "",
             description: "",
-            visit_type: "site_visit",
+            visit_type: "Site Visit",
             status: "SCHEDULED",
             scheduled_time: getDefaultDateTime(),
             actual_check_in: "",
@@ -312,19 +312,9 @@ const VisitsModal = ({
                                     <FormLabel className="text-xs font-bold flex gap-1">
                                         <span className="text-destructive">*</span> Visit Type
                                     </FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
-                                        <FormControl>
-                                            <SelectTrigger className="h-9 text-xs">
-                                                <SelectValue placeholder="Select visit type" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="site_visit">Site Visit</SelectItem>
-                                            <SelectItem value="meeting">Meeting</SelectItem>
-                                            <SelectItem value="demo">Demo</SelectItem>
-                                            <SelectItem value="installation">Installation</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <FormControl>
+                                        <Input placeholder="Site Visit, Meeting, etc." className="h-9 text-xs" disabled={isSubmitting} {...field} />
+                                    </FormControl>
                                     <FormMessage className="text-[10px]" />
                                 </FormItem>
                             )}

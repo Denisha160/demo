@@ -11,15 +11,26 @@ import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useVerifyLead } from "@/hooks/useLeadVerification";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 
 const verifyFormSchema = z.object({
-  property_type: z.enum(['HOTEL', 'RESTAURANT', 'CHAIN_PROPERTY', 'RESORT', 'SPA', 'OTHER']),
-  property_name: z.string().max(100).min(1, "Required"),
-  number_of_properties: z.coerce.number().int().min(1, "Required"),
+  property_type: z.enum(['HOTEL', 'RESTAURANT', 'CHAIN_PROPERTY', 'RESORT', 'SPA', 'OTHER'], {
+    required_error: "Property Type is required",
+  }),
+  property_name: z.string().min(1, "Property Name is required").max(100),
+  number_of_properties: z.coerce.number().int().min(1, "At least 1 property is required"),
   cities_of_operation: z.array(z.string()).default([]),
-  total_staff: z.coerce.number().int().min(0),
-  years_of_experience: z.coerce.number().int().min(0),
-  annual_turnover: z.coerce.number(),
+  total_staff: z.coerce.number().int().min(0).optional(),
+  years_of_experience: z.coerce.number().int().min(0).optional(),
+  annual_turnover: z.coerce.number().optional(),
   has_warehouse: z.boolean().default(false),
   warehouse_location: z.string().max(255).optional().nullable(),
   warehouse_size: z.coerce.number().optional().nullable(),
@@ -38,7 +49,9 @@ const verifyFormSchema = z.object({
     'DEALER', 'DISTRIBUTOR', 'RETAIL', 'HOTEL', 'RESORT',
     'CHAIN_HOTEL_RESORT', 'SPA_WELLNESS', 'CONSULTANT',
     'SCHOOL', 'HOSPITAL', 'CORPORATE_OFFICE', 'BANK', 'BUILDER'
-  ]),
+  ], {
+    required_error: "Customer Type is required",
+  }),
   verification_notes: z.string().optional().nullable(),
 });
 
@@ -107,6 +120,7 @@ export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadMod
     verifyMutation.mutate({ leadId, data: payload }, {
       onSuccess: () => {
         onClose();
+        form.reset();
       }
     });
   };
@@ -122,148 +136,367 @@ export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadMod
           <Button size="sm" onClick={form.handleSubmit(onSubmit)} disabled={verifyMutation.isPending}>Submit Verification</Button>
         </div>
       }>
-      <form className="max-h-[65vh] overflow-y-auto pr-2 space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-        {/* Form fields grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label>Customer Type *</Label>
-            <Combobox options={customerTypes} value={form.watch("customer_type")} onValueChange={(val) => form.setValue("customer_type", val as any)} placeholder="Select customer type" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Property Type *</Label>
-            <Combobox options={propertyTypes} value={form.watch("property_type")} onValueChange={(val) => form.setValue("property_type", val as any)} placeholder="Select property type" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Property Name *</Label>
-            <Input {...form.register("property_name")} />
-          </div>
+      <Form {...form}>
+        <form className="max-h-[65vh] overflow-y-auto pr-2" onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="customer_type"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold flex gap-1">
+                    Customer Type <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={customerTypes}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select customer type"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-1.5">
-            <Label>Number of Properties *</Label>
-            <Input type="number" {...form.register("number_of_properties")} />
-          </div>
+            <FormField
+              control={form.control}
+              name="property_type"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold flex gap-1">
+                    Property Type <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={propertyTypes}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select property type"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
 
-          <div className="space-y-1.5 flex flex-col">
-            <Label>Cities of Operation</Label>
-            <div className="flex flex-wrap gap-1 mb-1">
-              {cities.map((city, idx) => (
-                <Badge key={idx} variant="secondary" className="px-1.5 py-0">
-                  {city} 
-                  <X className="h-3 w-3 ml-1 cursor-pointer hover:text-destructive" onClick={() => removeCity(idx)} />
-                </Badge>
-              ))}
+            <FormField
+              control={form.control}
+              name="property_name"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold flex gap-1">
+                    Property Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input className="h-9 text-xs" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="number_of_properties"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold flex gap-1">
+                    Number of Properties <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="number" className="h-9 text-xs" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <div className="space-y-1.5 flex flex-col">
+              <Label className="text-xs font-bold">Cities of Operation</Label>
+              <div className="flex flex-wrap gap-1 mb-1 min-h-[24px]">
+                {cities.map((city, idx) => (
+                  <Badge key={idx} variant="secondary" className="px-1.5 py-0 text-[10px]">
+                    {city}
+                    <X className="h-3 w-3 ml-1 cursor-pointer hover:text-destructive" onClick={() => removeCity(idx)} />
+                  </Badge>
+                ))}
+              </div>
+              <Input
+                placeholder="Type city and press Enter"
+                className="h-9 text-xs"
+                value={cityInput}
+                onChange={(e) => setCityInput(e.target.value)}
+                onKeyDown={handleAddCity}
+              />
             </div>
-            <Input 
-              placeholder="Type city and press Enter" 
-              value={cityInput}
-              onChange={(e) => setCityInput(e.target.value)}
-              onKeyDown={handleAddCity}
+
+            <FormField
+              control={form.control}
+              name="total_staff"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold">Total Staff</FormLabel>
+                  <FormControl>
+                    <Input type="number" className="h-9 text-xs" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="years_of_experience"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold">Years of Experience</FormLabel>
+                  <FormControl>
+                    <Input type="number" className="h-9 text-xs" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="annual_turnover"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold">Annual Turnover</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" className="h-9 text-xs" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="verification_notes"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5 col-span-1 md:col-span-2">
+                  <FormLabel className="text-xs font-bold">Verification Notes</FormLabel>
+                  <FormControl>
+                    <Textarea className="min-h-[80px] text-xs resize-none" {...field} value={field.value || ""} />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label>Total Staff *</Label>
-            <Input type="number" {...form.register("total_staff")} />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 pb-2">
+            <FormField
+              control={form.control}
+              name="has_warehouse"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-2 space-y-0 p-3 rounded-lg border border-border/50 bg-accent/5">
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <FormLabel className="text-xs font-semibold cursor-pointer">Has Warehouse</FormLabel>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="has_showroom"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-2 space-y-0 p-3 rounded-lg border border-border/50 bg-accent/5">
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <FormLabel className="text-xs font-semibold cursor-pointer">Has Showroom</FormLabel>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="has_delivery_vehicles"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-2 space-y-0 p-3 rounded-lg border border-border/50 bg-accent/5">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(val) => {
+                        field.onChange(val);
+                        if (val && fields.length === 0) {
+                          append({ type: "", model: "", registration: "", capacity: "" });
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormLabel className="text-xs font-semibold cursor-pointer">Has Vehicles</FormLabel>
+                </FormItem>
+              )}
+            />
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Years of Experience *</Label>
-            <Input type="number" {...form.register("years_of_experience")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Annual Turnover *</Label>
-            <Input type="number" step="0.01" {...form.register("annual_turnover")} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Verification Notes</Label>
-            <Input {...form.register("verification_notes")} />
-          </div>
-        </div>
-
-        {/* Checkboxes */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox id="has_warehouse" checked={form.watch("has_warehouse")} onCheckedChange={(val) => form.setValue("has_warehouse", val as boolean)} />
-            <Label htmlFor="has_warehouse" className="cursor-pointer">Has Warehouse</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="has_showroom" checked={form.watch("has_showroom")} onCheckedChange={(val) => form.setValue("has_showroom", val as boolean)} />
-            <Label htmlFor="has_showroom" className="cursor-pointer">Has Showroom</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox id="has_delivery_vehicles" checked={form.watch("has_delivery_vehicles")} onCheckedChange={(val) => form.setValue("has_delivery_vehicles", val as boolean)} />
-            <Label htmlFor="has_delivery_vehicles" className="cursor-pointer">Has Vehicles</Label>
-          </div>
-        </div>
-
-        {(form.watch("has_warehouse") || form.watch("has_showroom")) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-            {form.watch("has_warehouse") && (
-              <>
-                <div className="space-y-1.5">
-                  <Label>Warehouse Location</Label>
-                  <Input {...form.register("warehouse_location")} />
+          {(form.watch("has_warehouse") || form.watch("has_showroom")) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 mt-2 rounded-xl border border-border/40 bg-muted/5">
+              {form.watch("has_warehouse") && (
+                <div className="space-y-4">
+                  <h5 className="text-[11px] font-bold text-primary uppercase">Warehouse Info</h5>
+                  <div className="grid grid-cols-1 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="warehouse_location"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-[10px] font-bold">Location</FormLabel>
+                          <FormControl>
+                            <Input className="h-8 text-xs" {...field} value={field.value || ""} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="warehouse_size"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-[10px] font-bold">Size (sqft)</FormLabel>
+                          <FormControl>
+                            <Input type="number" className="h-8 text-xs" {...field} value={field.value || ""} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Warehouse Size</Label>
-                  <Input type="number" step="0.01" {...form.register("warehouse_size")} />
+              )}
+              {form.watch("has_showroom") && (
+                <div className="space-y-4">
+                  <h5 className="text-[11px] font-bold text-primary uppercase">Showroom Info</h5>
+                  <div className="grid grid-cols-1 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="showroom_location"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-[10px] font-bold">Location</FormLabel>
+                          <FormControl>
+                            <Input className="h-8 text-xs" {...field} value={field.value || ""} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="showroom_size"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-[10px] font-bold">Size (sqft)</FormLabel>
+                          <FormControl>
+                            <Input type="number" className="h-8 text-xs" {...field} value={field.value || ""} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-              </>
-            )}
-            {form.watch("has_showroom") && (
-              <>
-                <div className="space-y-1.5">
-                  <Label>Showroom Location</Label>
-                  <Input {...form.register("showroom_location")} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Showroom Size</Label>
-                  <Input type="number" step="0.01" {...form.register("showroom_size")} />
-                </div>
-              </>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
-        {form.watch("has_delivery_vehicles") && (
-          <div className="border-t pt-4 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Number of Vehicles</Label>
-                <Input type="number" {...form.register("number_of_vehicles")} />
+          {form.watch("has_delivery_vehicles") && (
+            <div className="space-y-4 mt-4 p-4 rounded-xl border border-border/40 bg-muted/5">
+              <div className="flex justify-between items-center border-b border-border/50 pb-2">
+                <h5 className="text-[11px] font-bold text-primary uppercase">Vehicle Details</h5>
+              </div>
+
+              <div className="space-y-3">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="relative p-4 rounded-lg border border-border/50 bg-background/50">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
+                      onClick={() => remove(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`vehicle_details.${index}.type` as const}
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-[10px] font-bold">Type</FormLabel>
+                            <FormControl>
+                              <Input className="h-8 text-xs" {...field} />
+                            </FormControl>
+                            <FormMessage className="text-[8px]" />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`vehicle_details.${index}.model` as const}
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-[10px] font-bold">Model</FormLabel>
+                            <FormControl>
+                              <Input className="h-8 text-xs" {...field} />
+                            </FormControl>
+                            <FormMessage className="text-[8px]" />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`vehicle_details.${index}.registration` as const}
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-[10px] font-bold">Reg No</FormLabel>
+                            <FormControl>
+                              <Input className="h-8 text-xs uppercase" {...field} />
+                            </FormControl>
+                            <FormMessage className="text-[8px]" />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`vehicle_details.${index}.capacity` as const}
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-[10px] font-bold">Capacity</FormLabel>
+                            <FormControl>
+                              <Input className="h-8 text-xs" {...field} />
+                            </FormControl>
+                            <FormMessage className="text-[8px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                ))}
+
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs w-full sm:w-auto"
+                    onClick={() => append({ type: "", model: "", registration: "", capacity: "" })}
+                  >
+                    Add Vehicle
+                  </Button>
+                </div>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>Vehicle Details</Label>
-                <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => append({ type: "", model: "", registration: "", capacity: "" })}>Add Vehicle</Button>
-              </div>
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Type</Label>
-                    <Input className="h-8 text-xs" {...form.register(`vehicle_details.${index}.type` as const)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Model</Label>
-                    <Input className="h-8 text-xs" {...form.register(`vehicle_details.${index}.model` as const)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Registration</Label>
-                    <Input className="h-8 text-xs" {...form.register(`vehicle_details.${index}.registration` as const)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Capacity</Label>
-                    <Input className="h-8 text-xs" {...form.register(`vehicle_details.${index}.capacity` as const)} />
-                  </div>
-                  <Button type="button" variant="destructive" size="sm" className="h-8" onClick={() => remove(index)}>Remove</Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </form>
+          )}
+        </form>
+      </Form>
     </Modal>
   );
 }

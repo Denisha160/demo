@@ -306,6 +306,11 @@ export const verifyLead = (leadId, data) => {
   return axios({ method: "POST", url, data });
 };
 
+export const updateVerifyLead = (leadId, data) => {
+  const url = `leads/${leadId}/verification`;
+  return axios({ method: "PUT", url, data });
+};
+
 export const convertLead = (leadId) => {
   const url = `leads/${leadId}/convert-to-customer`;
   return axios({ method: "POST", url });

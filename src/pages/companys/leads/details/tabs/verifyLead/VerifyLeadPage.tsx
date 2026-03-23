@@ -2,12 +2,16 @@ import {
     ShieldCheck, Home, Users, History, Truck, 
     FileText, Layout, Package, MapPin, Activity, 
     DollarSign, Calendar, Landmark, Warehouse, 
-    Car, Store
+    Car, Store, Edit
 } from "lucide-react";
 import { format } from "date-fns";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import VerifyLeadModal from "./VerifyLeadModal";
 
 interface VerifyLeadPageProps {
     details: any;
+    leadId: string;
 }
 
 const InfoCard = ({ icon: Icon, label, value, colorClass = "text-muted-foreground" }: { icon: any, label: string, value: any, colorClass?: string }) => (
@@ -22,11 +26,19 @@ const InfoCard = ({ icon: Icon, label, value, colorClass = "text-muted-foregroun
     </div>
 );
 
-const VerifyLeadPage = ({ details }: VerifyLeadPageProps) => {
+const VerifyLeadPage = ({ details, leadId }: VerifyLeadPageProps) => {
+    const [editModalOpen, setEditModalOpen] = useState(false);
+
     if (!details) return <div className="p-8 text-center text-muted-foreground">No verification details available.</div>;
 
     return (
         <div className="space-y-6 animate-fade-in pb-10">
+            <div className="flex justify-end">
+                <Button size="sm" onClick={() => setEditModalOpen(true)} className="flex items-center gap-2">
+                    <Edit className="h-4 w-4" /> Edit Details
+                </Button>
+            </div>
+            
             {/* Top Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <InfoCard icon={ShieldCheck} label="Verification Status" value="Verified" colorClass="text-green-500" />
@@ -160,6 +172,13 @@ const VerifyLeadPage = ({ details }: VerifyLeadPageProps) => {
                     </p>
                 </div>
             </div>
+
+            <VerifyLeadModal 
+                open={editModalOpen} 
+                onClose={() => setEditModalOpen(false)} 
+                leadId={leadId} 
+                initialData={details} 
+            />
         </div>
     );
 };

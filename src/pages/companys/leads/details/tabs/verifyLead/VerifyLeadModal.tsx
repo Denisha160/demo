@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useVerifyLead } from "@/hooks/useLeadVerification";
+import { useVerifyLead, useUpdateVerifyLead } from "@/hooks/useLeadVerification";
 import {
   Form,
   FormControl,
@@ -61,11 +61,16 @@ interface VerifyLeadModalProps {
   open: boolean;
   onClose: () => void;
   leadId: string;
+  initialData?: any;
 }
 
-export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadModalProps) {
+export default function VerifyLeadModal({ open, onClose, leadId, initialData }: VerifyLeadModalProps) {
   const verifyMutation = useVerifyLead();
+  const updateMutation = useUpdateVerifyLead();
   const [cityInput, setCityInput] = useState("");
+
+  const isEditing = !!initialData;
+  const activeMutation = isEditing ? updateMutation : verifyMutation;
 
   const form = useForm<VerifyFormData>({
     resolver: zodResolver(verifyFormSchema),
@@ -80,6 +85,8 @@ export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadMod
       number_of_properties: 1,
       property_type: "OTHER" as const,
       customer_type: "RETAIL" as const,
+      cities_of_operation: [],
+      vehicle_details: []
     }
   });
 
@@ -90,10 +97,33 @@ export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadMod
 
   useEffect(() => {
     if (open) {
-      form.reset();
+      if (initialData) {
+        form.reset({
+          has_warehouse: initialData.has_warehouse ?? false,
+          has_showroom: initialData.has_showroom ?? false,
+          has_delivery_vehicles: initialData.has_delivery_vehicles ?? false,
+          number_of_vehicles: initialData.number_of_vehicles ?? 0,
+          total_staff: initialData.total_staff ?? 0,
+          years_of_experience: initialData.years_of_experience ?? 0,
+          annual_turnover: initialData.annual_turnover ?? 0,
+          number_of_properties: initialData.number_of_properties ?? 1,
+          property_type: initialData.property_type ?? "OTHER",
+          property_name: initialData.property_name ?? "",
+          customer_type: initialData.customer_type ?? "RETAIL",
+          warehouse_location: initialData.warehouse_location ?? "",
+          warehouse_size: initialData.warehouse_size ?? null,
+          showroom_location: initialData.showroom_location ?? "",
+          showroom_size: initialData.showroom_size ?? null,
+          cities_of_operation: initialData.cities_of_operation || [],
+          vehicle_details: initialData.vehicle_details || [],
+          verification_notes: initialData.verification_notes ?? ""
+        });
+      } else {
+        form.reset();
+      }
       setCityInput("");
     }
-  }, [open, form]);
+  }, [open, form, initialData]);
 
   const cities = form.watch("cities_of_operation") || [];
 
@@ -117,10 +147,10 @@ export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadMod
       ...data,
       documents: [],
     };
-    verifyMutation.mutate({ leadId, data: payload }, {
+    activeMutation.mutate({ leadId, data: payload }, {
       onSuccess: () => {
         onClose();
-        form.reset();
+        if (!isEditing) form.reset();
       }
     });
   };
@@ -129,11 +159,13 @@ export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadMod
   const customerTypes = ['DEALER', 'DISTRIBUTOR', 'RETAIL', 'HOTEL', 'RESORT', 'CHAIN_HOTEL_RESORT', 'SPA_WELLNESS', 'CONSULTANT', 'SCHOOL', 'HOSPITAL', 'CORPORATE_OFFICE', 'BANK', 'BUILDER'].map(v => ({ label: v, value: v }));
 
   return (
-    <Modal open={open} onClose={onClose} title="Verify Lead Details" maxWidth="sm:max-w-[800px]"
+    <Modal open={open} onClose={onClose} title={isEditing ? "Edit Verification Details" : "Verify Lead Details"} maxWidth="sm:max-w-[800px]"
       footer={
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={verifyMutation.isPending}>Cancel</Button>
-          <Button size="sm" onClick={form.handleSubmit(onSubmit)} disabled={verifyMutation.isPending}>Submit Verification</Button>
+          <Button variant="outline" size="sm" onClick={onClose} disabled={activeMutation.isPending}>Cancel</Button>
+          <Button size="sm" onClick={form.handleSubmit(onSubmit)} disabled={activeMutation.isPending}>
+            {isEditing ? "Update Verification" : "Submit Verification"}
+          </Button>
         </div>
       }>
       <Form {...form}>
@@ -216,6 +248,13 @@ export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadMod
             <div className="space-y-1.5 flex flex-col">
               <Label className="text-xs font-bold">Cities of Operation</Label>
               <div className="flex flex-wrap gap-1 mb-1 min-h-[24px]">
+                <Input
+                  placeholder="Type city and press Enter"
+                  className="h-9 text-xs"
+                  value={cityInput}
+                  onChange={(e) => setCityInput(e.target.value)}
+                  onKeyDown={handleAddCity}
+                />
                 {cities.map((city, idx) => (
                   <Badge key={idx} variant="secondary" className="px-1.5 py-0 text-[10px]">
                     {city}
@@ -223,13 +262,7 @@ export default function VerifyLeadModal({ open, onClose, leadId }: VerifyLeadMod
                   </Badge>
                 ))}
               </div>
-              <Input
-                placeholder="Type city and press Enter"
-                className="h-9 text-xs"
-                value={cityInput}
-                onChange={(e) => setCityInput(e.target.value)}
-                onKeyDown={handleAddCity}
-              />
+
             </div>
 
             <FormField

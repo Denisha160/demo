@@ -38,7 +38,7 @@ import QuotationsTab from "./tabs/quotations/QuotationsTab";
 import RemindersTab from "./tabs/reminders/RemindersTab";
 import VerifyLeadPage from "./tabs/verifyLead/VerifyLeadPage";
 import { useLead, useUpdateLead } from "@/hooks/useLeads";
-import VerifyLeadModal from "./VerifyLeadModal";
+import VerifyLeadModal from "./tabs/verifyLead/VerifyLeadModal";
 import { useConvertLead } from "@/hooks/useLeadVerification";
 
 export interface LeadProfileFormValues {
@@ -218,7 +218,7 @@ const LeadDetailsPage = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case "profile": return <ProfileTab leadProfile={leadProfile} setLeadProfile={setLeadProfile} isSaving={updateLeadMutation.isPending} />;
-            case "verify": return lead?.verification_details ? <VerifyLeadPage details={(lead as any).verification_details} /> : null;
+            case "verify": return lead?.verification_details ? <VerifyLeadPage leadId={id as string} details={(lead as any).verification_details} /> : null;
             case "contacts": return <ContactsTab />;
             case "follow-up": return id ? <FollowUpTab leadId={id} /> : null;
             case "visits": return id ? <VisitsTab leadId={id} /> : null;
@@ -286,7 +286,7 @@ const LeadDetailsPage = () => {
                     {filteredTabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
- 
+
                         return (
                             <button
                                 key={tab.id}

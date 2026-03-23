@@ -23,12 +23,11 @@ import {
 } from "@/hooks/useLeadVisits";
 
 const applyServerValidationErrors = (
-  error: unknown,
+  error: any,
   setError: (field: any, err: any) => void
 ) => {
-  const err = error as any;
-  if (err?.code === "validation_error" && err?.details?.body) {
-    Object.entries(err.details.body).forEach(([key, message]) => {
+  if (error?.code === "validation_error" && error?.details?.body) {
+    Object.entries(error.details.body).forEach(([key, message]) => {
       setError(key as any, { type: "server", message: String(message) });
     });
   }
@@ -125,7 +124,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       return;
     }
 
-    const payload: Record<string, unknown> = {
+    const payload: any = {
       title: formData.title,
       description: formData.description,
       visit_type: formData.visit_type,
@@ -144,7 +143,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       next_steps: formData.next_steps,
     };
 
-    let dataToSubmit: Record<string, unknown> | FormData = payload;
+    let dataToSubmit: any = payload;
 
     if (formData.visit_image_file) {
       const formDataObj = new FormData();
@@ -159,7 +158,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
 
     if (editingVisit) {
       updateVisitMutation.mutate(
-        { visitId: editingVisit.id, data: dataToSubmit },
+        { visitId: editingVisit.id, ...dataToSubmit },
         {
           onSuccess: () => {
             setIsModalOpen(false);

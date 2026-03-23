@@ -4,6 +4,19 @@ import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { useAllVisits } from "@/hooks/useLeadVisits";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Combobox } from "@/components/ui/combobox";
+import { useLeads } from "@/hooks/useLeads";
+
+const STATUS_OPTIONS = [
+  { value: "COMPLETED", label: "Completed" },
+  { value: "SCHEDULED", label: "Scheduled" },
+  { value: "RESCHEDULED", label: "Rescheduled" },
+  { value: "CANCELLED", label: "Cancelled" },
+  { value: "MISSED", label: "Missed" },
+  { value: "CHECKED_IN", label: "Checked In" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+];
 
 const toIsoDateTime = (value?: string) => {
   if (!value) return null;
@@ -44,14 +57,34 @@ const getStatusVariant = (status: string) => {
 
 const VisitsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  const [status, setStatus] = useState("");
+  const [leadId, setLeadId] = useState("");
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
+  const { data: leadsData = [] } = useLeads({ limit: 100 });
+  const leadOptions = useMemo(() => {
+    return leadsData.map((l: any) => ({ value: l.id, label: l.name || l.title || "Unknown Lead" }));
+  }, [leadsData]);
 
   const filters = useMemo(() => {
-    const f: any = {};
-    if (searchTerm) f.search = searchTerm;
+    const f: any = {
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    };
+    if (debouncedSearch) f.search = debouncedSearch;
+    if (status) f.status = status;
+    if (leadId) f.lead_id = leadId;
     return f;
-  }, [searchTerm]);
+  }, [debouncedSearch, status, leadId, page, pageSize]);
 
   const { data: visits = [], isLoading } = useAllVisits(filters);
+
+  // We infer the total assuming there's more data if the items equal pageSize
+  const serverTotal = visits.length === pageSize ? page * pageSize + 1 : (page - 1) * pageSize + visits.length;
 
   const columns: Column<any>[] = [
     {
@@ -129,14 +162,35 @@ const VisitsPage = () => {
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
       <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 sm:max-w-[300px]">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
-          <Input
-            placeholder="Search visits..."
-            className="h-9 rounded-sm pl-9 text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-1 items-center gap-2">
+          <div className="relative flex-1 sm:max-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
+            <Input
+              placeholder="Search visits..."
+              className="h-9 rounded-sm pl-9 text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="w-[180px]">
+            <Combobox
+              options={STATUS_OPTIONS}
+              value={status}
+              onValueChange={setStatus}
+              placeholder="Filter by status"
+              clearable
+            />
+          </div>
+          <div className="w-[200px]">
+            <Combobox
+              options={leadOptions}
+              value={leadId}
+              onValueChange={setLeadId}
+              placeholder="Filter by lead"
+              searchPlaceholder="Search leads..."
+              clearable
+            />
+          </div>
         </div>
       </div>
 
@@ -145,8 +199,13 @@ const VisitsPage = () => {
           <DataTable
             data={visits}
             columns={columns}
-            pageSize={15}
             isLoading={isLoading}
+            serverSide={true}
+            serverTotal={serverTotal}
+            serverPage={page}
+            pageSize={pageSize}
+            onServerPageChange={setPage}
+            onServerPageSizeChange={setPageSize}
           />
         </div>
       </div>

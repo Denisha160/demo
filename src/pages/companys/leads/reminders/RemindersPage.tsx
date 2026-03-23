@@ -3,6 +3,16 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
 import { useAllReminders } from "@/hooks/useLeadReminders";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Combobox } from "@/components/ui/combobox";
+import { useLeads } from "@/hooks/useLeads";
+import StatusBadge from "@/components/StatusBadge";
+
+const STATUS_OPTIONS = [
+  { value: "PENDING", label: "Pending" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
+];
 
 const formatReminderDateTime = (date: string, time: string) => {
   if (!date && !time) return "-";
@@ -47,17 +57,49 @@ const mapReminder = (reminder: any) => {
   };
 };
 
+const getStatusVariant = (status: string) => {
+  switch (status) {
+    case "COMPLETED":
+        return "success";
+    case "PENDING":
+        return "warning";
+    case "CANCELLED":
+        return "destructive";
+    default:
+        return "default";
+  }
+}
+
 const RemindersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  const [status, setStatus] = useState("");
+  const [leadId, setLeadId] = useState("");
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+
+  const { data: leadsData = [] } = useLeads({ limit: 100 });
+  const leadOptions = useMemo(() => {
+    return leadsData.map((l: any) => ({ value: l.id, label: l.name || l.title || "Unknown Lead" }));
+  }, [leadsData]);
 
   const filters = useMemo(() => {
-    const f: any = {};
-    if (searchTerm) f.search = searchTerm;
+    const f: any = {
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    };
+    if (debouncedSearch) f.search = debouncedSearch;
+    if (status) f.status = status;
+    if (leadId) f.lead_id = leadId;
     return f;
-  }, [searchTerm]);
+  }, [debouncedSearch, status, leadId, page, pageSize]);
 
   const { data: rawReminders = [], isLoading } = useAllReminders(filters);
   const reminders = useMemo(() => rawReminders.map(mapReminder), [rawReminders]);
+
+  const serverTotal = reminders.length === pageSize ? page * pageSize + 1 : (page - 1) * pageSize + reminders.length;
 
   const columns: Column<any>[] = [
     {
@@ -85,19 +127,47 @@ const RemindersPage = () => {
       header: "Description",
       render: (item) => <span className="max-w-md line-clamp-2 text-xs text-muted-foreground">{item.description}</span>,
     },
+    {
+        key: "status",
+        header: "Status",
+        render: (item) => (
+          <StatusBadge status={item.status || "PENDING"} variant={getStatusVariant(item.status || "PENDING")} />
+        )
+    }
   ];
 
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
       <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 sm:max-w-[300px]">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
-          <Input
-            placeholder="Search reminders..."
-            className="h-9 rounded-sm pl-9 text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-1 items-center gap-2">
+          <div className="relative flex-1 sm:max-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
+            <Input
+              placeholder="Search reminders..."
+              className="h-9 rounded-sm pl-9 text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="w-[180px]">
+            <Combobox
+              options={STATUS_OPTIONS}
+              value={status}
+              onValueChange={setStatus}
+              placeholder="Filter by status"
+              clearable
+            />
+          </div>
+          <div className="w-[200px]">
+            <Combobox
+              options={leadOptions}
+              value={leadId}
+              onValueChange={setLeadId}
+              placeholder="Filter by lead"
+              searchPlaceholder="Search leads..."
+              clearable
+            />
+          </div>
         </div>
       </div>
 
@@ -106,8 +176,13 @@ const RemindersPage = () => {
           <DataTable
             data={reminders}
             columns={columns}
-            pageSize={15}
             isLoading={isLoading}
+            serverSide={true}
+            serverTotal={serverTotal}
+            serverPage={page}
+            pageSize={pageSize}
+            onServerPageChange={setPage}
+            onServerPageSizeChange={setPageSize}
           />
         </div>
       </div>

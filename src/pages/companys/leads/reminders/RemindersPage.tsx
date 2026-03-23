@@ -8,12 +8,6 @@ import { Combobox } from "@/components/ui/combobox";
 import { useLeads } from "@/hooks/useLeads";
 import StatusBadge from "@/components/StatusBadge";
 
-const STATUS_OPTIONS = [
-    { value: "PENDING", label: "Pending" },
-    { value: "COMPLETED", label: "Completed" },
-    { value: "CANCELLED", label: "Cancelled" },
-];
-
 const formatReminderDateTime = (date: string, time: string) => {
     if (!date && !time) return "-";
     if (!date) return time;
@@ -57,24 +51,10 @@ const mapReminder = (reminder: any) => {
     };
 };
 
-const getStatusVariant = (status: string) => {
-    switch (status) {
-        case "COMPLETED":
-            return "success";
-        case "PENDING":
-            return "warning";
-        case "CANCELLED":
-            return "destructive";
-        default:
-            return "default";
-    }
-}
-
 const RemindersPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 500);
 
-    const [status, setStatus] = useState("");
     const [leadId, setLeadId] = useState("");
 
     const [page, setPage] = useState(1);
@@ -91,10 +71,9 @@ const RemindersPage = () => {
             offset: (page - 1) * pageSize,
         };
         if (debouncedSearch) f.search = debouncedSearch;
-        if (status) f.status = status;
         if (leadId) f.lead_id = leadId;
         return f;
-    }, [debouncedSearch, status, leadId, page, pageSize]);
+    }, [debouncedSearch, leadId, page, pageSize]);
 
     const { data: rawReminders = [], isLoading } = useAllReminders(filters);
     const reminders = useMemo(() => rawReminders.map(mapReminder), [rawReminders]);
@@ -113,22 +92,11 @@ const RemindersPage = () => {
             ),
         },
         {
-            key: "remind_date",
-            header: "Reminder Date",
-            render: (item) => (
-                <div className="flex flex-col">
-                    <span className="text-sm font-medium text-foreground">{formatReminderDateTime(item.remind_date, item.remind_time)}</span>
-                    <span className="text-[11px] text-muted-foreground">{item.remind_date} at {item.remind_time}</span>
-                </div>
-            ),
-        },
-        {
             key: "title",
             header: "Title",
             render: (item) => (
                 <div className="flex flex-col">
                     <span className="text-sm font-medium text-foreground">{item.title}</span>
-                    <span className="line-clamp-2 text-[11px] text-muted-foreground">{item.description}</span>
                 </div>
             ),
         },
@@ -138,12 +106,15 @@ const RemindersPage = () => {
             render: (item) => <span className="max-w-md line-clamp-2 text-xs text-muted-foreground">{item.description}</span>,
         },
         {
-            key: "status",
-            header: "Status",
+            key: "remind_date",
+            header: "Reminder Date",
             render: (item) => (
-                <StatusBadge status={item.status || "PENDING"} variant={getStatusVariant(item.status || "PENDING")} />
-            )
-        }
+                <div className="flex flex-col">
+                    <span className="text-sm font-medium text-foreground">{formatReminderDateTime(item.remind_date, item.remind_time)}</span>
+                    <span className="text-[11px] text-muted-foreground">{item.remind_date} at {item.remind_time}</span>
+                </div>
+            ),
+        },
     ];
 
     return (
@@ -157,15 +128,6 @@ const RemindersPage = () => {
                             className="h-9 rounded-sm pl-9 text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <div className="w-[180px]">
-                        <Combobox
-                            options={STATUS_OPTIONS}
-                            value={status}
-                            onValueChange={setStatus}
-                            placeholder="Filter by status"
-                            clearable
                         />
                     </div>
                     <div className="w-[200px]">

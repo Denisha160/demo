@@ -128,6 +128,7 @@ const FollowUpModal = ({
     <Modal
       open={open}
       onClose={onClose}
+      headerBg="bg-primary/10"
       title={isEditing ? "Edit Follow Up" : "Add Follow Up"}
       description="Enter follow up details"
       footer={

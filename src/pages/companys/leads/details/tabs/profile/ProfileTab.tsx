@@ -126,7 +126,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
         <Form {...form}>
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="w-full animate-fade-in rounded-2xl border border-border/50 bg-card p-6 shadow-sm"
+                className="w-full animate-fade-in rounded-2xl border border-border/50 bg-card p-4 shadow-sm"
             >
                 <div className="mb-6">
                     <h3 className="text-xl font-semibold text-foreground">
@@ -140,8 +140,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                 <div className="space-y-6">
                     {/* Basic Info */}
                     <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-foreground/80 border-b border-border/50 pb-2">Basic Info</h4>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                             <FormField
                                 control={form.control}
                                 name="name"
@@ -269,7 +268,6 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                     {/* Assignment & Locale */}
                     <div className="space-y-4 pt-4 border-t border-border/50">
-                        <h4 className="text-sm font-semibold text-foreground/80 border-b border-border/50 pb-2">Assignment & Locale</h4>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                             <FormField
                                 control={form.control}
@@ -380,7 +378,6 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                     {/* Additional Details */}
                     <div className="space-y-4 pt-4 border-t border-border/50">
-                        <h4 className="text-sm font-semibold text-foreground/80 border-b border-border/50 pb-2">Additional Details</h4>
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                             <FormField
                                 control={form.control}

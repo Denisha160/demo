@@ -128,11 +128,6 @@ const SourcePage = () => {
             className: "font-semibold",
         },
         {
-            key: "display_order",
-            header: "Display Order",
-            sortable: true,
-        },
-        {
             key: "is_active",
             header: "Status",
             render: (item) => (

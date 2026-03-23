@@ -1,5 +1,15 @@
 import axios from "./httpRequest";
 
+// Analytics
+// ===================== Analytics =====================
+
+export const getDashboardStats = () => {
+  const url = `analytics/dashboard-stats`;
+  return axios({ method: "GET", url });
+};
+
+// end region
+
 // region Auth
 // ===================== Auth =====================
 

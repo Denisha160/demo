@@ -54,7 +54,7 @@ const LeadPipeline = ({ displayedColumns, onDragEnd, isUpdatingOrder }: LeadPipe
                     <div
                         ref={boardProvided.innerRef}
                         {...boardProvided.droppableProps}
-                        className={`flex h-full min-h-0 gap-3 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide ${isUpdatingOrder ? "opacity-30 pointer-events-none" : ""}`}
+                        className={`flex h-full min-h-0 gap-3 overflow-x-auto overflow-y-hidden pb-2 ${isUpdatingOrder ? "opacity-30 pointer-events-none" : ""}`}
                     >
                         {displayedColumns.map((col, columnIndex) => {
                             const visibleDeals = col.deals.slice(

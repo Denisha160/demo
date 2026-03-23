@@ -1,162 +1,180 @@
 import StatCard from "@/components/StatCard";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
-import { Users, IndianRupee, TrendingUp, Target, BarChart3 } from "lucide-react";
+import { Users, IndianRupee, TrendingUp, Target, Layers } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-
-const recentDeals = [
-  { name: "Acme Corp", contact: "John Smith", value: "₹12,500", stage: "Negotiation", date: "Feb 12" },
-  { name: "TechStart Inc", contact: "Sarah Lee", value: "₹8,200", stage: "Qualified", date: "Feb 11" },
-  { name: "GlobalFin", contact: "Mike Chen", value: "₹45,000", stage: "Closed Won", date: "Feb 10" },
-  { name: "DataFlow", contact: "Emma Davis", value: "₹6,800", stage: "Proposal", date: "Feb 09" },
-  { name: "CloudBase", contact: "Alex Kim", value: "₹22,000", stage: "Negotiation", date: "Feb 08" },
-  { name: "NetSolutions", contact: "Lisa Wang", value: "₹15,300", stage: "Qualified", date: "Feb 07" },
-  { name: "SmartApps", contact: "Tom Brown", value: "₹9,900", stage: "Closed Lost", date: "Feb 06" },
-  { name: "InnoTech", contact: "Kate Miller", value: "₹31,000", stage: "Closed Won", date: "Feb 05" },
-];
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { RecentDeal } from "@/types/analytics";
+import { format } from "date-fns";
 
 const stageVariant = (stage: string) => {
   const map: Record<string, "success" | "warning" | "info" | "destructive" | "default"> = {
+    "Won": "success",
     "Closed Won": "success",
+    "Lost": "destructive",
     "Closed Lost": "destructive",
-    Negotiation: "warning",
-    Qualified: "info",
-    Proposal: "default",
+    "Negotiation": "warning",
+    "Qualified": "info",
+    "Proposal Sent": "default",
+    "New": "default",
+    "Converted": "success",
   };
   return map[stage] || "default";
 };
 
-const columns: Column<typeof recentDeals[0]>[] = [
+const columns: Column<RecentDeal>[] = [
   { key: "name", header: "Company" },
-  { key: "contact", header: "Contact", className: "hidden sm:table-cell" },
-  { key: "value", header: "Value" },
+  { key: "contact", header: "Contact", className: "hidden sm:table-cell", render: (item) => item.contact || "-" },
+  { 
+    key: "value", 
+    header: "Value", 
+    render: (item) => `₹${(item.value || 0).toLocaleString()}` 
+  },
   {
     key: "stage",
     header: "Stage",
     render: (item) => <StatusBadge status={item.stage} variant={stageVariant(item.stage)} />,
   },
-  { key: "date", header: "Date", className: "hidden md:table-cell" },
-];
-
-const recentActivities = [
-  { action: "New lead added", detail: "Sarah Lee from TechStart Inc", time: "2 min ago" },
-  { action: "Deal closed", detail: "GlobalFin — ₹45,000", time: "1 hour ago" },
-  { action: "Email sent", detail: "Follow-up to Acme Corp", time: "3 hours ago" },
-  { action: "Meeting scheduled", detail: "CloudBase — Tomorrow 10:00 AM", time: "5 hours ago" },
-];
-
-const monthlyRevenue = [
-  { month: "Aug", revenue: 32000 },
-  { month: "Sep", revenue: 28000 },
-  { month: "Oct", revenue: 41000 },
-  { month: "Nov", revenue: 35000 },
-  { month: "Dec", revenue: 48000 },
-  { month: "Jan", revenue: 52000 },
-  { month: "Feb", revenue: 46000 },
-];
-
-const conversionData = [
-  { month: "Aug", rate: 18 },
-  { month: "Sep", rate: 22 },
-  { month: "Oct", rate: 19 },
-  { month: "Nov", rate: 25 },
-  { month: "Dec", rate: 28 },
-  { month: "Jan", rate: 24 },
-  { month: "Feb", rate: 27 },
-];
-
-const dealsByStage = [
-  { name: "Qualified", value: 12, color: "hsl(220, 70%, 50%)" },
-  { name: "Proposal", value: 8, color: "hsl(220, 10%, 60%)" },
-  { name: "Negotiation", value: 6, color: "hsl(38, 92%, 50%)" },
-  { name: "Closed Won", value: 14, color: "hsl(142, 60%, 40%)" },
+  { 
+    key: "created_at", 
+    header: "Date", 
+    className: "hidden md:table-cell",
+    render: (item) => item.created_at ? format(new Date(item.created_at), "MMM dd") : "-"
+  },
 ];
 
 const Dashboard = () => {
+  const { data, isLoading } = useAnalytics();
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-muted-foreground">Loading dashboard data...</div>;
+  }
+
+  const counters = data?.counters;
+  const dealsByStage = data?.dealsByStage || [];
+  const recentActivities = data?.recentActivities || [];
+  const recentDeals = data?.recentDeals || [];
+  const monthlyRevenue = data?.monthlyRevenue || [];
+
+  // Mocking conversion data for the line chart if real data isn't available over time
+  const conversionData = [
+    { month: "Sep", rate: 18 },
+    { month: "Oct", rate: 22 },
+    { month: "Nov", rate: 19 },
+    { month: "Dec", rate: 25 },
+    { month: "Jan", rate: 28 },
+    { month: "Feb", rate: 24 },
+    { month: "Mar", rate: (counters?.conversionRate || 27) },
+  ];
+
+  const totalContacts = (counters?.totalLeads || 0) + (counters?.totalCustomers || 0);
+
   return (
-    <div className="space-y-2 animate-fade-in">
+    <div className="space-y-4 animate-fade-in pb-8">
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Contacts"
-          value="2,847"
-          change="+12% from last month"
-          changeType="positive"
+          value={totalContacts.toLocaleString()}
+          change={`${counters?.totalLeads || 0} Leads / ${counters?.totalCustomers || 0} Customers`}
+          changeType="default"
           icon={<Users className="h-4 w-4" />}
         />
         <StatCard
-          title="Revenue"
-          value="₹184,200"
-          change="+8% from last month"
+          title="Pipeline Value"
+          value={`₹${(counters?.pipelineValue || 0).toLocaleString()}`}
+          change={`Actual Revenue: ₹${(counters?.totalRevenue || 0).toLocaleString()}`}
           changeType="positive"
           icon={< IndianRupee className="h-4 w-4" />}
         />
         <StatCard
           title="Conversion Rate"
-          value="24.5%"
-          change="-2% from last month"
-          changeType="negative"
+          value={`${counters?.conversionRate || 0}%`}
+          change="Leads to Customers"
+          changeType="positive"
           icon={<TrendingUp className="h-4 w-4" />}
         />
         <StatCard
           title="Active Deals"
-          value="38"
-          change="+5 new this week"
+          value={(counters?.activeDeals || 0).toString()}
+          change="In progress stages"
           changeType="positive"
           icon={<Target className="h-4 w-4" />}
         />
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Revenue Chart */}
-        <div className="shadow-card border border-border bg-card rounded-sm p-3">
-          <h3 className="text-sm font-semibold text-foreground mb-2">Monthly Revenue</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={monthlyRevenue}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 10%, 91%)" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(220, 10%, 46%)" />
-              <YAxis tick={{ fontSize: 11 }} stroke="hsl(220, 10%, 46%)" tickFormatter={(v) => `$${v / 1000}k`} />
-              <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]} />
-              <Bar dataKey="revenue" fill="hsl(220, 70%, 50%)" radius={[2, 2, 0, 0]} />
+        <div className="shadow-sm border border-border bg-card rounded-md p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground">Monthly Revenue (Accepted)</h3>
+            <span className="text-xs text-muted-foreground">Last 6 Months</span>
+          </div>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={monthlyRevenue.length > 0 ? monthlyRevenue : [{ month: "No Data", revenue: 0 }]}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v / 1000}k`} />
+              <Tooltip 
+                cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
+                contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '4px' }}
+                formatter={(v: number) => [`₹${v.toLocaleString()}`, "Revenue"]} 
+              />
+              <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Conversion Chart */}
-        <div className="shadow-card border border-border bg-card rounded-sm p-3">
-          <h3 className="text-sm font-semibold text-foreground mb-2">Conversion Rate (%)</h3>
-          <ResponsiveContainer width="100%" height={200}>
+        <div className="shadow-sm border border-border bg-card rounded-md p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground">Conversion Performance (%)</h3>
+            <span className="text-xs text-muted-foreground">Trend Analysis</span>
+          </div>
+          <ResponsiveContainer width="100%" height={240}>
             <LineChart data={conversionData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 10%, 91%)" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(220, 10%, 46%)" />
-              <YAxis tick={{ fontSize: 11 }} stroke="hsl(220, 10%, 46%)" />
-              <Tooltip formatter={(v: number) => [`${v}%`, "Rate"]} />
-              <Line type="monotone" dataKey="rate" stroke="hsl(220, 70%, 50%)" strokeWidth={2} dot={{ r: 3 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip 
+                 contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '4px' }}
+                 formatter={(v: number) => [`${v}%`, "Rate"]} 
+              />
+              <Line type="monotone" dataKey="rate" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 0 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Deals by Stage */}
-        <div className="lg:col-span-1 shadow-card border border-border bg-card rounded-sm p-3">
-          <h3 className="text-sm font-semibold text-foreground mb-2">Deals by Stage</h3>
-          <div className="flex items-center gap-2">
-            <ResponsiveContainer width="60%" height={160}>
+        <div className="lg:col-span-1 shadow-sm border border-border bg-card rounded-md p-4">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Deals by Stage</h3>
+          <div className="flex flex-col items-center gap-6">
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
-                <Pie data={dealsByStage} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" stroke="none">
+                <Pie 
+                  data={dealsByStage.length > 0 ? dealsByStage : [{ name: "No Data", value: 1, color: "hsl(var(--muted))" }]} 
+                  cx="50%" 
+                  cy="50%" 
+                  innerRadius={60} 
+                  outerRadius={80} 
+                  dataKey="value" 
+                  paddingAngle={4}
+                  stroke="none"
+                >
                   {dealsByStage.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
+                    <Cell key={i} fill={entry.color || `hsl(var(--primary) / ${1 - (i * 0.15)})`} />
                   ))}
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-            <div className="space-y-1.5 min-w-0 flex-1">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full">
               {dealsByStage.map((s) => (
                 <div key={s.name} className="flex items-center gap-2 text-[11px]">
-                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                   <span className="text-muted-foreground truncate">{s.name}</span>
                   <span className="font-medium text-foreground ml-auto">{s.value}</span>
                 </div>
@@ -165,28 +183,40 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-2">
+        <div className="lg:col-span-2 space-y-4">
           {/* Recent Deals */}
-          <div>
-            <h2 className="text-sm font-semibold text-foreground mb-1.5">Recent Deals</h2>
+          <div className="shadow-sm border border-border bg-card rounded-md p-0 overflow-hidden">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-foreground">Recent Deals</h2>
+              <button className="text-xs text-primary font-medium hover:underline">View All</button>
+            </div>
             <DataTable data={recentDeals} columns={columns} pageSize={5} />
           </div>
         </div>
       </div>
 
       {/* Activity Feed */}
-      <div>
-        <h2 className="text-sm font-semibold text-foreground mb-1.5">Recent Activity</h2>
-        <div className="shadow-card border border-border bg-card rounded-sm divide-y divide-border">
-          {recentActivities.map((activity, i) => (
-            <div key={i} className="flex items-center justify-between px-3 py-2">
-              <div>
-                <p className="text-sm text-foreground">{activity.action}</p>
-                <p className="text-sm text-muted-foreground">{activity.detail}</p>
+      <div className="shadow-sm border border-border bg-card rounded-md">
+        <div className="px-4 py-3 border-b border-border">
+          <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
+        </div>
+        <div className="divide-y divide-border overflow-y-auto max-h-[400px]">
+          {recentActivities.length > 0 ? recentActivities.map((activity, i) => (
+            <div key={i} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                 <Layers className="h-4 w-4 text-primary" />
               </div>
-              <span className="text-sm text-muted-foreground whitespace-nowrap ml-2">{activity.time}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground leading-tight">{activity.action}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{activity.detail}</p>
+              </div>
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap ml-2">
+                {format(new Date(activity.time), "MMM dd, HH:mm")}
+              </span>
             </div>
-          ))}
+          )) : (
+            <div className="px-4 py-8 text-center text-sm text-muted-foreground">No recent activities available.</div>
+          )}
         </div>
       </div>
     </div>

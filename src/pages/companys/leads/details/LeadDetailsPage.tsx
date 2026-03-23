@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
     User, Users, Clock, MapPin, ClipboardList,
     PhoneCall, Package, Paperclip, Activity, FileText, Bell,
@@ -129,7 +129,10 @@ const mapLeadToProfile = (lead: LeadDetailsData | null | undefined): LeadProfile
 
 const LeadDetailsPage = () => {
     const { id } = useParams();
-    const [activeTab, setActiveTab] = useState("profile");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get("tab") || "profile";
+    const setActiveTab = (tab: string) => setSearchParams({ tab }, { replace: true });
+    
     const navigate = useNavigate();
     const { data: lead, isLoading } = useLead<LeadDetailsData>(id);
     const updateLeadMutation = useUpdateLead();

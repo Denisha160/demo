@@ -169,7 +169,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                                     <FormControl>
                                         <Input placeholder="Enter full name" {...field} />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-[10px]" />
                                 </FormItem>
                             )}
                         />
@@ -184,7 +184,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                                 <FormControl>
                                     <Input placeholder="Enter email address" {...field} />
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-[10px]" />
                             </FormItem>
                         )}
                     />
@@ -198,7 +198,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                                 <FormControl>
                                     <Input placeholder="Enter phone number" {...field} />
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-[10px]" />
                             </FormItem>
                         )}
                     />
@@ -212,7 +212,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                                 <FormControl>
                                     <Input placeholder="Enter designation" {...field} />
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-[10px]" />
                             </FormItem>
                         )}
                     />
@@ -226,7 +226,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                                 <FormControl>
                                     <Input placeholder="Enter department" {...field} />
                                 </FormControl>
-                                <FormMessage />
+                                <FormMessage className="text-[10px]" />
                             </FormItem>
                         )}
                     />
@@ -241,7 +241,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                                     <FormControl>
                                         <Input placeholder="Enter notes" {...field} />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-[10px]" />
                                 </FormItem>
                             )}
                         />

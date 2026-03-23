@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
@@ -52,13 +53,40 @@ const mapReminder = (reminder: any) => {
 };
 
 const RemindersPage = () => {
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const leadId = searchParams.get("lead_id") || "";
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(searchParams.get("limit") || "15", 10);
+
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
     const debouncedSearch = useDebounce(searchTerm, 500);
 
-    const [leadId, setLeadId] = useState("");
+    const updateParam = (key: string, value: string | number) => {
+        setSearchParams(
+            (prev) => {
+                const next = new URLSearchParams(prev);
+                if (value) next.set(key, String(value));
+                else next.delete(key);
+                if (key !== "page" && key !== "limit") {
+                    next.set("page", "1");
+                }
+                return next;
+            },
+            { replace: true }
+        );
+    };
 
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(15);
+    useEffect(() => {
+        if (debouncedSearch !== (searchParams.get("search") || "")) {
+            updateParam("search", debouncedSearch);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedSearch]);
+
+    const setLeadId = (v: string) => updateParam("lead_id", v);
+    const setPage = (p: number) => updateParam("page", p);
+    const setPageSize = (s: number) => updateParam("limit", s);
 
     const { data: leadsData = [] } = useLeads({ limit: 100 });
     const leadOptions = useMemo(() => {

@@ -442,29 +442,17 @@ export default function VerifyLeadModal({ open, onClose, leadId, initialData }: 
           {form.watch("has_delivery_vehicles") && (
             <div className="space-y-4 mt-4 p-4 rounded-xl border border-border/40 bg-muted/5">
               <div className="flex justify-between items-center border-b border-border/50 pb-2">
-                <div className="flex items-center gap-2">
-                  <Car className="h-4 w-4 text-primary" />
-                  <h5 className="text-[11px] font-bold text-primary uppercase tracking-wider">Vehicle Details ({fields.length})</h5>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-[10px] px-3 font-bold uppercase transition-all hover:bg-primary hover:text-white"
-                  onClick={() => append({ type: "", model: "", registration: "", capacity: "" })}
-                >
-                  Add Vehicle
-                </Button>
+                <h5 className="text-[11px] font-bold text-primary uppercase">Vehicle Details</h5>
               </div>
 
               <div className="space-y-3">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="relative p-5 rounded-lg border border-border/40 bg-background/50 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div key={field.id} className="relative p-4 rounded-lg border border-border/50 bg-background/50">
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
                       onClick={() => remove(index)}
                     >
                       <X className="h-3 w-3" />
@@ -476,7 +464,7 @@ export default function VerifyLeadModal({ open, onClose, leadId, initialData }: 
                         name={`vehicle_details.${index}.type` as const}
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase">Type</FormLabel>
+                            <FormLabel className="text-[10px] font-bold">Type</FormLabel>
                             <FormControl>
                               <Input placeholder="Truck, Van..." className="h-8 text-xs focus-visible:ring-primary" {...field} />
                             </FormControl>
@@ -489,7 +477,7 @@ export default function VerifyLeadModal({ open, onClose, leadId, initialData }: 
                         name={`vehicle_details.${index}.model` as const}
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase">Model</FormLabel>
+                            <FormLabel className="text-[10px] font-bold">Model</FormLabel>
                             <FormControl>
                               <Input placeholder="Tata, Mahindra..." className="h-8 text-xs focus-visible:ring-primary" {...field} />
                             </FormControl>
@@ -502,7 +490,7 @@ export default function VerifyLeadModal({ open, onClose, leadId, initialData }: 
                         name={`vehicle_details.${index}.registration` as const}
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase">Reg No</FormLabel>
+                            <FormLabel className="text-[10px] font-bold">Reg No</FormLabel>
                             <FormControl>
                               <Input placeholder="GJ 01..." className="h-8 text-xs uppercase focus-visible:ring-primary" {...field} />
                             </FormControl>
@@ -515,7 +503,7 @@ export default function VerifyLeadModal({ open, onClose, leadId, initialData }: 
                         name={`vehicle_details.${index}.capacity` as const}
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase">Capacity</FormLabel>
+                            <FormLabel className="text-[10px] font-bold">Capacity</FormLabel>
                             <FormControl>
                               <Input placeholder="1 Ton..." className="h-8 text-xs focus-visible:ring-primary" {...field} />
                             </FormControl>
@@ -527,11 +515,17 @@ export default function VerifyLeadModal({ open, onClose, leadId, initialData }: 
                   </div>
                 ))}
 
-                {fields.length === 0 && (
-                  <div className="text-center py-8 rounded-lg border border-dashed border-border/60 text-muted-foreground text-xs italic bg-muted/5">
-                    No vehicles added. Click "Add Vehicle" to begin.
-                  </div>
-                )}
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs w-full sm:w-auto"
+                    onClick={() => append({ type: "", model: "", registration: "", capacity: "" })}
+                  >
+                    Add Vehicle
+                  </Button>
+                </div>
               </div>
             </div>
           )}

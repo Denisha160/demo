@@ -69,7 +69,7 @@ interface NavGroupProps {
   active: boolean;
   onCloseSidebar: () => void;
   currentCompany: Company;
-  location: { pathname: string; search: string };
+  location: { pathname: string };
 }
 
 const NavGroup = ({ item, active, onCloseSidebar, currentCompany, location }: NavGroupProps) => {
@@ -84,28 +84,6 @@ const NavGroup = ({ item, active, onCloseSidebar, currentCompany, location }: Na
   const getFullActive = (path?: string) => {
     if (!path) return false;
     const itemPath = `/${currentCompany.id}/${path}`;
-    
-    const isLeadDetails = location.pathname.match(new RegExp(`^/${currentCompany.id}/leads/[^/]+`));
-    if (isLeadDetails) {
-      const searchParams = new URLSearchParams(location.search);
-      const tab = searchParams.get('tab') || 'profile';
-      
-      const tabMap: Record<string, string> = {
-        'quotations': 'quotations',
-        'visits': 'visites',
-        'reminders': 'reminders',
-        'follow-up': 'followups'
-      };
-
-      if (tabMap[tab] === path) {
-        return true;
-      }
-
-      if (path === 'leads' && !Object.keys(tabMap).includes(tab)) {
-        return true;
-      }
-    }
-
     return location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
   };
 
@@ -178,28 +156,6 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const getFullActive = (path?: string) => {
     if (!currentCompany || !path) return false;
     const itemPath = `/${currentCompany.id}/${path}`;
-
-    const isLeadDetails = location.pathname.match(new RegExp(`^/${currentCompany.id}/leads/[^/]+`));
-    if (isLeadDetails) {
-      const searchParams = new URLSearchParams(location.search);
-      const tab = searchParams.get('tab') || 'profile';
-      
-      const tabMap: Record<string, string> = {
-        'quotations': 'quotations',
-        'visits': 'visites',
-        'reminders': 'reminders',
-        'follow-up': 'followups'
-      };
-
-      if (tabMap[tab] === path) {
-        return true;
-      }
-
-      if (path === 'leads' && !Object.keys(tabMap).includes(tab)) {
-        return true;
-      }
-    }
-
     return location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
   };
   const initials = user?.name

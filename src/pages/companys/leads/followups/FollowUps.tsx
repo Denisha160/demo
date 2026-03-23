@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
@@ -145,6 +145,8 @@ const FollowUps = () => {
         },
     ];
 
+    const navigate = useNavigate();
+
     return (
         <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
             <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between">
@@ -192,6 +194,7 @@ const FollowUps = () => {
                         pageSize={pageSize}
                         onServerPageChange={setPage}
                         onServerPageSizeChange={setPageSize}
+                        onRowClick={(item) => navigate(`/companys/leads/${item.lead_id}?tab=follow-up`)}
                     />
                 </div>
             </div>

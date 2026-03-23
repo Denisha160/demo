@@ -20,11 +20,17 @@ export interface RecentActivity {
 }
 
 export interface RecentDeal {
+  id: string;
   name: string;
   contact: string;
   created_at: string;
   stage: string;
   value: number;
+}
+
+export interface ConversionTrend {
+  month: string;
+  rate: number;
 }
 
 export interface MonthlyRevenue {
@@ -38,6 +44,7 @@ export interface DashboardStats {
   recentActivities: RecentActivity[];
   recentDeals: RecentDeal[];
   monthlyRevenue: MonthlyRevenue[];
+  conversionTrend: ConversionTrend[];
 }
 
 export interface DashboardStatsResponse {

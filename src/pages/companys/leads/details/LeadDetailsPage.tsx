@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
-    User, Users, Clock, MapPin, ClipboardList,
     PhoneCall, Package, Paperclip, Activity, FileText, Bell,
-    CheckCircle, ShieldCheck
+    CheckCircle, ShieldCheck, ArrowLeft, User, Users, Clock, MapPin, ClipboardList
 } from "lucide-react";
 
 import {
@@ -241,12 +240,22 @@ const LeadDetailsPage = () => {
         <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in">
 
             {/* Header */}
-            <div className="mb-4 px-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
-                    {isLoading ? "Loading..." : (leadProfile.name || "Lead Details")}
-                    {lead?.is_verified && <span title="Verified"><ShieldCheck className="h-6 w-6 text-green-500" /></span>}
-                    {(lead?.customer_id || lead?.lead_type === "CUSTOMER" || convertMutation.isSuccess) && <span title="Converted to Customer"><CheckCircle className="h-6 w-6 text-blue-500" /></span>}
-                </h1>
+            <div className="mb-4 px-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2">
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(-1)}
+                        className="h-8 w-8 rounded-sm"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+                        {isLoading ? "Loading..." : (leadProfile.name || "Lead Details")}
+                        {lead?.is_verified && <span title="Verified"><ShieldCheck className="h-6 w-6 text-green-500" /></span>}
+                        {(lead?.customer_id || lead?.lead_type === "CUSTOMER" || convertMutation.isSuccess) && <span title="Converted to Customer"><CheckCircle className="h-6 w-6 text-blue-500" /></span>}
+                    </h1>
+                </div>
 
                 {id && !lead?.customer_id && lead?.lead_type !== "CUSTOMER" && !convertMutation.isSuccess && (
                     <div className="flex items-center gap-2">

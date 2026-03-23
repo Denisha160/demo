@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
@@ -95,7 +95,7 @@ const TasksPage = () => {
     const setLeadId = (v: string) => updateParam("lead_id", v);
     const setPage = (p: number) => updateParam("page", p);
     const setPageSize = (s: number) => updateParam("limit", s);
-
+    
     const { data: leadsData = [] } = useLeads({ limit: 100 });
     const leadOptions = useMemo(() => {
         return leadsData.map((l: any) => ({ value: l.id, label: l.name || l.title || "Unknown Lead" }));
@@ -166,6 +166,8 @@ const TasksPage = () => {
         },
     ];
 
+    const navigate = useNavigate();
+
     return (
         <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
             <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between">
@@ -213,6 +215,7 @@ const TasksPage = () => {
                         pageSize={pageSize}
                         onServerPageChange={setPage}
                         onServerPageSizeChange={setPageSize}
+                        onRowClick={(item) => navigate(`/companys/leads/${item.lead_id}?tab=tasks`)}
                     />
                 </div>
             </div>

@@ -2,6 +2,7 @@ import StatCard from "@/components/StatCard";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Users, IndianRupee, TrendingUp, Target, Layers } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { RecentDeal } from "@/types/analytics";
@@ -44,6 +45,7 @@ const columns: Column<RecentDeal>[] = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { data, isLoading } = useAnalytics();
 
   if (isLoading) {
@@ -56,16 +58,8 @@ const Dashboard = () => {
   const recentDeals = data?.recentDeals || [];
   const monthlyRevenue = data?.monthlyRevenue || [];
 
-  // Mocking conversion data for the line chart if real data isn't available over time
-  const conversionData = [
-    { month: "Sep", rate: 18 },
-    { month: "Oct", rate: 22 },
-    { month: "Nov", rate: 19 },
-    { month: "Dec", rate: 25 },
-    { month: "Jan", rate: 28 },
-    { month: "Feb", rate: 24 },
-    { month: "Mar", rate: (counters?.conversionRate || 27) },
-  ];
+  // Real conversion data from backend
+  const conversionData = data?.conversionTrend || [];
 
   const totalContacts = (counters?.totalLeads || 0) + (counters?.totalCustomers || 0);
 
@@ -188,9 +182,19 @@ const Dashboard = () => {
           <div className="shadow-sm border border-border bg-card rounded-md p-0 overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">Recent Deals</h2>
-              <button className="text-xs text-primary font-medium hover:underline">View All</button>
+              <button 
+                onClick={() => navigate('/companys/leads')}
+                className="text-xs text-primary font-medium hover:underline"
+              >
+                View All
+              </button>
             </div>
-            <DataTable data={recentDeals} columns={columns} pageSize={5} />
+            <DataTable 
+              data={recentDeals} 
+              columns={columns} 
+              pageSize={5} 
+              onRowClick={(item) => navigate(`/companys/leads/${item.id}`)}
+            />
           </div>
         </div>
       </div>

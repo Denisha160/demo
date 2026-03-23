@@ -87,8 +87,12 @@ export function TagSelector({ suggestions, value = [], onChange }: TagSelectorPr
           />
         </div>
       </PopoverTrigger>
-      {open && filteredSuggestions.length > 0 && (
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        {filteredSuggestions.length > 0 && (
           <Command>
             <CommandList>
               <CommandGroup>
@@ -108,8 +112,8 @@ export function TagSelector({ suggestions, value = [], onChange }: TagSelectorPr
               </CommandGroup>
             </CommandList>
           </Command>
-        </PopoverContent>
-      )}
+        )}
+      </PopoverContent>
     </Popover>
   );
 }

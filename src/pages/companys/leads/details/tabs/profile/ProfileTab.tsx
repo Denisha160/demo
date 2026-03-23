@@ -445,7 +445,15 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                         <FormControl>
                                             <TagSelector
                                                 suggestions={tagSuggestions}
-                                                value={(field.value as any) || []}
+                                                value={useMemo(() => {
+                                                    return (Array.isArray(field.value) ? field.value : []).map(val => {
+                                                        if (typeof val === 'string') {
+                                                            const found = tagSuggestions.find(s => s.id === val);
+                                                            return found || { name: val };
+                                                        }
+                                                        return val;
+                                                    });
+                                                }, [field.value, tagSuggestions])}
                                                 onChange={(tags) => form.setValue("tags", tags as any, { shouldValidate: true, shouldDirty: true })}
                                             />
                                         </FormControl>

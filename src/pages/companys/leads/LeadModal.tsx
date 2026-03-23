@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, UseFormSetError } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -316,7 +316,13 @@ const LeadModal = ({
                   <FormControl>
                     <TagSelector
                       suggestions={tagSuggestions}
-                      value={field.value as any || []}
+                      value={useMemo(() => (Array.isArray(field.value) ? field.value : []).map(val => {
+                        if (typeof val === 'string') {
+                          const found = tagSuggestions.find(s => s.id === val);
+                          return found || { name: val };
+                        }
+                        return val;
+                      }), [field.value, tagSuggestions])}
                       onChange={field.onChange}
                     />
                   </FormControl>

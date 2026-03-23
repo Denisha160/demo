@@ -308,7 +308,7 @@ export const verifyLead = (leadId, data) => {
 
 export const updateVerifyLead = (leadId, data) => {
   const url = `leads/${leadId}/verification`;
-  return axios({ method: "PUT", url, data });
+  return axios({ method: "PATCH", url, data });
 };
 
 export const convertLead = (leadId) => {

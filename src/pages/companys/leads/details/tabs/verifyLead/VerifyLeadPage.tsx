@@ -1,7 +1,7 @@
-import { 
-    ShieldCheck, Home, Users, History, Truck, 
-    FileText, Layout, Package, MapPin, Activity, 
-    DollarSign, Calendar, Landmark, Warehouse, 
+import {
+    ShieldCheck, Home, Users, History, Truck,
+    FileText, Layout, Package, MapPin, Activity,
+    DollarSign, Calendar, Landmark, Warehouse,
     Car, Store, Edit
 } from "lucide-react";
 import { format } from "date-fns";
@@ -38,7 +38,7 @@ const VerifyLeadPage = ({ details, leadId }: VerifyLeadPageProps) => {
                     <Edit className="h-4 w-4" /> Edit Details
                 </Button>
             </div>
-            
+
             {/* Top Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <InfoCard icon={ShieldCheck} label="Verification Status" value="Verified" colorClass="text-green-500" />
@@ -173,11 +173,11 @@ const VerifyLeadPage = ({ details, leadId }: VerifyLeadPageProps) => {
                 </div>
             </div>
 
-            <VerifyLeadModal 
-                open={editModalOpen} 
-                onClose={() => setEditModalOpen(false)} 
-                leadId={leadId} 
-                initialData={details} 
+            <VerifyLeadModal
+                open={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+                leadId={leadId}
+                initialData={details}
             />
         </div>
     );

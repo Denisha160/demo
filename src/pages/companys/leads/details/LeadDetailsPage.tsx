@@ -36,6 +36,7 @@ import AttachmentsTab from "./tabs/attachments/AttachmentsTab";
 import ActivityTab from "./tabs/activity/ActivityTab";
 import QuotationsTab from "./tabs/quotations/QuotationsTab";
 import RemindersTab from "./tabs/reminders/RemindersTab";
+import VerifyLeadPage from "./tabs/verifyLead/VerifyLeadPage";
 import { useLead, useUpdateLead } from "@/hooks/useLeads";
 import VerifyLeadModal from "./VerifyLeadModal";
 import { useConvertLead } from "@/hooks/useLeadVerification";
@@ -99,10 +100,12 @@ interface LeadDetailsData {
     is_verified?: boolean;
     customer_id?: string | null;
     lead_type?: string;
+    verification_details?: any;
 }
 
 const TABS = [
     { id: "profile", label: "Profile", icon: User },
+    { id: "verify", label: "Verify", icon: ShieldCheck, showIf: (lead: any) => !!lead?.is_verified },
     { id: "contacts", label: "Contacts", icon: Users },
     { id: "follow-up", label: "Follow Up", icon: Clock },
     { id: "visits", label: "Visits", icon: MapPin },
@@ -212,6 +215,7 @@ const LeadDetailsPage = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case "profile": return <ProfileTab leadProfile={leadProfile} setLeadProfile={setLeadProfile} isSaving={updateLeadMutation.isPending} />;
+            case "verify": return lead?.verification_details ? <VerifyLeadPage details={(lead as any).verification_details} /> : null;
             case "contacts": return <ContactsTab />;
             case "follow-up": return id ? <FollowUpTab leadId={id} /> : null;
             case "visits": return id ? <VisitsTab leadId={id} /> : null;
@@ -225,6 +229,10 @@ const LeadDetailsPage = () => {
             default: return null;
         }
     };
+
+    const filteredTabs = useMemo(() => {
+        return TABS.filter(tab => !tab.showIf || tab.showIf(lead));
+    }, [lead]);
 
     return (
         <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in">
@@ -253,12 +261,12 @@ const LeadDetailsPage = () => {
                 <Select value={activeTab} onValueChange={setActiveTab}>
                     <SelectTrigger className="w-full">
                         <SelectValue>
-                            {TABS.find(t => t.id === activeTab)?.label}
+                            {filteredTabs.find(t => t.id === activeTab)?.label || "Select Tab"}
                         </SelectValue>
                     </SelectTrigger>
 
                     <SelectContent>
-                        {TABS.map((tab) => (
+                        {filteredTabs.map((tab) => (
                             <SelectItem key={tab.id} value={tab.id}>
                                 {tab.label}
                             </SelectItem>
@@ -272,10 +280,10 @@ const LeadDetailsPage = () => {
 
                 {/* Sidebar (Desktop only) */}
                 <div className="hidden md:flex w-[260px] flex-shrink-0 flex-col gap-1 pr-2 overflow-y-auto border-r border-border/50 pb-10">
-                    {TABS.map((tab) => {
+                    {filteredTabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
-
+ 
                         return (
                             <button
                                 key={tab.id}
@@ -299,7 +307,7 @@ const LeadDetailsPage = () => {
                     {/* Title (Desktop only) */}
                     <div className="hidden md:block mb-4">
                         <h2 className="text-lg font-bold text-foreground">
-                            {TABS.find(t => t.id === activeTab)?.label}
+                            {filteredTabs.find(t => t.id === activeTab)?.label}
                         </h2>
                     </div>
 

@@ -34,10 +34,16 @@ const InterestedCategorySelect = ({ value = [], onValueChange }: { value?: any[]
       name: cat.name,
     }));
 
+  const displayValue = (Array.isArray(value) ? value : []).map((val: any) => {
+    const id = typeof val === 'string' ? val : (val?.id || val?.name);
+    const suggestion = suggestions.find(s => s.id === id);
+    return suggestion || (typeof val === 'string' ? { id: val, name: val } : val);
+  });
+
   return (
     <TagSelector
       suggestions={suggestions}
-      value={value}
+      value={displayValue}
       onChange={onValueChange}
     />
   );
@@ -316,13 +322,11 @@ const LeadModal = ({
                   <FormControl>
                     <TagSelector
                       suggestions={tagSuggestions}
-                      value={useMemo(() => (Array.isArray(field.value) ? field.value : []).map(val => {
-                        if (typeof val === 'string') {
-                          const found = tagSuggestions.find(s => s.id === val);
-                          return found || { name: val };
-                        }
-                        return val;
-                      }), [field.value, tagSuggestions])}
+                      value={(Array.isArray(field.value) ? field.value : []).map((val: any) => {
+                        const id = typeof val === 'string' ? val : (val?.id || val?.name);
+                        const found = tagSuggestions.find(s => s.id === id);
+                        return found || (typeof val === 'string' ? { id: val, name: val } : val);
+                      })}
                       onChange={field.onChange}
                     />
                   </FormControl>

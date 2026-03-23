@@ -138,8 +138,12 @@ const mapLeadToProfile = (lead: LeadDetailsData | null | undefined): LeadProfile
     tags: Array.isArray(lead?.tags)
         ? lead.tags.map((tag: any) => typeof tag === "string" ? { name: tag } : { id: tag?.id ? String(tag.id) : undefined, name: tag?.name }).filter((t: any) => !!t.name)
         : [],
-    interested_category_id: Array.isArray((lead as any)?.interested_products)
-        ? (lead as any).interested_products.map((p: any) => ({ id: String(p.id), name: p.name }))
+    interested_category_id: Array.isArray((lead as any)?.interested_category_id)
+        ? (lead as any).interested_category_id.map((id: any) =>
+            typeof id === 'string'
+                ? { id, name: id }
+                : { id: String(id?.id), name: id?.name || id?.id }
+        )
         : [],
 });
 
@@ -264,7 +268,7 @@ const LeadDetailsPage = () => {
             </div>
 
             {/* Layout */}
-            <div className="flex flex-col md:flex-row gap-6 flex-1 w-full min-h-0">
+            <div className="flex flex-col md:flex-row gap-2 flex-1 w-full min-h-0">
 
                 {/* Sidebar (Desktop only) */}
                 <div className="hidden md:flex w-[260px] flex-shrink-0 flex-col gap-1 pr-2 overflow-y-auto border-r border-border/50 pb-10">

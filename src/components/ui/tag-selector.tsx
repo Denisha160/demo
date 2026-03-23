@@ -50,7 +50,7 @@ export function TagSelector({ suggestions, value = [], onChange }: TagSelectorPr
   );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>
         <div className="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-sm border border-input/60 bg-background px-3 py-1 text-xs shadow-sm focus-within:ring-1 focus-within:ring-primary">
           {value.map((tag) => (

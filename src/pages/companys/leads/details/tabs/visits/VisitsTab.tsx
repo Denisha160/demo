@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
+import { DateRange } from "react-day-picker";
 import VisitsModal, { Visit, VisitFormData } from "./VisitsMode";
 import {
   useCreateLeadVisit,
@@ -84,11 +86,15 @@ interface VisitsTabProps {
 
 const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
   const [visitToDelete, setVisitToDelete] = useState<Visit | null>(null);
 
-  const { data: visits = [], isLoading } = useLeadVisits(leadId);
+  const { data: visits = [], isLoading } = useLeadVisits(leadId, {
+    startDate: dateRange?.from?.toISOString(),
+    endDate: dateRange?.to?.toISOString(),
+  });
   const createVisitMutation = useCreateLeadVisit(leadId);
   const updateVisitMutation = useUpdateLeadVisit(leadId);
   const deleteVisitMutation = useDeleteLeadVisit(leadId);
@@ -274,10 +280,18 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   return (
     <div className="w-full animate-fade-in rounded-lg border border-border/50 bg-card p-4 shadow-sm">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Button size="sm" className="h-9 gap-2 px-4" onClick={handleCreate}>
-          <Plus className="h-4 w-4" />
-          Add Visit
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button size="sm" className="h-9 gap-2 px-4" onClick={handleCreate}>
+            <Plus className="h-4 w-4" />
+            Add Visit
+          </Button>
+          <DatePickerWithRange 
+            date={dateRange} 
+            setDate={setDateRange} 
+            className="w-[260px]"
+            placeholder="Filter by scheduled date"
+          />
+        </div>
 
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

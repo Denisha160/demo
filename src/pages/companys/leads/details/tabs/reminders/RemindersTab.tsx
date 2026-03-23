@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
+import { DateRange } from "react-day-picker";
 import ReminderModal, { Reminder, ReminderFormData } from "./ReminderModal";
 import {
   useCreateLeadReminder,
@@ -85,11 +87,15 @@ interface RemindersTabProps {
 
 const RemindersTab = ({ leadId }: RemindersTabProps) => {
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(null);
 
-  const { data: reminders = [], isLoading } = useLeadReminders(leadId);
+  const { data: reminders = [], isLoading } = useLeadReminders(leadId, {
+    startDate: dateRange?.from?.toISOString(),
+    endDate: dateRange?.to?.toISOString(),
+  });
   const createReminderMutation = useCreateLeadReminder(leadId);
   const updateReminderMutation = useUpdateLeadReminder(leadId);
   const deleteReminderMutation = useDeleteLeadReminder(leadId);
@@ -197,10 +203,18 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
   return (
     <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 w-full animate-fade-in">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Button size="sm" className="h-9 gap-2 px-4" onClick={() => setIsModalOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Add Reminder
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button size="sm" className="h-9 gap-2 px-4" onClick={() => setIsModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add Reminder
+          </Button>
+          <DatePickerWithRange 
+            date={dateRange} 
+            setDate={setDateRange} 
+            className="w-[260px]"
+            placeholder="Filter by remind date"
+          />
+        </div>
 
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

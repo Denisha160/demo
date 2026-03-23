@@ -28,7 +28,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export function useLeadFollowUps(leadId?: string, params?: Record<string, unknown>) {
   return useQuery({
-    queryKey: queryKeys.leads.followUps(leadId || ""),
+    queryKey: queryKeys.leads.followUps(leadId || "", params),
     queryFn: () => listLeadFollowUps(leadId, params),
     enabled: !!leadId,
     staleTime: 5 * 60 * 1000,

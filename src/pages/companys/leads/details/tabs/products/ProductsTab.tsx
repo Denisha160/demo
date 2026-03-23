@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,8 @@ import { InterestedProduct } from "@/types/interestedProducts";
 import { toast } from "react-toastify";
 
 const ProductsTab = () => {
-    const { id: leadId = "" } = useParams<{ id: string }>();
+    const { id: leadId = "", companyId = "" } = useParams<{ id: string; companyId: string }>();
+    const navigate = useNavigate();
 
     const [productSearch, setProductSearch] = useState("");
     const debouncedSearch = useDebounce(productSearch, 300);
@@ -71,11 +72,10 @@ const ProductsTab = () => {
             render: (item) => (
                 <div className="flex flex-col">
                     <span className="font-bold text-foreground text-xs">{item.product_name}</span>
-                    <span className="text-[10px] text-muted-foreground font-mono">#{item.id.split('-')[0].toUpperCase()}</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">#{item.code}</span>
                 </div>
             )
         },
-        { key: "code", header: "Code" },
         { 
             key: "selling_price", 
             header: "Price",
@@ -146,6 +146,7 @@ const ProductsTab = () => {
                 data={filteredData} 
                 pageSize={10} 
                 isLoading={isLoading}
+                onRowClick={(item) => navigate(`/${companyId}/products/${item.id}`)}
             />
 
             {/* Delete Modal */}

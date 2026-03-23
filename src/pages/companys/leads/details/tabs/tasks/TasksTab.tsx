@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
+import { DateRange } from "react-day-picker";
 import TaskModal, { Task, TaskFormData } from "./TaskModal";
 import {
   useCreateLeadTask,
@@ -55,11 +57,15 @@ interface TasksTabProps {
 
 const TasksTab = ({ leadId }: TasksTabProps) => {
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
-  const { data: tasks = [], isLoading } = useLeadTasks(leadId);
+  const { data: tasks = [], isLoading } = useLeadTasks(leadId, {
+    startDate: dateRange?.from?.toISOString(),
+    endDate: dateRange?.to?.toISOString(),
+  });
   const createTaskMutation = useCreateLeadTask(leadId);
   const updateTaskMutation = useUpdateLeadTask(leadId);
   const deleteTaskMutation = useDeleteLeadTask(leadId);
@@ -212,11 +218,19 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
   return (
     <div className="w-full animate-fade-in rounded-lg border border-border/50 bg-card p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <Button size="sm" className="h-9 gap-2 px-4" onClick={handleCreate}>
-          <Plus className="h-4 w-4" />
-          New Task
-        </Button>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button size="sm" className="h-9 gap-2 px-4" onClick={handleCreate}>
+            <Plus className="h-4 w-4" />
+            New Task
+          </Button>
+          <DatePickerWithRange 
+            date={dateRange} 
+            setDate={setDateRange} 
+            className="w-[260px]"
+            placeholder="Filter by due date"
+          />
+        </div>
 
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

@@ -29,7 +29,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export function useLeadVisits(leadId?: string, params?: Record<string, unknown>) {
   return useQuery({
-    queryKey: queryKeys.leads.visits(leadId || ""),
+    queryKey: queryKeys.leads.visits(leadId || "", params),
     queryFn: () => listLeadVisits(leadId, params),
     enabled: !!leadId,
     staleTime: 5 * 60 * 1000,

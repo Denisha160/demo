@@ -28,7 +28,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export function useLeadTasks(leadId?: string, params?: Record<string, unknown>) {
   return useQuery({
-    queryKey: queryKeys.leads.tasks(leadId || ""),
+    queryKey: queryKeys.leads.tasks(leadId || "", params),
     queryFn: () => listLeadTasks(leadId, params),
     enabled: !!leadId,
     staleTime: 5 * 60 * 1000,

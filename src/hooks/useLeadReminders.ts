@@ -19,7 +19,7 @@ const normalizeList = <T,>(response: any): T[] => {
 
 export function useLeadReminders(leadId?: string, params?: Record<string, unknown>) {
   return useQuery({
-    queryKey: queryKeys.leads.reminders(leadId || ""),
+    queryKey: queryKeys.leads.reminders(leadId || "", params),
     queryFn: () => listLeadReminders(leadId, params),
     enabled: !!leadId,
     staleTime: 5 * 60 * 1000,

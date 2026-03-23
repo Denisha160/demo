@@ -1,234 +1,214 @@
+import { useState } from "react";
+import { useParams } from "react-router-dom";
 import {
-    ArrowRightLeft,
-    CalendarClock,
-    CircleDot,
-    Flag,
-    MessageSquarePlus,
-    PencilLine,
-    Phone,
-    RefreshCcw,
-    UserPlus,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
+    History,
+    MoreHorizontal
 } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-
-type ActivityType =
-    | "LEAD_CREATED"
-    | "STATUS_CHANGE"
-    | "OWNER_CHANGE"
-    | "PRIORITY_CHANGE"
-    | "FIELD_UPDATE"
-    | "NOTE_ADDED"
-    | "CALL_LOGGED"
-    | "VISIT_SCHEDULED"
-
-type ActivityItem = {
-    id: string;
-    userName: string;
-    userRole: string;
-    avatar?: string;
-    action: ActivityType;
-    message: string;
-    recordName: string;
-    time: string;
-};
-
-const activities: ActivityItem[] = [
-    {
-        id: "1",
-        userName: "Arjun Patel",
-        userRole: "Sales Executive",
-        avatar: "https://i.pravatar.cc/100?img=12",
-        action: "LEAD_CREATED",
-        message: 'created this lead for "Jerde Inc" from the website enquiry.',
-        recordName: "Lead",
-        time: "Today, 10:45 AM",
-    },
-    {
-        id: "2",
-        userName: "Neha Verma",
-        userRole: "Sales Manager",
-        avatar: "https://i.pravatar.cc/100?img=32",
-        action: "STATUS_CHANGE",
-        message: 'changed the lead status from "New" to "Qualified".',
-        recordName: "Status",
-        time: "Today, 09:20 AM",
-    },
-    {
-        id: "3",
-        userName: "Vikram Singh",
-        userRole: "CRM Admin",
-        action: "OWNER_CHANGE",
-        message: 'assigned this lead to Neha Verma for follow-up.',
-        recordName: "Owner",
-        time: "Yesterday, 06:10 PM",
-    },
-    {
-        id: "4",
-        userName: "Arjun Patel",
-        userRole: "Sales Executive",
-        avatar: "https://i.pravatar.cc/100?img=12",
-        action: "NOTE_ADDED",
-        message: 'added a note: "Customer requested a quotation before Monday."',
-        recordName: "Note",
-        time: "Yesterday, 03:35 PM",
-    },
-    {
-        id: "5",
-        userName: "Neha Verma",
-        userRole: "Sales Manager",
-        avatar: "https://i.pravatar.cc/100?img=32",
-        action: "CALL_LOGGED",
-        message: 'logged a call and marked the customer as interested in premium models.',
-        recordName: "Call Log",
-        time: "Mar 17, 2026, 11:05 AM",
-    },
-];
-
-const colorPalettes = [
-    {
-        badgeClassName: "border-emerald-200 bg-emerald-500/10 text-emerald-700",
-        iconClassName: "bg-emerald-500/10 text-emerald-600",
-    },
-    {
-        badgeClassName: "border-sky-200 bg-sky-500/10 text-sky-700",
-        iconClassName: "bg-sky-500/10 text-sky-600",
-    },
-    {
-        badgeClassName: "border-amber-200 bg-amber-500/10 text-amber-700",
-        iconClassName: "bg-amber-500/10 text-amber-600",
-    },
-    {
-        badgeClassName: "border-violet-200 bg-violet-500/10 text-violet-700",
-        iconClassName: "bg-violet-500/10 text-violet-600",
-    },
-    {
-        badgeClassName: "border-rose-200 bg-rose-500/10 text-rose-700",
-        iconClassName: "bg-rose-500/10 text-rose-600",
-    },
-    {
-        badgeClassName: "border-cyan-200 bg-cyan-500/10 text-cyan-700",
-        iconClassName: "bg-cyan-500/10 text-cyan-600",
-    },
-];
-
-const activityConfig: Record<
-    ActivityType,
-    {
-        label: string;
-        icon: typeof CircleDot;
-    }
-> = {
-    LEAD_CREATED: {
-        label: "Lead Created",
-        icon: UserPlus,
-    },
-    STATUS_CHANGE: {
-        label: "Status Change",
-        icon: RefreshCcw,
-    },
-    OWNER_CHANGE: {
-        label: "Owner Change",
-        icon: ArrowRightLeft,
-    },
-    PRIORITY_CHANGE: {
-        label: "Priority Change",
-        icon: Flag,
-    },
-    FIELD_UPDATE: {
-        label: "Field Update",
-        icon: PencilLine,
-    },
-    NOTE_ADDED: {
-        label: "Note Added",
-        icon: MessageSquarePlus,
-    },
-    CALL_LOGGED: {
-        label: "Call Logged",
-        icon: Phone,
-    },
-    VISIT_SCHEDULED: {
-        label: "Visit Scheduled",
-        icon: CalendarClock,
-    },
-
-};
-
-const getInitials = (name: string) =>
-    name
-        .split(" ")
-        .map((part) => part[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
-
-const getPaletteBySeed = (seed: string) => {
-    const hash = seed.split("").reduce((total, char) => total + char.charCodeAt(0), 0);
-    return colorPalettes[hash % colorPalettes.length];
-};
+import { Button } from "@/components/ui/button";
+import { useLeadActivities } from "@/hooks/useLeadActivities";
+import { LeadActivityType } from "@/types/activities";
+import { cn } from "@/lib/utils";
 
 const ActivityTab = () => {
+    const { id: leadId = "" } = useParams<{ id: string }>();
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    const { data, isLoading } = useLeadActivities(leadId, {
+        limit: pageSize,
+        offset: (currentPage - 1) * pageSize
+    });
+
+    const activities = data?.activities || [];
+    const total = data?.total || 0;
+    const totalPages = Math.ceil(total / pageSize);
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 space-y-4">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-xs text-muted-foreground animate-pulse font-medium">Loading history...</p>
+            </div>
+        );
+    }
+
+    if (activities.length === 0) {
+        return (
+            <div className="bg-card rounded-lg border border-border/50 shadow-sm p-10 flex flex-col items-center justify-center text-center space-y-3">
+                <History className="h-10 w-10 text-muted-foreground opacity-20" />
+                <div>
+                    <div className="font-medium text-sm text-foreground">No history found</div>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-[250px]">
+                        Any changes or interactions will appear here in chronological order.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const activityLabels: Record<LeadActivityType, string> = {
+        LEAD_CREATED: "Created",
+        STATUS_CHANGE: "Status Update",
+        OWNER_CHANGE: "Reassigned",
+        PRIORITY_CHANGE: "Priority Update",
+        FIELD_UPDATE: "Updated",
+        NOTE_ADDED: "Note Added",
+        CALL_LOGGED: "Call Log",
+        VISIT_SCHEDULED: "Visit Scheduled",
+        VISIT_COMPLETED: "Visit Done",
+        TASK_CREATED: "Task Created",
+        TASK_COMPLETED: "Task Done",
+        FOLLOW_UP_SCHEDULED: "Follow-up",
+        FOLLOW_UP_COMPLETED: "Follow-up Done",
+        QUOTATION_CREATED: "Quoted",
+        QUOTATION_UPDATED: "Quote Updated",
+        ATTACHMENT_ADDED: "Attached",
+        CONVERTED_TO_CUSTOMER: "Converted",
+        SYSTEM_EVENT: "System",
+        OTHER: "Action",
+    };
+
     return (
-        <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 md:p-5 w-full animate-fade-in">
-            <div className="mb-4">
-                <div className="font-medium text-sm text-foreground">Activity Log</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                    All lead changes from users are shown here, including added, updated, and deleted records.
-                </p>
+        <div className="bg-card rounded-lg border border-border/50 shadow-sm flex flex-col animate-fade-in">
+            <div className="p-4 border-b border-border/40 flex items-center justify-between bg-muted/5">
+                <div>
+                    <div className="font-bold text-xs text-foreground flex items-center gap-2">
+                        <History className="h-3 w-3 text-primary" />
+                        ACTIVITY LOG
+                    </div>
+                </div>
+                <Badge variant="outline" className="text-[10px] py-0 h-4 border-border/60 font-mono text-muted-foreground">
+                    {total} TOTAL EVENTS
+                </Badge>
             </div>
 
-            <div className="space-y-4">
+            <div className="divide-y divide-border/30">
                 {activities.map((activity, index) => {
-                    const config = activityConfig[activity.action];
-                    const palette = getPaletteBySeed(`${activity.id}-${activity.action}-${index}`);
+                    const label = activityLabels[activity.activity_type] || activityLabels.OTHER;
 
                     return (
-                        <div key={activity.id} className="relative flex gap-3">
-
-
-                            <div className="flex-1 rounded-xl border border-border/60 bg-background/80 p-4">
-                                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                                    <div className="flex items-start gap-3">
-                                        <Avatar className="h-11 w-11 border border-border/60">
-                                            <AvatarImage src={activity.avatar} alt={activity.userName} />
-                                            <AvatarFallback className="text-xs font-semibold">
-                                                {getInitials(activity.userName)}
-                                            </AvatarFallback>
-                                        </Avatar>
-
-                                        <div className="space-y-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="text-sm font-semibold text-foreground">
-                                                    {activity.userName}
-                                                </span>
-                                                <Badge variant="outline" className={palette.badgeClassName}>
-                                                    {config.label}
-                                                </Badge>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {activity.recordName}
-                                                </span>
-                                            </div>
-
-                                            <p className="text-xs text-muted-foreground">
-                                                {activity.userRole}
-                                            </p>
-
-                                            <p className="text-sm leading-6 text-foreground/90">
-                                                {activity.userName} {activity.message}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="text-xs text-muted-foreground whitespace-nowrap pl-14 md:pl-0">
-                                        {activity.time}
-                                    </div>
+                        <div key={activity.id} className="p-3.5 hover:bg-muted/10 transition-colors">
+                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-1.5 mb-1.5">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span className="text-xs font-bold text-foreground underline decoration-primary/20 decoration-2 underline-offset-4">
+                                        {activity.user_name || "System"}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">
+                                        {label}
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground/80">•</span>
+                                    <span className="text-[10px] text-muted-foreground font-medium">
+                                        {format(new Date(activity.created_at), "MMM d, h:mm a")}
+                                    </span>
                                 </div>
+                                <div className="text-[9px] text-muted-foreground font-mono bg-muted/30 px-1.5 py-0.5 rounded border border-border/20 whitespace-nowrap hidden md:block">
+                                    {formatDistanceToNow(new Date(activity.created_at))} ago
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-[12px] text-foreground/80 leading-relaxed font-medium">
+                                    {activity.description}
+                                </p>
+
+                                {(activity.old_value !== null || activity.new_value !== null) &&
+                                    activity.activity_type === 'FIELD_UPDATE' && (
+                                        <div className="flex flex-wrap items-center gap-2 text-[10px] py-1">
+                                            {activity.old_value !== null && (
+                                                <span className="text-muted-foreground line-through opacity-40 italic">
+                                                    {typeof activity.old_value === 'object' ? JSON.stringify(activity.old_value) : String(activity.old_value)}
+                                                </span>
+                                            )}
+                                            <MoreHorizontal className="h-2 w-2 text-muted-foreground/30" />
+                                            <span className="text-primary/80 font-bold bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
+                                                {typeof activity.new_value === 'object' ? JSON.stringify(activity.new_value) : String(activity.new_value)}
+                                            </span>
+                                        </div>
+                                    )}
                             </div>
                         </div>
                     );
                 })}
             </div>
+
+            {/* Simple Minimalist Pagination */}
+            {totalPages > 1 && (
+                <div className="p-3 border-t border-border/40 bg-muted/5 flex items-center justify-between">
+                    <div className="text-[10px] font-medium text-muted-foreground">
+                        Page <span className="text-foreground">{currentPage}</span> of {totalPages}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 rounded-sm hover:bg-primary/5"
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronsLeft className="h-3 w-3" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 rounded-sm hover:bg-primary/5"
+                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="h-3 w-3" />
+                        </Button>
+
+                        <div className="flex items-center gap-1 px-1">
+                            {[1, 2, 3].map(offset => {
+                                const pageNum = currentPage - 2 + offset;
+                                if (pageNum > 0 && pageNum <= totalPages) {
+                                    return (
+                                        <Button
+                                            key={pageNum}
+                                            variant={currentPage === pageNum ? "secondary" : "ghost"}
+                                            className={cn(
+                                                "h-6 w-6 text-[10px] p-0 font-bold",
+                                                currentPage === pageNum ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground"
+                                            )}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                        >
+                                            {pageNum}
+                                        </Button>
+                                    );
+                                }
+                                return null;
+                            })}
+                        </div>
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 rounded-sm hover:bg-primary/5"
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            <ChevronRight className="h-3 w-3" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 rounded-sm hover:bg-primary/5"
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={currentPage === totalPages}
+                        >
+                            <ChevronsRight className="h-3 w-3" />
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

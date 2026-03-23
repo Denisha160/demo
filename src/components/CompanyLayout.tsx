@@ -353,7 +353,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
         {user?.is_root_user && (
           <div className="p-2 border-t border-border">
             <Link
-              to="/admin/tasks"
+              to="/admin/companies"
               onClick={() => setSidebarOpen(false)}
               className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-foreground w-full rounded-md hover:bg-accent transition-colors"
             >

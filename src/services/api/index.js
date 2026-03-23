@@ -378,6 +378,26 @@ export const deleteLeadVisit = ({ leadId, visitId }) => {
 
 // end region
 
+// region Lead Interested Products
+// ===================== Lead Interested Products =====================
+
+export const listInterestedProducts = (leadId, params) => {
+  const url = `leads/${leadId}/interested-products`;
+  return axios({ method: "GET", url, params });
+};
+
+export const addInterestedProduct = (leadId, data) => {
+  const url = `leads/${leadId}/interested-products`;
+  return axios({ method: "POST", url, data });
+};
+
+export const removeInterestedProduct = ({ leadId, productId }) => {
+  const url = `leads/${leadId}/interested-products/${productId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
 // region Lead Attachments
 // ===================== Lead Attachments =====================
 
@@ -425,6 +445,41 @@ export const updateLeadReminder = ({ leadId, reminderId, ...data }) => {
 
 export const deleteLeadReminder = ({ leadId, reminderId }) => {
   const url = `leads/${leadId}/reminders/${reminderId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Reminders
+// ===================== Lead Activities =====================
+
+export const listLeadActivities = (leadId, params) => {
+  const url = `leads/${leadId}/activities`;
+  return axios({ method: "GET", url, params });
+};
+
+// end region
+
+// region Lead Contacts
+// ===================== Lead Contacts =====================
+
+export const listContacts = (leadId, params) => {
+  const url = `leads/${leadId}/contacts`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadContacts = (leadId, data) => {
+  const url = `leads/${leadId}/contacts`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadContacts = ({ leadId, contactId, ...data }) => {
+  const url = `leads/${leadId}/contacts/${contactId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadContacts = ({ leadId, contactId }) => {
+  const url = `leads/${leadId}/contacts/${contactId}`;
   return axios({ method: "DELETE", url });
 };
 

@@ -14,13 +14,16 @@ import {
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useCreateLeadContact, useUpdateLeadContact } from "@/hooks/useLeadContacts";
+import { LeadContact } from "@/types/contacts";
 
 const contactSchema = z.object({
     fullName: z.string().min(2, "Full name must be at least 2 characters"),
-    email: z.string().email("Invalid email address").min(1, "Email is required"),
-    phone: z.string().regex(/^\+?[0-9\s\-()]{7,20}$/, "Invalid phone number format").min(1, "Phone number is required"),
-    designation: z.string().min(1, "Designation is required"),
-    department: z.string().min(1, "Department is required"),
+    email: z.string().email("Invalid email address").optional().or(z.literal("")),
+    phone: z.string().regex(/^\+?[0-9\s\-()]{7,20}$/, "Invalid phone number format").optional().or(z.literal("")),
+    designation: z.string().optional().or(z.literal("")),
+    department: z.string().optional().or(z.literal("")),
     notes: z.string().optional().or(z.literal("")),
     active: z.boolean().default(true),
 });
@@ -34,11 +37,15 @@ export interface Contact extends ContactFormData {
 interface ContactModalProps {
     open: boolean;
     onClose: () => void;
-    onSave: (contact: Contact) => void;
-    initialData?: Contact | null;
+    onSave?: (contact: LeadContact) => void;
+    initialData?: LeadContact | null;
 }
 
 const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps) => {
+    const { id: leadId = "" } = useParams<{ id: string }>();
+    const createMutation = useCreateLeadContact();
+    const updateMutation = useUpdateLeadContact();
+
     const form = useForm<ContactFormData>({
         resolver: zodResolver(contactSchema),
         defaultValues: {
@@ -57,13 +64,13 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
         if (open) {
             if (initialData) {
                 form.reset({
-                    fullName: initialData.fullName,
-                    email: initialData.email,
-                    phone: initialData.phone,
-                    designation: initialData.designation,
-                    department: initialData.department,
+                    fullName: initialData.name,
+                    email: initialData.email || "",
+                    phone: initialData.phone || "",
+                    designation: initialData.designation || "",
+                    department: initialData.department || "",
                     notes: initialData.notes || "",
-                    active: initialData.active,
+                    active: initialData.is_primary,
                 });
             } else {
                 form.reset({
@@ -80,13 +87,38 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
     }, [open, initialData, form]);
 
     const onSubmit = (data: ContactFormData) => {
-        const contactData = {
-            ...data,
-            id: initialData?.id || Math.random().toString(36).substr(2, 9),
+        const payload = {
+            name: data.fullName,
+            email: data.email || null,
+            phone: data.phone || null,
+            designation: data.designation || null,
+            department: data.department || null,
+            notes: data.notes || null,
+            is_primary: data.active,
         };
-        onSave(contactData);
-        form.reset();
-        onClose();
+
+        if (initialData) {
+            updateMutation.mutate({
+                leadId,
+                contactId: initialData.id,
+                ...payload
+            }, {
+                onSuccess: () => {
+                    onClose();
+                    form.reset();
+                }
+            });
+        } else {
+            createMutation.mutate({
+                leadId,
+                data: payload
+            }, {
+                onSuccess: () => {
+                    onClose();
+                    form.reset();
+                }
+            });
+        }
     };
 
     return (
@@ -221,7 +253,7 @@ const ContactModal = ({ open, onClose, onSave, initialData }: ContactModalProps)
                         render={({ field }) => (
                             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm col-span-2">
                                 <div className="space-y-0.5">
-                                    <FormLabel>Active Status</FormLabel>
+                                    <FormLabel>Mark as Primary Contact</FormLabel>
                                 </div>
                                 <FormControl>
                                     <Switch

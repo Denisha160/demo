@@ -3,84 +3,90 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
-import ContactModal, { Contact } from "./ContactModal";
-
-// Initial Mock Contacts
-const initialContacts: Contact[] = [
-    {
-        id: "1",
-        fullName: "Vance Johnson",
-        email: "hattie.rosenbaum@example.net",
-        designation: "Anthropology Teacher",
-        phone: "620-578-5185",
-        active: true,
-        notes: "",
-        department: "Education",
-    }
-];
+import { useState, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
+import ContactModal from "./ContactModal";
+import { useLeadContacts, useDeleteLeadContact, useUpdateLeadContact } from "@/hooks/useLeadContacts";
+import { LeadContact } from "@/types/contacts";
 
 const ContactsTab = () => {
+    const { id: leadId = "" } = useParams<{ id: string }>();
+    const [searchParams, setSearchParams] = useSearchParams();
+    
     const [open, setOpen] = useState(false);
-    const [contacts, setContacts] = useState<Contact[]>(initialContacts);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [editingContact, setEditingContact] = useState<Contact | null>(null);
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+    const debouncedSearch = useDebounce(searchTerm, 500);
+    const [editingContact, setEditingContact] = useState<LeadContact | null>(null);
 
-    const handleSave = (contact: Contact) => {
-        if (editingContact) {
-            setContacts((prev) => prev.map((c) => (c.id === contact.id ? contact : c)));
-        } else {
-            setContacts((prev) => [contact, ...prev]);
-        }
-        setEditingContact(null);
-    };
+    // Synchronize search to URL
+    useEffect(() => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            if (debouncedSearch) next.set("search", debouncedSearch);
+            else next.delete("search");
+            return next;
+        }, { replace: true });
+    }, [debouncedSearch, setSearchParams]);
 
-    const handleEdit = (contact: Contact) => {
+    const { data, isLoading } = useLeadContacts(leadId, {
+        search: debouncedSearch
+    });
+    
+    const deleteMutation = useDeleteLeadContact();
+    const updateMutation = useUpdateLeadContact();
+
+    const contacts = data?.contacts || [];
+
+    const handleEdit = (contact: LeadContact) => {
         setEditingContact(contact);
         setOpen(true);
     };
 
     const handleDelete = (id: string) => {
         if (window.confirm("Are you sure you want to delete this contact?")) {
-            setContacts((prev) => prev.filter((c) => c.id !== id));
+            deleteMutation.mutate({ leadId, contactId: id });
         }
     };
 
-    const filteredContacts = contacts.filter((contact) =>
-        contact.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (contact.email && contact.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (contact.phone && contact.phone.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const handleTogglePrimary = (contact: LeadContact, checked: boolean) => {
+        updateMutation.mutate({
+            leadId,
+            contactId: contact.id,
+            is_primary: checked
+        });
+    };
 
-    const columns: Column<Contact>[] = [
+    const columns: Column<LeadContact>[] = [
         {
-            key: "fullName",
+            key: "name",
             header: "Full Name",
             render: (item) => (
                 <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold font-mono">
-                        {item.fullName.charAt(0)}
+                    <div className="h-8 w-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold font-mono text-xs">
+                        {item.name.charAt(0)}
                     </div>
                     <div className="flex flex-col">
-                        <span className="font-semibold text-foreground text-sm">{item.fullName}</span>
+                        <span className="font-semibold text-foreground text-sm">{item.name}</span>
+                        {item.is_primary && (
+                            <span className="text-[10px] text-primary font-bold uppercase tracking-wider">Primary Contact</span>
+                        )}
                     </div>
                 </div>
             )
         },
-        { key: "email", header: "Email" },
-        { key: "phone", header: "Phone" },
-        { key: "designation", header: "Designation" },
-        { key: "department", header: "Department" },
+        { key: "email", header: "Email", render: (item) => <span className="text-sm">{item.email || "-"}</span> },
+        { key: "phone", header: "Phone", render: (item) => <span className="text-sm">{item.phone || "-"}</span> },
+        { key: "designation", header: "Designation", render: (item) => <span className="text-sm">{item.designation || "-"}</span> },
+        { key: "department", header: "Department", render: (item) => <span className="text-sm">{item.department || "-"}</span> },
         {
-            key: "active",
-            header: "Active",
+            key: "is_primary",
+            header: "Primary",
             render: (item) => (
                 <Switch 
-                    checked={item.active} 
+                    checked={item.is_primary} 
                     className="scale-75 origin-left" 
-                    onCheckedChange={(checked) => {
-                        setContacts(prev => prev.map(c => c.id === item.id ? { ...c, active: checked } : c));
-                    }}
+                    onCheckedChange={(checked) => handleTogglePrimary(item, checked)}
                 />
             )
         },
@@ -138,8 +144,9 @@ const ContactsTab = () => {
             </div>
             <DataTable
                 columns={columns}
-                data={filteredContacts}
+                data={contacts}
                 pageSize={25}
+                isLoading={isLoading}
             />
             <ContactModal
                 open={open}
@@ -147,7 +154,6 @@ const ContactsTab = () => {
                     setOpen(false);
                     setEditingContact(null);
                 }}
-                onSave={handleSave}
                 initialData={editingContact}
             />
         </div>

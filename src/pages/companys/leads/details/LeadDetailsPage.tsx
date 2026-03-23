@@ -269,15 +269,6 @@ const LeadDetailsPage = () => {
                                 <Icon className={`h-[18px] w-[18px] ${isActive ? "text-primary" : "text-muted-foreground"
                                     }`} />
                                 <span className="flex-1 text-left">{tab.label}</span>
-
-                                {tab.id === "contacts" && (
-                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive
-                                        ? "bg-primary/20 text-primary"
-                                        : "bg-muted text-muted-foreground"
-                                        }`}>
-                                        1
-                                    </span>
-                                )}
                             </button>
                         );
                     })}

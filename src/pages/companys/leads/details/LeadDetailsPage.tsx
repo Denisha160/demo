@@ -15,14 +15,14 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 import ProfileTab from "./tabs/profile/ProfileTab";
@@ -45,16 +45,23 @@ export interface LeadProfileFormValues {
     company: string;
     email: string;
     phone: string;
+    alternate_phone: string;
     status_id: string;
     source_id: string;
     assigned_to: string;
+    priority: string;
     country: string;
+    state: string;
+    city: string;
+    pincode: string;
     website: string;
     designation: string;
-    gstPan: string;
-    location: string;
-    address: string;
+    gst_number: string;
+    pan_number: string;
+    address_line1: string;
+    address_line2: string;
     tags: { id?: string; name: string }[];
+    interested_category_id: { id?: string; name: string }[];
 }
 
 interface LeadDetailsData {
@@ -113,17 +120,26 @@ const mapLeadToProfile = (lead: LeadDetailsData | null | undefined): LeadProfile
     company: lead?.company || lead?.company_name || "",
     email: lead?.email || "",
     phone: lead?.phone || "",
+    alternate_phone: lead?.alternate_phone || "",
     status_id: (lead as any)?.status_id || lead?.status || "",
     source_id: (lead as any)?.source_id || lead?.source || "",
     assigned_to: lead?.assigned_to || lead?.assignedTo || "",
+    priority: (lead as any)?.priority || "HOT",
     country: lead?.country || "",
+    state: lead?.state || "",
+    city: lead?.city || "",
+    pincode: lead?.pincode || "",
     website: lead?.website || "",
     designation: lead?.designation || "",
-    gstPan: lead?.gstPan || lead?.gst_pan || lead?.gst_number || lead?.pan_number || "",
-    location: lead?.location || [lead?.city, lead?.state, lead?.pincode].filter(Boolean).join(", "),
-    address: lead?.address || [lead?.address_line1, lead?.address_line2].filter(Boolean).join(", "),
+    gst_number: lead?.gst_number || "",
+    pan_number: (lead as any)?.pan_number || lead?.pan_number || "",
+    address_line1: lead?.address_line1 || "",
+    address_line2: lead?.address_line2 || "",
     tags: Array.isArray(lead?.tags)
         ? lead.tags.map((tag: any) => typeof tag === "string" ? { name: tag } : { id: tag?.id ? String(tag.id) : undefined, name: tag?.name }).filter((t: any) => !!t.name)
+        : [],
+    interested_category_id: Array.isArray((lead as any)?.interested_products)
+        ? (lead as any).interested_products.map((p: any) => ({ id: String(p.id), name: p.name }))
         : [],
 });
 
@@ -132,7 +148,7 @@ const LeadDetailsPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get("tab") || "profile";
     const setActiveTab = (tab: string) => setSearchParams({ tab }, { replace: true });
-    
+
     const navigate = useNavigate();
     const { data: lead, isLoading } = useLead<LeadDetailsData>(id);
     const updateLeadMutation = useUpdateLead();
@@ -152,37 +168,36 @@ const LeadDetailsPage = () => {
     const setLeadProfile = (profile: LeadProfileFormValues) => {
         if (!id) return;
 
-        const payload: { leadId: string; [key: string]: any } = { leadId: id };
+        const payload: { leadId: string;[key: string]: any } = { leadId: id };
 
         if (profile.name !== leadProfile.name) payload.name = profile.name;
         if (profile.company !== leadProfile.company) payload.company_name = profile.company;
         if (profile.email !== leadProfile.email) payload.email = profile.email;
         if (profile.phone !== leadProfile.phone) payload.phone = profile.phone;
+        if (profile.alternate_phone !== leadProfile.alternate_phone) payload.alternate_phone = profile.alternate_phone;
         if (profile.status_id !== leadProfile.status_id) payload.status_id = profile.status_id;
         if (profile.source_id !== leadProfile.source_id) payload.source_id = profile.source_id;
         if (profile.assigned_to !== leadProfile.assigned_to) payload.assigned_to = profile.assigned_to;
+        if (profile.priority !== leadProfile.priority) payload.priority = profile.priority;
         if (profile.country !== leadProfile.country) payload.country = profile.country;
+        if (profile.state !== leadProfile.state) payload.state = profile.state;
+        if (profile.city !== leadProfile.city) payload.city = profile.city;
+        if (profile.pincode !== leadProfile.pincode) payload.pincode = profile.pincode;
         if (profile.website !== leadProfile.website) payload.website = profile.website;
         if (profile.designation !== leadProfile.designation) payload.designation = profile.designation;
-        if (profile.gstPan !== leadProfile.gstPan) payload.gst_number = profile.gstPan;
+        if (profile.gst_number !== leadProfile.gst_number) payload.gst_number = profile.gst_number;
+        if (profile.pan_number !== leadProfile.pan_number) payload.pan_number = profile.pan_number;
+        if (profile.address_line1 !== leadProfile.address_line1) payload.address_line1 = profile.address_line1;
+        if (profile.address_line2 !== leadProfile.address_line2) payload.address_line2 = profile.address_line2;
 
-        if (profile.location !== leadProfile.location) {
-            const [city = "", state = "", pincode = ""] = (profile.location || "").split(",").map((item) => item.trim());
-            payload.city = city;
-            payload.state = state;
-            payload.pincode = pincode;
-        }
+        const compareTags = (a: any[], b: any[]) => JSON.stringify(a.map(x => x.id || x.name).sort()) === JSON.stringify(b.map(x => x.id || x.name).sort());
 
-        if (profile.address !== leadProfile.address) {
-            const [address_line1 = "", ...restAddress] = (profile.address || "").split(",");
-            payload.address_line1 = address_line1.trim();
-            payload.address_line2 = restAddress.join(",").trim();
-        }
-
-        const newTags = profile.tags.map((t) => t.id ? String(t.id) : t.name).sort();
-        const oldTags = leadProfile.tags.map((t) => t.id ? String(t.id) : t.name).sort();
-        if (JSON.stringify(newTags) !== JSON.stringify(oldTags)) {
+        if (!compareTags(profile.tags, leadProfile.tags)) {
             payload.tags = profile.tags.map((t) => t.id ? String(t.id) : t.name);
+        }
+
+        if (!compareTags(profile.interested_category_id, leadProfile.interested_category_id)) {
+            payload.interested_category_id = profile.interested_category_id.map((t) => t.id ? String(t.id) : t.name);
         }
 
         if (Object.keys(payload).length > 1) {
@@ -217,15 +232,15 @@ const LeadDetailsPage = () => {
                     {lead?.is_verified && <span title="Verified"><ShieldCheck className="h-6 w-6 text-green-500" /></span>}
                     {(lead?.customer_id || lead?.lead_type === "CUSTOMER" || convertMutation.isSuccess) && <span title="Converted to Customer"><CheckCircle className="h-6 w-6 text-blue-500" /></span>}
                 </h1>
-                
+
                 {id && !lead?.customer_id && lead?.lead_type !== "CUSTOMER" && !convertMutation.isSuccess && (
-                  <div className="flex items-center gap-2">
-                    {!lead?.is_verified ? (
-                      <Button size="sm" onClick={() => setVerifyModalOpen(true)}>Verify Lead</Button>
-                    ) : (
-                      <Button size="sm" onClick={() => setConvertModalOpen(true)} disabled={convertMutation.isPending}>Convert to Customer</Button>
-                    )}
-                  </div>
+                    <div className="flex items-center gap-2">
+                        {!lead?.is_verified ? (
+                            <Button size="sm" onClick={() => setVerifyModalOpen(true)}>Verify Lead</Button>
+                        ) : (
+                            <Button size="sm" onClick={() => setConvertModalOpen(true)} disabled={convertMutation.isPending}>Convert to Customer</Button>
+                        )}
+                    </div>
                 )}
             </div>
 

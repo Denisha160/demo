@@ -63,6 +63,7 @@ const formSchema = z.object({
   designation: z.string().optional().or(z.literal("")),
   website: z.string().optional().or(z.literal("")),
   gst_number: z.string().optional().refine(val => !val || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/.test(val), "Invalid GST Number format").or(z.literal("")),
+  pan_number: z.string().optional().refine(val => !val || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val), "Invalid PAN Number format (e.g. ABCDE1234F)").or(z.literal("")),
   priority: z.string().optional().or(z.literal("")),
   assigned_to: z.string().optional().or(z.literal("")),
   interested_category_id: z.array(z.object({ id: z.string().optional(), name: z.string() })).optional(),
@@ -107,6 +108,7 @@ const LeadModal = ({
       designation: "",
       website: "",
       gst_number: "",
+      pan_number: "",
       priority: "HOT",
       assigned_to: "",
       interested_category_id: [],
@@ -168,6 +170,7 @@ const LeadModal = ({
       designation: "",
       website: "",
       gst_number: "",
+      pan_number: "",
       priority: "HOT",
       assigned_to: "",
       interested_category_id: [],
@@ -505,6 +508,20 @@ const LeadModal = ({
                       value={field.value as any}
                       onValueChange={field.onChange}
                     />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="pan_number"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground">PAN Card Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter PAN Number" className="h-9 text-xs border-border/60 uppercase" {...field} />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>

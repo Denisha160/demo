@@ -24,7 +24,25 @@ import { TagSelector } from "@/components/ui/tag-selector";
 import { useLeadStatuses } from "@/hooks/useLeadStatus";
 import { useLeadSources } from "@/hooks/useLeadSource";
 import { useUsers } from "@/hooks/useUsers";
-import { useLeadTags } from "@/hooks/useLeadTags";
+import { useLeadTags } from "@/hooks/useLeadTags"; import { useCategoriesCombobox } from "@/hooks/useProductCategories";
+
+const InterestedCategorySelect = ({ value = [], onValueChange, disabled }: { value?: any[], onValueChange: (val: any[]) => void, disabled?: boolean }) => {
+    const { data: categories = [] } = useCategoriesCombobox();
+    const suggestions = categories
+        .filter((cat: any) => !!cat.parent_name)
+        .map((cat: any) => ({
+            id: String(cat.id),
+            name: cat.name,
+        }));
+
+    return (
+        <TagSelector
+            suggestions={suggestions}
+            value={value}
+            onChange={onValueChange}
+        />
+    );
+};
 
 import type { LeadProfileFormValues } from "../../LeadDetailsPage";
 
@@ -42,17 +60,24 @@ const leadSchema = z.object({
         .min(1, "Phone is required")
         .regex(/^\d+$/, "Only numbers allowed")
         .min(10, "Must be at least 10 digits"),
+    alternate_phone: z.string().optional().refine(val => !val || /^[0-9]{10}$/.test(val), "Must be exactly 10 digits").or(z.literal("")),
     company: z.string().optional(),
     status_id: z.string().optional(),
     source_id: z.string().optional(),
     assigned_to: z.string().optional(),
+    priority: z.string().optional(),
     country: z.string().optional(),
+    state: z.string().optional(),
+    city: z.string().optional(),
+    pincode: z.string().optional(),
     website: z.string().optional(),
     designation: z.string().optional(),
-    gstPan: z.string().optional(),
-    location: z.string().optional(),
+    gst_number: z.string().optional().refine(val => !val || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/.test(val), "Invalid GST Number format").or(z.literal("")),
+    pan_number: z.string().optional().refine(val => !val || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val), "Invalid PAN Number format (e.g. ABCDE1234F)").or(z.literal("")),
     tags: z.array(z.object({ id: z.string().optional(), name: z.string() })).optional(),
-    address: z.string().optional(),
+    interested_category_id: z.array(z.object({ id: z.string().optional(), name: z.string() })).optional(),
+    address_line1: z.string().optional(),
+    address_line2: z.string().optional(),
 });
 
 const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTabProps) => {
@@ -208,6 +233,31 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     </FormItem>
                                 )}
                             />
+
+                            <FormField
+                                control={form.control}
+                                name="priority"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold">Priority</FormLabel>
+                                        <FormControl>
+                                            <Combobox
+                                                options={[
+                                                    { value: "HOT", label: "Hot" },
+                                                    { value: "WARM", label: "Warm" },
+                                                    { value: "COLD", label: "Cold" }
+                                                ]}
+                                                value={field.value}
+                                                onValueChange={(val) => form.setValue("priority", val, { shouldDirty: true, shouldValidate: true })}
+                                                placeholder="Select Priority"
+                                                className="h-9 w-full"
+                                                disabled={isSaving}
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-[10px]" />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
                     </div>
 
@@ -252,12 +302,68 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                             <FormField
                                 control={form.control}
+                                name="state"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold">State</FormLabel>
+                                        <FormControl>
+                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter state" {...field} />
+                                        </FormControl>
+                                        <FormMessage className="text-[10px]" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="city"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold">City</FormLabel>
+                                        <FormControl>
+                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter city" {...field} />
+                                        </FormControl>
+                                        <FormMessage className="text-[10px]" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="pincode"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold">Pincode</FormLabel>
+                                        <FormControl>
+                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter pincode" {...field} />
+                                        </FormControl>
+                                        <FormMessage className="text-[10px]" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
                                 name="website"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Website</FormLabel>
                                         <FormControl>
                                             <Input disabled={isSaving} type="url" className="h-9 text-sm" placeholder="Enter website URL" {...field} />
+                                        </FormControl>
+                                        <FormMessage className="text-[10px]" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="alternate_phone"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold">Alternative Phone</FormLabel>
+                                        <FormControl>
+                                            <Input disabled={isSaving} type="tel" className="h-9 text-sm" placeholder="Enter alternative phone" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -286,12 +392,12 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                             <FormField
                                 control={form.control}
-                                name="gstPan"
+                                name="gst_number"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs font-bold">GST / PAN</FormLabel>
+                                        <FormLabel className="text-xs font-bold">GST Number</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm uppercase" placeholder="Enter GST or PAN details" {...field} />
+                                            <Input disabled={isSaving} className="h-9 text-sm uppercase" placeholder="Enter GST details" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -300,12 +406,26 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                             <FormField
                                 control={form.control}
-                                name="location"
+                                name="pan_number"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs font-bold">Location</FormLabel>
+                                        <FormLabel className="text-xs font-bold">PAN Card Number</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter location" {...field} />
+                                            <Input disabled={isSaving} className="h-9 text-sm uppercase" placeholder="Enter PAN Number" {...field} />
+                                        </FormControl>
+                                        <FormMessage className="text-[10px]" />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="pan_number"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold">PAN Card Number</FormLabel>
+                                        <FormControl>
+                                            <Input disabled={isSaving} className="h-9 text-sm uppercase" placeholder="Enter PAN Number" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -313,12 +433,12 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                             />
                         </div>
 
-                        <div className="pt-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                             <FormField
                                 control={form.control}
                                 name="tags"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1.5 md:col-span-2 lg:col-span-3">
+                                    <FormItem className="space-y-1.5">
                                         <FormLabel className="text-xs font-bold flex items-center gap-1.5 pb-1">
                                             <Tag className="h-4 w-4 text-muted-foreground" /> Tags
                                         </FormLabel>
@@ -333,17 +453,48 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     </FormItem>
                                 )}
                             />
-                        </div>
-                        
-                        <div className="pt-2">
+
                             <FormField
                                 control={form.control}
-                                name="address"
+                                name="interested_category_id"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1.5 md:col-span-2 lg:col-span-3">
-                                        <FormLabel className="text-xs font-bold">Address</FormLabel>
+                                    <FormItem className="space-y-1.5">
+                                        <FormLabel className="text-xs font-bold pb-1">Interested Category</FormLabel>
                                         <FormControl>
-                                            <Textarea disabled={isSaving} className="min-h-[80px] text-sm" placeholder="Enter full address" {...field} />
+                                            <InterestedCategorySelect
+                                                value={field.value as any}
+                                                onValueChange={(val) => form.setValue("interested_category_id", val, { shouldValidate: true, shouldDirty: true })}
+                                                disabled={isSaving}
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-[10px]" />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 pt-2">
+                            <FormField
+                                control={form.control}
+                                name="address_line1"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold">Address Line 1</FormLabel>
+                                        <FormControl>
+                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter address line 1" {...field} />
+                                        </FormControl>
+                                        <FormMessage className="text-[10px]" />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="address_line2"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold">Address Line 2</FormLabel>
+                                        <FormControl>
+                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter address line 2" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>

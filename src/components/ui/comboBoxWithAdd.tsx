@@ -76,10 +76,10 @@ const ComboboxWithAdd = React.forwardRef<HTMLDivElement, ComboboxProps>(
             const val = newValue.trim();
             if (val) {
                 if (!options.some(o => o.label.toLowerCase() === val.toLowerCase())) {
-                    const newOption = { value: val.toLowerCase(), label: val };
+                    const newOption = { value: val, label: val };
                     onOptionsChange?.([...options, newOption]);
                 }
-                onValueChange(val.toLowerCase());
+                onValueChange(val);
             }
             setIsAdding(false);
             setNewValue("");
@@ -105,6 +105,7 @@ const ComboboxWithAdd = React.forwardRef<HTMLDivElement, ComboboxProps>(
                         }}
                     />
                     <Button
+                        type="button"
                         variant="outline"
                         size="icon"
                         onClick={saveNewValue}
@@ -113,6 +114,7 @@ const ComboboxWithAdd = React.forwardRef<HTMLDivElement, ComboboxProps>(
                         <Check className="h-4 w-4" />
                     </Button>
                     <Button
+                        type="button"
                         variant="outline"
                         size="icon"
                         onClick={() => {
@@ -204,6 +206,7 @@ const ComboboxWithAdd = React.forwardRef<HTMLDivElement, ComboboxProps>(
                     </Popover>
                 </div>
                 <Button
+                    type="button"
                     variant="outline"
                     size="icon"
                     onClick={() => setIsAdding(true)}

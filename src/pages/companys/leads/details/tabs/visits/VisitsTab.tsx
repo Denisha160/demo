@@ -23,6 +23,7 @@ import {
   useLeadVisits,
   useUpdateLeadVisit,
 } from "@/hooks/useLeadVisits";
+import { useLeadContacts, useCreateLeadContact } from "@/hooks/useLeadContacts";
 
 const applyServerValidationErrors = (
   error: any,
@@ -99,6 +100,10 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const updateVisitMutation = useUpdateLeadVisit(leadId);
   const deleteVisitMutation = useDeleteLeadVisit(leadId);
 
+  const { data: contactData } = useLeadContacts(leadId);
+  const contacts = contactData?.contacts || [];
+  const createContactMutation = useCreateLeadContact();
+
   const filteredVisits = useMemo(
     () =>
       visits.filter((visit: Visit) => {
@@ -149,6 +154,23 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       next_steps: formData.next_steps,
       set_reminder: formData.set_reminder,
     };
+
+    // Auto-create contact if it is new
+    if (formData.contact_person_name) {
+      const isExisting = contacts.some(
+        (c) => c.name.toLowerCase() === formData.contact_person_name?.toLowerCase()
+      );
+      if (!isExisting) {
+        createContactMutation.mutate({
+          leadId,
+          data: {
+            name: formData.contact_person_name,
+            designation: formData.contact_person_designation,
+            phone: formData.contact_person_phone,
+          },
+        });
+      }
+    }
 
     let dataToSubmit: any = payload;
 
@@ -286,9 +308,9 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             <Plus className="h-4 w-4" />
             Add Visit
           </Button>
-          <DatePickerWithRange 
-            date={dateRange} 
-            setDate={setDateRange} 
+          <DatePickerWithRange
+            date={dateRange}
+            setDate={setDateRange}
             className="w-[260px]"
             placeholder="Filter by scheduled date"
           />
@@ -311,6 +333,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       {isModalOpen && (
         <VisitsModal
           open={isModalOpen}
+          leadId={leadId}
           onClose={() => {
             setIsModalOpen(false);
             setEditingVisit(null);

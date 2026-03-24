@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
-import { ComboboxWithAdd } from "@/components/ui/comboBoxWithAdd";
 import {
   Form,
   FormControl,
@@ -145,7 +144,7 @@ const LeadModal = ({
   const [countrySearch, setCountrySearch] = useState("");
   const [stateSearch, setStateSearch] = useState("");
   const [citySearch, setCitySearch] = useState("");
-  
+
   const debouncedCountrySearch = useDebounce(countrySearch, 500);
   const debouncedStateSearch = useDebounce(stateSearch, 500);
   const debouncedCitySearch = useDebounce(citySearch, 500);
@@ -309,7 +308,7 @@ const LeadModal = ({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Priority
-                    </FormLabel>
+                  </FormLabel>
                   <FormControl>
                     <Combobox
                       options={[

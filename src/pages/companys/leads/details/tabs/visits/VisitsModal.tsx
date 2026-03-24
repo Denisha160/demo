@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, Loader2, LocateFixed, Trash2 } from "lucide-react";
 import { useForm, UseFormSetError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { compressImage } from "@/utils/imageCompression";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { ComboboxWithAdd, ComboboxOption } from "@/components/ui/comboBoxWithAdd";
+import { useLeadContacts } from "@/hooks/useLeadContacts";
 
 const visitSchema = z.object({
     title: z.string().min(1, "Title is required").max(200, "Title is too long"),
@@ -59,6 +61,7 @@ export interface Visit extends VisitFormData {
 
 interface VisitsModalProps {
     open: boolean;
+    leadId: string;
     onClose: () => void;
     visitData?: Visit | null;
     onSave: (data: VisitFormData, setError: UseFormSetError<VisitFormData>) => void;
@@ -86,6 +89,7 @@ const toDateTimeLocal = (value?: string) => {
 
 const VisitsModal = ({
     open,
+    leadId,
     onClose,
     visitData,
     onSave,
@@ -94,6 +98,35 @@ const VisitsModal = ({
     const [locationLoading, setLocationLoading] = useState(false);
     const [locationMessage, setLocationMessage] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const { data: contactData } = useLeadContacts(leadId);
+
+    const [nameOptions, setNameOptions] = useState<ComboboxOption[]>([]);
+    const [designationOptions, setDesignationOptions] = useState<ComboboxOption[]>([]);
+    const [phoneOptions, setPhoneOptions] = useState<ComboboxOption[]>([]);
+
+    useEffect(() => {
+        if (contactData?.contacts) {
+            setNameOptions(contactData.contacts.map(c => ({ value: c.name, label: c.name })));
+            setDesignationOptions(
+                Array.from(new Set(contactData.contacts.map(c => c.designation).filter(Boolean)))
+                    .map(d => ({ value: d!, label: d! }))
+            );
+            setPhoneOptions(
+                Array.from(new Set(contactData.contacts.map(c => c.phone).filter(Boolean)))
+                    .map(p => ({ value: p!, label: p! }))
+            );
+        }
+    }, [contactData]);
+
+    const handleContactNameChange = (val: string, onChange: (v: string) => void) => {
+        onChange(val);
+        const contact = contactData?.contacts.find(c => c.name.toLowerCase() === val.toLowerCase());
+        if (contact) {
+            form.setValue("contact_person_designation", contact.designation || "", { shouldDirty: true });
+            form.setValue("contact_person_phone", contact.phone || "", { shouldDirty: true });
+        }
+    };
 
     const form = useForm<VisitFormData>({
         resolver: zodResolver(visitSchema),
@@ -638,7 +671,15 @@ const VisitsModal = ({
                                         Contact Person Name
                                     </FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Enter contact person name" className="h-9 text-xs" disabled={isSubmitting} {...field} />
+                                        <ComboboxWithAdd
+                                            options={nameOptions}
+                                            value={field.value}
+                                            onValueChange={(val) => handleContactNameChange(val, field.onChange)}
+                                            onOptionsChange={setNameOptions}
+                                            placeholder="Select or add contact"
+                                            className="h-9 text-xs"
+                                            disabled={isSubmitting}
+                                        />
                                     </FormControl>
                                     <FormMessage className="text-[10px]" />
                                 </FormItem>
@@ -652,7 +693,15 @@ const VisitsModal = ({
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold">Designation</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Manager" className="h-9 text-xs" disabled={isSubmitting} {...field} />
+                                        <ComboboxWithAdd
+                                            options={designationOptions}
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                            onOptionsChange={setDesignationOptions}
+                                            placeholder="Select or add designation"
+                                            className="h-9 text-xs"
+                                            disabled={isSubmitting}
+                                        />
                                     </FormControl>
                                     <FormMessage className="text-[10px]" />
                                 </FormItem>
@@ -668,7 +717,15 @@ const VisitsModal = ({
                                         Contact Phone
                                     </FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Enter phone number" className="h-9 text-xs" disabled={isSubmitting} {...field} />
+                                        <ComboboxWithAdd
+                                            options={phoneOptions}
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                            onOptionsChange={setPhoneOptions}
+                                            placeholder="Select or add phone"
+                                            className="h-9 text-xs"
+                                            disabled={isSubmitting}
+                                        />
                                     </FormControl>
                                     <FormMessage className="text-[10px]" />
                                 </FormItem>

@@ -17,7 +17,10 @@ import {
 } from "@/components/ui/form";
 
 const statusSchema = z.object({
-  name: z.string().min(1, "Status name is required").max(100, "Status name cannot exceed 100 characters"),
+  name: z
+    .string()
+    .min(1, "Status name is required")
+    .max(100, "Status name cannot exceed 100 characters"),
   color: z.string().min(1, "Color is required"),
   is_active: z.boolean().default(true),
 });
@@ -28,11 +31,20 @@ interface StatusFormModalProps {
   open: boolean;
   onClose: () => void;
   statusData?: any;
-  onSave: (data: StatusFormData, setError: UseFormSetError<StatusFormData>) => void;
+  onSave: (
+    data: StatusFormData,
+    setError: UseFormSetError<StatusFormData>,
+  ) => void;
   isSubmitting?: boolean;
 }
 
-const StatusFormModal = ({ open, onClose, statusData, onSave, isSubmitting }: StatusFormModalProps) => {
+const StatusFormModal = ({
+  open,
+  onClose,
+  statusData,
+  onSave,
+  isSubmitting,
+}: StatusFormModalProps) => {
   const form = useForm<StatusFormData>({
     resolver: zodResolver(statusSchema),
     defaultValues: {
@@ -73,7 +85,9 @@ const StatusFormModal = ({ open, onClose, statusData, onSave, isSubmitting }: St
         onClose();
       }}
       title={statusData ? "Edit Status" : "Add Status"}
-      description={statusData ? "Update status details." : "Create a new lead status."}
+      description={
+        statusData ? "Update status details." : "Create a new lead status."
+      }
       maxWidth="sm:max-w-md"
       footer={
         <div className="flex justify-end gap-2 w-full">
@@ -96,7 +110,13 @@ const StatusFormModal = ({ open, onClose, statusData, onSave, isSubmitting }: St
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? (statusData ? "Updating..." : "Creating...") : (statusData ? "Update Status" : "Create Status")}
+            {isSubmitting
+              ? statusData
+                ? "Updating..."
+                : "Creating..."
+              : statusData
+                ? "Update Status"
+                : "Create Status"}
           </Button>
         </div>
       }
@@ -156,7 +176,6 @@ const StatusFormModal = ({ open, onClose, statusData, onSave, isSubmitting }: St
                 </FormItem>
               )}
             />
-
           </div>
 
           <FormField
@@ -165,8 +184,12 @@ const StatusFormModal = ({ open, onClose, statusData, onSave, isSubmitting }: St
             render={({ field }) => (
               <FormItem className="flex items-center justify-between space-x-2 py-2 border rounded-md px-3 bg-muted/20">
                 <div className="flex flex-col space-y-1">
-                  <FormLabel className="text-xs font-bold">Active Status</FormLabel>
-                  <span className="text-[10px] text-muted-foreground">Toggle visibility</span>
+                  <FormLabel className="text-xs font-bold">
+                    Active Status
+                  </FormLabel>
+                  <span className="text-[10px] text-muted-foreground">
+                    Toggle visibility
+                  </span>
                 </div>
                 <FormControl>
                   <Switch

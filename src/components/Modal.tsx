@@ -24,7 +24,6 @@ const Modal = ({
   headerBg = "bg-card",
   titleClassName = "",
 }: ModalProps) => {
-
   // Lock body scroll when modal is open
   useEffect(() => {
     if (open) {
@@ -32,7 +31,9 @@ const Modal = ({
     } else {
       document.body.style.overflow = "unset";
     }
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [open]);
 
   if (!open) return null;
@@ -46,12 +47,25 @@ const Modal = ({
       <div
         className={`relative bg-card border border-border shadow-card-hover rounded-sm w-full ${maxWidth} max-h-[85vh] flex flex-col animate-fade-in`}
       >
-        <div className={`flex items-start justify-between p-3 border-b border-border rounded-t-sm ${headerBg}`}>
+        <div
+          className={`flex items-start justify-between p-3 border-b border-border rounded-t-sm ${headerBg}`}
+        >
           <div>
-            <h2 className={`text-sm font-semibold ${titleClassName || "text-foreground"}`}>{title}</h2>
-            {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
+            <h2
+              className={`text-sm font-semibold ${titleClassName || "text-foreground"}`}
+            >
+              {title}
+            </h2>
+            {description && (
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {description}
+              </p>
+            )}
           </div>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -59,15 +73,18 @@ const Modal = ({
         <div
           className="p-3 overflow-y-auto flex-1"
           style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
           }}
         >
-          <style dangerouslySetInnerHTML={{
-            __html: `
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
             .overflow-y-auto::-webkit-scrollbar { display: none; }
-          `}} />
+          `,
+            }}
+          />
           {children}
         </div>
         {footer && (

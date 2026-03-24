@@ -4,7 +4,10 @@ import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import QuotationModal, { Quotation, QuotationFormData } from "./QuotationsModal";
+import QuotationModal, {
+  Quotation,
+  QuotationFormData,
+} from "./QuotationsModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -126,15 +129,24 @@ const calculateGrandTotal = (quotation: QuotationFormData) => {
         ? discountValue
         : 0;
 
-  return subtotal - discountAmount + (quotation.total_tax_amount || 0) + (quotation.total_additional_charges || 0);
+  return (
+    subtotal -
+    discountAmount +
+    (quotation.total_tax_amount || 0) +
+    (quotation.total_additional_charges || 0)
+  );
 };
 
 const QuotationsTab = () => {
   const [quotations, setQuotations] = useState<Quotation[]>(initialQuotations);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(null);
-  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(null);
+  const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(
+    null,
+  );
+  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(
+    null,
+  );
 
   const filteredQuotations = quotations.filter((quotation) => {
     const query = search.toLowerCase();
@@ -169,8 +181,8 @@ const QuotationsTab = () => {
                 ...quotation,
                 ...formData,
               }
-            : quotation
-        )
+            : quotation,
+        ),
       );
     } else {
       const newQuotation: Quotation = {
@@ -210,7 +222,9 @@ const QuotationsTab = () => {
       render: (item) => (
         <div className="flex flex-col">
           <span className="font-medium text-sm">{item.quotation_number}</span>
-          <span className="text-[10px] text-muted-foreground">{item.customer_name}</span>
+          <span className="text-[10px] text-muted-foreground">
+            {item.customer_name}
+          </span>
         </div>
       ),
     },
@@ -222,7 +236,9 @@ const QuotationsTab = () => {
     {
       key: "valid_until",
       header: "Valid Until",
-      render: (item) => <span className="text-sm">{item.valid_until || "-"}</span>,
+      render: (item) => (
+        <span className="text-sm">{item.valid_until || "-"}</span>
+      ),
     },
     {
       key: "status",
@@ -247,7 +263,11 @@ const QuotationsTab = () => {
     {
       key: "subtotal",
       header: "Grand Total",
-      render: (item) => <span className="text-sm font-medium">{calculateGrandTotal(item).toFixed(2)}</span>,
+      render: (item) => (
+        <span className="text-sm font-medium">
+          {calculateGrandTotal(item).toFixed(2)}
+        </span>
+      ),
     },
     {
       key: "id",
@@ -305,19 +325,25 @@ const QuotationsTab = () => {
         />
       )}
 
-      <AlertDialog open={!!quotationToDelete} onOpenChange={(open) => !open && setQuotationToDelete(null)}>
+      <AlertDialog
+        open={!!quotationToDelete}
+        onOpenChange={(open) => !open && setQuotationToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete quotation "{quotationToDelete?.quotation_number}".
-              This action cannot be undone.
+              This will permanently delete quotation "
+              {quotationToDelete?.quotation_number}". This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => quotationToDelete && handleDelete(quotationToDelete.id)}
+              onClick={() =>
+                quotationToDelete && handleDelete(quotationToDelete.id)
+              }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

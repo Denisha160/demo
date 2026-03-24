@@ -17,7 +17,10 @@ import {
 } from "@/components/ui/form";
 
 const sourceSchema = z.object({
-  name: z.string().min(1, "Source name is required").max(100, "Source name cannot exceed 100 characters"),
+  name: z
+    .string()
+    .min(1, "Source name is required")
+    .max(100, "Source name cannot exceed 100 characters"),
   is_active: z.boolean().default(true),
 });
 
@@ -27,11 +30,20 @@ interface SourceModalProps {
   open: boolean;
   onClose: () => void;
   sourceData?: any;
-  onSave: (data: SourceFormData, setError: UseFormSetError<SourceFormData>) => void;
+  onSave: (
+    data: SourceFormData,
+    setError: UseFormSetError<SourceFormData>,
+  ) => void;
   isSubmitting?: boolean;
 }
 
-const SourceModal = ({ open, onClose, sourceData, onSave, isSubmitting }: SourceModalProps) => {
+const SourceModal = ({
+  open,
+  onClose,
+  sourceData,
+  onSave,
+  isSubmitting,
+}: SourceModalProps) => {
   const form = useForm<SourceFormData>({
     resolver: zodResolver(sourceSchema),
     defaultValues: {
@@ -69,7 +81,9 @@ const SourceModal = ({ open, onClose, sourceData, onSave, isSubmitting }: Source
         onClose();
       }}
       title={sourceData ? "Edit Source" : "Add Source"}
-      description={sourceData ? "Update source details." : "Create a new lead source."}
+      description={
+        sourceData ? "Update source details." : "Create a new lead source."
+      }
       maxWidth="sm:max-w-md"
       footer={
         <div className="flex justify-end gap-2 w-full">
@@ -92,7 +106,13 @@ const SourceModal = ({ open, onClose, sourceData, onSave, isSubmitting }: Source
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? (sourceData ? "Updating..." : "Creating...") : (sourceData ? "Update Source" : "Create Source")}
+            {isSubmitting
+              ? sourceData
+                ? "Updating..."
+                : "Creating..."
+              : sourceData
+                ? "Update Source"
+                : "Create Source"}
           </Button>
         </div>
       }
@@ -126,8 +146,12 @@ const SourceModal = ({ open, onClose, sourceData, onSave, isSubmitting }: Source
             render={({ field }) => (
               <FormItem className="flex items-center justify-between space-x-2 py-2 border rounded-md px-3 bg-muted/20">
                 <div className="flex flex-col space-y-0.5">
-                  <FormLabel className="text-xs font-bold">Active Status</FormLabel>
-                  <span className="text-[10px] text-muted-foreground">Toggle visibility</span>
+                  <FormLabel className="text-xs font-bold">
+                    Active Status
+                  </FormLabel>
+                  <span className="text-[10px] text-muted-foreground">
+                    Toggle visibility
+                  </span>
                 </div>
                 <FormControl>
                   <Switch

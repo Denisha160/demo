@@ -5,10 +5,21 @@ import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, History, Box, LayoutGrid, X } from "lucide-react";
-import { useNavigate, useParams, useLocation, useSearchParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { useInventories } from "@/hooks/useInventory";
 import { Inventory } from "@/types/inventory";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const InventoriesPage = () => {
   const navigate = useNavigate();
@@ -22,12 +33,20 @@ const InventoriesPage = () => {
   // Filters and Pagination State
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
-  const [filterType, setFilterType] = useState<string>(searchParams.get("type") || "all");
-  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
-  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
-  const [sortKey, setSortKey] = useState<string | null>(searchParams.get("sortKey") || "name");
+  const [filterType, setFilterType] = useState<string>(
+    searchParams.get("type") || "all",
+  );
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10),
+  );
+  const [limit, setLimit] = useState(
+    parseInt(searchParams.get("limit") || "10", 10),
+  );
+  const [sortKey, setSortKey] = useState<string | null>(
+    searchParams.get("sortKey") || "name",
+  );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
-    (searchParams.get("sortDirection") as "asc" | "desc") || "asc"
+    (searchParams.get("sortDirection") as "asc" | "desc") || "asc",
   );
 
   const hasFilters = Boolean(search || filterType !== "all");
@@ -42,17 +61,34 @@ const InventoriesPage = () => {
 
   // Sync state to URL
   useEffect(() => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (debouncedSearch) next.set("search", debouncedSearch); else next.delete("search");
-      if (filterType !== "all") next.set("type", filterType); else next.delete("type");
-      if (page > 1) next.set("page", page.toString()); else next.delete("page");
-      if (limit !== 10) next.set("limit", limit.toString()); else next.delete("limit");
-      if (sortKey) next.set("sortKey", sortKey); else next.delete("sortKey");
-      if (sortDirection) next.set("sortDirection", sortDirection); else next.delete("sortDirection");
-      return next;
-    }, { replace: true });
-  }, [debouncedSearch, filterType, page, limit, sortKey, sortDirection, setSearchParams]);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        if (filterType !== "all") next.set("type", filterType);
+        else next.delete("type");
+        if (page > 1) next.set("page", page.toString());
+        else next.delete("page");
+        if (limit !== 10) next.set("limit", limit.toString());
+        else next.delete("limit");
+        if (sortKey) next.set("sortKey", sortKey);
+        else next.delete("sortKey");
+        if (sortDirection) next.set("sortDirection", sortDirection);
+        else next.delete("sortDirection");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [
+    debouncedSearch,
+    filterType,
+    page,
+    limit,
+    sortKey,
+    sortDirection,
+    setSearchParams,
+  ]);
 
   const { data: listResponse, isLoading } = useInventories({
     search: debouncedSearch.trim() || undefined,
@@ -72,29 +108,46 @@ const InventoriesPage = () => {
       header: "Item Info",
       sortable: true,
       render: (item) => (
-        <div 
+        <div
           className="flex items-center gap-3 cursor-pointer group"
-          onClick={() => navigate(`${routePrefix}/inventory/${item.inventory_type.toLowerCase()}/${item.product_id || item.kit_id}`)}
+          onClick={() =>
+            navigate(
+              `${routePrefix}/inventory/${item.inventory_type.toLowerCase()}/${item.product_id || item.kit_id}`,
+            )
+          }
         >
           <div className="p-2 bg-muted rounded-md text-muted-foreground group-hover:bg-primary/10 transition-colors">
-            {item.inventory_type === 'PRODUCT' ? <Box className="h-4 w-4 group-hover:text-primary transition-colors" /> : <LayoutGrid className="h-4 w-4 group-hover:text-primary transition-colors" />}
+            {item.inventory_type === "PRODUCT" ? (
+              <Box className="h-4 w-4 group-hover:text-primary transition-colors" />
+            ) : (
+              <LayoutGrid className="h-4 w-4 group-hover:text-primary transition-colors" />
+            )}
           </div>
           <div>
-            <p className="font-medium text-sm group-hover:text-primary transition-colors">{item.name}</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.code || "NO CODE"}</p>
+            <p className="font-medium text-sm group-hover:text-primary transition-colors">
+              {item.name}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+              {item.code || "NO CODE"}
+            </p>
           </div>
         </div>
-      )
+      ),
     },
     {
       key: "inventory_type",
       header: "Type",
-      render: (item) => <StatusBadge status={item.inventory_type} variant={item.inventory_type === 'PRODUCT' ? 'info' : 'warning'} />
+      render: (item) => (
+        <StatusBadge
+          status={item.inventory_type}
+          variant={item.inventory_type === "PRODUCT" ? "info" : "warning"}
+        />
+      ),
     },
     {
       key: "location",
       header: "Location",
-      render: (item) => <span className="text-sm">{item.location || "—"}</span>
+      render: (item) => <span className="text-sm">{item.location || "—"}</span>,
     },
     {
       key: "stock",
@@ -102,24 +155,38 @@ const InventoriesPage = () => {
       sortable: true,
       render: (item) => (
         <div className="flex flex-col">
-          <span className={`font-semibold ${Number(item.stock) <= Number(item.min_stock) ? 'text-destructive' : 'text-primary'}`}>
-            {item.stock} {item.base_unit || ''}
+          <span
+            className={`font-semibold ${Number(item.stock) <= Number(item.min_stock) ? "text-destructive" : "text-primary"}`}
+          >
+            {item.stock} {item.base_unit || ""}
           </span>
           {item.min_stock > 0 && (
-            <span className="text-[10px] text-muted-foreground">Min: {item.min_stock}</span>
+            <span className="text-[10px] text-muted-foreground">
+              Min: {item.min_stock}
+            </span>
           )}
         </div>
-      )
+      ),
     },
     {
       key: "total_in",
       header: "Total In/Out",
       render: (item) => (
         <div className="text-[11px] leading-tight flex flex-col">
-          <span className="text-muted-foreground">In: <span className="text-emerald-600 font-medium">+{item.total_in || 0}</span></span>
-          <span className="text-muted-foreground">Out: <span className="text-rose-600 font-medium">-{item.total_out || 0}</span></span>
+          <span className="text-muted-foreground">
+            In:{" "}
+            <span className="text-emerald-600 font-medium">
+              +{item.total_in || 0}
+            </span>
+          </span>
+          <span className="text-muted-foreground">
+            Out:{" "}
+            <span className="text-rose-600 font-medium">
+              -{item.total_out || 0}
+            </span>
+          </span>
         </div>
-      )
+      ),
     },
     {
       key: "actions",
@@ -129,13 +196,17 @@ const InventoriesPage = () => {
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => navigate(`${routePrefix}/inventory/${item.inventory_type.toLowerCase()}/${item.product_id || item.kit_id}`)}
+          onClick={() =>
+            navigate(
+              `${routePrefix}/inventory/${item.inventory_type.toLowerCase()}/${item.product_id || item.kit_id}`,
+            )
+          }
           title="Transaction History"
         >
           <History className="h-4 w-4 text-muted-foreground" />
         </Button>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -155,7 +226,13 @@ const InventoriesPage = () => {
             />
           </div>
 
-          <Select value={filterType} onValueChange={(val) => { setFilterType(val); setPage(1); }}>
+          <Select
+            value={filterType}
+            onValueChange={(val) => {
+              setFilterType(val);
+              setPage(1);
+            }}
+          >
             <SelectTrigger className="w-[130px] h-8 text-xs rounded-sm">
               <SelectValue placeholder="All types" />
             </SelectTrigger>

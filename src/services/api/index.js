@@ -168,27 +168,32 @@ export const getAvailablePermissions = () => {
 
 export const listProducts = (params) => {
   const url = `products`;
-  return axios({ method: "GET", url, params })
-}
+  return axios({ method: "GET", url, params });
+};
 
 export const getProductDetails = (id) => {
   const url = `products/${id}`;
-  return axios({ method: 'GET', url });
-}
+  return axios({ method: "GET", url });
+};
 
 export const createProduct = (data) => {
   const url = `products`;
-  return axios({ method: 'POST', url, data });
-}
+  return axios({ method: "POST", url, data });
+};
 
 export const updateProduct = (id, data) => {
   const url = `products/${id}`;
-  return axios({ method: 'PATCH', url, data });
-}
+  return axios({ method: "PATCH", url, data });
+};
 
 export const uploadProductPhoto = (id, formData) => {
   const url = `products/${id}/images`;
-  return axios({ method: "POST", url, data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const deleteProductPhoto = (id, imageId) => {
@@ -243,28 +248,28 @@ export const deleteFragrance = (id) => {
 
 export const listPackages = (params) => {
   const url = `package`;
-  return axios({ method: "GET", url, params })
-}
+  return axios({ method: "GET", url, params });
+};
 
 export const getPackageDetails = (id) => {
   const url = `package/${id}`;
-  return axios({ method: 'GET', url });
-}
+  return axios({ method: "GET", url });
+};
 
 export const createPackage = (data) => {
   const url = `package`;
-  return axios({ method: 'POST', url, data });
-}
+  return axios({ method: "POST", url, data });
+};
 
 export const updatePackage = ({ id, ...data }) => {
   const url = `package/${id}`;
-  return axios({ method: 'PATCH', url, data });
-}
+  return axios({ method: "PATCH", url, data });
+};
 
 export const deletePackage = (id) => {
   const url = `package/${id}`;
   return axios({ method: "DELETE", url });
-}
+};
 
 // end region
 
@@ -432,7 +437,6 @@ export const uploadLeadAttachment = (leadId, formData, onUploadProgress) => {
   });
 };
 
-
 export const deleteLeadAttachment = (attachmentId) => {
   const url = `leads/attachments/${attachmentId}`;
   return axios({ method: "DELETE", url });
@@ -505,58 +509,58 @@ export const deleteLeadContacts = ({ leadId, contactId }) => {
 
 export const listBOM = (params) => {
   const url = `bom`;
-  return axios({ method: "GET", url, params })
-}
+  return axios({ method: "GET", url, params });
+};
 
 export const getBOMDetails = (bom_id) => {
   const url = `bom/${bom_id}`;
-  return axios({ method: 'GET', url });
-}
+  return axios({ method: "GET", url });
+};
 
 export const createBOM = (data) => {
   const url = `bom`;
-  return axios({ method: 'POST', url, data });
-}
+  return axios({ method: "POST", url, data });
+};
 
 export const updateBOM = ({ bom_id, ...data }) => {
   const url = `bom/${bom_id}`;
-  return axios({ method: 'PATCH', url, data });
-}
+  return axios({ method: "PATCH", url, data });
+};
 
 export const deleteBOM = (bom_id) => {
   const url = `bom/${bom_id}`;
   return axios({ method: "DELETE", url });
-}
+};
 
 // end region
 
-// region Kits  
+// region Kits
 // ===================== Kits =====================
 
 export const listKits = (params) => {
   const url = `kit`;
-  return axios({ method: "GET", url, params })
-}
+  return axios({ method: "GET", url, params });
+};
 
 export const getKitDetails = (id) => {
   const url = `kit/${id}`;
-  return axios({ method: 'GET', url });
-}
+  return axios({ method: "GET", url });
+};
 
 export const createKit = (data) => {
   const url = `kit`;
-  return axios({ method: 'POST', url, data });
-}
+  return axios({ method: "POST", url, data });
+};
 
 export const updateKit = ({ id, ...data }) => {
   const url = `kit/${id}`;
-  return axios({ method: 'PATCH', url, data });
-}
+  return axios({ method: "PATCH", url, data });
+};
 
 export const deleteKit = (id) => {
   const url = `kit/${id}`;
   return axios({ method: "DELETE", url });
-}
+};
 
 export const associateProductToKit = (data) => {
   const url = `kit/associate`;
@@ -575,45 +579,45 @@ export const listKitsByProduct = (productId) => {
 
 // end region
 
-// start region 
+// start region
 // ===================== Batches =====================
 
 export const listBatch = (params) => {
-  const url = `inventory/batches`
-  return axios({ method: "GET", url, params })
-}
+  const url = `inventory/batches`;
+  return axios({ method: "GET", url, params });
+};
 
 export const createBatch = (data) => {
-  const url = `inventory/batches`
-  return axios({ method: "POST", url, data })
-}
+  const url = `inventory/batches`;
+  return axios({ method: "POST", url, data });
+};
 
 export const getBatch = (id) => {
-  const url = `inventory/batches/${id}`
-  return axios({ method: "GET", url })
-}
+  const url = `inventory/batches/${id}`;
+  return axios({ method: "GET", url });
+};
 
 export const updateBatch = ({ id, ...data }) => {
-  const url = `inventory/batches/${id}`
-  return axios({ method: "PATCH", url, data })
-}
+  const url = `inventory/batches/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
 
 // ===================== Serials =====================
 
 export const listSerials = (params) => {
-  const url = `inventory/serials`
-  return axios({ method: "GET", url, params })
-}
+  const url = `inventory/serials`;
+  return axios({ method: "GET", url, params });
+};
 
 export const generateSerials = (data) => {
-  const url = `inventory/serials/generate`
-  return axios({ method: "POST", url, data })
-}
+  const url = `inventory/serials/generate`;
+  return axios({ method: "POST", url, data });
+};
 
 export const bulkSyncSerials = (data) => {
-  const url = `inventory/serials/bulk-sync`
-  return axios({ method: "POST", url, data })
-}
+  const url = `inventory/serials/bulk-sync`;
+  return axios({ method: "POST", url, data });
+};
 
 // ===================== Inventory =====================
 
@@ -634,22 +638,22 @@ export const listTransactions = (params) => {
 export const listStatus = (params) => {
   const url = `leads/lead-status`;
   return axios({ method: "GET", url, params });
-}
+};
 
 export const createStatus = (data) => {
   const url = `leads/lead-status`;
   return axios({ method: "POST", url, data });
-}
+};
 
 export const updateStatus = ({ id, ...data }) => {
   const url = `leads/lead-status/${id}`;
   return axios({ method: "PATCH", url, data });
-}
+};
 
 export const deleteStatus = (id) => {
   const url = `leads/lead-status/${id}`;
   return axios({ method: "DELETE", url });
-}
+};
 
 export const updateLeadStatusOrder = (data) => {
   return axios({ method: "PATCH", url: "leads/lead-status/order", data });
@@ -660,22 +664,22 @@ export const updateLeadStatusOrder = (data) => {
 export const listSource = (params) => {
   const url = `leads/lead-source`;
   return axios({ method: "GET", url, params });
-}
+};
 
 export const createSource = (data) => {
   const url = `leads/lead-source`;
   return axios({ method: "POST", url, data });
-}
+};
 
 export const updateSource = ({ id, ...data }) => {
   const url = `leads/lead-source/${id}`;
   return axios({ method: "PATCH", url, data });
-}
+};
 
 export const deleteSource = (id) => {
   const url = `leads/lead-source/${id}`;
   return axios({ method: "DELETE", url });
-}
+};
 
 export const listAllVisits = (params) => {
   return axios({ method: "GET", url: `visits`, params });

@@ -1,4 +1,8 @@
-import { deleteLeadAttachment, listLeadAttachments, uploadLeadAttachment } from "@/services/api";
+import {
+  deleteLeadAttachment,
+  listLeadAttachments,
+  uploadLeadAttachment,
+} from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -22,10 +26,17 @@ export function useUploadLeadAttachment(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ formData, onUploadProgress }: { formData: FormData; onUploadProgress?: (progressEvent: any) => void }) => 
-      uploadLeadAttachment(leadId, formData, onUploadProgress),
+    mutationFn: ({
+      formData,
+      onUploadProgress,
+    }: {
+      formData: FormData;
+      onUploadProgress?: (progressEvent: any) => void;
+    }) => uploadLeadAttachment(leadId, formData, onUploadProgress),
     onSuccess: (response: any) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.attachments(leadId || "") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.attachments(leadId || ""),
+      });
       toast.success(response?.message || "Attachment uploaded successfully.");
     },
     onError: (error: any) => {
@@ -40,7 +51,9 @@ export function useDeleteLeadAttachment(leadId?: string) {
   return useMutation({
     mutationFn: (attachmentId: string) => deleteLeadAttachment(attachmentId),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.attachments(leadId || "") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.attachments(leadId || ""),
+      });
       toast.success(response?.message || "Attachment deleted successfully.");
     },
     onError: (error: unknown) => {

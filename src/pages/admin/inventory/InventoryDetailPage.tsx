@@ -23,12 +23,13 @@ const InventoryDetailPage = () => {
 
   const item = inventoryData?.items?.[0];
 
-  const { data: transactionResponse, isLoading: isLoadingTransactions } = useInventoryTransactions({
-    product_id: type === "product" ? id : undefined,
-    kit_id: type === "kit" ? id : undefined,
-    offset: (page - 1) * limit,
-    limit,
-  });
+  const { data: transactionResponse, isLoading: isLoadingTransactions } =
+    useInventoryTransactions({
+      product_id: type === "product" ? id : undefined,
+      kit_id: type === "kit" ? id : undefined,
+      offset: (page - 1) * limit,
+      limit,
+    });
 
   const memoizedTransactions = useMemo(() => {
     return transactionResponse?.items || [];
@@ -53,57 +54,71 @@ const InventoryDetailPage = () => {
       header: "Date & Time",
       render: (t) => (
         <div className="flex flex-col">
-          <span className="text-sm font-medium">{format(new Date(t.created_at), "MMM dd, yyyy")}</span>
-          <span className="text-[10px] text-muted-foreground">{format(new Date(t.created_at), "HH:mm:ss")}</span>
+          <span className="text-sm font-medium">
+            {format(new Date(t.created_at), "MMM dd, yyyy")}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {format(new Date(t.created_at), "HH:mm:ss")}
+          </span>
         </div>
-      )
+      ),
     },
     {
       key: "type",
       header: "Type",
       render: (t) => (
         <StatusBadge
-          status={t.type === 'in' ? 'STOCK IN' : 'STOCK OUT'}
-          variant={t.type === 'in' ? 'success' : 'destructive'}
+          status={t.type === "in" ? "STOCK IN" : "STOCK OUT"}
+          variant={t.type === "in" ? "success" : "destructive"}
         />
-      )
+      ),
     },
     {
       key: "quantity",
       header: "Quantity",
       render: (t) => (
-        <span className={`font-bold ${t.type === 'in' ? 'text-emerald-600' : 'text-rose-600'}`}>
-          {t.type === 'in' ? '+' : '-'}{t.quantity}
+        <span
+          className={`font-bold ${t.type === "in" ? "text-emerald-600" : "text-rose-600"}`}
+        >
+          {t.type === "in" ? "+" : "-"}
+          {t.quantity}
         </span>
-      )
+      ),
     },
     {
       key: "before_stock",
       header: "Previous",
-      render: (t) => <span className="text-muted-foreground text-sm">{t.before_stock}</span>
+      render: (t) => (
+        <span className="text-muted-foreground text-sm">{t.before_stock}</span>
+      ),
     },
     {
       key: "after_stock",
       header: "Balance",
-      render: (t) => <span className="font-bold text-sm">{t.after_stock}</span>
+      render: (t) => <span className="font-bold text-sm">{t.after_stock}</span>,
     },
     {
       key: "batch_number",
       header: "Batch Info",
-      render: (t) => (
+      render: (t) =>
         t.batch_number ? (
           <div className="flex flex-col">
             <span className="text-xs font-medium text-primary bg-primary/5 px-2 py-0.5 rounded w-fit">
               {t.batch_number}
             </span>
           </div>
-        ) : <span className="text-muted-foreground">—</span>
-      )
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       key: "remark",
       header: "Transaction Notes",
-      render: (t) => <p className="text-xs text-muted-foreground max-w-[250px] italic">{t.remark || "No notes provided"}</p>
+      render: (t) => (
+        <p className="text-xs text-muted-foreground max-w-[250px] italic">
+          {t.remark || "No notes provided"}
+        </p>
+      ),
     },
     {
       key: "user_name",
@@ -112,8 +127,8 @@ const InventoryDetailPage = () => {
         <div className="flex items-center gap-1">
           <span className="text-xs font-medium">{t.user_name}</span>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -130,18 +145,28 @@ const InventoryDetailPage = () => {
           </Button>
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 bg-primary/10 rounded-lg text-primary flex items-center justify-center border border-primary/20">
-              {type === 'product' ? <Box className="h-5 w-5" /> : <LayoutGrid className="h-5 w-5" />}
+              {type === "product" ? (
+                <Box className="h-5 w-5" />
+              ) : (
+                <LayoutGrid className="h-5 w-5" />
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold">{isLoadingItem ? "Loading..." : (itemInfo?.name || "Inventory Detail")}</h1>
+                <h1 className="text-xl font-bold">
+                  {isLoadingItem
+                    ? "Loading..."
+                    : itemInfo?.name || "Inventory Detail"}
+                </h1>
                 <StatusBadge
-                  status={type === 'product' ? 'Product' : 'Kit'}
-                  variant={type === 'product' ? 'info' : 'warning'}
+                  status={type === "product" ? "Product" : "Kit"}
+                  variant={type === "product" ? "info" : "warning"}
                 />
               </div>
               <p className="text-[11px] text-muted-foreground font-mono uppercase tracking-wider">
-                {isLoadingItem ? "..." : (itemInfo?.code || "ID: " + id?.slice(0, 8))}
+                {isLoadingItem
+                  ? "..."
+                  : itemInfo?.code || "ID: " + id?.slice(0, 8)}
               </p>
             </div>
           </div>

@@ -41,7 +41,10 @@ interface FollowUpModalProps {
   onClose: () => void;
   followUpData?: FollowUp | null;
   isEditing?: boolean;
-  onSave: (data: FollowUpFormData, setError: UseFormSetError<FollowUpFormData>) => void;
+  onSave: (
+    data: FollowUpFormData,
+    setError: UseFormSetError<FollowUpFormData>,
+  ) => void;
   isSubmitting?: boolean;
 }
 
@@ -49,7 +52,8 @@ const getDateOnly = (value?: string | null) => {
   if (!value) return new Date().toISOString().split("T")[0];
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return new Date().toISOString().split("T")[0];
+  if (Number.isNaN(parsed.getTime()))
+    return new Date().toISOString().split("T")[0];
   const year = parsed.getFullYear();
   const month = String(parsed.getMonth() + 1).padStart(2, "0");
   const day = String(parsed.getDate()).padStart(2, "0");
@@ -136,17 +140,33 @@ const FollowUpModal = ({
           <Button variant="outline" size="sm" onClick={onClose}>
             Close
           </Button>
-          <Button type="submit" form="follow-up-form" size="sm" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            form="follow-up-form"
+            size="sm"
+            disabled={isSubmitting}
+          >
             {isEditing ? "Update" : "Save"}
           </Button>
         </div>
       }
     >
-      <form id="follow-up-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      <form
+        id="follow-up-form"
+        onSubmit={handleSubmit(handleFormSubmit)}
+        className="space-y-4"
+      >
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label>Status <span className="text-red-500">*</span></Label>
-            <Select value={status} onValueChange={(val) => setValue("status", val, { shouldValidate: true })}>
+            <Label>
+              Status <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={status}
+              onValueChange={(val) =>
+                setValue("status", val, { shouldValidate: true })
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -157,12 +177,19 @@ const FollowUpModal = ({
                 <SelectItem value="RESCHEDULED">RESCHEDULED</SelectItem>
               </SelectContent>
             </Select>
-            {errors.status && <p className="text-xs text-red-500">{errors.status.message}</p>}
+            {errors.status && (
+              <p className="text-xs text-red-500">{errors.status.message}</p>
+            )}
           </div>
 
           <div>
             <Label>Method</Label>
-            <Select value={followUpMethod} onValueChange={(val) => setValue("follow_up_method", val, { shouldValidate: true })}>
+            <Select
+              value={followUpMethod}
+              onValueChange={(val) =>
+                setValue("follow_up_method", val, { shouldValidate: true })
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select method" />
               </SelectTrigger>
@@ -173,42 +200,70 @@ const FollowUpModal = ({
                 <SelectItem value="Meeting">Meeting</SelectItem>
               </SelectContent>
             </Select>
-            {errors.follow_up_method && <p className="text-xs text-red-500">{errors.follow_up_method.message}</p>}
+            {errors.follow_up_method && (
+              <p className="text-xs text-red-500">
+                {errors.follow_up_method.message}
+              </p>
+            )}
           </div>
 
           <div className="col-span-2">
             <Label>Purpose</Label>
             <Input {...register("purpose")} placeholder="Enter purpose" />
-            {errors.purpose && <p className="text-xs text-red-500">{errors.purpose.message}</p>}
+            {errors.purpose && (
+              <p className="text-xs text-red-500">{errors.purpose.message}</p>
+            )}
           </div>
 
           <div>
-            <Label>Assigned To <span className="text-red-500">*</span></Label>
+            <Label>
+              Assigned To <span className="text-red-500">*</span>
+            </Label>
             <Combobox
               options={userOptions}
               value={watch("assigned_to")}
-              onValueChange={(value) => setValue("assigned_to", value, { shouldValidate: true })}
+              onValueChange={(value) =>
+                setValue("assigned_to", value, { shouldValidate: true })
+              }
               placeholder="Search and select a user..."
               disabled={isSubmitting}
               className={errors.assigned_to ? "border-destructive" : ""}
             />
-            {errors.assigned_to && <p className="text-xs text-red-500">{errors.assigned_to.message}</p>}
+            {errors.assigned_to && (
+              <p className="text-xs text-red-500">
+                {errors.assigned_to.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <Label>Scheduled Date <span className="text-red-500">*</span></Label>
+            <Label>
+              Scheduled Date <span className="text-red-500">*</span>
+            </Label>
             <DatePicker
               value={scheduledAt}
-              onChange={(val: string) => setValue("scheduled_at", val || "", { shouldValidate: true })}
+              onChange={(val: string) =>
+                setValue("scheduled_at", val || "", { shouldValidate: true })
+              }
               disabled={isSubmitting}
             />
-            {errors.scheduled_at && <p className="text-xs text-red-500">{errors.scheduled_at.message}</p>}
+            {errors.scheduled_at && (
+              <p className="text-xs text-red-500">
+                {errors.scheduled_at.message}
+              </p>
+            )}
           </div>
 
           <div className="col-span-2">
             <Label>Remarks</Label>
-            <Textarea {...register("remarks")} placeholder="Enter remarks" className="min-h-[100px]" />
-            {errors.remarks && <p className="text-xs text-red-500">{errors.remarks.message}</p>}
+            <Textarea
+              {...register("remarks")}
+              placeholder="Enter remarks"
+              className="min-h-[100px]"
+            />
+            {errors.remarks && (
+              <p className="text-xs text-red-500">{errors.remarks.message}</p>
+            )}
           </div>
         </div>
       </form>

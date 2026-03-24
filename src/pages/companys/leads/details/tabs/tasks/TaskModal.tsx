@@ -27,7 +27,10 @@ import { Combobox } from "@/components/ui/combobox";
 import { useUsers } from "@/hooks/useUsers";
 
 const taskSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title cannot exceed 100 characters"),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(200, "Title cannot exceed 100 characters"),
   description: z.string().min(1, "Description is required"),
   status: z.string().min(1, "Status is required"),
   priority: z.string().min(1, "Priority is required"),
@@ -62,7 +65,13 @@ const getDateOnly = (value?: string | null) => {
   return `${year}-${month}-${day}`;
 };
 
-const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalProps) => {
+const TaskModal = ({
+  open,
+  onClose,
+  taskData,
+  onSave,
+  isSubmitting,
+}: TaskModalProps) => {
   const { data: usersResponse } = useUsers({ limit: 100 });
   const users = usersResponse?.items || usersResponse || [];
   const userOptions = users.map((user: any) => ({
@@ -119,7 +128,9 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
       }}
       headerBg="bg-primary/10"
       title={taskData ? "Edit Task" : "Add Task"}
-      description={taskData ? "Update task details." : "Create a new task for this lead."}
+      description={
+        taskData ? "Update task details." : "Create a new task for this lead."
+      }
       maxWidth="sm:max-w-lg"
       footer={
         <div className="flex justify-end gap-2 w-full">
@@ -142,7 +153,13 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? (taskData ? "Updating..." : "Creating...") : (taskData ? "Update Task" : "Create Task")}
+            {isSubmitting
+              ? taskData
+                ? "Updating..."
+                : "Creating..."
+              : taskData
+                ? "Update Task"
+                : "Create Task"}
           </Button>
         </div>
       }
@@ -176,7 +193,7 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-bold flex gap-1">
-                  Description  <span className="text-destructive">*</span>
+                  Description <span className="text-destructive">*</span>
                 </FormLabel>
                 <FormControl>
                   <Textarea
@@ -198,7 +215,11 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold">Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={isSubmitting}
+                  >
                     <FormControl>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue placeholder="Select status" />
@@ -223,7 +244,11 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs font-bold">Priority</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={isSubmitting}
+                  >
                     <FormControl>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue placeholder="Select priority" />
@@ -258,7 +283,11 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
                       onValueChange={field.onChange}
                       placeholder="Search and select a user..."
                       disabled={isSubmitting}
-                      className={form.formState.errors.assigned_to ? "border-destructive" : ""}
+                      className={
+                        form.formState.errors.assigned_to
+                          ? "border-destructive"
+                          : ""
+                      }
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
@@ -275,7 +304,9 @@ const TaskModal = ({ open, onClose, taskData, onSave, isSubmitting }: TaskModalP
                   <FormControl>
                     <DatePicker
                       value={field.value}
-                      onChange={(value: string) => field.onChange(value || null)}
+                      onChange={(value: string) =>
+                        field.onChange(value || null)
+                      }
                       className="h-8 text-sm rounded-sm"
                       disabled={isSubmitting}
                     />

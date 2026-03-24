@@ -6,287 +6,321 @@ import { Input } from "@/components/ui/input";
 import { Search, Trash2, Edit, X, Plus } from "lucide-react";
 import DataTable, { Column, SortDirection } from "@/components/DataTable";
 import StatusFormModal from "./StatusFormModal";
-import { useLeadStatuses, useCreateLeadStatus, useUpdateLeadStatus, useDeleteLeadStatus } from "@/hooks/useLeadStatus";
+import {
+  useLeadStatuses,
+  useCreateLeadStatus,
+  useUpdateLeadStatus,
+  useDeleteLeadStatus,
+} from "@/hooks/useLeadStatus";
 import { LeadStatus, LeadStatusPayload } from "@/types/leadStatus";
 import StatusBadge from "@/components/StatusBadge";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 const StatusPage = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-    const [search, setSearch] = useState(searchParams.get("search") || "");
-    const debouncedSearch = useDebounce(search, 500);
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const debouncedSearch = useDebounce(search, 500);
 
-    const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
-    const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
-    const [sortKey, setSortKey] = useState<string | null>(searchParams.get("sortKey"));
-    const [sortDirection, setSortDirection] = useState<SortDirection>(
-        (searchParams.get("sortDirection") as SortDirection) || null
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10),
+  );
+  const [limit, setLimit] = useState(
+    parseInt(searchParams.get("limit") || "10", 10),
+  );
+  const [sortKey, setSortKey] = useState<string | null>(
+    searchParams.get("sortKey"),
+  );
+  const [sortDirection, setSortDirection] = useState<SortDirection>(
+    (searchParams.get("sortDirection") as SortDirection) || null,
+  );
+
+  const hasFilters = Boolean(search || sortKey);
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setSortKey(null);
+    setSortDirection(null);
+    setPage(1);
+  };
+
+  // Synchronize states to URL
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        if (page > 1) next.set("page", page.toString());
+        else next.delete("page");
+        if (limit !== 10) next.set("limit", limit.toString());
+        else next.delete("limit");
+        if (sortKey) next.set("sortKey", sortKey);
+        else next.delete("sortKey");
+        if (sortDirection) next.set("sortDirection", sortDirection);
+        else next.delete("sortDirection");
+        return next;
+      },
+      { replace: true },
     );
+  }, [debouncedSearch, page, limit, sortKey, sortDirection, setSearchParams]);
 
-    const hasFilters = Boolean(search || sortKey);
+  const { data: listResponse, isLoading } = useLeadStatuses({
+    search: debouncedSearch.trim() || undefined,
+    sort_by: sortKey || undefined,
+    sort_direction: sortDirection || undefined,
+    offset: (page - 1) * limit,
+    limit,
+  });
 
-    const handleClearFilters = () => {
-        setSearch("");
-        setSortKey(null);
-        setSortDirection(null);
-        setPage(1);
-    };
+  const createStatusMutation = useCreateLeadStatus();
+  const updateStatusMutation = useUpdateLeadStatus();
+  const { mutate: deleteStatus, isPending: isDeleting } = useDeleteLeadStatus();
 
-    // Synchronize states to URL
-    useEffect(() => {
-        setSearchParams((prev) => {
-            const next = new URLSearchParams(prev);
-            if (debouncedSearch) next.set("search", debouncedSearch);
-            else next.delete("search");
-            if (page > 1) next.set("page", page.toString());
-            else next.delete("page");
-            if (limit !== 10) next.set("limit", limit.toString());
-            else next.delete("limit");
-            if (sortKey) next.set("sortKey", sortKey);
-            else next.delete("sortKey");
-            if (sortDirection) next.set("sortDirection", sortDirection);
-            else next.delete("sortDirection");
-            return next;
-        }, { replace: true });
-    }, [debouncedSearch, page, limit, sortKey, sortDirection, setSearchParams]);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [editingStatus, setEditingStatus] = useState<LeadStatus | null>(null);
+  const [statusToDelete, setStatusToDelete] = useState<LeadStatus | null>(null);
 
-    const { data: listResponse, isLoading } = useLeadStatuses({
-        search: debouncedSearch.trim() || undefined,
-        sort_by: sortKey || undefined,
-        sort_direction: sortDirection || undefined,
-        offset: (page - 1) * limit,
-        limit,
-    });
+  const statuses = listResponse?.items || [];
+  const totalItems = listResponse?.pagination?.total || 0;
 
-    const createStatusMutation = useCreateLeadStatus();
-    const updateStatusMutation = useUpdateLeadStatus();
-    const { mutate: deleteStatus, isPending: isDeleting } = useDeleteLeadStatus();
+  const handleCreate = () => {
+    setEditingStatus(null);
+    setIsFormModalOpen(true);
+  };
 
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [editingStatus, setEditingStatus] = useState<LeadStatus | null>(null);
-    const [statusToDelete, setStatusToDelete] = useState<LeadStatus | null>(null);
+  const handleEdit = (statusItem: LeadStatus) => {
+    setEditingStatus(statusItem);
+    setIsFormModalOpen(true);
+  };
 
-    const statuses = listResponse?.items || [];
-    const totalItems = listResponse?.pagination?.total || 0;
-
-    const handleCreate = () => {
-        setEditingStatus(null);
-        setIsFormModalOpen(true);
-    };
-
-    const handleEdit = (statusItem: LeadStatus) => {
-        setEditingStatus(statusItem);
-        setIsFormModalOpen(true);
-    };
-
-    const handleSaveStatus = (formData: LeadStatusPayload, setError: (field: any, err: any) => void) => {
-        if (editingStatus) {
-            updateStatusMutation.mutate({ id: editingStatus.id, ...formData }, {
-                onSuccess: () => {
-                    setIsFormModalOpen(false);
-                    setEditingStatus(null);
-                },
-                onError: (error: any) => {
-                    if (error?.code === 'validation_error' && error?.details?.body) {
-                        Object.entries(error.details.body).forEach(([key, msg]) => {
-                            setError(key, { type: 'server', message: msg });
-                        });
-                    }
-                }
+  const handleSaveStatus = (
+    formData: LeadStatusPayload,
+    setError: (field: any, err: any) => void,
+  ) => {
+    if (editingStatus) {
+      updateStatusMutation.mutate(
+        { id: editingStatus.id, ...formData },
+        {
+          onSuccess: () => {
+            setIsFormModalOpen(false);
+            setEditingStatus(null);
+          },
+          onError: (error: any) => {
+            if (error?.code === "validation_error" && error?.details?.body) {
+              Object.entries(error.details.body).forEach(([key, msg]) => {
+                setError(key, { type: "server", message: msg });
+              });
+            }
+          },
+        },
+      );
+    } else {
+      createStatusMutation.mutate(formData, {
+        onSuccess: () => {
+          setIsFormModalOpen(false);
+        },
+        onError: (error: any) => {
+          if (error?.code === "validation_error" && error?.details?.body) {
+            Object.entries(error.details.body).forEach(([key, msg]) => {
+              setError(key, { type: "server", message: msg });
             });
-        } else {
-            createStatusMutation.mutate(formData, {
-                onSuccess: () => {
-                    setIsFormModalOpen(false);
-                },
-                onError: (error: any) => {
-                    if (error?.code === 'validation_error' && error?.details?.body) {
-                        Object.entries(error.details.body).forEach(([key, msg]) => {
-                            setError(key, { type: 'server', message: msg });
-                        });
-                    }
-                }
-            });
-        }
-    };
-
-    const columns: Column<LeadStatus>[] = [
-        {
-            key: "name",
-            header: "Name",
-            sortable: true,
-            className: "font-semibold",
+          }
         },
-        {
-            key: "color",
-            header: "Color",
-            render: (item) => (
-                <div className="flex items-center gap-2">
-                    <div
-                        className="w-4 h-4 rounded-full border border-border/50 shadow-sm"
-                        style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-muted-foreground uppercase text-[10px] tracking-wider">{item.color}</span>
-                </div>
-            )
-        },
-        {
-            key: "display_order",
-            header: "Display Order",
-            sortable: true,
-        },
-        {
-            key: "is_active",
-            header: "Status",
-            render: (item) => (
-                <StatusBadge
-                    status={item.is_active ? "Active" : "Inactive"}
-                    variant={item.is_active ? "success" : "destructive"}
-                />
-            )
-        },
-        {
-            key: "actions",
-            header: "Actions",
-            render: (item) => (
-                <div className="flex bg-transparent items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:text-primary hover:bg-primary/10 rounded-sm"
-                        onClick={() => handleEdit(item)}
-                    >
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:text-destructive hover:bg-destructive/10 rounded-sm text-destructive"
-                        onClick={() => setStatusToDelete(item)}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            )
-        }
-    ];
+      });
+    }
+  };
 
-    return (
-        <div className="w-full mx-auto space-y-4 animate-fade-in pb-10">
-            {/* Header bar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-2">
-                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto text-sm">
-                    {/* Search */}
-                    <div className="relative flex-1 sm:flex-initial">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                            placeholder="Search Status..."
-                            value={search}
-                            onChange={(e) => {
-                                setSearch(e.target.value);
-                                setPage(1);
-                            }}
-                            className="h-8 pl-7 text-xs rounded-sm w-full sm:w-[250px]"
-                        />
-                    </div>
-
-                    {hasFilters && (
-                        <div className="animate-in fade-in slide-in-from-left-2 duration-300">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleClearFilters}
-                                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
-                            >
-                                <X className="h-3.5 w-3.5 mr-1" />
-                                Clear
-                            </Button>
-                        </div>
-                    )}
-                </div>
-
-                <Button size="sm" className="h-8 text-xs gap-1.5" onClick={handleCreate}>
-                    <Plus className="h-3.5 w-3.5" />
-                    Add Status
-                </Button>
-            </div>
-
-            {/* Data Table */}
-            <div className="bg-card rounded-md shadow-sm border border-border/50">
-                <DataTable
-                    columns={columns}
-                    data={statuses}
-                    isLoading={isLoading}
-                    serverSide={true}
-                    serverTotal={totalItems}
-                    serverPage={page}
-                    serverSortKey={sortKey || undefined}
-                    serverSortDirection={sortDirection}
-                    onServerPageChange={setPage}
-                    onServerPageSizeChange={(newSize) => {
-                        setLimit(newSize);
-                        setPage(1);
-                    }}
-                    onServerSortChange={(key, direction) => {
-                        setSortKey(key);
-                        setSortDirection(direction);
-                        setPage(1);
-                    }}
-                />
-            </div>
-
-            {isFormModalOpen && (
-                <StatusFormModal
-                    open={isFormModalOpen}
-                    onClose={() => {
-                        setIsFormModalOpen(false);
-                    }}
-                    statusData={editingStatus}
-                    onSave={handleSaveStatus}
-                    isSubmitting={createStatusMutation.isPending || updateStatusMutation.isPending}
-                />
-            )}
-
-            <AlertDialog open={!!statusToDelete} onOpenChange={(open) => !open && setStatusToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete the status "{statusToDelete?.name}".
-                            This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            disabled={isDeleting}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                if (statusToDelete?.id) {
-                                    deleteStatus(statusToDelete.id, {
-                                        onSuccess: () => setStatusToDelete(null)
-                                    });
-                                }
-                            }}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                            {isDeleting ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+  const columns: Column<LeadStatus>[] = [
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      className: "font-semibold",
+    },
+    {
+      key: "color",
+      header: "Color",
+      render: (item) => (
+        <div className="flex items-center gap-2">
+          <div
+            className="w-4 h-4 rounded-full border border-border/50 shadow-sm"
+            style={{ backgroundColor: item.color }}
+          />
+          <span className="text-muted-foreground uppercase text-[10px] tracking-wider">
+            {item.color}
+          </span>
         </div>
-    );
+      ),
+    },
+    {
+      key: "display_order",
+      header: "Display Order",
+      sortable: true,
+    },
+    {
+      key: "is_active",
+      header: "Status",
+      render: (item) => (
+        <StatusBadge
+          status={item.is_active ? "Active" : "Inactive"}
+          variant={item.is_active ? "success" : "destructive"}
+        />
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (item) => (
+        <div
+          className="flex bg-transparent items-center gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 hover:text-primary hover:bg-primary/10 rounded-sm"
+            onClick={() => handleEdit(item)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 hover:text-destructive hover:bg-destructive/10 rounded-sm text-destructive"
+            onClick={() => setStatusToDelete(item)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="w-full mx-auto space-y-4 animate-fade-in pb-10">
+      {/* Header bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto text-sm">
+          {/* Search */}
+          <div className="relative flex-1 sm:flex-initial">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search Status..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="h-8 pl-7 text-xs rounded-sm w-full sm:w-[250px]"
+            />
+          </div>
+
+          {hasFilters && (
+            <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
+              >
+                <X className="h-3.5 w-3.5 mr-1" />
+                Clear
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <Button
+          size="sm"
+          className="h-8 text-xs gap-1.5"
+          onClick={handleCreate}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add Status
+        </Button>
+      </div>
+
+      {/* Data Table */}
+      <div className="bg-card rounded-md shadow-sm border border-border/50">
+        <DataTable
+          columns={columns}
+          data={statuses}
+          isLoading={isLoading}
+          serverSide={true}
+          serverTotal={totalItems}
+          serverPage={page}
+          serverSortKey={sortKey || undefined}
+          serverSortDirection={sortDirection}
+          onServerPageChange={setPage}
+          onServerPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+          }}
+          onServerSortChange={(key, direction) => {
+            setSortKey(key);
+            setSortDirection(direction);
+            setPage(1);
+          }}
+        />
+      </div>
+
+      {isFormModalOpen && (
+        <StatusFormModal
+          open={isFormModalOpen}
+          onClose={() => {
+            setIsFormModalOpen(false);
+          }}
+          statusData={editingStatus}
+          onSave={handleSaveStatus}
+          isSubmitting={
+            createStatusMutation.isPending || updateStatusMutation.isPending
+          }
+        />
+      )}
+
+      <AlertDialog
+        open={!!statusToDelete}
+        onOpenChange={(open) => !open && setStatusToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the status "{statusToDelete?.name}".
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                if (statusToDelete?.id) {
+                  deleteStatus(statusToDelete.id, {
+                    onSuccess: () => setStatusToDelete(null),
+                  });
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
 };
 
 export default StatusPage;

@@ -21,7 +21,9 @@ export function useCityStateCountry(params: GeoParams) {
   });
 }
 
-export function useCountries(params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true }) {
+export function useCountries(
+  params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true },
+) {
   return useQuery({
     queryKey: queryKeys.locations.list(params),
     queryFn: () => listCityStateCountry(params),
@@ -31,7 +33,10 @@ export function useCountries(params: Omit<GeoParams, "country_id" | "state_id"> 
   });
 }
 
-export function useStates(countryId?: string, params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true }) {
+export function useStates(
+  countryId?: string,
+  params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true },
+) {
   return useQuery({
     queryKey: queryKeys.locations.list({ ...params, country_id: countryId }),
     queryFn: () => listCityStateCountry({ ...params, country_id: countryId }),
@@ -42,7 +47,10 @@ export function useStates(countryId?: string, params: Omit<GeoParams, "country_i
   });
 }
 
-export function useCities(stateId?: string, params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true }) {
+export function useCities(
+  stateId?: string,
+  params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true },
+) {
   return useQuery({
     queryKey: queryKeys.locations.list({ ...params, state_id: stateId }),
     queryFn: () => listCityStateCountry({ ...params, state_id: stateId }),

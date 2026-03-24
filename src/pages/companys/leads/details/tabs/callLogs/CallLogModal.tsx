@@ -28,7 +28,11 @@ const callLogSchema = z.object({
   call_type: z.string().min(1, "Call type is required"),
   call_start_time: z.string().min(1, "Start time is required"),
   call_end_time: z.string().min(1, "End time is required"),
-  recording_url: z.string().url("Invalid URL format").optional().or(z.literal("")),
+  recording_url: z
+    .string()
+    .url("Invalid URL format")
+    .optional()
+    .or(z.literal("")),
   subject: z.string().min(1, "Subject is required").max(200),
   remarks: z.string().optional().or(z.literal("")),
   created_at: z.string().optional().or(z.literal("")),
@@ -44,11 +48,20 @@ interface CallLogModalProps {
   open: boolean;
   onClose: () => void;
   callLogData?: CallLog | null;
-  onSave: (data: CallLogFormData, setError: UseFormSetError<CallLogFormData>) => void;
+  onSave: (
+    data: CallLogFormData,
+    setError: UseFormSetError<CallLogFormData>,
+  ) => void;
   isSubmitting?: boolean;
 }
 
-const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: CallLogModalProps) => {
+const CallLogModal = ({
+  open,
+  onClose,
+  callLogData,
+  onSave,
+  isSubmitting,
+}: CallLogModalProps) => {
   const form = useForm<CallLogFormData>({
     resolver: zodResolver(callLogSchema),
     defaultValues: {
@@ -58,7 +71,7 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
       recording_url: "",
       subject: "",
       remarks: "",
-      created_at: new Date().toISOString().split('T')[0],
+      created_at: new Date().toISOString().split("T")[0],
     },
   });
 
@@ -72,7 +85,8 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
           recording_url: callLogData.recording_url || "",
           subject: callLogData.subject || "",
           remarks: callLogData.remarks || "",
-          created_at: callLogData.created_at || new Date().toISOString().split('T')[0],
+          created_at:
+            callLogData.created_at || new Date().toISOString().split("T")[0],
         });
       } else {
         form.reset({
@@ -82,7 +96,7 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
           recording_url: "",
           subject: "",
           remarks: "",
-          created_at: new Date().toISOString().split('T')[0],
+          created_at: new Date().toISOString().split("T")[0],
         });
       }
     }
@@ -101,7 +115,11 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
       }}
       headerBg="bg-primary/10"
       title={callLogData ? "Edit Call Log" : "Add Call Log"}
-      description={callLogData ? "Update call log details." : "Record a new call log for this lead."}
+      description={
+        callLogData
+          ? "Update call log details."
+          : "Record a new call log for this lead."
+      }
       maxWidth="sm:max-w-lg"
       footer={
         <div className="flex justify-end gap-2 w-full">
@@ -124,7 +142,13 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? (callLogData ? "Updating..." : "Saving...") : (callLogData ? "Update Log" : "Save Log")}
+            {isSubmitting
+              ? callLogData
+                ? "Updating..."
+                : "Saving..."
+              : callLogData
+                ? "Update Log"
+                : "Save Log"}
           </Button>
         </div>
       }
@@ -140,7 +164,11 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
                   <FormLabel className="text-xs font-bold flex gap-1">
                     <span className="text-destructive">*</span> Call Type
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={isSubmitting}
+                  >
                     <FormControl>
                       <SelectTrigger className="h-9 text-xs">
                         <SelectValue placeholder="Select type" />
@@ -166,7 +194,9 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
                   <FormControl>
                     <DatePicker
                       value={field.value}
-                      onChange={(value: string) => field.onChange(value || null)}
+                      onChange={(value: string) =>
+                        field.onChange(value || null)
+                      }
                       className="h-8 text-sm rounded-sm"
                       disabled={isSubmitting}
                     />
@@ -208,7 +238,13 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
                     <span className="text-destructive">*</span> Start Time
                   </FormLabel>
                   <FormControl>
-                    <Input type="time" step="1" className="h-9 text-xs" disabled={isSubmitting} {...field} />
+                    <Input
+                      type="time"
+                      step="1"
+                      className="h-9 text-xs"
+                      disabled={isSubmitting}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -224,7 +260,13 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
                     <span className="text-destructive">*</span> End Time
                   </FormLabel>
                   <FormControl>
-                    <Input type="time" step="1" className="h-9 text-xs" disabled={isSubmitting} {...field} />
+                    <Input
+                      type="time"
+                      step="1"
+                      className="h-9 text-xs"
+                      disabled={isSubmitting}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -237,7 +279,9 @@ const CallLogModal = ({ open, onClose, callLogData, onSave, isSubmitting }: Call
             name="recording_url"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-bold">Recording URL</FormLabel>
+                <FormLabel className="text-xs font-bold">
+                  Recording URL
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="https://example.com/recording.mp3"

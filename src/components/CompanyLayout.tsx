@@ -1,9 +1,32 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Link, useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
 import {
-  LayoutDashboard, LogOut, Menu, ChevronDown,
-  Bell, PanelLeftClose, PanelLeft, Box, ShieldCheck, List, Clock, Tags, Blocks,
-  Package, Hash, Award, Wind, ClipboardList, MapPin, FileText
+  Link,
+  useLocation,
+  useNavigate,
+  Outlet,
+  useParams,
+} from "react-router-dom";
+import {
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  ChevronDown,
+  Bell,
+  PanelLeftClose,
+  PanelLeft,
+  Box,
+  ShieldCheck,
+  List,
+  Clock,
+  Tags,
+  Blocks,
+  Package,
+  Hash,
+  Award,
+  Wind,
+  ClipboardList,
+  MapPin,
+  FileText,
 } from "lucide-react";
 
 import { useLogout, useCurrentUser, useHasPermission } from "@/hooks/useAuth";
@@ -39,30 +62,69 @@ const navItems: NavItemEntry[] = [
       { label: "Reminders", icon: Bell, path: "reminders" },
       { label: "Follow-ups", icon: Clock, path: "followups" },
       { label: "Taks", icon: ClipboardList, path: "tasks" },
-    ]
+    ],
   },
   // { label: "Salesmen", icon: UserCheck, path: "salesmen"},
   // { label: "Employees", icon: Users, path: "employees"},
-  // { label: "Attendance", icon: Clock, path: "attendance" },  
+  // { label: "Attendance", icon: Clock, path: "attendance" },
   // { label: "Suppliers", icon: Truck, path: "suppliers" },
   // { label: "Parties", icon: Users, path: "parties" },
   {
     label: "Product Setup",
     icon: Blocks,
     children: [
-      { label: "Products", icon: Box, path: "products", permission: "product.read" },
-      { label: "Recipes", icon: List, path: "recipes", permission: "product-bom.read" },
-      { label: "Kits", icon: Package, path: "kits", permission: "product-kit.read" },
-      { label: "Categories", icon: Tags, path: "product-categories", permission: "product-category.read" },
-      { label: "Brands", icon: Award, path: "brands", permission: "product-brand.read" },
-      { label: "Fragrances", icon: Wind, path: "fragrances", permission: "product-fragrance.read" },
-    ]
+      {
+        label: "Products",
+        icon: Box,
+        path: "products",
+        permission: "product.read",
+      },
+      {
+        label: "Recipes",
+        icon: List,
+        path: "recipes",
+        permission: "product-bom.read",
+      },
+      {
+        label: "Kits",
+        icon: Package,
+        path: "kits",
+        permission: "product-kit.read",
+      },
+      {
+        label: "Categories",
+        icon: Tags,
+        path: "product-categories",
+        permission: "product-category.read",
+      },
+      {
+        label: "Brands",
+        icon: Award,
+        path: "brands",
+        permission: "product-brand.read",
+      },
+      {
+        label: "Fragrances",
+        icon: Wind,
+        path: "fragrances",
+        permission: "product-fragrance.read",
+      },
+    ],
   },
-  { label: "Batches", icon: Blocks, path: "batches", permission: "inventory-batch.read" },
-  { label: "Serial Numbers", icon: Hash, path: "serials", permission: "inventory-serial.read" },
+  {
+    label: "Batches",
+    icon: Blocks,
+    path: "batches",
+    permission: "inventory-batch.read",
+  },
+  {
+    label: "Serial Numbers",
+    icon: Hash,
+    path: "serials",
+    permission: "inventory-serial.read",
+  },
   // { label: "Accounts", icon: Landmark, path: "accounts" },
 ];
-
 
 interface NavGroupProps {
   item: NavItemEntry & { children: NavItemEntry[] };
@@ -72,19 +134,31 @@ interface NavGroupProps {
   location: { pathname: string };
 }
 
-const NavGroup = ({ item, active, onCloseSidebar, currentCompany, location }: NavGroupProps) => {
+const NavGroup = ({
+  item,
+  active,
+  onCloseSidebar,
+  currentCompany,
+  location,
+}: NavGroupProps) => {
   const [isOpen, setIsOpen] = useState(active);
 
   useEffect(() => {
     if (active) setIsOpen(true);
   }, [active]);
 
-  const theme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
+  const theme = getCompanyTheme(
+    currentCompany.id,
+    currentCompany.display_name || currentCompany.legal_name,
+  );
 
   const getFullActive = (path?: string) => {
     if (!path) return false;
     const itemPath = `/${currentCompany.id}/${path}`;
-    return location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
+    return (
+      location.pathname === itemPath ||
+      location.pathname.startsWith(itemPath + "/")
+    );
   };
 
   return (
@@ -101,7 +175,9 @@ const NavGroup = ({ item, active, onCloseSidebar, currentCompany, location }: Na
           <item.icon className="h-4 w-4 shrink-0 transition-colors" />
           <span>{item.label}</span>
         </div>
-        <ChevronDown className={`h-3 w-3 transition-transform duration-200 opacity-50 group-hover:opacity-100 ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`h-3 w-3 transition-transform duration-200 opacity-50 group-hover:opacity-100 ${isOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       {isOpen && (
@@ -115,9 +191,10 @@ const NavGroup = ({ item, active, onCloseSidebar, currentCompany, location }: Na
                 onClick={onCloseSidebar}
                 className={`
                   flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-md transition-all duration-200
-                  ${childActive
-                    ? "bg-primary/15 text-primary font-bold"
-                    : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
+                  ${
+                    childActive
+                      ? "bg-primary/15 text-primary font-bold"
+                      : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
                   }
                 `}
                 style={childActive ? { color: `hsl(${theme.primary})` } : {}}
@@ -144,23 +221,38 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const user = useCurrentUser();
   const { hasPermission } = useHasPermission();
   const { data: companiesData, isLoading: isLoadingCompanies } = useCompanies();
-  const companies = useMemo(() => companiesData?.items || [], [companiesData?.items]);
+  const companies = useMemo(
+    () => companiesData?.items || [],
+    [companiesData?.items],
+  );
 
   const currentCompany = useMemo(() => {
     if (companies.length === 0) return null;
-    return companies.find((c: Company) => c.id === companyId) ||
-      companies.find((c: Company) => c.id === localStorage.getItem("currentCompanyId")) ||
-      companies[0];
+    return (
+      companies.find((c: Company) => c.id === companyId) ||
+      companies.find(
+        (c: Company) => c.id === localStorage.getItem("currentCompanyId"),
+      ) ||
+      companies[0]
+    );
   }, [companyId, companies]);
 
   const getFullActive = (path?: string) => {
     if (!currentCompany || !path) return false;
     const itemPath = `/${currentCompany.id}/${path}`;
-    return location.pathname === itemPath || location.pathname.startsWith(itemPath + "/");
+    return (
+      location.pathname === itemPath ||
+      location.pathname.startsWith(itemPath + "/")
+    );
   };
   const initials = user?.name
-    ? user.name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
-    : 'ME';
+    ? user.name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "ME";
 
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -170,20 +262,25 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
-        !buttonRef.current?.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !buttonRef.current?.contains(event.target as Node)
+      ) {
         setIsUserDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
 
   useEffect(() => {
     if (currentCompany) {
-      const theme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
+      const theme = getCompanyTheme(
+        currentCompany.id,
+        currentCompany.display_name || currentCompany.legal_name,
+      );
       const root = document.documentElement;
       root.style.setProperty("--primary", theme.primary);
       root.style.setProperty("--ring", theme.ring);
@@ -197,13 +294,13 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
     setIsCompanyDropdownOpen(false);
     // When switching company, navigate to the new company's dashboard
     const currentPath = location.pathname.split("/").slice(2).join("/");
-    navigate(`/${company.id}/${currentPath || 'dashboard'}`);
+    navigate(`/${company.id}/${currentPath || "dashboard"}`);
   };
 
-  const activeNavItem = navItems.find(item => {
+  const activeNavItem = navItems.find((item) => {
     if (!currentCompany) return false;
     if (item.children) {
-      return item.children.some(child => getFullActive(child.path));
+      return item.children.some((child) => getFullActive(child.path));
     }
     return getFullActive(item.path);
   });
@@ -218,39 +315,54 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
     );
   }
 
-  const currentTheme = getCompanyTheme(currentCompany.id, currentCompany.display_name || currentCompany.legal_name);
+  const currentTheme = getCompanyTheme(
+    currentCompany.id,
+    currentCompany.display_name || currentCompany.legal_name,
+  );
 
   return (
     <div className="flex h-screen bg-secondary/30">
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-foreground/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div
+          className="fixed inset-0 bg-foreground/20 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
 
       {/* Sidebar */}
-      <aside className={`
+      <aside
+        className={`
         fixed lg:static inset-y-0 left-0 z-50 bg-card border-r border-border
         flex flex-col transition-all duration-300 ease-in-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         ${sidebarCollapsed ? "lg:w-0 lg:border-r-0 lg:overflow-hidden lg:-translate-x-full" : "lg:w-56 lg:translate-x-0"}
         w-56
-      `}>
+      `}
+      >
         <div className="p-2 border-b lg:border-b-0">
           <div className="flex items-center gap-1">
             {/* Company Selector */}
             <div className="relative flex-1 min-w-0">
               <button
-                onClick={() => (user?.is_root_user || companies.length > 1) && setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
-                className={`flex items-center gap-2 w-full h-9 px-2 rounded-md transition-colors text-left overflow-hidden ${user?.is_root_user || companies.length > 1 ? 'hover:bg-accent' : 'cursor-default'}`}
+                onClick={() =>
+                  (user?.is_root_user || companies.length > 1) &&
+                  setIsCompanyDropdownOpen(!isCompanyDropdownOpen)
+                }
+                className={`flex items-center gap-2 w-full h-9 px-2 rounded-md transition-colors text-left overflow-hidden ${user?.is_root_user || companies.length > 1 ? "hover:bg-accent" : "cursor-default"}`}
               >
                 <div className="h-6 w-6 bg-primary text-primary-foreground flex items-center justify-center rounded-sm shrink-0">
-                  <span className="text-[10px] font-bold">{currentTheme.initials}</span>
+                  <span className="text-[10px] font-bold">
+                    {currentTheme.initials}
+                  </span>
                 </div>
                 <span className="flex-1 text-sm font-semibold truncate leading-none text-foreground">
                   {currentCompany.display_name || currentCompany.legal_name}
                 </span>
                 {(user?.is_root_user || companies.length > 1) && (
-                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0 ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0 ${isCompanyDropdownOpen ? "rotate-180" : ""}`}
+                  />
                 )}
               </button>
 
@@ -258,22 +370,35 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
               {isCompanyDropdownOpen && (
                 <div className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-md shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-1">
-                    <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Switch Company</div>
+                    <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                      Switch Company
+                    </div>
                     {companies.map((company: Company) => {
-                      const theme = getCompanyTheme(company.id, company.display_name || company.legal_name);
+                      const theme = getCompanyTheme(
+                        company.id,
+                        company.display_name || company.legal_name,
+                      );
                       return (
                         <button
                           key={company.id}
                           onClick={() => toggleCompany(company)}
                           className={`flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm transition-colors text-left
-                            ${currentCompany.id === company.id ? 'bg-accent text-accent-foreground' : 'text-popover-foreground hover:bg-accent hover:text-accent-foreground'}
+                            ${currentCompany.id === company.id ? "bg-accent text-accent-foreground" : "text-popover-foreground hover:bg-accent hover:text-accent-foreground"}
                           `}
                         >
-                          <div className={`h-5 w-5 rounded-sm flex items-center justify-center shrink-0 border ${currentCompany.id === company.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted'}`}>
-                            <span className="text-[10px] font-bold">{theme.initials}</span>
+                          <div
+                            className={`h-5 w-5 rounded-sm flex items-center justify-center shrink-0 border ${currentCompany.id === company.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted"}`}
+                          >
+                            <span className="text-[10px] font-bold">
+                              {theme.initials}
+                            </span>
                           </div>
-                          <span className="truncate flex-1">{company.display_name || company.legal_name}</span>
-                          {currentCompany.id === company.id && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                          <span className="truncate flex-1">
+                            {company.display_name || company.legal_name}
+                          </span>
+                          {currentCompany.id === company.id && (
+                            <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                          )}
                         </button>
                       );
                     })}
@@ -284,7 +409,10 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
             {/* Sidebar Hide Button */}
             <button
-              onClick={() => { setSidebarCollapsed(true); setSidebarOpen(false); }}
+              onClick={() => {
+                setSidebarCollapsed(true);
+                setSidebarOpen(false);
+              }}
               className="h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
               title="Hide sidebar"
             >
@@ -295,58 +423,71 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
         {/* Navigation */}
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {navItems.filter(item => {
-            if (item.permission) {
-              return hasPermission(item.permission);
-            }
-            if (item.children) {
-              return item.children.some(child => !child.permission || hasPermission(child.permission));
-            }
-            return true;
-          }).map((item) => {
-            const active = item.children
-              ? item.children.some(child => getFullActive(child.path))
-              : getFullActive(item.path);
+          {navItems
+            .filter((item) => {
+              if (item.permission) {
+                return hasPermission(item.permission);
+              }
+              if (item.children) {
+                return item.children.some(
+                  (child) =>
+                    !child.permission || hasPermission(child.permission),
+                );
+              }
+              return true;
+            })
+            .map((item) => {
+              const active = item.children
+                ? item.children.some((child) => getFullActive(child.path))
+                : getFullActive(item.path);
 
-            if (item.children) {
-              const visibleChildren = item.children.filter(child => !child.permission || hasPermission(child.permission));
-              if (visibleChildren.length === 0) return null;
+              if (item.children) {
+                const visibleChildren = item.children.filter(
+                  (child) =>
+                    !child.permission || hasPermission(child.permission),
+                );
+                if (visibleChildren.length === 0) return null;
 
+                return (
+                  <NavGroup
+                    key={item.label}
+                    item={{ ...item, children: visibleChildren }}
+                    active={active}
+                    onCloseSidebar={() => setSidebarOpen(false)}
+                    currentCompany={currentCompany}
+                    location={location}
+                  />
+                );
+              }
+
+              const itemPath = `/${currentCompany.id}/${item.path}`;
               return (
-                <NavGroup
-                  key={item.label}
-                  item={{ ...item, children: visibleChildren }}
-                  active={active}
-                  onCloseSidebar={() => setSidebarOpen(false)}
-                  currentCompany={currentCompany}
-                  location={location}
-                />
-              );
-            }
-
-            const itemPath = `/${currentCompany.id}/${item.path}`;
-            return (
-              <Link
-                key={item.path}
-                to={itemPath}
-                onClick={() => setSidebarOpen(false)}
-                className={`
+                <Link
+                  key={item.path}
+                  to={itemPath}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
                   flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
-                  ${active
-                    ? "bg-primary/10 text-primary font-bold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  ${
+                    active
+                      ? "bg-primary/10 text-primary font-bold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   }
                 `}
-                style={active ? { color: `hsl(${currentTheme.primary})` } : {}}
-              >
-                <item.icon
-                  className={`h-4 w-4 transition-colors`}
-                  style={active ? { color: `hsl(${currentTheme.primary})` } : {}}
-                />
-                {item.label}
-              </Link>
-            );
-          })}
+                  style={
+                    active ? { color: `hsl(${currentTheme.primary})` } : {}
+                  }
+                >
+                  <item.icon
+                    className={`h-4 w-4 transition-colors`}
+                    style={
+                      active ? { color: `hsl(${currentTheme.primary})` } : {}
+                    }
+                  />
+                  {item.label}
+                </Link>
+              );
+            })}
         </nav>
 
         {user?.is_root_user && (
@@ -386,7 +527,9 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
               <Menu className="h-5 w-5" />
             </button>
 
-            <h1 className="text-sm md:text-base font-semibold text-foreground tracking-tight ml-1">{pageTitle}</h1>
+            <h1 className="text-sm md:text-base font-semibold text-foreground tracking-tight ml-1">
+              {pageTitle}
+            </h1>
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3">
@@ -406,11 +549,14 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                   <span className="text-[10px] font-bold">{initials}</span>
                 </div>
                 <div className="hidden md:block text-left mr-1">
-                  <span className="block text-[11px] font-semibold leading-none">{user?.name || 'User'}</span>
+                  <span className="block text-[11px] font-semibold leading-none">
+                    {user?.name || "User"}
+                  </span>
                 </div>
-                <ChevronDown className={`h-3 w-3 text-muted-foreground hidden sm:block transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`h-3 w-3 text-muted-foreground hidden sm:block transition-transform ${isUserDropdownOpen ? "rotate-180" : ""}`}
+                />
               </button>
-
 
               {isUserDropdownOpen &&
                 createPortal(
@@ -438,11 +584,13 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                         className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-sm text-destructive hover:bg-destructive/10"
                       >
                         <LogOut className="h-4 w-4" />
-                        <span>{isLoggingOut ? "Signing out…" : "Sign out"}</span>
+                        <span>
+                          {isLoggingOut ? "Signing out…" : "Sign out"}
+                        </span>
                       </button>
                     </div>
                   </div>,
-                  document.body
+                  document.body,
                 )}
             </div>
           </div>

@@ -7,32 +7,51 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerClose,
-  DrawerFooter
+  DrawerFooter,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { Plus, X, Search, Loader2, ArrowLeft, Edit2 } from "lucide-react";
-import { useCategories, useCreateCategory, useUpdateCategory, useCategoriesCombobox } from "@/hooks/useProductCategories";
+import {
+  useCategories,
+  useCreateCategory,
+  useUpdateCategory,
+  useCategoriesCombobox,
+} from "@/hooks/useProductCategories";
 import { ProductCategory, CategoryType } from "@/types/productCategories";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
-const categorySchema = z.object({
-  name: z.string().min(2, "Category name must be at least 2 characters").max(100, "Category name cannot exceed 100 characters"),
-  type: z.enum(["main", "sub"]),
-  mainCategoryId: z.string().optional(),
-}).refine(data => {
-  if (data.type === 'sub' && !data.mainCategoryId) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Please select a main category",
-  path: ["mainCategoryId"]
-});
+const categorySchema = z
+  .object({
+    name: z
+      .string()
+      .min(2, "Category name must be at least 2 characters")
+      .max(100, "Category name cannot exceed 100 characters"),
+    type: z.enum(["main", "sub"]),
+    mainCategoryId: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.type === "sub" && !data.mainCategoryId) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Please select a main category",
+      path: ["mainCategoryId"],
+    },
+  );
 
 interface CategoryDrawerProps {
   open: boolean;
@@ -40,15 +59,22 @@ interface CategoryDrawerProps {
 }
 
 export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
-  const [view, setView] = useState<'list' | 'form'>('list');
+  const [view, setView] = useState<"list" | "form">("list");
   const [search, setSearch] = useState("");
-  const [formData, setFormData] = useState<Partial<ProductCategory>>({ name: "", type: "main" });
-  const [errors, setErrors] = useState<{ name?: string; mainCategoryId?: string }>({});
+  const [formData, setFormData] = useState<Partial<ProductCategory>>({
+    name: "",
+    type: "main",
+  });
+  const [errors, setErrors] = useState<{
+    name?: string;
+    mainCategoryId?: string;
+  }>({});
 
   const { data, isLoading: isLoadingList } = useCategories({ search });
   const categories = data?.items ?? [];
 
-  const { data: mainCategories = [], isLoading: isLoadingMainCats } = useCategoriesCombobox({ type: "main" });
+  const { data: mainCategories = [], isLoading: isLoadingMainCats } =
+    useCategoriesCombobox({ type: "main" });
 
   const { mutate: createCategory, isPending: isCreating } = useCreateCategory();
   const { mutate: updateCategory, isPending: isUpdating } = useUpdateCategory();
@@ -58,7 +84,7 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
   const handleAddNew = () => {
     setFormData({ name: "", type: "main" });
     setErrors({});
-    setView('form');
+    setView("form");
   };
 
   const handleEdit = (category: ProductCategory) => {
@@ -66,14 +92,14 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
       id: category.id,
       name: category.name,
       type: category.parent_id ? "sub" : "main",
-      mainCategoryId: category.parent_id ?? undefined
+      mainCategoryId: category.parent_id ?? undefined,
     });
     setErrors({});
-    setView('form');
+    setView("form");
   };
 
   const handleBack = () => {
-    setView('list');
+    setView("list");
     setErrors({});
   };
 
@@ -84,24 +110,28 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
 
       const payload = {
         name: formData.name!,
-        parent_id: formData.type === "sub" ? formData.mainCategoryId : null
+        parent_id: formData.type === "sub" ? formData.mainCategoryId : null,
       };
 
       if (formData.id) {
-        updateCategory({ id: formData.id, ...payload }, {
-          onSuccess: () => setView('list')
-        });
+        updateCategory(
+          { id: formData.id, ...payload },
+          {
+            onSuccess: () => setView("list"),
+          },
+        );
       } else {
         createCategory(payload, {
-          onSuccess: () => setView('list')
+          onSuccess: () => setView("list"),
         });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: { name?: string; mainCategoryId?: string } = {};
-        error.errors.forEach(err => {
-          if (err.path[0] === 'name') newErrors.name = err.message;
-          if (err.path[0] === 'mainCategoryId') newErrors.mainCategoryId = err.message;
+        error.errors.forEach((err) => {
+          if (err.path[0] === "name") newErrors.name = err.message;
+          if (err.path[0] === "mainCategoryId")
+            newErrors.mainCategoryId = err.message;
         });
         setErrors(newErrors);
       }
@@ -122,7 +152,11 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
             </DrawerDescription>
           </div>
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted/80">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-md hover:bg-muted/80"
+            >
               <X className="h-3.5 w-3.5" />
             </Button>
           </DrawerClose>
@@ -140,7 +174,11 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
               className="pl-8 h-9 text-sm border-muted-foreground/20 focus-visible:ring-primary/30 rounded-md"
             />
           </div>
-          <Button onClick={handleAddNew} size="sm" className="h-9 px-3 gap-1.5 text-xs font-medium">
+          <Button
+            onClick={handleAddNew}
+            size="sm"
+            className="h-9 px-3 gap-1.5 text-xs font-medium"
+          >
             <Plus className="h-3.5 w-3.5" />
             Add
           </Button>
@@ -155,8 +193,15 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
               </div>
             ) : categories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-border/60 rounded-lg bg-muted/5">
-                <p className="text-xs text-muted-foreground mb-2">No categories found</p>
-                <Button variant="outline" size="sm" onClick={handleAddNew} className="h-8 text-xs gap-1">
+                <p className="text-xs text-muted-foreground mb-2">
+                  No categories found
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddNew}
+                  className="h-8 text-xs gap-1"
+                >
                   <Plus className="h-3 w-3" />
                   Create category
                 </Button>
@@ -207,7 +252,12 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
     <div className="flex flex-col h-full bg-background">
       <DrawerHeader className="border-b border-border/50 pb-4 px-6 pt-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 rounded-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBack}
+            className="h-8 w-8 rounded-full"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="space-y-1">
@@ -215,7 +265,9 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
               {formData.id ? "Edit Category" : "Add New Category"}
             </DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">
-              {formData.id ? "Modify existing category details." : "Fill in the details for the new category."}
+              {formData.id
+                ? "Modify existing category details."
+                : "Fill in the details for the new category."}
             </DrawerDescription>
           </div>
         </div>
@@ -235,7 +287,8 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
                   setFormData({
                     ...formData,
                     type: value,
-                    mainCategoryId: value === "main" ? undefined : formData.mainCategoryId,
+                    mainCategoryId:
+                      value === "main" ? undefined : formData.mainCategoryId,
                   });
                 }}
                 disabled={isPending}
@@ -257,24 +310,35 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
                   Main Category
                 </Label>
                 <Combobox
-                  options={mainCategories.map((cat) => ({ value: cat.id, label: cat.name }))}
+                  options={mainCategories.map((cat) => ({
+                    value: cat.id,
+                    label: cat.name,
+                  }))}
                   value={formData.mainCategoryId || ""}
                   onValueChange={(value) => {
                     setFormData({ ...formData, mainCategoryId: value });
-                    if (errors.mainCategoryId) setErrors({ ...errors, mainCategoryId: undefined });
+                    if (errors.mainCategoryId)
+                      setErrors({ ...errors, mainCategoryId: undefined });
                   }}
-                  placeholder={isLoadingMainCats ? "Loading..." : "Select parent category"}
-                  className={`h-10 border-muted-foreground/20 ${errors.mainCategoryId ? 'border-destructive' : ''}`}
+                  placeholder={
+                    isLoadingMainCats ? "Loading..." : "Select parent category"
+                  }
+                  className={`h-10 border-muted-foreground/20 ${errors.mainCategoryId ? "border-destructive" : ""}`}
                 />
                 {errors.mainCategoryId && (
-                  <p className="text-[11px] text-destructive font-medium">{errors.mainCategoryId}</p>
+                  <p className="text-[11px] text-destructive font-medium">
+                    {errors.mainCategoryId}
+                  </p>
                 )}
               </div>
             )}
 
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="drawer-cat-name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label
+                htmlFor="drawer-cat-name"
+                className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+              >
                 Category Name
               </Label>
               <Input
@@ -285,12 +349,14 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
                   setFormData({ ...formData, name: e.target.value });
                   if (errors.name) setErrors({ ...errors, name: undefined });
                 }}
-                className={`h-10 border-muted-foreground/20 focus-visible:ring-primary ${errors.name ? 'border-destructive' : ''}`}
+                className={`h-10 border-muted-foreground/20 focus-visible:ring-primary ${errors.name ? "border-destructive" : ""}`}
                 disabled={isPending}
                 autoFocus
               />
               {errors.name && (
-                <p className="text-[11px] text-destructive font-medium">{errors.name}</p>
+                <p className="text-[11px] text-destructive font-medium">
+                  {errors.name}
+                </p>
               )}
             </div>
           </div>
@@ -299,12 +365,25 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
 
       <DrawerFooter className="border-t border-border/50 pt-4 pb-8 px-6 bg-muted/5">
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleBack} className="flex-1 h-11 font-semibold uppercase tracking-wider text-xs" disabled={isPending}>
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            className="flex-1 h-11 font-semibold uppercase tracking-wider text-xs"
+            disabled={isPending}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave} className="flex-1 h-11 font-semibold uppercase tracking-wider text-xs shadow-lg shadow-primary/20" disabled={isPending}>
+          <Button
+            onClick={handleSave}
+            className="flex-1 h-11 font-semibold uppercase tracking-wider text-xs shadow-lg shadow-primary/20"
+            disabled={isPending}
+          >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isPending ? "Saving..." : formData.id ? "Save Changes" : "Create Category"}
+            {isPending
+              ? "Saving..."
+              : formData.id
+                ? "Save Changes"
+                : "Create Category"}
           </Button>
         </div>
       </DrawerFooter>
@@ -312,9 +391,15 @@ export function CategoryDrawer({ open, onOpenChange }: CategoryDrawerProps) {
   );
 
   return (
-    <Drawer open={open} onOpenChange={(o) => { if (!isPending) onOpenChange(o); }} direction="right">
+    <Drawer
+      open={open}
+      onOpenChange={(o) => {
+        if (!isPending) onOpenChange(o);
+      }}
+      direction="right"
+    >
       <DrawerContent className="overflow-hidden h-full">
-        {view === 'list' ? renderList() : renderForm()}
+        {view === "list" ? renderList() : renderForm()}
       </DrawerContent>
     </Drawer>
   );

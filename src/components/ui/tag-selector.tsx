@@ -2,8 +2,17 @@ import React, { useState, useRef } from "react";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 export interface Tag {
   id?: string;
@@ -17,7 +26,12 @@ interface TagSelectorProps {
   disabled?: boolean;
 }
 
-export function TagSelector({ suggestions, value = [], onChange, disabled }: TagSelectorProps) {
+export function TagSelector({
+  suggestions,
+  value = [],
+  onChange,
+  disabled,
+}: TagSelectorProps) {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,7 +51,9 @@ export function TagSelector({ suggestions, value = [], onChange, disabled }: Tag
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && inputValue.trim()) {
       e.preventDefault();
-      const existing = suggestions.find((s) => s.name.toLowerCase() === inputValue.trim().toLowerCase());
+      const existing = suggestions.find(
+        (s) => s.name.toLowerCase() === inputValue.trim().toLowerCase(),
+      );
       if (existing) {
         handleSelect(existing);
       } else {
@@ -47,18 +63,28 @@ export function TagSelector({ suggestions, value = [], onChange, disabled }: Tag
   };
 
   const filteredSuggestions = suggestions.filter(
-    (s) => !value.find((v) => v.name === s.name) && s.name.toLowerCase().includes(inputValue.toLowerCase())
+    (s) =>
+      !value.find((v) => v.name === s.name) &&
+      s.name.toLowerCase().includes(inputValue.toLowerCase()),
   );
 
   if (disabled) {
     return (
       <div className="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-sm border border-input/60 bg-muted/30 px-3 py-1 text-xs shadow-sm opacity-80 cursor-not-allowed">
         {value.map((tag) => (
-          <Badge key={tag.name} variant="secondary" className="rounded-sm px-1.5 py-0 font-normal">
+          <Badge
+            key={tag.name}
+            variant="secondary"
+            className="rounded-sm px-1.5 py-0 font-normal"
+          >
             {tag.name}
           </Badge>
         ))}
-        {value.length === 0 && <span className="text-muted-foreground/50 italic">No items selected</span>}
+        {value.length === 0 && (
+          <span className="text-muted-foreground/50 italic">
+            No items selected
+          </span>
+        )}
       </div>
     );
   }
@@ -68,7 +94,11 @@ export function TagSelector({ suggestions, value = [], onChange, disabled }: Tag
       <PopoverTrigger asChild>
         <div className="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-sm border border-input/60 bg-background px-3 py-1 text-xs shadow-sm focus-within:ring-1 focus-within:ring-primary">
           {value.map((tag) => (
-            <Badge key={tag.name} variant="secondary" className="hover:bg-secondary/80 rounded-sm px-1.5 py-0 font-normal">
+            <Badge
+              key={tag.name}
+              variant="secondary"
+              className="hover:bg-secondary/80 rounded-sm px-1.5 py-0 font-normal"
+            >
               {tag.name}
               <button
                 type="button"

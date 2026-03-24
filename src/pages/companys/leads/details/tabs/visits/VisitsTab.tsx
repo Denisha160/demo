@@ -29,7 +29,7 @@ import { useLeadContacts, useCreateLeadContact } from "@/hooks/useLeadContacts";
 
 const applyServerValidationErrors = (
   error: any,
-  setError: (field: any, err: any) => void
+  setError: (field: any, err: any) => void,
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
@@ -91,8 +91,12 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
-  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
-  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10),
+  );
+  const [limit, setLimit] = useState(
+    parseInt(searchParams.get("limit") || "10", 10),
+  );
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -100,16 +104,19 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const [visitToDelete, setVisitToDelete] = useState<Visit | null>(null);
 
   useEffect(() => {
-      setSearchParams((prev) => {
-          const next = new URLSearchParams(prev);
-          if (debouncedSearch) next.set("search", debouncedSearch);
-          else next.delete("search");
-          if (page > 1) next.set("page", page.toString());
-          else next.delete("page");
-          if (limit !== 10) next.set("limit", limit.toString());
-          else next.delete("limit");
-          return next;
-      }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        if (page > 1) next.set("page", page.toString());
+        else next.delete("page");
+        if (limit !== 10) next.set("limit", limit.toString());
+        else next.delete("limit");
+        return next;
+      },
+      { replace: true },
+    );
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: visits = [], isLoading } = useLeadVisits(leadId, {
@@ -117,7 +124,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
     endDate: dateRange?.to?.toISOString(),
     limit,
     offset: (page - 1) * limit,
-    ...(debouncedSearch ? { search: debouncedSearch } : {})
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
   const createVisitMutation = useCreateLeadVisit(leadId);
   const updateVisitMutation = useUpdateLeadVisit(leadId);
@@ -127,7 +134,10 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const contacts = contactData?.contacts || [];
   const createContactMutation = useCreateLeadContact();
 
-  const serverTotal = visits.length === limit ? page * limit + 1 : (page - 1) * limit + visits.length;
+  const serverTotal =
+    visits.length === limit
+      ? page * limit + 1
+      : (page - 1) * limit + visits.length;
 
   const handleCreate = () => {
     setEditingVisit(null);
@@ -139,7 +149,10 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
     setIsModalOpen(true);
   };
 
-  const handleSaveVisit = (formData: VisitFormData, setError: (field: any, err: any) => void) => {
+  const handleSaveVisit = (
+    formData: VisitFormData,
+    setError: (field: any, err: any) => void,
+  ) => {
     if (!leadId) {
       return;
     }
@@ -167,7 +180,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
     // Auto-create contact if it is new
     if (formData.contact_person_name) {
       const isExisting = contacts.some(
-        (c) => c.name.toLowerCase() === formData.contact_person_name?.toLowerCase()
+        (c) =>
+          c.name.toLowerCase() === formData.contact_person_name?.toLowerCase(),
       );
       if (!isExisting) {
         createContactMutation.mutate({
@@ -204,7 +218,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             setEditingVisit(null);
           },
           onError: (error) => applyServerValidationErrors(error, setError),
-        }
+        },
       );
       return;
     }
@@ -225,8 +239,12 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             <CalendarDays className="h-3.5 w-3.5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-foreground">{formatDateTime(item.scheduled_time)}</span>
-            <span className="text-[11px] text-muted-foreground">Check in: {formatDateTime(item.actual_check_in)}</span>
+            <span className="text-sm font-medium text-foreground">
+              {formatDateTime(item.scheduled_time)}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              Check in: {formatDateTime(item.actual_check_in)}
+            </span>
           </div>
         </div>
       ),
@@ -244,8 +262,12 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             />
           ) : null}
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-foreground">{item.title}</span>
-            <span className="line-clamp-2 text-[11px] text-muted-foreground">{item.description}</span>
+            <span className="text-sm font-medium text-foreground">
+              {item.title}
+            </span>
+            <span className="line-clamp-2 text-[11px] text-muted-foreground">
+              {item.description}
+            </span>
           </div>
         </div>
       ),
@@ -255,8 +277,13 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       header: "Status",
       render: (item) => (
         <div className="space-y-1">
-          <StatusBadge status={item.status.replace(/_/g, " ")} variant={getStatusVariant(item.status)} />
-          <div className="text-[11px] capitalize text-muted-foreground">{item.visit_type.replace("_", " ")}</div>
+          <StatusBadge
+            status={item.status.replace(/_/g, " ")}
+            variant={getStatusVariant(item.status)}
+          />
+          <div className="text-[11px] capitalize text-muted-foreground">
+            {item.visit_type.replace("_", " ")}
+          </div>
         </div>
       ),
     },
@@ -265,9 +292,15 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       header: "Contact",
       render: (item) => (
         <div className="flex flex-col">
-          <span className="text-sm font-medium text-foreground">{item.contact_person_name}</span>
-          <span className="text-[11px] text-muted-foreground">{item.contact_person_designation || "-"}</span>
-          <span className="text-[11px] text-muted-foreground">{item.contact_person_phone}</span>
+          <span className="text-sm font-medium text-foreground">
+            {item.contact_person_name}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {item.contact_person_designation || "-"}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {item.contact_person_phone}
+          </span>
         </div>
       ),
     },
@@ -278,8 +311,12 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
         <div className="flex max-w-xs items-start gap-2">
           <MapPin className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
           <div className="flex flex-col">
-            <span className="line-clamp-2 text-xs text-foreground">{item.location_address}</span>
-            <span className="text-[11px] text-muted-foreground">Rating: {item.customer_rating || "-"}</span>
+            <span className="line-clamp-2 text-xs text-foreground">
+              {item.location_address}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              Rating: {item.customer_rating || "-"}
+            </span>
           </div>
         </div>
       ),
@@ -333,8 +370,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             className="h-9 w-[250px] pl-9 text-sm"
             value={search}
             onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+              setSearch(e.target.value);
+              setPage(1);
             }}
           />
         </div>
@@ -350,11 +387,13 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
         serverTotal={serverTotal}
         onServerPageChange={setPage}
         onServerPageSizeChange={(newSize) => {
-            setLimit(newSize);
-            setPage(1);
+          setLimit(newSize);
+          setPage(1);
         }}
       />
-      {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading visits...</p>}
+      {isLoading && (
+        <p className="mt-3 text-xs text-muted-foreground">Loading visits...</p>
+      )}
 
       {isModalOpen && (
         <VisitsModal
@@ -366,11 +405,16 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
           }}
           visitData={editingVisit}
           onSave={handleSaveVisit}
-          isSubmitting={createVisitMutation.isPending || updateVisitMutation.isPending}
+          isSubmitting={
+            createVisitMutation.isPending || updateVisitMutation.isPending
+          }
         />
       )}
 
-      <AlertDialog open={!!visitToDelete} onOpenChange={(open) => !open && setVisitToDelete(null)}>
+      <AlertDialog
+        open={!!visitToDelete}
+        onOpenChange={(open) => !open && setVisitToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -380,7 +424,9 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteVisitMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteVisitMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 visitToDelete &&

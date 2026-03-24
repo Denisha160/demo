@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ToastContainer, Zoom } from 'react-toastify';
+import { ToastContainer, Zoom } from "react-toastify";
 import Cookies from "js-cookie";
 import AdminLayout from "./components/AdminLayout";
 import CompanyLayout from "./components/CompanyLayout";
@@ -83,7 +83,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const token = Cookies.get("auth_token");
   if (token && user) {
     if (user.is_root_user) return <Navigate to="/admin" replace />;
-    const companyId = user.companies?.[0]?.id || 'no-access';
+    const companyId = user.companies?.[0]?.id || "no-access";
     return <Navigate to={`/${companyId}/dashboard`} replace />;
   }
   return <>{children}</>;
@@ -93,14 +93,20 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   const user = getStoredUser();
   const token = Cookies.get("auth_token");
   if (!token || !user) return <Navigate to="/login" replace />;
-  if (!user.is_root_user) return <Navigate to={`/${user.companies?.[0]?.id || 'no-access'}/dashboard`} replace />;
+  if (!user.is_root_user)
+    return (
+      <Navigate
+        to={`/${user.companies?.[0]?.id || "no-access"}/dashboard`}
+        replace
+      />
+    );
   return <>{children}</>;
 }
 
 function DashboardRedirect() {
   const user = getStoredUser();
   if (!user) return <Navigate to="/login" replace />;
-  const companyId = user.companies?.[0]?.id || 'no-access';
+  const companyId = user.companies?.[0]?.id || "no-access";
   return <Navigate to={`/${companyId}/dashboard`} replace />;
 }
 
@@ -110,18 +116,56 @@ const App = () => (
       <Toaster />
       <Sonner />
       <Routes>
-        <Route path="/" element={<PublicRoute><Navigate to="/login" replace /></PublicRoute>} />
-        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Navigate to="/login" replace />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password-otp" element={<ResetPasswordOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/company-selection" element={<Navigate to="/admin/companies" replace />} />
-        <Route path="/no-access" element={<PrivateRoute><NoCompanyAccessPage /></PrivateRoute>} />
+        <Route
+          path="/company-selection"
+          element={<Navigate to="/admin/companies" replace />}
+        />
+        <Route
+          path="/no-access"
+          element={
+            <PrivateRoute>
+              <NoCompanyAccessPage />
+            </PrivateRoute>
+          }
+        />
 
-        <Route path="/dashboard" element={<PrivateRoute><DashboardRedirect /></PrivateRoute>} />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <DashboardRedirect />
+            </PrivateRoute>
+          }
+        />
 
-        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
           <Route index element={<Navigate to="companies" replace />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="inbox" element={<InboxPage />} />
@@ -133,8 +177,14 @@ const App = () => (
           <Route path="kits" element={<KitsPage />} />
           <Route path="kits/new" element={<KitFormPage />} />
           <Route path="kits/edit/:id" element={<KitFormPage />} />
-          <Route path="product-categories" element={<ProductCategoriesPage />} />
-          <Route path="product-categories/:id" element={<CategoryDetailPage />} />
+          <Route
+            path="product-categories"
+            element={<ProductCategoriesPage />}
+          />
+          <Route
+            path="product-categories/:id"
+            element={<CategoryDetailPage />}
+          />
           <Route path="brands" element={<BrandsPage />} />
           <Route path="fragrances" element={<FragrancesPage />} />
           <Route path="users" element={<Users />} />
@@ -156,15 +206,28 @@ const App = () => (
         </Route>
 
         {/* Company Routes – protected */}
-        <Route path="/:companyId" element={<PrivateRoute><CompanyLayout /></PrivateRoute>}>
+        <Route
+          path="/:companyId"
+          element={
+            <PrivateRoute>
+              <CompanyLayout />
+            </PrivateRoute>
+          }
+        >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="products" element={<Products />} />
           <Route path="products/new" element={<ProductFormPage />} />
           <Route path="products/:id" element={<ProductFormPage />} />
-          <Route path="product-categories" element={<ProductCategoriesPage />} />
-          <Route path="product-categories/:id" element={<CategoryDetailPage />} />
+          <Route
+            path="product-categories"
+            element={<ProductCategoriesPage />}
+          />
+          <Route
+            path="product-categories/:id"
+            element={<CategoryDetailPage />}
+          />
           <Route path="brands" element={<BrandsPage />} />
           <Route path="fragrances" element={<FragrancesPage />} />
           <Route path="recipes" element={<BomPage />} />

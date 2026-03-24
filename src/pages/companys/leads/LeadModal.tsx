@@ -23,11 +23,21 @@ import { useUsers } from "@/hooks/useUsers";
 import { useCategoriesCombobox } from "@/hooks/useProductCategories";
 import { TagSelector } from "@/components/ui/tag-selector";
 import { useLeadTags } from "@/hooks/useLeadTags";
-import { useCountries, useStates, useCities } from "@/hooks/useCityStateCountry";
+import {
+  useCountries,
+  useStates,
+  useCities,
+} from "@/hooks/useCityStateCountry";
 import { useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
-const InterestedCategorySelect = ({ value = [], onValueChange }: { value?: any[], onValueChange: (val: any[]) => void }) => {
+const InterestedCategorySelect = ({
+  value = [],
+  onValueChange,
+}: {
+  value?: any[];
+  onValueChange: (val: any[]) => void;
+}) => {
   const { data: categories = [], isLoading } = useCategoriesCombobox();
   const suggestions = categories
     .filter((cat: any) => !!cat.parent_name)
@@ -37,9 +47,11 @@ const InterestedCategorySelect = ({ value = [], onValueChange }: { value?: any[]
     }));
 
   const displayValue = (Array.isArray(value) ? value : []).map((val: any) => {
-    const id = typeof val === 'string' ? val : (val?.id || val?.name);
-    const suggestion = suggestions.find(s => s.id === id);
-    return suggestion || (typeof val === 'string' ? { id: val, name: val } : val);
+    const id = typeof val === "string" ? val : val?.id || val?.name;
+    const suggestion = suggestions.find((s) => s.id === id);
+    return (
+      suggestion || (typeof val === "string" ? { id: val, name: val } : val)
+    );
   });
 
   return (
@@ -61,7 +73,14 @@ const formSchema = z.object({
     .string()
     .min(1, "Phone is required")
     .regex(/^[0-9]{10}$/, "Phone must be exactly 10 digits"),
-  alternate_phone: z.string().optional().refine(val => !val || /^[0-9]{10}$/.test(val), "Must be exactly 10 digits").or(z.literal("")),
+  alternate_phone: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^[0-9]{10}$/.test(val),
+      "Must be exactly 10 digits",
+    )
+    .or(z.literal("")),
   address_line1: z.string().optional().or(z.literal("")),
   address_line2: z.string().optional().or(z.literal("")),
   city_id: z.string().optional().or(z.literal("")),
@@ -70,12 +89,34 @@ const formSchema = z.object({
   pincode: z.string().optional().or(z.literal("")),
   designation: z.string().optional().or(z.literal("")),
   website: z.string().optional().or(z.literal("")),
-  gst_number: z.string().optional().refine(val => !val || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/.test(val), "Invalid GST Number format").or(z.literal("")),
-  pan_number: z.string().optional().refine(val => !val || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val), "Invalid PAN Number format (e.g. ABCDE1234F)").or(z.literal("")),
+  gst_number: z
+    .string()
+    .optional()
+    .refine(
+      (val) =>
+        !val ||
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/.test(
+          val,
+        ),
+      "Invalid GST Number format",
+    )
+    .or(z.literal("")),
+  pan_number: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val),
+      "Invalid PAN Number format (e.g. ABCDE1234F)",
+    )
+    .or(z.literal("")),
   priority: z.string().optional().or(z.literal("")),
   assigned_to: z.string().optional().or(z.literal("")),
-  interested_category_id: z.array(z.object({ id: z.string().optional(), name: z.string() })).optional(),
-  tags: z.array(z.object({ id: z.string().optional(), name: z.string() })).optional(),
+  interested_category_id: z
+    .array(z.object({ id: z.string().optional(), name: z.string() }))
+    .optional(),
+  tags: z
+    .array(z.object({ id: z.string().optional(), name: z.string() }))
+    .optional(),
 });
 
 export type LeadFormData = z.infer<typeof formSchema>;
@@ -139,7 +180,9 @@ const LeadModal = ({
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const { data: sourceResponse } = useLeadSources({ limit: 100 });
   const { data: usersResponse } = useUsers({ limit: 100 });
-  const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
+  const [selectedCountryId, setSelectedCountryId] = useState<string | null>(
+    null,
+  );
   const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
   const [countrySearch, setCountrySearch] = useState("");
   const [stateSearch, setStateSearch] = useState("");
@@ -149,24 +192,39 @@ const LeadModal = ({
   const debouncedStateSearch = useDebounce(stateSearch, 500);
   const debouncedCitySearch = useDebounce(citySearch, 500);
 
-  const { data: countriesData } = useCountries({ search: debouncedCountrySearch, combobox: true, limit: 100 });
-  const { data: statesData } = useStates(selectedCountryId || undefined, { search: debouncedStateSearch, combobox: true, limit: 100 });
-  const { data: citiesData } = useCities(selectedStateId || undefined, { search: debouncedCitySearch, combobox: true, limit: 100 });
+  const { data: countriesData } = useCountries({
+    search: debouncedCountrySearch,
+    combobox: true,
+    limit: 100,
+  });
+  const { data: statesData } = useStates(selectedCountryId || undefined, {
+    search: debouncedStateSearch,
+    combobox: true,
+    limit: 100,
+  });
+  const { data: citiesData } = useCities(selectedStateId || undefined, {
+    search: debouncedCitySearch,
+    combobox: true,
+    limit: 100,
+  });
 
-  const countryOptions = (countriesData as any)?.items?.map((item: any) => ({
-    value: item.id,
-    label: item.name,
-  })) || [];
+  const countryOptions =
+    (countriesData as any)?.items?.map((item: any) => ({
+      value: item.id,
+      label: item.name,
+    })) || [];
 
-  const stateOptions = (statesData as any)?.items?.map((item: any) => ({
-    value: item.id,
-    label: item.name,
-  })) || [];
+  const stateOptions =
+    (statesData as any)?.items?.map((item: any) => ({
+      value: item.id,
+      label: item.name,
+    })) || [];
 
-  const cityOptions = (citiesData as any)?.items?.map((item: any) => ({
-    value: item.id,
-    label: item.name,
-  })) || [];
+  const cityOptions =
+    (citiesData as any)?.items?.map((item: any) => ({
+      value: item.id,
+      label: item.name,
+    })) || [];
 
   const users = usersResponse?.items || usersResponse || [];
   const userOptions = users.map((user: any) => ({
@@ -224,7 +282,9 @@ const LeadModal = ({
     const payload = {
       ...data,
       interested_category_id: data.interested_category_id?.length
-        ? data.interested_category_id.map((c: any) => c.id ? String(c.id) : c.name)
+        ? data.interested_category_id.map((c: any) =>
+            c.id ? String(c.id) : c.name,
+          )
         : [],
       tags: data.tags?.length
         ? data.tags.map((t: any) => (t.id ? String(t.id) : t.name))
@@ -239,23 +299,41 @@ const LeadModal = ({
       open={open}
       onClose={onClose}
       title="Create Lead"
-      description={addModalCol ? `Stage: ${columns.find((c) => c.id === addModalCol)?.title}` : ""}
+      description={
+        addModalCol
+          ? `Stage: ${columns.find((c) => c.id === addModalCol)?.title}`
+          : ""
+      }
       headerBg="bg-primary/5"
       maxWidth="sm:max-w-[800px] md:max-w-[900px]"
       titleClassName="text-primary font-bold"
       footer={
         <div className="flex w-full gap-2 sm:w-auto">
-          <Button variant="outline" size="sm" className="h-9 px-6 text-xs font-semibold rounded-sm" onClick={onClose} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-6 text-xs font-semibold rounded-sm"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button size="sm" className="h-9 px-8 text-xs font-semibold rounded-sm" onClick={form.handleSubmit(handleSubmit)} disabled={isSubmitting}>
+          <Button
+            size="sm"
+            className="h-9 px-8 text-xs font-semibold rounded-sm"
+            onClick={form.handleSubmit(handleSubmit)}
+            disabled={isSubmitting}
+          >
             Save Lead
           </Button>
         </div>
       }
     >
       <Form {...form}>
-        <form className="custom-scrollbar h-[60vh] space-y-4 overflow-y-auto pr-2 pt-2" onSubmit={form.handleSubmit(handleSubmit)}>
+        <form
+          className="custom-scrollbar h-[60vh] space-y-4 overflow-y-auto pr-2 pt-2"
+          onSubmit={form.handleSubmit(handleSubmit)}
+        >
           <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
             <FormField
               control={form.control}
@@ -314,7 +392,7 @@ const LeadModal = ({
                       options={[
                         { value: "HOT", label: "Hot" },
                         { value: "WARM", label: "Warm" },
-                        { value: "COLD", label: "Cold" }
+                        { value: "COLD", label: "Cold" },
                       ]}
                       value={field.value}
                       onValueChange={field.onChange}
@@ -332,7 +410,9 @@ const LeadModal = ({
               name="assigned_to"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Assigned To</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Assigned To
+                  </FormLabel>
                   <FormControl>
                     <Combobox
                       options={userOptions}
@@ -360,10 +440,19 @@ const LeadModal = ({
                   <FormControl>
                     <TagSelector
                       suggestions={tagSuggestions}
-                      value={(Array.isArray(field.value) ? field.value : []).map((val: any) => {
-                        const id = typeof val === 'string' ? val : (val?.id || val?.name);
-                        const found = tagSuggestions.find(s => s.id === id);
-                        return found || (typeof val === 'string' ? { id: val, name: val } : val);
+                      value={(Array.isArray(field.value)
+                        ? field.value
+                        : []
+                      ).map((val: any) => {
+                        const id =
+                          typeof val === "string" ? val : val?.id || val?.name;
+                        const found = tagSuggestions.find((s) => s.id === id);
+                        return (
+                          found ||
+                          (typeof val === "string"
+                            ? { id: val, name: val }
+                            : val)
+                        );
                       })}
                       onChange={field.onChange}
                     />
@@ -381,10 +470,14 @@ const LeadModal = ({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
-                    Name  <span className="text-destructive">*</span>
+                    Name <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Name" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Name"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -396,9 +489,16 @@ const LeadModal = ({
               name="email"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Email Address</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Email Address
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Email Address" type="email" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Email Address"
+                      type="email"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -414,7 +514,12 @@ const LeadModal = ({
                     Phone <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Phone Number" type="tel" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Phone Number"
+                      type="tel"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -426,9 +531,16 @@ const LeadModal = ({
               name="alternate_phone"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Alternative Phone</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Alternative Phone
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Alternative Phone Number" type="tel" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Alternative Phone Number"
+                      type="tel"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -440,7 +552,9 @@ const LeadModal = ({
               name="country_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Country</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Country
+                  </FormLabel>
                   <FormControl>
                     <Combobox
                       options={countryOptions}
@@ -468,7 +582,9 @@ const LeadModal = ({
               name="state_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">State</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    State
+                  </FormLabel>
                   <FormControl>
                     <Combobox
                       options={stateOptions}
@@ -481,7 +597,11 @@ const LeadModal = ({
                         form.setValue("city_id", "");
                         setCitySearch("");
                       }}
-                      placeholder={selectedCountryId ? "Select State" : "Select Country first"}
+                      placeholder={
+                        selectedCountryId
+                          ? "Select State"
+                          : "Select Country first"
+                      }
                       className="h-9 w-full"
                       disabled={!selectedCountryId}
                     />
@@ -496,7 +616,9 @@ const LeadModal = ({
               name="city_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">City</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    City
+                  </FormLabel>
                   <FormControl>
                     <Combobox
                       options={cityOptions}
@@ -504,7 +626,9 @@ const LeadModal = ({
                       searchValue={citySearch}
                       onSearchChange={setCitySearch}
                       onValueChange={field.onChange}
-                      placeholder={selectedStateId ? "Select City" : "Select State first"}
+                      placeholder={
+                        selectedStateId ? "Select City" : "Select State first"
+                      }
                       className="h-9 w-full"
                       disabled={!selectedStateId}
                     />
@@ -519,9 +643,15 @@ const LeadModal = ({
               name="pincode"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Pincode</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Pincode
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Pincode" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Pincode"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -533,9 +663,15 @@ const LeadModal = ({
               name="company_name"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Company Name</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Company Name
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Company Name" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Company Name"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -547,9 +683,15 @@ const LeadModal = ({
               name="designation"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Designation</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Designation
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Designation" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Designation"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -561,9 +703,15 @@ const LeadModal = ({
               name="website"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Website</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Website
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Website URL" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Website URL"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -575,9 +723,15 @@ const LeadModal = ({
               name="gst_number"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">GST Number</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    GST Number
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter GST Number" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter GST Number"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -589,7 +743,9 @@ const LeadModal = ({
               name="interested_category_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Interested Category</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Interested Category
+                  </FormLabel>
                   <FormControl>
                     <InterestedCategorySelect
                       value={field.value as any}
@@ -606,9 +762,15 @@ const LeadModal = ({
               name="pan_number"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">PAN Card Number</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    PAN Card Number
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter PAN Number" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter PAN Number"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -620,9 +782,15 @@ const LeadModal = ({
               name="address_line1"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Address Line 1</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Address Line 1
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Address Line 1" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Address Line 1"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -634,9 +802,15 @@ const LeadModal = ({
               name="address_line2"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Address Line 2</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Address Line 2
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Address Line 2" className="h-9 text-xs border-border/60" {...field} />
+                    <Input
+                      placeholder="Enter Address Line 2"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>

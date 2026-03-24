@@ -9,7 +9,7 @@ import {
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
-const normalizeList = <T,>(response: unknown): T[] => {
+const normalizeList = <T>(response: unknown): T[] => {
   const r = response as any;
   if (Array.isArray(r?.data?.visits)) return r.data.visits;
   if (Array.isArray(r?.visits)) return r.visits;
@@ -27,7 +27,10 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-export function useLeadVisits(leadId?: string, params?: Record<string, unknown>) {
+export function useLeadVisits(
+  leadId?: string,
+  params?: Record<string, unknown>,
+) {
   return useQuery({
     queryKey: queryKeys.leads.visits(leadId || "", params),
     queryFn: () => listLeadVisits(leadId, params),
@@ -54,9 +57,12 @@ export function useCreateLeadVisit(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: Record<string, unknown>) => createLeadVisit(leadId, payload),
+    mutationFn: (payload: Record<string, unknown>) =>
+      createLeadVisit(leadId, payload),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "").concat("visits") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || "").concat("visits"),
+      });
       toast.success("Visit created successfully.");
     },
     onError: (error: unknown) => {
@@ -72,10 +78,17 @@ export function useUpdateLeadVisit(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ visitId, data }: { visitId: string; data: Record<string, unknown> | FormData }) =>
-      updateLeadVisit({ leadId, visitId, data }),
+    mutationFn: ({
+      visitId,
+      data,
+    }: {
+      visitId: string;
+      data: Record<string, unknown> | FormData;
+    }) => updateLeadVisit({ leadId, visitId, data }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "").concat("visits") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || "").concat("visits"),
+      });
       toast.success("Visit updated successfully.");
     },
     onError: (error: unknown) => {
@@ -93,7 +106,9 @@ export function useDeleteLeadVisit(leadId?: string) {
   return useMutation({
     mutationFn: (visitId: string) => deleteLeadVisit({ leadId, visitId }),
     onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "").concat("visits") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || "").concat("visits"),
+      });
       toast.success("Visit deleted successfully.");
     },
     onError: (error: unknown) => {

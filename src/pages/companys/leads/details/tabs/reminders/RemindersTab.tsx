@@ -27,12 +27,15 @@ import {
 
 const applyServerValidationErrors = (
   error: any,
-  setError: (field: any, err: any) => void
+  setError: (field: any, err: any) => void,
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
       if (key === "remind_at") {
-        setError("remind_date" as any, { type: "server", message: String(message) });
+        setError("remind_date" as any, {
+          type: "server",
+          message: String(message),
+        });
         return;
       }
       setError(key as any, { type: "server", message: String(message) });
@@ -91,25 +94,34 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
-  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
-  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10),
+  );
+  const [limit, setLimit] = useState(
+    parseInt(searchParams.get("limit") || "10", 10),
+  );
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
-  const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(null);
+  const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(
+    null,
+  );
 
   useEffect(() => {
-      setSearchParams((prev) => {
-          const next = new URLSearchParams(prev);
-          if (debouncedSearch) next.set("search", debouncedSearch);
-          else next.delete("search");
-          if (page > 1) next.set("page", page.toString());
-          else next.delete("page");
-          if (limit !== 10) next.set("limit", limit.toString());
-          else next.delete("limit");
-          return next;
-      }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        if (page > 1) next.set("page", page.toString());
+        else next.delete("page");
+        if (limit !== 10) next.set("limit", limit.toString());
+        else next.delete("limit");
+        return next;
+      },
+      { replace: true },
+    );
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: reminders = [], isLoading } = useLeadReminders(leadId, {
@@ -117,23 +129,35 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
     endDate: dateRange?.to?.toISOString(),
     limit,
     offset: (page - 1) * limit,
-    ...(debouncedSearch ? { search: debouncedSearch } : {})
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
   const createReminderMutation = useCreateLeadReminder(leadId);
   const updateReminderMutation = useUpdateLeadReminder(leadId);
   const deleteReminderMutation = useDeleteLeadReminder(leadId);
 
-  const reminderItems = useMemo(() => reminders.map((reminder: any) => mapReminder(reminder)), [reminders]);
+  const reminderItems = useMemo(
+    () => reminders.map((reminder: any) => mapReminder(reminder)),
+    [reminders],
+  );
 
-  const serverTotal = reminderItems.length === limit ? page * limit + 1 : (page - 1) * limit + reminderItems.length;
+  const serverTotal =
+    reminderItems.length === limit
+      ? page * limit + 1
+      : (page - 1) * limit + reminderItems.length;
 
-  const handleSaveReminder = (formData: ReminderFormData, setError: (field: any, err: any) => void) => {
+  const handleSaveReminder = (
+    formData: ReminderFormData,
+    setError: (field: any, err: any) => void,
+  ) => {
     const remind_at = `${formData.remind_date}T${formData.remind_time.length === 5 ? `${formData.remind_time}:00` : formData.remind_time}`;
     const payload = {
       title: formData.title,
       description: formData.description,
       remind_at,
-      remind_time: formData.remind_time.length === 5 ? `${formData.remind_time}:00` : formData.remind_time,
+      remind_time:
+        formData.remind_time.length === 5
+          ? `${formData.remind_time}:00`
+          : formData.remind_time,
     };
 
     if (editingReminder) {
@@ -145,7 +169,7 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
             setEditingReminder(null);
           },
           onError: (error) => applyServerValidationErrors(error, setError),
-        }
+        },
       );
       return;
     }
@@ -162,8 +186,12 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
       header: "Reminder Date",
       render: (item) => (
         <div className="flex flex-col">
-          <span className="text-sm font-medium text-foreground">{formatReminderDateTime(item.remind_date, item.remind_time)}</span>
-          <span className="text-[11px] text-muted-foreground">{item.remind_date} at {item.remind_time}</span>
+          <span className="text-sm font-medium text-foreground">
+            {formatReminderDateTime(item.remind_date, item.remind_time)}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {item.remind_date} at {item.remind_time}
+          </span>
         </div>
       ),
     },
@@ -172,15 +200,23 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
       header: "Title",
       render: (item) => (
         <div className="flex flex-col">
-          <span className="text-sm font-medium text-foreground">{item.title}</span>
-          <span className="line-clamp-2 text-[11px] text-muted-foreground">{item.description}</span>
+          <span className="text-sm font-medium text-foreground">
+            {item.title}
+          </span>
+          <span className="line-clamp-2 text-[11px] text-muted-foreground">
+            {item.description}
+          </span>
         </div>
       ),
     },
     {
       key: "description",
       header: "Description",
-      render: (item) => <span className="max-w-md line-clamp-2 text-xs text-muted-foreground">{item.description}</span>,
+      render: (item) => (
+        <span className="max-w-md line-clamp-2 text-xs text-muted-foreground">
+          {item.description}
+        </span>
+      ),
     },
     {
       key: "id",
@@ -215,13 +251,17 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
     <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 w-full animate-fade-in">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <Button size="sm" className="h-9 gap-2 px-4" onClick={() => setIsModalOpen(true)}>
+          <Button
+            size="sm"
+            className="h-9 gap-2 px-4"
+            onClick={() => setIsModalOpen(true)}
+          >
             <Plus className="h-4 w-4" />
             Add Reminder
           </Button>
-          <DatePickerWithRange 
-            date={dateRange} 
-            setDate={setDateRange} 
+          <DatePickerWithRange
+            date={dateRange}
+            setDate={setDateRange}
             className="w-[260px]"
             placeholder="Filter by remind date"
           />
@@ -234,28 +274,32 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
             className="h-9 w-[250px] pl-9 text-sm"
             value={search}
             onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+              setSearch(e.target.value);
+              setPage(1);
             }}
           />
         </div>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={reminderItems} 
-        isLoading={isLoading} 
+      <DataTable
+        columns={columns}
+        data={reminderItems}
+        isLoading={isLoading}
         serverSide={true}
         serverPage={page}
         pageSize={limit}
         serverTotal={serverTotal}
         onServerPageChange={setPage}
         onServerPageSizeChange={(newSize) => {
-            setLimit(newSize);
-            setPage(1);
+          setLimit(newSize);
+          setPage(1);
         }}
       />
-      {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading reminders...</p>}
+      {isLoading && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Loading reminders...
+        </p>
+      )}
 
       {isModalOpen && (
         <ReminderModal
@@ -266,21 +310,28 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
           }}
           reminderData={editingReminder}
           onSave={handleSaveReminder}
-          isSubmitting={createReminderMutation.isPending || updateReminderMutation.isPending}
+          isSubmitting={
+            createReminderMutation.isPending || updateReminderMutation.isPending
+          }
         />
       )}
 
-      <AlertDialog open={!!reminderToDelete} onOpenChange={(open) => !open && setReminderToDelete(null)}>
+      <AlertDialog
+        open={!!reminderToDelete}
+        onOpenChange={(open) => !open && setReminderToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the reminder for "{reminderToDelete?.title}".
-              This action cannot be undone.
+              This will permanently delete the reminder for "
+              {reminderToDelete?.title}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteReminderMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteReminderMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 reminderToDelete &&

@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { DropResult } from "@hello-pangea/dnd";
-import { parseISO, startOfDay, endOfDay, isWithinInterval, format } from "date-fns";
+import {
+  parseISO,
+  startOfDay,
+  endOfDay,
+  isWithinInterval,
+  format,
+} from "date-fns";
 import { Plus, Search, Filter, List, Kanban } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -21,10 +27,19 @@ import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
 import { Deal, PipelineColumn } from "../../../types/leads";
 import { useCreateLead, useLeads, useUpdateLeadStatus } from "@/hooks/useLeads";
-import { useLeadStatuses, useUpdateLeadStatusOrder } from "@/hooks/useLeadStatus";
+import {
+  useLeadStatuses,
+  useUpdateLeadStatusOrder,
+} from "@/hooks/useLeadStatus";
 import type { LeadStatus } from "@/types/leadStatus";
 
-const VARIANTS: PipelineColumn["variant"][] = ["default", "info", "warning", "success", "destructive"];
+const VARIANTS: PipelineColumn["variant"][] = [
+  "default",
+  "info",
+  "warning",
+  "success",
+  "destructive",
+];
 
 const slugify = (value?: string) =>
   (value || "")
@@ -33,22 +48,38 @@ const slugify = (value?: string) =>
     .replace(/^_+|_+$/g, "");
 
 const getColumnIdFromLead = (lead: any, statuses: LeadStatus[]) => {
-  if (lead?.status_id && statuses.some((status) => status.id === lead.status_id)) {
+  if (
+    lead?.status_id &&
+    statuses.some((status) => status.id === lead.status_id)
+  ) {
     return lead.status_id;
   }
 
-  const rawStatusName = slugify(lead?.status?.name || lead?.status_name || lead?.status);
-  const matchedStatus = statuses.find((status) => slugify(status.name) === rawStatusName);
+  const rawStatusName = slugify(
+    lead?.status?.name || lead?.status_name || lead?.status,
+  );
+  const matchedStatus = statuses.find(
+    (status) => slugify(status.name) === rawStatusName,
+  );
   return matchedStatus?.id || statuses[0]?.id || "default";
 };
 
-const mapLeadToDeal = (lead: any): Deal & { isVerified?: boolean; isCustomer?: boolean } => ({
+const mapLeadToDeal = (
+  lead: any,
+): Deal & { isVerified?: boolean; isCustomer?: boolean } => ({
   id: String(lead?.id || ""),
   title: lead?.name || lead?.title || "Untitled Lead",
   company: lead?.company || lead?.company_name || "-",
-  value: lead?.value ? String(lead.value) : lead?.budget ? String(lead.budget) : "-",
+  value: lead?.value
+    ? String(lead.value)
+    : lead?.budget
+      ? String(lead.budget)
+      : "-",
   contact: lead?.contact || lead?.email || lead?.phone || "-",
-  date: (lead?.created_at || lead?.date || new Date().toISOString()).slice(0, 10),
+  date: (lead?.created_at || lead?.date || new Date().toISOString()).slice(
+    0,
+    10,
+  ),
   priority: lead?.priority || "NORMAL",
   quotationStatus: lead?.quotationStatus || lead?.quotation_status,
   isVerified: !!lead?.is_verified,
@@ -61,7 +92,7 @@ const mapLeadToDeal = (lead: any): Deal & { isVerified?: boolean; isCustomer?: b
 
 const applyServerValidationErrors = (
   error: any,
-  setError: (field: any, err: any) => void
+  setError: (field: any, err: any) => void,
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
@@ -74,11 +105,16 @@ const LeadsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
-  const [createLeadStatusId, setCreateLeadStatusId] = useState<string | null>(null);
+  const [createLeadStatusId, setCreateLeadStatusId] = useState<string | null>(
+    null,
+  );
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [visibleStageIds, setVisibleStageIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"pipeline" | "table">(() => {
-    return (localStorage.getItem("leadsViewMode") as "pipeline" | "table") || "pipeline";
+    return (
+      (localStorage.getItem("leadsViewMode") as "pipeline" | "table") ||
+      "pipeline"
+    );
   });
 
   const filters = useMemo(() => {
@@ -114,18 +150,28 @@ const LeadsPage = () => {
     if (!leadStatuses.length) return;
 
     const sortedIds = [...leadStatuses]
-      .sort((a, b) => (a.display_order ?? Number.MAX_SAFE_INTEGER) - (b.display_order ?? Number.MAX_SAFE_INTEGER))
+      .sort(
+        (a, b) =>
+          (a.display_order ?? Number.MAX_SAFE_INTEGER) -
+          (b.display_order ?? Number.MAX_SAFE_INTEGER),
+      )
       .map((status) => status.id);
 
     setColumnOrder((prev) =>
       prev.length
-        ? [...prev.filter((id) => sortedIds.includes(id)), ...sortedIds.filter((id) => !prev.includes(id))]
-        : sortedIds
+        ? [
+            ...prev.filter((id) => sortedIds.includes(id)),
+            ...sortedIds.filter((id) => !prev.includes(id)),
+          ]
+        : sortedIds,
     );
     setVisibleStageIds((prev) =>
       prev.length
-        ? [...prev.filter((id) => sortedIds.includes(id)), ...sortedIds.filter((id) => !prev.includes(id))]
-        : sortedIds
+        ? [
+            ...prev.filter((id) => sortedIds.includes(id)),
+            ...sortedIds.filter((id) => !prev.includes(id)),
+          ]
+        : sortedIds,
     );
     setCreateLeadStatusId((prev) => prev || sortedIds[0] || null);
   }, [leadStatuses]);
@@ -140,33 +186,48 @@ const LeadsPage = () => {
       if (dateRange?.from) {
         const dealDate = parseISO(deal.date);
         const fromDate = startOfDay(dateRange.from);
-        const toDate = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
-        matchesDate = isWithinInterval(dealDate, { start: fromDate, end: toDate });
+        const toDate = dateRange.to
+          ? endOfDay(dateRange.to)
+          : endOfDay(dateRange.from);
+        matchesDate = isWithinInterval(dealDate, {
+          start: fromDate,
+          end: toDate,
+        });
       }
 
       return matchesSearch && matchesDate;
     },
-    [searchTerm, dateRange]
+    [searchTerm, dateRange],
   );
 
   const columns = useMemo(() => {
     const sortedStatuses = [...leadStatuses].sort(
-      (a, b) => (a.display_order ?? Number.MAX_SAFE_INTEGER) - (b.display_order ?? Number.MAX_SAFE_INTEGER)
+      (a, b) =>
+        (a.display_order ?? Number.MAX_SAFE_INTEGER) -
+        (b.display_order ?? Number.MAX_SAFE_INTEGER),
     );
 
-    const leadGroups = sortedStatuses.reduce<Record<string, Deal[]>>((acc, status) => {
-      acc[status.id] = [];
-      return acc;
-    }, {});
+    const leadGroups = sortedStatuses.reduce<Record<string, Deal[]>>(
+      (acc, status) => {
+        acc[status.id] = [];
+        return acc;
+      },
+      {},
+    );
 
     localLeads.forEach((lead: any) => {
       const columnId = getColumnIdFromLead(lead, sortedStatuses);
-      leadGroups[columnId] = [...(leadGroups[columnId] || []), mapLeadToDeal(lead)];
+      leadGroups[columnId] = [
+        ...(leadGroups[columnId] || []),
+        mapLeadToDeal(lead),
+      ];
     });
 
     return columnOrder
       .map((columnId) => {
-        const statusIndex = sortedStatuses.findIndex((status) => status.id === columnId);
+        const statusIndex = sortedStatuses.findIndex(
+          (status) => status.id === columnId,
+        );
         const status = sortedStatuses.find((item) => item.id === columnId);
         if (!status) return null;
 
@@ -198,24 +259,29 @@ const LeadsPage = () => {
         return next;
       });
 
-      updateStatusOrderMutation.mutate({
-        orders: [
-          {
-            id: result.draggableId,
-            display_order: destination.index + 1
-          }
-        ]
-      }, {
-        onError: () => {
-          // Revert if mutation fails
-          setColumnOrder(previousColumnOrder);
-        }
-      });
+      updateStatusOrderMutation.mutate(
+        {
+          orders: [
+            {
+              id: result.draggableId,
+              display_order: destination.index + 1,
+            },
+          ],
+        },
+        {
+          onError: () => {
+            // Revert if mutation fails
+            setColumnOrder(previousColumnOrder);
+          },
+        },
+      );
       return;
     }
 
     const srcCol = columns.find((column) => column.id === source.droppableId);
-    const destCol = columns.find((column) => column.id === destination.droppableId);
+    const destCol = columns.find(
+      (column) => column.id === destination.droppableId,
+    );
     const movedDeal = srcCol?.deals[source.index];
 
     if (!destCol || !movedDeal) {
@@ -226,11 +292,11 @@ const LeadsPage = () => {
     setLocalLeads((prev) => {
       const next = [...prev];
       const leadIndex = next.findIndex((l) => String(l.id) === movedDeal.id);
-      
+
       if (leadIndex > -1) {
         // Remove from current position
         const [lead] = next.splice(leadIndex, 1);
-        
+
         // Clone lead to avoid mutating the original object directly
         const updatedLead = { ...lead };
 
@@ -243,7 +309,9 @@ const LeadsPage = () => {
         // Insert at new position
         const targetDeal = destCol.deals[destination.index];
         if (targetDeal && targetDeal.id !== movedDeal.id) {
-          const targetIndex = next.findIndex((l) => String(l.id) === targetDeal.id);
+          const targetIndex = next.findIndex(
+            (l) => String(l.id) === targetDeal.id,
+          );
           if (targetIndex > -1) {
             next.splice(targetIndex, 0, updatedLead);
           } else {
@@ -266,29 +334,31 @@ const LeadsPage = () => {
         },
         {
           onError: () => {
-             // Rollback optimistic state if the mutation eventually fails
-             setLocalLeads(leads);
-          }
-        }
+            // Rollback optimistic state if the mutation eventually fails
+            setLocalLeads(leads);
+          },
+        },
       );
     }
   };
 
-  const handleAddLead = (data: any, setError: (field: any, err: any) => void) => {
-    createLeadMutation.mutate(
-      data,
-      {
-        onSuccess: () => {
-          setIsLeadModalOpen(false);
-        },
-        onError: (error) => applyServerValidationErrors(error, setError),
-      }
-    );
+  const handleAddLead = (
+    data: any,
+    setError: (field: any, err: any) => void,
+  ) => {
+    createLeadMutation.mutate(data, {
+      onSuccess: () => {
+        setIsLeadModalOpen(false);
+      },
+      onError: (error) => applyServerValidationErrors(error, setError),
+    });
   };
 
   const toggleStageVisibility = (id: string) => {
     setVisibleStageIds((prev) =>
-      prev.includes(id) ? prev.filter((stageId) => stageId !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((stageId) => stageId !== id)
+        : [...prev, id],
     );
   };
 
@@ -318,12 +388,18 @@ const LeadsPage = () => {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-9 w-9 shrink-0 border-border/60 bg-background hover:bg-accent/50">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0 border-border/60 bg-background hover:bg-accent/50"
+                  >
                     <Filter className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="text-xs font-semibold">Filter Stages</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs font-semibold">
+                    Filter Stages
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {columns.map((column) => (
                     <DropdownMenuCheckboxItem
@@ -346,7 +422,9 @@ const LeadsPage = () => {
                 size="sm"
                 className={cn(
                   "h-7 flex-1 rounded-xs px-3 text-xs font-semibold transition-all sm:flex-none",
-                  viewMode === "pipeline" ? "bg-background shadow-xs text-primary" : "text-muted-foreground hover:text-foreground"
+                  viewMode === "pipeline"
+                    ? "bg-background shadow-xs text-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 onClick={() => setViewMode("pipeline")}
               >
@@ -358,7 +436,9 @@ const LeadsPage = () => {
                 size="sm"
                 className={cn(
                   "h-7 flex-1 rounded-xs px-3 text-xs font-semibold transition-all sm:flex-none",
-                  viewMode === "table" ? "bg-background shadow-xs text-primary" : "text-muted-foreground hover:text-foreground"
+                  viewMode === "table"
+                    ? "bg-background shadow-xs text-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
                 onClick={() => setViewMode("table")}
               >
@@ -372,7 +452,9 @@ const LeadsPage = () => {
         <div className="flex items-center">
           <Button
             onClick={() => {
-              setCreateLeadStatusId(columns[0]?.id || createLeadStatusId || null);
+              setCreateLeadStatusId(
+                columns[0]?.id || createLeadStatusId || null,
+              );
               setIsLeadModalOpen(true);
             }}
             size="sm"
@@ -386,13 +468,18 @@ const LeadsPage = () => {
 
       <div className="min-h-0 flex-1 overflow-hidden pt-2">
         {viewMode === "pipeline" ? (
-          <LeadPipeline displayedColumns={displayedColumns} onDragEnd={onDragEnd} />
+          <LeadPipeline
+            displayedColumns={displayedColumns}
+            onDragEnd={onDragEnd}
+          />
         ) : (
           <div className="h-full overflow-auto">
             <LeadTable displayedColumns={displayedColumns} />
           </div>
         )}
-        {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading leads...</p>}
+        {isLoading && (
+          <p className="mt-3 text-xs text-muted-foreground">Loading leads...</p>
+        )}
       </div>
 
       <LeadModal

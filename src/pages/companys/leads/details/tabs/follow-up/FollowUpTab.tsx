@@ -26,7 +26,7 @@ import {
 
 const applyServerValidationErrors = (
   error: any,
-  setError: (field: any, err: any) => void
+  setError: (field: any, err: any) => void,
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
@@ -76,39 +76,56 @@ interface FollowUpTabProps {
 const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
   const [open, setOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || "",
+  );
   const debouncedSearch = useDebounce(searchTerm, 500);
-  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
-  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10),
+  );
+  const [limit, setLimit] = useState(
+    parseInt(searchParams.get("limit") || "10", 10),
+  );
 
   const [editingFollowUp, setEditingFollowUp] = useState<FollowUp | null>(null);
-  const [followUpToDelete, setFollowUpToDelete] = useState<FollowUp | null>(null);
+  const [followUpToDelete, setFollowUpToDelete] = useState<FollowUp | null>(
+    null,
+  );
 
   useEffect(() => {
-      setSearchParams((prev) => {
-          const next = new URLSearchParams(prev);
-          if (debouncedSearch) next.set("search", debouncedSearch);
-          else next.delete("search");
-          if (page > 1) next.set("page", page.toString());
-          else next.delete("page");
-          if (limit !== 10) next.set("limit", limit.toString());
-          else next.delete("limit");
-          return next;
-      }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        if (page > 1) next.set("page", page.toString());
+        else next.delete("page");
+        if (limit !== 10) next.set("limit", limit.toString());
+        else next.delete("limit");
+        return next;
+      },
+      { replace: true },
+    );
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: followups = [], isLoading } = useLeadFollowUps(leadId, {
-      limit,
-      offset: (page - 1) * limit,
-      ...(debouncedSearch ? { search: debouncedSearch } : {})
+    limit,
+    offset: (page - 1) * limit,
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
   const createFollowUpMutation = useCreateLeadFollowUp(leadId);
   const updateFollowUpMutation = useUpdateLeadFollowUp(leadId);
   const deleteFollowUpMutation = useDeleteLeadFollowUp(leadId);
 
-  const serverTotal = followups.length === limit ? page * limit + 1 : (page - 1) * limit + followups.length;
+  const serverTotal =
+    followups.length === limit
+      ? page * limit + 1
+      : (page - 1) * limit + followups.length;
 
-  const handleSave = (data: FollowUpFormData, setError: (field: any, err: any) => void) => {
+  const handleSave = (
+    data: FollowUpFormData,
+    setError: (field: any, err: any) => void,
+  ) => {
     const payload = {
       ...data,
       scheduled_at: toIsoDateTime(data.scheduled_at),
@@ -126,7 +143,7 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
             setEditingFollowUp(null);
           },
           onError: (error) => applyServerValidationErrors(error, setError),
-        }
+        },
       );
       return;
     }
@@ -141,17 +158,26 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
     {
       key: "scheduled_at",
       header: "Scheduled At",
-      render: (item) => <span className="text-sm">{formatDateTime(item.scheduled_at)}</span>,
+      render: (item) => (
+        <span className="text-sm">{formatDateTime(item.scheduled_at)}</span>
+      ),
     },
     {
       key: "status",
       header: "Status",
-      render: (item) => <StatusBadge status={item.status} variant={getStatusVariant(item.status)} />,
+      render: (item) => (
+        <StatusBadge
+          status={item.status}
+          variant={getStatusVariant(item.status)}
+        />
+      ),
     },
     {
       key: "follow_up_method",
       header: "Method",
-      render: (item) => <span className="text-sm">{item.follow_up_method || "-"}</span>,
+      render: (item) => (
+        <span className="text-sm">{item.follow_up_method || "-"}</span>
+      ),
     },
     {
       key: "purpose",
@@ -161,12 +187,18 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
     {
       key: "assigned_to_name",
       header: "Assigned To",
-      render: (item) => <span className="text-sm">{item.assigned_to_name || "-"}</span>,
+      render: (item) => (
+        <span className="text-sm">{item.assigned_to_name || "-"}</span>
+      ),
     },
     {
       key: "remarks",
       header: "Remarks",
-      render: (item) => <span className="max-w-xs line-clamp-2 text-xs text-muted-foreground">{item.remarks || "-"}</span>,
+      render: (item) => (
+        <span className="max-w-xs line-clamp-2 text-xs text-muted-foreground">
+          {item.remarks || "-"}
+        </span>
+      ),
     },
     {
       key: "id",
@@ -219,8 +251,8 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
             className="h-9 w-[250px] pl-9 text-sm"
             value={searchTerm}
             onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPage(1);
+              setSearchTerm(e.target.value);
+              setPage(1);
             }}
           />
         </div>
@@ -236,11 +268,15 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
         serverTotal={serverTotal}
         onServerPageChange={setPage}
         onServerPageSizeChange={(newSize) => {
-            setLimit(newSize);
-            setPage(1);
+          setLimit(newSize);
+          setPage(1);
         }}
       />
-      {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading follow ups...</p>}
+      {isLoading && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Loading follow ups...
+        </p>
+      )}
 
       <FollowUpModal
         open={open}
@@ -251,20 +287,27 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
         onSave={handleSave}
         followUpData={editingFollowUp}
         isEditing={!!editingFollowUp}
-        isSubmitting={createFollowUpMutation.isPending || updateFollowUpMutation.isPending}
+        isSubmitting={
+          createFollowUpMutation.isPending || updateFollowUpMutation.isPending
+        }
       />
 
-      <AlertDialog open={!!followUpToDelete} onOpenChange={(nextOpen) => !nextOpen && setFollowUpToDelete(null)}>
+      <AlertDialog
+        open={!!followUpToDelete}
+        onOpenChange={(nextOpen) => !nextOpen && setFollowUpToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the follow up "{followUpToDelete?.purpose}".
-              This action cannot be undone.
+              This will permanently delete the follow up "
+              {followUpToDelete?.purpose}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteFollowUpMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteFollowUpMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 followUpToDelete &&

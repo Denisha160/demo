@@ -28,7 +28,7 @@ import {
 
 const applyServerValidationErrors = (
   error: any,
-  setError: (field: any, err: any) => void
+  setError: (field: any, err: any) => void,
 ) => {
   if (error?.code === "validation_error" && error?.details?.body) {
     Object.entries(error.details.body).forEach(([key, message]) => {
@@ -61,8 +61,12 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
-  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
-  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10),
+  );
+  const [limit, setLimit] = useState(
+    parseInt(searchParams.get("limit") || "10", 10),
+  );
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,16 +74,19 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   useEffect(() => {
-      setSearchParams((prev) => {
-          const next = new URLSearchParams(prev);
-          if (debouncedSearch) next.set("search", debouncedSearch);
-          else next.delete("search");
-          if (page > 1) next.set("page", page.toString());
-          else next.delete("page");
-          if (limit !== 10) next.set("limit", limit.toString());
-          else next.delete("limit");
-          return next;
-      }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (debouncedSearch) next.set("search", debouncedSearch);
+        else next.delete("search");
+        if (page > 1) next.set("page", page.toString());
+        else next.delete("page");
+        if (limit !== 10) next.set("limit", limit.toString());
+        else next.delete("limit");
+        return next;
+      },
+      { replace: true },
+    );
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: tasks = [], isLoading } = useLeadTasks(leadId, {
@@ -87,13 +94,16 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
     endDate: dateRange?.to?.toISOString(),
     limit,
     offset: (page - 1) * limit,
-    ...(debouncedSearch ? { search: debouncedSearch } : {})
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
   const createTaskMutation = useCreateLeadTask(leadId);
   const updateTaskMutation = useUpdateLeadTask(leadId);
   const deleteTaskMutation = useDeleteLeadTask(leadId);
 
-  const serverTotal = tasks.length === limit ? page * limit + 1 : (page - 1) * limit + tasks.length;
+  const serverTotal =
+    tasks.length === limit
+      ? page * limit + 1
+      : (page - 1) * limit + tasks.length;
 
   const handleCreate = () => {
     setEditingTask(null);
@@ -105,7 +115,10 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
     setIsModalOpen(true);
   };
 
-  const handleSaveTask = (formData: TaskFormData, setError: (field: any, err: any) => void) => {
+  const handleSaveTask = (
+    formData: TaskFormData,
+    setError: (field: any, err: any) => void,
+  ) => {
     if (!leadId) {
       return;
     }
@@ -123,18 +136,21 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
             setEditingTask(null);
           },
           onError: (error) => applyServerValidationErrors(error, setError),
-        }
+        },
       );
       return;
     }
 
-    createTaskMutation.mutate({
-      ...formData,
-      due_date: toIsoDate(formData.due_date),
-    }, {
-      onSuccess: () => setIsModalOpen(false),
-      onError: (error) => applyServerValidationErrors(error, setError),
-    });
+    createTaskMutation.mutate(
+      {
+        ...formData,
+        due_date: toIsoDate(formData.due_date),
+      },
+      {
+        onSuccess: () => setIsModalOpen(false),
+        onError: (error) => applyServerValidationErrors(error, setError),
+      },
+    );
   };
 
   const getPriorityVariant = (priority: string) => {
@@ -175,7 +191,9 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
       render: (item) => (
         <div className="flex flex-col">
           <span className="font-medium text-sm">{item.title}</span>
-          <span className="line-clamp-1 text-[10px] text-muted-foreground">{item.description}</span>
+          <span className="line-clamp-1 text-[10px] text-muted-foreground">
+            {item.description}
+          </span>
         </div>
       ),
     },
@@ -183,18 +201,27 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
       key: "priority",
       header: "Priority",
       render: (item) => (
-        <StatusBadge status={item.priority.toUpperCase()} variant={getPriorityVariant(item.priority)} />
+        <StatusBadge
+          status={item.priority.toUpperCase()}
+          variant={getPriorityVariant(item.priority)}
+        />
       ),
     },
     {
       key: "assigned_to",
       header: "Assigned To",
-      render: (item) => <span className="text-sm">{item.assigned_to_name || item.assigned_to}</span>,
+      render: (item) => (
+        <span className="text-sm">
+          {item.assigned_to_name || item.assigned_to}
+        </span>
+      ),
     },
     {
       key: "due_date",
       header: "Due Date",
-      render: (item) => <span className="text-sm">{formatDate(item.due_date)}</span>,
+      render: (item) => (
+        <span className="text-sm">{formatDate(item.due_date)}</span>
+      ),
     },
     {
       key: "status",
@@ -240,9 +267,9 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
             <Plus className="h-4 w-4" />
             New Task
           </Button>
-          <DatePickerWithRange 
-            date={dateRange} 
-            setDate={setDateRange} 
+          <DatePickerWithRange
+            date={dateRange}
+            setDate={setDateRange}
             className="w-[260px]"
             placeholder="Filter by due date"
           />
@@ -255,8 +282,8 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
             className="h-9 w-[250px] pl-9 text-sm"
             value={search}
             onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+              setSearch(e.target.value);
+              setPage(1);
             }}
           />
         </div>
@@ -272,11 +299,13 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
         serverTotal={serverTotal}
         onServerPageChange={setPage}
         onServerPageSizeChange={(newSize) => {
-            setLimit(newSize);
-            setPage(1);
+          setLimit(newSize);
+          setPage(1);
         }}
       />
-      {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading tasks...</p>}
+      {isLoading && (
+        <p className="mt-3 text-xs text-muted-foreground">Loading tasks...</p>
+      )}
 
       {isModalOpen && (
         <TaskModal
@@ -287,11 +316,16 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
           }}
           taskData={editingTask}
           onSave={handleSaveTask}
-          isSubmitting={createTaskMutation.isPending || updateTaskMutation.isPending}
+          isSubmitting={
+            createTaskMutation.isPending || updateTaskMutation.isPending
+          }
         />
       )}
 
-      <AlertDialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
+      <AlertDialog
+        open={!!taskToDelete}
+        onOpenChange={(open) => !open && setTaskToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -301,7 +335,9 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteTaskMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteTaskMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 taskToDelete &&

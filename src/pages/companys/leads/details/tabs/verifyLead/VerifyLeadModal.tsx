@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Search, MapPin } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { useListCity } from "@/hooks/useCityStateCountry";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const verifyFormSchema = z.object({
   property_type: z.enum(
@@ -101,7 +103,20 @@ export default function VerifyLeadModal({
 }: VerifyLeadModalProps) {
   const verifyMutation = useVerifyLead();
   const updateMutation = useUpdateVerifyLead();
-  const [cityInput, setCityInput] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  const debouncedCitySearch = useDebounce(citySearch, 300);
+
+  const { data: cityResults, isLoading: isCitiesLoading } = useListCity({
+    search: debouncedCitySearch,
+    limit: 10,
+  });
+
+  const cityOptions = useMemo(() => {
+    return (cityResults?.items || []).map((c: any) => ({
+      label: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`.replace(/, , /g, ", ").trim(),
+      value: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`.replace(/, , /g, ", ").trim(),
+    }));
+  }, [cityResults]);
 
   const isEditing = !!initialData;
   const activeMutation = isEditing ? updateMutation : verifyMutation;
@@ -155,27 +170,18 @@ export default function VerifyLeadModal({
       } else {
         form.reset();
       }
-      setCityInput("");
+      setCitySearch("");
     }
   }, [open, form, initialData]);
 
   const cities = form.watch("cities_of_operation") || [];
 
-  const handleAddCity = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if ((e.key === "Enter" || e.key === ",") && cityInput.trim()) {
-      e.preventDefault();
-      const val = cityInput.replace(",", "").trim();
-      if (val && !cities.includes(val)) {
-        form.setValue("cities_of_operation", [...cities, val], {
-          shouldDirty: true,
-        });
-        setCityInput("");
-      }
-    } else if (e.key === "Backspace" && !cityInput && cities.length > 0) {
-      e.preventDefault();
-      const newCities = [...cities];
-      newCities.pop();
-      form.setValue("cities_of_operation", newCities, { shouldDirty: true });
+  const handleSelectCity = (val: string) => {
+    if (val && !cities.includes(val)) {
+      form.setValue("cities_of_operation", [...cities, val], {
+        shouldDirty: true,
+      });
+      setCitySearch("");
     }
   };
 
@@ -345,14 +351,17 @@ export default function VerifyLeadModal({
               <Label className="text-xs font-bold flex gap-1">
                 Cities of Operation
               </Label>
-              <Input
-                placeholder="Type city and press Enter"
+              <Combobox
+                options={cityOptions}
+                onValueChange={handleSelectCity}
+                placeholder="Search and select city..."
+                searchPlaceholder="Type city name..."
+                searchValue={citySearch}
+                onSearchChange={setCitySearch}
                 className="h-9 text-xs"
-                value={cityInput}
-                onChange={(e) => setCityInput(e.target.value)}
-                onKeyDown={handleAddCity}
+                emptyText={isCitiesLoading ? "Searching..." : "No cities found."}
               />
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1 mt-1">
                 {cities.map((city, idx) => (
                   <Badge
                     key={idx}
@@ -521,7 +530,7 @@ export default function VerifyLeadModal({
                       name="warehouse_location"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-bold">Warehouse Location</FormLabel>
+                          <FormLabel className="text-xs font-bold">Warehouse Location</FormLabel>
                           <FormControl>
                             <Input
                               className="h-8 text-xs"
@@ -538,7 +547,7 @@ export default function VerifyLeadModal({
                       name="warehouse_size"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-bold">Size (sqft)</FormLabel>
+                          <FormLabel className="text-xs font-bold">Size (sqft)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -560,7 +569,7 @@ export default function VerifyLeadModal({
                       name="showroom_location"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-bold">Showroom Location</FormLabel>
+                          <FormLabel className="text-xs font-bold">Showroom Location</FormLabel>
                           <FormControl>
                             <Input
                               className="h-8 text-xs"
@@ -577,7 +586,7 @@ export default function VerifyLeadModal({
                       name="showroom_size"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-bold">Size (sqft)</FormLabel>
+                          <FormLabel className="text-xs font-bold">Size (sqft)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -601,7 +610,7 @@ export default function VerifyLeadModal({
 
               <div className="overflow-x-auto rounded-lg border border-border/20">
                 <table className="w-full text-left text-[11px]">
-                  <thead className="bg-background/50 uppercase text-[10px] font-bold">
+                  <thead className="bg-background/50 uppercase text-xs font-bold">
                     <tr>
                       <th className="px-3 py-2 border-r border-border/10">Type</th>
                       <th className="px-3 py-2 border-r border-border/10">Model</th>

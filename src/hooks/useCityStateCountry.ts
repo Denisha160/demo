@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { listCityStateCountry } from "@/services/api";
+import { listCityStateCountry, listCity } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
 interface GeoParams {
@@ -9,6 +9,7 @@ interface GeoParams {
   combobox?: boolean;
   limit?: number;
   offset?: number;
+  [key: string]: unknown;
 }
 
 export function useCityStateCountry(params: GeoParams) {
@@ -55,6 +56,16 @@ export function useCities(
     queryKey: queryKeys.locations.list({ ...params, state_id: stateId }),
     queryFn: () => listCityStateCountry({ ...params, state_id: stateId }),
     enabled: !!stateId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    select: (data) => data?.data,
+  });
+}
+
+export function useListCity(params: GeoParams) {
+  return useQuery({
+    queryKey: [...queryKeys.locations.all, "list-city", params],
+    queryFn: () => listCity(params),
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     select: (data) => data?.data,

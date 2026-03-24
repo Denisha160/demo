@@ -338,6 +338,26 @@ const VisitsModal = ({
         onSave(data, form.setError);
     };
 
+    const formatLabel = (s: string) =>
+        s
+            .toLowerCase()
+            .split("_")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+
+    const statusOptions = [
+        "SCHEDULED",
+        "CHECKED_IN",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "CANCELLED",
+        "MISSED",
+        "RESCHEDULED",
+    ].map((s) => ({
+        label: formatLabel(s),
+        value: s,
+    }));
+
     return (
         <Modal
             open={open}
@@ -541,13 +561,11 @@ const VisitsModal = ({
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="SCHEDULED">SCHEDULED</SelectItem>
-                                            <SelectItem value="CHECKED_IN">CHECKED_IN</SelectItem>
-                                            <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
-                                            <SelectItem value="COMPLETED">COMPLETED</SelectItem>
-                                            <SelectItem value="CANCELLED">CANCELLED</SelectItem>
-                                            <SelectItem value="MISSED">MISSED</SelectItem>
-                                            <SelectItem value="RESCHEDULED">RESCHEDULED</SelectItem>
+                                            {statusOptions.map((opt) => (
+                                                <SelectItem key={opt.value} value={opt.value}>
+                                                    {opt.label}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <FormMessage className="text-[10px]" />
@@ -647,6 +665,7 @@ const VisitsModal = ({
                                             type="datetime-local"
                                             className="h-9 text-xs"
                                             disabled={isSubmitting}
+                                            min={new Date().toISOString().slice(0, 16)}
                                             {...field}
                                         />
                                     </FormControl>
@@ -668,6 +687,7 @@ const VisitsModal = ({
                                             type="datetime-local"
                                             className="h-9 text-xs"
                                             disabled={isSubmitting}
+                                            min={form.watch("actual_check_in") || new Date().toISOString().slice(0, 16)}
                                             {...field}
                                         />
                                     </FormControl>

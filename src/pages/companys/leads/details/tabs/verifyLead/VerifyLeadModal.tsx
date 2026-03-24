@@ -212,6 +212,13 @@ export default function VerifyLeadModal({
     );
   };
 
+  const formatLabel = (s: string) =>
+    s
+      .toLowerCase()
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
   const propertyTypes = [
     "HOTEL",
     "RESTAURANT",
@@ -219,7 +226,8 @@ export default function VerifyLeadModal({
     "RESORT",
     "SPA",
     "OTHER",
-  ].map((v) => ({ label: v, value: v }));
+  ].map((v) => ({ label: formatLabel(v), value: v }));
+
   const customerTypes = [
     "DEALER",
     "DISTRIBUTOR",
@@ -234,7 +242,7 @@ export default function VerifyLeadModal({
     "CORPORATE_OFFICE",
     "BANK",
     "BUILDER",
-  ].map((v) => ({ label: v, value: v }));
+  ].map((v) => ({ label: formatLabel(v), value: v }));
 
   return (
     <Modal

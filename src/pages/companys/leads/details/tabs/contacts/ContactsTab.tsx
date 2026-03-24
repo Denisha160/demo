@@ -9,6 +9,16 @@ import { useDebounce } from "@/hooks/useDebounce";
 import ContactModal from "./ContactModal";
 import { useLeadContacts, useDeleteLeadContact, useUpdateLeadContact } from "@/hooks/useLeadContacts";
 import { LeadContact } from "@/types/contacts";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ContactsTab = () => {
     const { id: leadId = "" } = useParams<{ id: string }>();
@@ -18,6 +28,7 @@ const ContactsTab = () => {
     const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
     const debouncedSearch = useDebounce(searchTerm, 500);
     const [editingContact, setEditingContact] = useState<LeadContact | null>(null);
+    const [contactToDelete, setContactToDelete] = useState<LeadContact | null>(null);
 
     // Synchronize search to URL
     useEffect(() => {
@@ -43,10 +54,8 @@ const ContactsTab = () => {
         setOpen(true);
     };
 
-    const handleDelete = (id: string) => {
-        if (window.confirm("Are you sure you want to delete this contact?")) {
-            deleteMutation.mutate({ leadId, contactId: id });
-        }
+    const handleDelete = (contact: LeadContact) => {
+        setContactToDelete(contact);
     };
 
     const handleTogglePrimary = (contact: LeadContact, checked: boolean) => {
@@ -107,7 +116,7 @@ const ContactsTab = () => {
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => handleDelete(item)}
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -156,6 +165,36 @@ const ContactsTab = () => {
                 }}
                 initialData={editingContact}
             />
+
+            <AlertDialog open={!!contactToDelete} onOpenChange={(open) => !open && setContactToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the contact "{contactToDelete?.name}".
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() =>
+                                contactToDelete &&
+                                deleteMutation.mutate(
+                                    { leadId, contactId: contactToDelete.id },
+                                    {
+                                        onSuccess: () => setContactToDelete(null),
+                                    }
+                                )
+                            }
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={deleteMutation.isPending}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

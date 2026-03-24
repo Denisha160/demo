@@ -167,6 +167,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             name: formData.contact_person_name,
             designation: formData.contact_person_designation,
             phone: formData.contact_person_phone,
+            is_primary: false,
           },
         });
       }

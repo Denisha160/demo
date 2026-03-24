@@ -29,14 +29,11 @@ interface ComboboxProps {
   searchPlaceholder?: string;
   emptyText?: string;
   className?: string;
-  /** If true, a clear ("×") button appears when a value is selected */
   clearable?: boolean;
   disabled?: boolean;
   searchValue?: string;
   onSearchChange?: (search: string) => void;
-  /** Stable label to display when the selected value is not in the options list (common with server-side search) */
   selectedLabel?: string;
-  /** Allow creating a new option using the search value */
   creatable?: boolean;
 }
 
@@ -160,7 +157,8 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                 {options.map((option) => (
                   <CommandItem
                     key={option.value}
-                    value={option.label}
+                    value={option.value}
+                    keywords={[option.label]}
                     onSelect={() => handleSelect(option.value)}
                     className="flex items-center gap-2 rounded-sm text-sm cursor-pointer"
                   >

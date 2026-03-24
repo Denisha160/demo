@@ -94,30 +94,91 @@ const LeadPipeline = ({
                         }`}
                     >
                       {/* Top side hover highlight */}
-                      <div className="absolute inset-x-0 top-0 h-0.5 z-10 bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 transition-opacity duration-300 group-hover/column:opacity-100" />
+                      <div
+                        className="absolute inset-x-0 top-0 h-1 z-10 opacity-0 transition-opacity duration-300 group-hover/column:opacity-100"
+                        style={
+                          col.color
+                            ? {
+                              background: `linear-gradient(to right, transparent, ${col.color}, transparent)`,
+                            }
+                            : {
+                              background: `linear-gradient(to right, transparent, hsl(var(--primary)/0.6), transparent)`,
+                            }
+                        }
+                      />
 
                       <div
                         {...columnProvided.dragHandleProps}
-                        className="flex cursor-grab items-center justify-between border-b border-border/20 bg-background/90 px-3.5 py-3 backdrop-blur-xl active:cursor-grabbing"
+                        className={`flex cursor-grab items-center justify-between border-b px-4 py-3.5 backdrop-blur-xl transition-colors duration-200 active:cursor-grabbing ${!col.color ? "border-border/20 bg-background/90" : ""
+                          }`}
+                        style={
+                          col.color
+                            ? {
+                              background: `linear-gradient(to bottom, ${col.color}25, ${col.color}05)`,
+                              borderColor: `${col.color}30`,
+                            }
+                            : undefined
+                        }
                       >
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-3">
                           {columnIndex === 0 ? (
                             <div className="w-4" />
                           ) : (
-                            <GripVertical className="h-4 w-4 text-muted-foreground/70" />
+                            <div className="text-muted-foreground/40 transition-colors group-hover/column:text-muted-foreground/80">
+                              <GripVertical className="h-4 w-4" />
+                            </div>
                           )}
-                          <StatusBadge
-                            status={col.title}
-                            variant={col.variant}
-                          />
-                          <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full border border-border/40 bg-secondary/80 px-1.5 text-[12px] font-extrabold text-foreground/70">
-                            {col.deals.length}
+                          <div className="flex items-center gap-2">
+
+                            <div
+                              className="rounded-md border px-2 py-0.5 text-[12px] font-bold shadow-sm transition-all duration-200"
+                              style={
+                                col.color
+                                  ? {
+                                      backgroundColor: `${col.color}15`,
+                                      borderColor: `${col.color}35`,
+                                      color: col.color,
+                                    }
+                                  : {
+                                      backgroundColor: "hsl(var(--secondary) / 0.8)",
+                                      borderColor: "hsl(var(--border) / 0.4)",
+                                      color: "hsl(var(--foreground) / 0.7)",
+                                    }
+                              }
+                            >
+                              {col.title}
+                            </div>
+                            <div
+                              className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full border px-1.5 text-[12px] font-bold shadow-sm transition-colors duration-200"
+                              style={
+                                col.color
+                                  ? {
+                                    backgroundColor: `${col.color}20`,
+                                    borderColor: `${col.color}40`,
+                                    color: col.color,
+                                  }
+                                  : {
+                                    backgroundColor: "hsl(var(--secondary) / 0.8)",
+                                    borderColor: "hsl(var(--border) / 0.4)",
+                                    color: "hsl(var(--foreground) / 0.7)",
+                                  }
+                              }
+                            >
+                              {col.deals.length}
+                            </div>
                           </div>
                         </div>
 
-                        <span className="text-[12px] font-medium text-muted-foreground">
-                          Drag column
-                        </span>
+                        {columnIndex !== 0 && (
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-widest transition-colors duration-200"
+                            style={{
+                              color: col.color ? `${col.color}80` : "hsl(var(--muted-foreground) / 0.5)",
+                            }}
+                          >
+                            Drag
+                          </span>
+                        )}
                       </div>
 
                       <Droppable droppableId={col.id} type="DEAL">

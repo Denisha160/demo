@@ -21,5 +21,6 @@ export interface PipelineColumn {
   id: string;
   title: string;
   variant: "default" | "info" | "warning" | "success" | "destructive";
+  color?: string;
   deals: Deal[];
 }

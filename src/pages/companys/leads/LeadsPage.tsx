@@ -235,6 +235,7 @@ const LeadsPage = () => {
           id: status.id,
           title: status.name,
           variant: VARIANTS[statusIndex % VARIANTS.length] || "default",
+          color: status.color,
           deals: (leadGroups[columnId] || []).filter(isDealVisible),
         } satisfies PipelineColumn;
       })

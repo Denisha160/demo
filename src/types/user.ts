@@ -55,6 +55,26 @@ export interface UserCreatePayload {
 
 export type UserUpdatePayload = Partial<UserCreatePayload> & { id: string };
 
+export interface UserSession {
+  id: string; // UUID
+  user_id: string;
+  ip_address: string;
+  user_agent: string;
+  is_deleted: boolean;
+  created_at: string;
+  expires_at: string;
+  deleted_at: string | null;
+}
+
+export interface UserSessionListResponse {
+  items: UserSession[];
+  pagination: {
+    total: number;
+    offset: number;
+    limit: number;
+  };
+}
+
 export interface UserDetailData extends Partial<User> {
   id: string; // Ensure id is always present
   revenue?: string;
@@ -70,13 +90,7 @@ export interface UserDetailData extends Partial<User> {
   conversionRate?: string;
   avgProductionTime?: string;
   fulfillmentRate?: string;
-  sessions?: {
-    id: number;
-    device: string;
-    ip: string;
-    lastActive: string;
-    current: boolean;
-  }[];
+  sessions?: UserSession[];
 }
 
 // Utility to get local YYYY-MM-DD string without UTC shifting

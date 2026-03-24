@@ -1,7 +1,18 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
-import { Camera, Briefcase, User, CreditCard, Loader2 } from "lucide-react";
+import {
+  Camera,
+  Briefcase,
+  User,
+  CreditCard,
+  Loader2,
+  Monitor,
+  Smartphone,
+  Globe,
+  Clock,
+  ShieldCheck,
+} from "lucide-react";
 import { EditableDetailItem, SelectOption } from "./EditableDetailItem";
 import {
   useRef,
@@ -10,7 +21,7 @@ import {
   useImperativeHandle,
   useEffect,
 } from "react";
-import { useUpdateUser } from "@/hooks/useUsers";
+import { useUpdateUser, useUserSessions } from "@/hooks/useUsers";
 import { z } from "zod";
 import {
   UserDetailData,

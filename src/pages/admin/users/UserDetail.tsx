@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -9,15 +9,23 @@ import OverviewTab, { OverviewTabRef } from "./components/OverviewTab";
 import LeadsTab from "./components/LeadsTab";
 import AnalyticsTab from "./components/AnalyticsTab";
 import PermissionsTab from "./components/PermissionsTab";
+import SessionsTab from "./components/SessionsTab";
 import { SelectOption } from "./components/EditableDetailItem";
 import { UserDetailData } from "@/types/user";
 
 const UserDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState("overview");
+  // Tab state from search params
+  const activeTab = searchParams.get("tab") || "overview";
+  const setActiveTab = (tab: string) => {
+    setSearchParams((prev) => {
+      prev.set("tab", tab);
+      return prev;
+    });
+  };
   const [isSavingOverview, setIsSavingOverview] = useState(false);
   const overviewRef = useRef<OverviewTabRef>(null);
 
@@ -223,6 +231,12 @@ const UserDetailPage = () => {
             >
               Permissions
             </TabsTrigger>
+            <TabsTrigger
+              value="sessions"
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0"
+            >
+              Sessions
+            </TabsTrigger>
           </TabsList>
 
           {activeTab === "overview" && (
@@ -326,6 +340,13 @@ const UserDetailPage = () => {
             companyRoles={companyRoles}
             setCompanyRoles={setCompanyRoles}
           />
+        </TabsContent>
+
+        <TabsContent
+          value="sessions"
+          className="space-y-4 animate-in fade-in-50 duration-300"
+        >
+          <SessionsTab user_id={userData.id!} />
         </TabsContent>
       </Tabs>
     </div>

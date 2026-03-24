@@ -132,22 +132,54 @@ const ActivityTab = () => {
                   {activity.description}
                 </p>
 
-                {(activity.old_value !== null || activity.new_value !== null) &&
-                  activity.activity_type === "FIELD_UPDATE" && (
-                    <div className="flex flex-wrap items-center gap-2 text-[10px] py-1">
-                      {activity.old_value !== null && (
-                        <span className="text-muted-foreground line-through opacity-40 italic">
-                          {typeof activity.old_value === "object"
-                            ? JSON.stringify(activity.old_value)
-                            : String(activity.old_value)}
-                        </span>
-                      )}
-                      <MoreHorizontal className="h-2 w-2 text-muted-foreground/30" />
-                      <span className="text-primary/80 font-bold bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
-                        {typeof activity.new_value === "object"
-                          ? JSON.stringify(activity.new_value)
-                          : String(activity.new_value)}
-                      </span>
+                {activity.activity_type === "FIELD_UPDATE" &&
+                  activity.new_value &&
+                  typeof activity.new_value === "object" && (
+                    <div className="flex flex-col gap-1 mt-1 pl-2 border-l-2 border-primary/10">
+                      {Object.keys(activity.new_value).map((key) => {
+                        const newVal = (activity.new_value as any)[key];
+                        const oldVal = (activity.old_value as any)?.[key];
+
+                        if (
+                          key.endsWith("_id") ||
+                          key === "id" ||
+                          ["updated_at", "updated_by", "created_at", "created_by", "deleted_at"].includes(key)
+                        ) {
+                          return null;
+                        }
+
+                        // Skip if redundant with description (rough check)
+                        if (
+                          activity.description.toLowerCase().includes(key.toLowerCase()) &&
+                          activity.description.toLowerCase().includes(String(newVal).toLowerCase())
+                        ) {
+                          return null;
+                        }
+
+                        const fieldLabel =
+                          key.charAt(0).toUpperCase() +
+                          key.slice(1).replace(/_/g, " ");
+
+                        return (
+                          <div
+                            key={key}
+                            className="flex items-center gap-2 text-[10px]"
+                          >
+                            <span className="text-muted-foreground font-medium">
+                              {fieldLabel}:
+                            </span>
+                            {oldVal !== undefined && (
+                              <span className="text-muted-foreground/60 line-through">
+                                {String(oldVal)}
+                              </span>
+                            )}
+                            <MoreHorizontal className="h-2 w-2 text-muted-foreground/30" />
+                            <span className="text-primary font-bold">
+                              {String(newVal)}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
               </div>

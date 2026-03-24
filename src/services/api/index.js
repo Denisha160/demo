@@ -106,6 +106,11 @@ export const updateUserPermissions = (id, data) => {
   return axios({ method: "PUT", url, data });
 };
 
+export const listUserSessions = (id, params) => {
+  const url = `users/${id}/sessions`;
+  return axios({ method: "GET", url, params });
+};
+
 // end region
 
 // region Companies
@@ -579,7 +584,7 @@ export const listKitsByProduct = (productId) => {
 
 // end region
 
-// start region
+// region Batches
 // ===================== Batches =====================
 
 export const listBatch = (params) => {
@@ -602,6 +607,7 @@ export const updateBatch = ({ id, ...data }) => {
   return axios({ method: "PATCH", url, data });
 };
 
+// region Serials
 // ===================== Serials =====================
 
 export const listSerials = (params) => {
@@ -618,7 +624,9 @@ export const bulkSyncSerials = (data) => {
   const url = `inventory/serials/bulk-sync`;
   return axios({ method: "POST", url, data });
 };
+// end region
 
+// region Inventory
 // ===================== Inventory =====================
 
 export const listInventories = (params) => {
@@ -633,7 +641,8 @@ export const listTransactions = (params) => {
 
 // end region
 
-// ===== status ====
+// region Lead Status
+// ===================== Lead Status =====================
 
 export const listStatus = (params) => {
   const url = `leads/lead-status`;
@@ -658,9 +667,10 @@ export const deleteStatus = (id) => {
 export const updateLeadStatusOrder = (data) => {
   return axios({ method: "PATCH", url: "leads/lead-status/order", data });
 };
+// end region
 
-// ===== source ====
-
+// region Lead source 
+// ===================== Lead Source =====================
 export const listSource = (params) => {
   const url = `leads/lead-source`;
   return axios({ method: "GET", url, params });
@@ -680,7 +690,9 @@ export const deleteSource = (id) => {
   const url = `leads/lead-source/${id}`;
   return axios({ method: "DELETE", url });
 };
+// end region
 
+// region General Visits, Followps, Reminders and Tasks
 export const listAllVisits = (params) => {
   return axios({ method: "GET", url: `visits`, params });
 };
@@ -696,8 +708,17 @@ export const listAllReminders = (params) => {
 export const listAllTasks = (params) => {
   return axios({ method: "GET", url: `tasks`, params });
 };
+// end region
 
+// region City State Country
+// ===================== City State Country =====================
 export const listCityStateCountry = (params) => {
   const url = `city-state-country`;
   return axios({ method: "GET", url, params });
 };
+
+export const listCity = (params) => {
+  const url = `city-state-country/city`;
+  return axios({ method: "GET", url, params });
+};
+// end region

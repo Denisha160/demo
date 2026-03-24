@@ -35,6 +35,8 @@ export const queryKeys = {
     list: (filters?: Record<string, unknown>) =>
       [...queryKeys.users.all, "list", filters] as const,
     detail: (id: string) => [...queryKeys.users.all, "detail", id] as const,
+    sessions: (id: string, params?: Record<string, unknown>) =>
+      [...queryKeys.users.detail(id), "sessions", params] as const,
   },
   companies: {
     all: ["companies"] as const,

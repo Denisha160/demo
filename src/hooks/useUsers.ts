@@ -5,6 +5,7 @@ import {
   getUserDetails,
   createUser,
   updateUser,
+  listUserSessions,
   deleteUser,
   updateUserPermissions,
 } from "@/services/api";
@@ -13,6 +14,8 @@ import {
   UserCreatePayload,
   UserUpdatePayload,
   ApiErrorResponse,
+  UserSession,
+  UserSessionListResponse,
 } from "@/types/user";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -163,5 +166,16 @@ export const useUpdateUserPermissions = () => {
         "Failed to update user permissions.";
       toast.error(message);
     },
+  });
+};
+
+export const useUserSessions = (id: string, params?: Record<string, unknown>, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: queryKeys.users.sessions(id, params),
+    queryFn: async () => {
+      const response = await listUserSessions(id, params);
+      return response.data as UserSessionListResponse;
+    },
+    enabled: enabled && !!id,
   });
 };

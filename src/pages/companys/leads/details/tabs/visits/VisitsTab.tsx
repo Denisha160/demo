@@ -115,9 +115,9 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const { data: visits = [], isLoading } = useLeadVisits(leadId, {
     startDate: dateRange?.from?.toISOString(),
     endDate: dateRange?.to?.toISOString(),
-    search: debouncedSearch,
     limit,
-    offset: (page - 1) * limit
+    offset: (page - 1) * limit,
+    ...(debouncedSearch ? { search: debouncedSearch } : {})
   });
   const createVisitMutation = useCreateLeadVisit(leadId);
   const updateVisitMutation = useUpdateLeadVisit(leadId);

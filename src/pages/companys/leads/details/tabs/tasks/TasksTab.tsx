@@ -85,9 +85,9 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
   const { data: tasks = [], isLoading } = useLeadTasks(leadId, {
     startDate: dateRange?.from?.toISOString(),
     endDate: dateRange?.to?.toISOString(),
-    search: debouncedSearch,
     limit,
-    offset: (page - 1) * limit
+    offset: (page - 1) * limit,
+    ...(debouncedSearch ? { search: debouncedSearch } : {})
   });
   const createTaskMutation = useCreateLeadTask(leadId);
   const updateTaskMutation = useUpdateLeadTask(leadId);

@@ -57,9 +57,9 @@ const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: attachmentsData, isLoading } = useGetLeadAttachments(leadId, { 
-    search: debouncedSearch,
     limit,
-    offset: (page - 1) * limit 
+    offset: (page - 1) * limit,
+    ...(debouncedSearch ? { search: debouncedSearch } : {})
   });
   const uploadAttachmentMutation = useUploadLeadAttachment(leadId);
   const deleteAttachmentMutation = useDeleteLeadAttachment(leadId);

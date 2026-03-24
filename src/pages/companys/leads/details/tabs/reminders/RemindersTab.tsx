@@ -115,9 +115,9 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
   const { data: reminders = [], isLoading } = useLeadReminders(leadId, {
     startDate: dateRange?.from?.toISOString(),
     endDate: dateRange?.to?.toISOString(),
-    search: debouncedSearch,
     limit,
-    offset: (page - 1) * limit
+    offset: (page - 1) * limit,
+    ...(debouncedSearch ? { search: debouncedSearch } : {})
   });
   const createReminderMutation = useCreateLeadReminder(leadId);
   const updateReminderMutation = useUpdateLeadReminder(leadId);

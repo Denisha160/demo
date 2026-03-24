@@ -98,9 +98,9 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: followups = [], isLoading } = useLeadFollowUps(leadId, {
-      search: debouncedSearch,
       limit,
-      offset: (page - 1) * limit
+      offset: (page - 1) * limit,
+      ...(debouncedSearch ? { search: debouncedSearch } : {})
   });
   const createFollowUpMutation = useCreateLeadFollowUp(leadId);
   const updateFollowUpMutation = useUpdateLeadFollowUp(leadId);

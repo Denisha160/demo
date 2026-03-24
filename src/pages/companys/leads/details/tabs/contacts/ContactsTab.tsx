@@ -29,6 +29,8 @@ const ContactsTab = () => {
     const debouncedSearch = useDebounce(searchTerm, 500);
     const [editingContact, setEditingContact] = useState<LeadContact | null>(null);
     const [contactToDelete, setContactToDelete] = useState<LeadContact | null>(null);
+    const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+    const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
 
     // Synchronize search to URL
     useEffect(() => {
@@ -36,18 +38,25 @@ const ContactsTab = () => {
             const next = new URLSearchParams(prev);
             if (debouncedSearch) next.set("search", debouncedSearch);
             else next.delete("search");
+            if (page > 1) next.set("page", String(page));
+            else next.delete("page");
+            if (limit !== 10) next.set("limit", String(limit));
+            else next.delete("limit");
             return next;
         }, { replace: true });
-    }, [debouncedSearch, setSearchParams]);
+    }, [debouncedSearch, page, limit, setSearchParams]);
 
     const { data, isLoading } = useLeadContacts(leadId, {
-        search: debouncedSearch
+        limit,
+        offset: (page - 1) * limit,
+        ...(debouncedSearch ? { search: debouncedSearch } : {})
     });
     
     const deleteMutation = useDeleteLeadContact();
     const updateMutation = useUpdateLeadContact();
 
     const contacts = data?.contacts || [];
+    const totalItems = data?.total || (contacts.length === limit ? page * limit + 1 : (page - 1) * limit + contacts.length);
 
     const handleEdit = (contact: LeadContact) => {
         setEditingContact(contact);
@@ -146,7 +155,10 @@ const ContactsTab = () => {
                             placeholder="Search contacts..."
                             className="h-9 pl-9 w-[250px] text-sm"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setPage(1);
+                            }}
                         />
                     </div>
                 </div>
@@ -154,8 +166,16 @@ const ContactsTab = () => {
             <DataTable
                 columns={columns}
                 data={contacts}
-                pageSize={25}
                 isLoading={isLoading}
+                serverSide={true}
+                serverPage={page}
+                pageSize={limit}
+                serverTotal={totalItems}
+                onServerPageChange={setPage}
+                onServerPageSizeChange={(newSize) => {
+                    setLimit(newSize);
+                    setPage(1);
+                }}
             />
             <ContactModal
                 open={open}

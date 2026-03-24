@@ -91,14 +91,14 @@ const FollowUpModal = ({
   } = useForm<FollowUpFormData>({
     resolver: zodResolver(followUpSchema),
     defaultValues: {
-      status: "SCHEDULED",
-      follow_up_method: "Email",
+      status: "",
+      follow_up_method: "",
       purpose: "",
       remarks: "",
       assigned_to: "",
-      scheduled_at: getTodayDate(),
+      scheduled_at: "",
       set_reminder: false,
-      reminder_time: getCurrentTime(),
+      reminder_time: "",
     },
   });
 
@@ -120,14 +120,14 @@ const FollowUpModal = ({
     }
 
     reset({
-      status: "SCHEDULED",
-      follow_up_method: "Email",
+      status: "",
+      follow_up_method: "",
       purpose: "",
       remarks: "",
       assigned_to: "",
-      scheduled_at: getTodayDate(),
+      scheduled_at: "",
       set_reminder: false,
-      reminder_time: getCurrentTime(),
+      reminder_time: "",
     });
   }, [open, isEditing, followUpData, reset]);
 
@@ -301,6 +301,7 @@ const FollowUpModal = ({
                   </Label>
                   <Input
                     type="time"
+                    placeholder="Select reminder time"
                     className="h-9 text-xs"
                     disabled={isSubmitting}
                     {...register("reminder_time")}

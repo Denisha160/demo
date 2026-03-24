@@ -133,7 +133,7 @@ const TABS = [
   { id: "products", label: "Interested Products", icon: Package },
   { id: "attachments", label: "Attachment", icon: Paperclip },
   { id: "activity", label: "Activity", icon: Activity },
-  { id: "quotations", label: "Quotations", icon: FileText },
+  // { id: "quotations", label: "Quotations", icon: FileText },
   { id: "reminders", label: "Reminder", icon: Bell },
 ];
 
@@ -161,19 +161,19 @@ const mapLeadToProfile = (
   address_line2: lead?.address_line2 || "",
   tags: Array.isArray(lead?.tags)
     ? lead.tags
-        .map((tag: any) =>
-          typeof tag === "string"
-            ? { name: tag }
-            : { id: tag?.id ? String(tag.id) : undefined, name: tag?.name },
-        )
-        .filter((t: any) => !!t.name)
+      .map((tag: any) =>
+        typeof tag === "string"
+          ? { name: tag }
+          : { id: tag?.id ? String(tag.id) : undefined, name: tag?.name },
+      )
+      .filter((t: any) => !!t.name)
     : [],
   interested_category_id: Array.isArray((lead as any)?.interested_category_id)
     ? (lead as any).interested_category_id.map((id: any) =>
-        typeof id === "string"
-          ? { id, name: id }
-          : { id: String(id?.id), name: id?.name || id?.id },
-      )
+      typeof id === "string"
+        ? { id, name: id }
+        : { id: String(id?.id), name: id?.name || id?.id },
+    )
     : [],
 });
 
@@ -203,7 +203,7 @@ const LeadDetailsPage = () => {
   const setLeadProfile = (profile: LeadProfileFormValues) => {
     if (!id) return;
 
-    const payload: { leadId: string; [key: string]: any } = { leadId: id };
+    const payload: { leadId: string;[key: string]: any } = { leadId: id };
 
     if (profile.name !== leadProfile.name) payload.name = profile.name;
     if (profile.company !== leadProfile.company)
@@ -339,10 +339,10 @@ const LeadDetailsPage = () => {
             {(lead?.customer_id ||
               lead?.lead_type === "CUSTOMER" ||
               convertMutation.isSuccess) && (
-              <span title="Converted to Customer">
-                <CheckCircle className="h-6 w-6 text-blue-500" />
-              </span>
-            )}
+                <span title="Converted to Customer">
+                  <CheckCircle className="h-6 w-6 text-blue-500" />
+                </span>
+              )}
           </h1>
         </div>
 
@@ -400,16 +400,14 @@ const LeadDetailsPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-medium rounded-md transition-all duration-200 ${
-                  isActive
-                    ? "bg-primary/5 text-primary"
-                    : "text-foreground/80 hover:bg-muted/50 hover:text-foreground"
-                }`}
+                className={`flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-medium rounded-md transition-all duration-200 ${isActive
+                  ? "bg-primary/5 text-primary"
+                  : "text-foreground/80 hover:bg-muted/50 hover:text-foreground"
+                  }`}
               >
                 <Icon
-                  className={`h-[18px] w-[18px] ${
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  }`}
+                  className={`h-[18px] w-[18px] ${isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
                 />
                 <span className="flex-1 text-left">{tab.label}</span>
               </button>

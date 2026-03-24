@@ -68,9 +68,10 @@ const mapAttachment = (attachment: any): Attachment => ({
 
 interface AttachmentsTabProps {
   leadId: string;
+  initialAttachments?: any[];
 }
 
-const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
+const AttachmentsTab = ({ leadId, initialAttachments = [] }: AttachmentsTabProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
@@ -110,8 +111,12 @@ const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
   const deleteAttachmentMutation = useDeleteLeadAttachment(leadId);
 
   const attachments = useMemo(() => {
-    return (attachmentsData?.data?.items || []).map(mapAttachment);
-  }, [attachmentsData]);
+    const rawItems = attachmentsData?.data?.items || [];
+    if (isLoading && rawItems.length === 0 && initialAttachments.length > 0) {
+      return initialAttachments.map(mapAttachment);
+    }
+    return rawItems.map(mapAttachment);
+  }, [attachmentsData, initialAttachments, isLoading]);
 
   const serverTotal =
     attachments.length === limit

@@ -88,12 +88,12 @@ const TaskModal = ({
     defaultValues: {
       title: "",
       description: "",
-      status: "TODO",
-      priority: "MEDIUM",
+      status: "",
+      priority: "",
       assigned_to: "",
-      due_date: getTodayDate(),
+      due_date: "",
       set_reminder: false,
-      reminder_time: getCurrentTime(),
+      reminder_time: "",
     },
   });
 
@@ -103,23 +103,23 @@ const TaskModal = ({
         form.reset({
           title: taskData.title || "",
           description: taskData.description || "",
-          status: taskData.status || "TODO",
-          priority: taskData.priority || "MEDIUM",
+          status: taskData.status || "",
+          priority: taskData.priority || "",
           assigned_to: taskData.assigned_to || "",
-          due_date: getDateOnly(taskData.due_date as string) || getTodayDate(),
+          due_date: getDateOnly(taskData.due_date as string) || "",
           set_reminder: false,
-          reminder_time: getCurrentTime(),
+          reminder_time: "",
         });
       } else {
         form.reset({
           title: "",
           description: "",
-          status: "TODO",
-          priority: "MEDIUM",
+          status: "",
+          priority: "",
           assigned_to: "",
-          due_date: getTodayDate(),
+          due_date: "",
           set_reminder: false,
-          reminder_time: getCurrentTime(),
+          reminder_time: "",
         });
       }
     }
@@ -203,7 +203,7 @@ const TaskModal = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-bold flex gap-1">
-                  Description <span className="text-destructive">*</span>
+                  Description
                 </FormLabel>
                 <FormControl>
                   <Textarea
@@ -224,7 +224,7 @@ const TaskModal = ({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold">Status</FormLabel>
+                  <FormLabel className="text-xs font-bold">Status<span className="text-destructive">*</span></FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
@@ -253,7 +253,7 @@ const TaskModal = ({
               name="priority"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold">Priority</FormLabel>
+                  <FormLabel className="text-xs font-bold">Priority<span className="text-destructive">*</span></FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
@@ -368,6 +368,7 @@ const TaskModal = ({
                       <FormControl>
                         <Input
                           type="time"
+                          placeholder="Select reminder time"
                           className="h-9 text-xs"
                           disabled={isSubmitting}
                           {...field}

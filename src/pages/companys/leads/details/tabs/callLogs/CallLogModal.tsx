@@ -65,13 +65,13 @@ const CallLogModal = ({
   const form = useForm<CallLogFormData>({
     resolver: zodResolver(callLogSchema),
     defaultValues: {
-      call_type: "outbound",
+      call_type: "",
       call_start_time: "",
       call_end_time: "",
       recording_url: "",
       subject: "",
       remarks: "",
-      created_at: new Date().toISOString().split("T")[0],
+      created_at: "",
     },
   });
 
@@ -79,24 +79,24 @@ const CallLogModal = ({
     if (open) {
       if (callLogData) {
         form.reset({
-          call_type: callLogData.call_type || "outbound",
+          call_type: callLogData.call_type || "",
           call_start_time: callLogData.call_start_time || "",
           call_end_time: callLogData.call_end_time || "",
           recording_url: callLogData.recording_url || "",
           subject: callLogData.subject || "",
           remarks: callLogData.remarks || "",
           created_at:
-            callLogData.created_at || new Date().toISOString().split("T")[0],
+            callLogData.created_at || "",
         });
       } else {
         form.reset({
-          call_type: "outbound",
+          call_type: "",
           call_start_time: "",
           call_end_time: "",
           recording_url: "",
           subject: "",
           remarks: "",
-          created_at: new Date().toISOString().split("T")[0],
+          created_at: "",
         });
       }
     }
@@ -240,6 +240,7 @@ const CallLogModal = ({
                   <FormControl>
                     <Input
                       type="time"
+                      placeholder="Start"
                       step="1"
                       className="h-9 text-xs"
                       disabled={isSubmitting}
@@ -262,6 +263,7 @@ const CallLogModal = ({
                   <FormControl>
                     <Input
                       type="time"
+                      placeholder="End"
                       step="1"
                       className="h-9 text-xs"
                       disabled={isSubmitting}

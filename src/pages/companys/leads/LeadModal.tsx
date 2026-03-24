@@ -307,7 +307,9 @@ const LeadModal = ({
               name="priority"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">Priority</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
+                    Priority
+                    </FormLabel>
                   <FormControl>
                     <Combobox
                       options={[

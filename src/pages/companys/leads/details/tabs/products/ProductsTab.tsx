@@ -83,7 +83,7 @@ const ProductsTab = () => {
       key: "product_name",
       header: "Product",
       render: (item) => (
-        <div className="flex flex-col">
+        <div className="flex flex-col cursor-pointer" onClick={() => navigate(`/${companyId}/products/${item.id}`)}>
           <span className="font-bold text-foreground text-xs">
             {item.product_name}
           </span>
@@ -137,7 +137,7 @@ const ProductsTab = () => {
             <Combobox
               options={allProducts.map((p) => ({
                 value: p.id!,
-                label: `${p.product_name} (${p.code})`,
+                label: `${p.product_name}(${p.code})`,
               }))}
               value=""
               onValueChange={handleSelect}
@@ -173,7 +173,6 @@ const ProductsTab = () => {
         data={filteredData}
         pageSize={10}
         isLoading={isLoading}
-        onRowClick={(item) => navigate(`/${companyId}/products/${item.id}`)}
       />
 
       {/* Delete Modal */}

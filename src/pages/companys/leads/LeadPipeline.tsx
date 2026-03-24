@@ -88,11 +88,10 @@ const LeadPipeline = ({
                       ref={columnProvided.innerRef}
                       {...columnProvided.draggableProps}
                       style={columnProvided.draggableProps.style}
-                      className={`group/column relative flex h-full min-h-0 w-[300px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${
-                        columnSnapshot.isDragging
-                          ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
-                          : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
-                      }`}
+                      className={`group/column relative flex h-full min-h-0 w-[300px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${columnSnapshot.isDragging
+                        ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
+                        : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
+                        }`}
                     >
                       {/* Top side hover highlight */}
                       <div className="absolute inset-x-0 top-0 h-0.5 z-10 bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 transition-opacity duration-300 group-hover/column:opacity-100" />
@@ -111,12 +110,12 @@ const LeadPipeline = ({
                             status={col.title}
                             variant={col.variant}
                           />
-                          <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full border border-border/40 bg-secondary/80 px-1.5 text-[11px] font-extrabold text-foreground/70">
+                          <div className="flex h-5 min-w-[20px] items-center justify-center rounded-full border border-border/40 bg-secondary/80 px-1.5 text-[12px] font-extrabold text-foreground/70">
                             {col.deals.length}
                           </div>
                         </div>
 
-                        <span className="text-[11px] font-medium text-muted-foreground">
+                        <span className="text-[12px] font-medium text-muted-foreground">
                           Drag column
                         </span>
                       </div>
@@ -126,11 +125,10 @@ const LeadPipeline = ({
                           <div
                             ref={dealProvided.innerRef}
                             {...dealProvided.droppableProps}
-                            className={`flex min-h-0 flex-1 flex-col transition-colors ${
-                              dealSnapshot.isDraggingOver
-                                ? "bg-primary/5"
-                                : "bg-transparent"
-                            }`}
+                            className={`flex min-h-0 flex-1 flex-col transition-colors ${dealSnapshot.isDraggingOver
+                              ? "bg-primary/5"
+                              : "bg-transparent"
+                              }`}
                           >
                             <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-thin">
                               <div className="space-y-3">
@@ -148,11 +146,10 @@ const LeadPipeline = ({
                                         style={
                                           dealDragProvided.draggableProps.style
                                         }
-                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${
-                                          dealDragSnapshot.isDragging
-                                            ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
-                                            : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
-                                        }`}
+                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${dealDragSnapshot.isDragging
+                                          ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
+                                          : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
+                                          }`}
                                       >
                                         <div
                                           onClick={() => navigate(deal.id)}

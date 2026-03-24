@@ -17,6 +17,9 @@ import { cn } from "@/lib/utils";
 
 interface LeadTableProps {
   displayedColumns: PipelineColumn[];
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 const PRIORITIES = [
@@ -25,7 +28,12 @@ const PRIORITIES = [
   { value: "COLD", label: "Cold", color: "text-primary" },
 ];
 
-const LeadTable = ({ displayedColumns }: LeadTableProps) => {
+const LeadTable = ({
+  displayedColumns,
+  onLoadMore,
+  hasMore,
+  isLoadingMore,
+}: LeadTableProps) => {
   const navigate = useNavigate();
   const updateLeadMutation = useUpdateLead();
   const updateLeadStatusMutation = useUpdateLeadStatus();
@@ -217,13 +225,32 @@ const LeadTable = ({ displayedColumns }: LeadTableProps) => {
     ];
 
   return (
-    <div className="flex-1 overflow-auto bg-card rounded-sm border border-border/40 shadow-sm">
-      <DataTable
-        data={flatDeals}
-        columns={tableColumns}
-        pageSize={15}
-        onRowClick={(item) => navigate(item.id)}
-      />
+    <div className="flex flex-col h-full gap-3 overflow-hidden">
+      <div className="flex-1 overflow-auto bg-card rounded-sm border border-border/40 shadow-sm scrollbar-hide">
+        <DataTable
+          data={flatDeals}
+          columns={tableColumns}
+          pageSize={Math.max(flatDeals.length, 1)}
+          onRowClick={(item) => navigate(item.id)}
+        />
+      </div>
+      <div className="flex items-center justify-center p-4 bg-background/50 border-t border-border/40">
+        {hasMore ? (
+          <Button
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            variant="outline"
+            size="sm"
+            className="px-8 font-semibold shadow-sm hover:shadow-md transition-all h-9"
+          >
+            {isLoadingMore ? "Loading..." : "Load More"}
+          </Button>
+        ) : (
+          <div className="text-xs font-medium text-muted-foreground bg-muted/30 px-4 py-2 rounded-full border border-border/40">
+            All leads loaded
+          </div>
+        )}
+      </div>
       {updateLeadMutation.isPending && (
         <div className="fixed bottom-4 right-4 animate-pulse bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs shadow-lg">
           Updating priority...

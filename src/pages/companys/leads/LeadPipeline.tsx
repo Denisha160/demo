@@ -12,49 +12,21 @@ import StatusBadge from "@/components/StatusBadge";
 import { PipelineColumn } from "../../../types/leads";
 
 interface LeadPipelineProps {
-  displayedColumns: PipelineColumn[];
+  displayedColumns: (PipelineColumn & { total: number })[];
   onDragEnd: (result: DropResult) => void;
+  onLoadMore?: (statusId: string) => void;
   isUpdatingOrder?: boolean;
+  isLoadingMore?: string | null;
 }
-
-const INITIAL_VISIBLE_DEALS = 10;
-const LOAD_MORE_STEP = 10;
 
 const LeadPipeline = ({
   displayedColumns,
   onDragEnd,
+  onLoadMore,
   isUpdatingOrder,
+  isLoadingMore,
 }: LeadPipelineProps) => {
   const navigate = useNavigate();
-  const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>(
-    {},
-  );
-
-  useEffect(() => {
-    setVisibleCounts((prev) => {
-      const next: Record<string, number> = {};
-
-      displayedColumns.forEach((column) => {
-        const previousCount = prev[column.id] ?? INITIAL_VISIBLE_DEALS;
-        next[column.id] = Math.min(
-          Math.max(previousCount, INITIAL_VISIBLE_DEALS),
-          column.deals.length || INITIAL_VISIBLE_DEALS,
-        );
-      });
-
-      return next;
-    });
-  }, [displayedColumns]);
-
-  const handleLoadMore = (columnId: string, totalDeals: number) => {
-    setVisibleCounts((prev) => ({
-      ...prev,
-      [columnId]: Math.min(
-        (prev[columnId] ?? INITIAL_VISIBLE_DEALS) + LOAD_MORE_STEP,
-        totalDeals,
-      ),
-    }));
-  };
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
@@ -70,11 +42,8 @@ const LeadPipeline = ({
             className={`flex h-full min-h-0 gap-3 overflow-x-auto overflow-y-hidden pb-2 ${isUpdatingOrder ? "opacity-30 pointer-events-none" : ""}`}
           >
             {displayedColumns.map((col, columnIndex) => {
-              const visibleDeals = col.deals.slice(
-                0,
-                visibleCounts[col.id] ?? INITIAL_VISIBLE_DEALS,
-              );
-              const canLoadMore = visibleDeals.length < col.deals.length;
+              const visibleDeals = col.deals;
+              const canLoadMore = visibleDeals.length < col.total;
 
               return (
                 <Draggable
@@ -151,7 +120,7 @@ const LeadPipeline = ({
                                   }
                               }
                             >
-                              {col.deals.length}
+                              {col.total}
                             </div>
                           </div>
                         </div>
@@ -248,11 +217,12 @@ const LeadPipeline = ({
                                   variant="outline"
                                   size="sm"
                                   className="h-9 w-full"
+                                  disabled={isLoadingMore === col.id}
                                   onClick={() =>
-                                    handleLoadMore(col.id, col.deals.length)
+                                    onLoadMore?.(col.id)
                                   }
                                 >
-                                  Load More
+                                  {isLoadingMore === col.id ? "Loading..." : "Load More"}
                                 </Button>
                               ) : (
                                 <div className="text-center text-xs text-muted-foreground">

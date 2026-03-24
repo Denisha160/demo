@@ -26,14 +26,17 @@ const normalizeDetail = <T>(response: any): T | null => {
   return null;
 };
 
-export function useLeads(params?: Record<string, unknown>) {
+export function useLeads<T = any[]>(
+  params?: Record<string, unknown>,
+  select?: (data: any) => T,
+) {
   return useQuery({
     queryKey: queryKeys.leads.list(params),
     queryFn: () => listLeads(params),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    select: (data) => normalizeList(data),
+    select: select || ((data) => normalizeList(data) as any),
   });
 }
 

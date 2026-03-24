@@ -32,6 +32,7 @@ import {
   useUpdateLeadStatusOrder,
 } from "@/hooks/useLeadStatus";
 import type { LeadStatus } from "@/types/leadStatus";
+import { listLeads } from "@/services/api";
 
 const VARIANTS: PipelineColumn["variant"][] = [
   "default",
@@ -139,18 +140,60 @@ const LeadsPage = () => {
     return f;
   }, [searchTerm, dateRange]);
 
-  const { data: leads = [], isLoading } = useLeads(filters);
+  const [paginationData, setPaginationData] = useState<Record<string, {
+    items: any[];
+    total: number;
+    offset: number;
+    limit: number;
+  }>>({});
+
+  const [tableData, setTableData] = useState<{
+    items: any[];
+    total: number;
+    offset: number;
+  }>({ items: [], total: 0, offset: 0 });
+
+  const { data: initialGroups, isLoading: isGroupLoading } = useLeads(
+    { ...filters, grouped: true, limit_per_status: 10 },
+    (res) => res?.data?.groups || []
+  );
+
+  const { data: initialTableLeads, isLoading: isTableLoading } = useLeads(
+    { ...filters, limit: 20, offset: 0 },
+    (res) => res?.data
+  );
+
+  const isLoading = viewMode === "pipeline" ? isGroupLoading : isTableLoading;
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLeadStatus();
   const updateStatusOrderMutation = useUpdateLeadStatusOrder();
   const leadStatuses = statusResponse?.items || [];
 
-  const [localLeads, setLocalLeads] = useState<any[]>([]);
+  useEffect(() => {
+    if (initialGroups) {
+      const newPagination: Record<string, any> = {};
+      initialGroups.forEach((group: any) => {
+        newPagination[group.status_id] = {
+          items: group.items,
+          total: group.total,
+          offset: 0,
+          limit: 10,
+        };
+      });
+      setPaginationData(newPagination);
+    }
+  }, [initialGroups]);
 
   useEffect(() => {
-    setLocalLeads(leads);
-  }, [leads]);
+    if (initialTableLeads) {
+      setTableData({
+        items: initialTableLeads.items,
+        total: initialTableLeads.pagination.total,
+        offset: 0,
+      });
+    }
+  }, [initialTableLeads]);
 
   useEffect(() => {
     localStorage.setItem("leadsViewMode", viewMode);
@@ -217,22 +260,6 @@ const LeadsPage = () => {
         (b.display_order ?? Number.MAX_SAFE_INTEGER),
     );
 
-    const leadGroups = sortedStatuses.reduce<Record<string, Deal[]>>(
-      (acc, status) => {
-        acc[status.id] = [];
-        return acc;
-      },
-      {},
-    );
-
-    localLeads.forEach((lead: any) => {
-      const columnId = getColumnIdFromLead(lead, sortedStatuses);
-      leadGroups[columnId] = [
-        ...(leadGroups[columnId] || []),
-        mapLeadToDeal(lead),
-      ];
-    });
-
     return columnOrder
       .map((columnId) => {
         const statusIndex = sortedStatuses.findIndex(
@@ -241,16 +268,81 @@ const LeadsPage = () => {
         const status = sortedStatuses.find((item) => item.id === columnId);
         if (!status) return null;
 
+        const paginated = paginationData[columnId];
+        const statusItems = paginated?.items || [];
+
         return {
           id: status.id,
           title: status.name,
           variant: VARIANTS[statusIndex % VARIANTS.length] || "default",
           color: status.color,
-          deals: (leadGroups[columnId] || []).filter(isDealVisible),
-        } satisfies PipelineColumn;
+          deals: statusItems.map(mapLeadToDeal).filter(isDealVisible),
+          total: paginated?.total || 0,
+        } satisfies PipelineColumn & { total: number };
       })
-      .filter(Boolean) as PipelineColumn[];
-  }, [columnOrder, isDealVisible, leadStatuses, localLeads]);
+      .filter(Boolean) as (PipelineColumn & { total: number })[];
+  }, [columnOrder, isDealVisible, leadStatuses, paginationData]);
+
+  const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(null);
+
+  const handleLoadMore = async (statusId: string) => {
+    const current = paginationData[statusId];
+    if (!current || current.items.length >= current.total) return;
+
+    setLoadingMoreStatus(statusId);
+    try {
+      const nextOffset = current.offset + current.limit;
+      const response = await listLeads({
+        ...filters,
+        status_id: statusId,
+        limit: 10,
+        offset: nextOffset,
+      });
+
+      const newItems = response?.data?.items || [];
+      setPaginationData((prev) => ({
+        ...prev,
+        [statusId]: {
+          ...prev[statusId],
+          items: [...prev[statusId].items, ...newItems],
+          offset: nextOffset,
+        },
+      }));
+    } catch (error) {
+      console.error("Failed to load more leads:", error);
+      toast.error("Failed to load more leads.");
+    } finally {
+      setLoadingMoreStatus(null);
+    }
+  };
+
+  const [isTableLoadingMore, setIsTableLoadingMore] = useState(false);
+
+  const handleLoadMoreTable = async () => {
+    if (tableData.items.length >= tableData.total) return;
+
+    setIsTableLoadingMore(true);
+    try {
+      const nextOffset = tableData.offset + 20;
+      const response = await listLeads({
+        ...filters,
+        limit: 20,
+        offset: nextOffset,
+      });
+
+      const newItems = response?.data?.items || [];
+      setTableData((prev) => ({
+        ...prev,
+        items: [...prev.items, ...newItems],
+        offset: nextOffset,
+      }));
+    } catch (error) {
+      console.error("Failed to load more leads:", error);
+      toast.error("Failed to load more leads.");
+    } finally {
+      setIsTableLoadingMore(false);
+    }
+  };
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, type } = result;
@@ -299,39 +391,28 @@ const LeadsPage = () => {
       return;
     }
 
-    // Optimistic Update locally to eliminate UI flickering
-    setLocalLeads((prev) => {
-      const next = [...prev];
-      const leadIndex = next.findIndex((l) => String(l.id) === movedDeal.id);
+    // Optimistic Update locally
+    setPaginationData((prev) => {
+      const sourceStatus = prev[source.droppableId];
+      const destStatus = prev[destination.droppableId];
+      if (!sourceStatus || !destStatus) return prev;
 
-      if (leadIndex > -1) {
-        // Remove from current position
-        const [lead] = next.splice(leadIndex, 1);
+      const newSourceItems = [...sourceStatus.items];
+      const [movedLead] = newSourceItems.splice(source.index, 1);
+      if (!movedLead) return prev;
 
-        // Clone lead to avoid mutating the original object directly
-        const updatedLead = { ...lead };
-
-        // Update status if it's an inter-column move
-        if (source.droppableId !== destination.droppableId) {
-          updatedLead.status_id = destCol.id;
-          updatedLead.status_name = destCol.title;
-        }
-
-        // Insert at new position
-        const targetDeal = destCol.deals[destination.index];
-        if (targetDeal && targetDeal.id !== movedDeal.id) {
-          const targetIndex = next.findIndex(
-            (l) => String(l.id) === targetDeal.id,
-          );
-          if (targetIndex > -1) {
-            next.splice(targetIndex, 0, updatedLead);
-          } else {
-            next.push(updatedLead);
-          }
-        } else {
-          next.push(updatedLead);
-        }
+      const updatedLead = { ...movedLead };
+      if (source.droppableId !== destination.droppableId) {
+        updatedLead.status_id = destination.droppableId;
       }
+
+      const next = { ...prev };
+      next[source.droppableId] = { ...sourceStatus, items: newSourceItems, total: sourceStatus.total - 1 };
+
+      const newDestItems = [...destStatus.items];
+      newDestItems.splice(destination.index, 0, updatedLead);
+      next[destination.droppableId] = { ...destStatus, items: newDestItems, total: destStatus.total + 1 };
+
       return next;
     });
 
@@ -345,8 +426,8 @@ const LeadsPage = () => {
         },
         {
           onError: () => {
-            // Rollback optimistic state if the mutation eventually fails
-            setLocalLeads(leads);
+            // Rollback (Simplification: refetch initial groups)
+            // queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
           },
         },
       );
@@ -376,6 +457,17 @@ const LeadsPage = () => {
   const displayedColumns = useMemo(() => {
     return columns.filter((column) => visibleStageIds.includes(column.id));
   }, [columns, visibleStageIds]);
+
+  const tableColumns = useMemo(() => {
+    return [
+      {
+        id: "all",
+        title: "All Leads",
+        variant: "default" as const,
+        deals: tableData.items.map(mapLeadToDeal),
+      },
+    ];
+  }, [tableData.items]);
 
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
@@ -496,10 +588,17 @@ const LeadsPage = () => {
           <LeadPipeline
             displayedColumns={displayedColumns}
             onDragEnd={onDragEnd}
+            onLoadMore={handleLoadMore}
+            isLoadingMore={loadingMoreStatus}
           />
         ) : (
           <div className="h-full overflow-auto">
-            <LeadTable displayedColumns={displayedColumns} />
+            <LeadTable
+              displayedColumns={tableColumns}
+              onLoadMore={handleLoadMoreTable}
+              hasMore={tableData.items.length < tableData.total}
+              isLoadingMore={isTableLoadingMore}
+            />
           </div>
         )}
         {isLoading && (

@@ -187,7 +187,7 @@ const CallLogsTab = () => {
 
   return (
     <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 w-full animate-fade-in">
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Button size="sm" className="gap-2 h-9 px-4" onClick={handleCreate}>
           <Plus className="h-4 w-4" />
           Log a Call

@@ -46,10 +46,10 @@ const mapAttachment = (attachment: any): Attachment => ({
   fileSize: formatFileSize(
     Number(
       attachment?.file_size_bytes ||
-        attachment?.fileSize ||
-        attachment?.file_size ||
-        attachment?.size ||
-        0,
+      attachment?.fileSize ||
+      attachment?.file_size ||
+      attachment?.size ||
+      0,
     ),
   ),
   url:
@@ -199,7 +199,7 @@ const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
 
   return (
     <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 w-full animate-fade-in">
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Button
           size="sm"
           className="gap-2 h-9 px-4"

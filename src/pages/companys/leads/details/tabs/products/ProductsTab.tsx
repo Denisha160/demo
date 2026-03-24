@@ -129,7 +129,7 @@ const ProductsTab = () => {
     <div className="bg-card rounded-lg border border-border/50 shadow-sm p-4 w-full animate-fade-in">
       {/* Minimal Header Layout */}
       <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="space-y-1">
             <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
               Add Product
@@ -143,7 +143,7 @@ const ProductsTab = () => {
               onValueChange={handleSelect}
               placeholder="Find products to add..."
               searchPlaceholder="Search product name or SKU..."
-              className="h-9 w-[300px] text-xs"
+              className="h-9 w-[260px] text-xs"
               searchValue={productSearch}
               onSearchChange={setProductSearch}
               disabled={addProductMutation.isPending}
@@ -159,7 +159,7 @@ const ProductsTab = () => {
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Filter current products..."
-              className="h-9 pl-9 w-[280px] text-sm"
+              className="h-9 pl-9 w-[260px] text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

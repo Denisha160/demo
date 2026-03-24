@@ -175,9 +175,8 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
           reminder_time
         ) {
           createReminderMutation.mutate({
-            title: `Reminder: Follow-up (${
-              data.purpose || data.follow_up_method || "Scheduled"
-            })`,
+            title: `Reminder: Follow-up (${data.purpose || data.follow_up_method || "Scheduled"
+              })`,
             description:
               data.remarks ||
               data.purpose ||
@@ -269,7 +268,7 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
 
   return (
     <div className="w-full animate-fade-in rounded-lg border border-border/50 bg-card p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Button
           onClick={() => {
             setEditingFollowUp(null);

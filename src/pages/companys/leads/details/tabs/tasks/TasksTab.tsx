@@ -289,8 +289,8 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
   return (
     <div className="w-full animate-fade-in rounded-lg border border-border/50 bg-card p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button size="sm" className="h-9 gap-2 px-4" onClick={handleCreate}>
             <Plus className="h-4 w-4" />
             New Task
@@ -307,7 +307,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search tasks..."
-            className="h-9 w-[250px] pl-9 text-sm"
+            className="h-9 w-[260px] pl-9 text-sm"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);

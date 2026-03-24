@@ -178,9 +178,9 @@ const QuotationsTab = () => {
         prev.map((quotation) =>
           quotation.id === editingQuotation.id
             ? {
-                ...quotation,
-                ...formData,
-              }
+              ...quotation,
+              ...formData,
+            }
             : quotation,
         ),
       );
@@ -297,7 +297,7 @@ const QuotationsTab = () => {
 
   return (
     <div className="w-full animate-fade-in rounded-lg border border-border/50 bg-card p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Button size="sm" className="h-9 gap-2 px-4" onClick={handleCreate}>
           <Plus className="h-4 w-4" />
           New Quotation

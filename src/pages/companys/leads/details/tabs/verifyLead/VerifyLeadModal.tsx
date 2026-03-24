@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -231,6 +231,10 @@ export default function VerifyLeadModal({
     <Modal
       open={open}
       onClose={onClose}
+      headerBg="bg-primary/10"
+      description={
+        isEditing ? "Update verification details." : "Create a new verification for this lead."
+      }
       title={isEditing ? "Edit Verification Details" : "Verify Lead Details"}
       maxWidth="sm:max-w-[800px]"
       footer={
@@ -310,7 +314,7 @@ export default function VerifyLeadModal({
                     Property Name <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input className="h-9 text-xs" {...field} />
+                    <Input className="h-9 text-xs" {...field} placeholder="Enter Property name" />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -327,7 +331,7 @@ export default function VerifyLeadModal({
                     <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" className="h-9 text-xs" {...field} />
+                    <Input type="number" className="h-9 text-xs" {...field} placeholder="Enter number of properties" />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -350,11 +354,11 @@ export default function VerifyLeadModal({
                   <Badge
                     key={idx}
                     variant="secondary"
-                    className="px-2 py-0.5 text-[10px] flex items-center gap-1"
+                    className="px-2 py-0.5 text-[10px] flex items-center gap-1 group"
                   >
                     {city}
                     <X
-                      className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors"
+                      className="h-3 w-3 cursor-pointer text-muted-foreground group-hover:text-destructive transition-colors"
                       onClick={() => removeCity(idx)}
                     />
                   </Badge>
@@ -371,7 +375,7 @@ export default function VerifyLeadModal({
                     Total Staff
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" className="h-9 text-xs" {...field} />
+                    <Input type="number" className="h-9 text-xs" {...field} placeholder="Enter total staff" />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -387,7 +391,7 @@ export default function VerifyLeadModal({
                     Years of Experience
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" className="h-9 text-xs" {...field} />
+                    <Input type="number" className="h-9 text-xs" {...field} placeholder="Enter years of experience" />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -408,6 +412,7 @@ export default function VerifyLeadModal({
                       step="0.01"
                       className="h-9 text-xs"
                       {...field}
+                      placeholder="Enter annual turnover"
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
@@ -428,6 +433,7 @@ export default function VerifyLeadModal({
                       className="min-h-[80px] text-xs resize-none"
                       {...field}
                       value={field.value || ""}
+                      placeholder="Add any additional verification notes here..."
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
@@ -503,26 +509,22 @@ export default function VerifyLeadModal({
           </div>
 
           {(form.watch("has_warehouse") || form.watch("has_showroom")) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 mt-2 rounded-xl border border-border/40 bg-muted/5">
-              {form.watch("has_warehouse") && (
-                <div className="space-y-4">
-                  <h5 className="text-[11px] font-bold text-primary uppercase tracking-wider">
-                    Warehouse Info
-                  </h5>
-                  <div className="grid grid-cols-1 gap-3">
+            <div className="space-y-2 p-4 mt-2 rounded-xl border border-border/40 bg-muted/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {form.watch("has_warehouse") && (
+                  <div className="grid grid-cols-2 gap-3">
                     <FormField
                       control={form.control}
                       name="warehouse_location"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-bold">
-                            Location
-                          </FormLabel>
+                          <FormLabel className="text-[10px] font-bold">Warehouse Location</FormLabel>
                           <FormControl>
                             <Input
                               className="h-8 text-xs"
                               {...field}
                               value={field.value || ""}
+                              placeholder="Location"
                             />
                           </FormControl>
                         </FormItem>
@@ -533,42 +535,35 @@ export default function VerifyLeadModal({
                       name="warehouse_size"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-bold">
-                            Size (sqft)
-                          </FormLabel>
+                          <FormLabel className="text-[10px] font-bold">Size (sqft)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
                               className="h-8 text-xs"
                               {...field}
                               value={field.value || ""}
+                              placeholder="Size"
                             />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                   </div>
-                </div>
-              )}
-              {form.watch("has_showroom") && (
-                <div className="space-y-4">
-                  <h5 className="text-[11px] font-bold text-primary uppercase">
-                    Showroom Info
-                  </h5>
-                  <div className="grid grid-cols-1 gap-3">
+                )}
+                {form.watch("has_showroom") && (
+                  <div className="grid grid-cols-2 gap-3">
                     <FormField
                       control={form.control}
                       name="showroom_location"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-bold">
-                            Location
-                          </FormLabel>
+                          <FormLabel className="text-[10px] font-bold">Showroom Location</FormLabel>
                           <FormControl>
                             <Input
                               className="h-8 text-xs"
                               {...field}
                               value={field.value || ""}
+                              placeholder="Location"
                             />
                           </FormControl>
                         </FormItem>
@@ -579,149 +574,144 @@ export default function VerifyLeadModal({
                       name="showroom_size"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-bold">
-                            Size (sqft)
-                          </FormLabel>
+                          <FormLabel className="text-[10px] font-bold">Size (sqft)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
                               className="h-8 text-xs"
                               {...field}
                               value={field.value || ""}
+                              placeholder="Size"
                             />
                           </FormControl>
                         </FormItem>
                       )}
                     />
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
           {form.watch("has_delivery_vehicles") && (
-            <div className="space-y-4 mt-4 p-4 rounded-xl border border-border/40 bg-muted/5">
-              <div className="flex justify-between items-center border-b border-border/50 pb-2">
-                <h5 className="text-[11px] font-bold text-primary uppercase">
-                  Vehicle Details
-                </h5>
+            <div className="mt-4 p-4 rounded-xl border border-border/40 bg-muted/5">
+
+              <div className="overflow-x-auto rounded-lg border border-border/20">
+                <table className="w-full text-left text-[11px]">
+                  <thead className="bg-background/50 text-muted-foreground uppercase text-[10px] font-bold">
+                    <tr>
+                      <th className="px-3 py-2 border-r border-border/10">Type</th>
+                      <th className="px-3 py-2 border-r border-border/10">Model</th>
+                      <th className="px-3 py-2 border-r border-border/10">Reg No</th>
+                      <th className="px-3 py-2 border-r border-border/10">Capacity</th>
+                      <th className="px-3 py-2 text-center w-10">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/10">
+                    {fields.map((field, index) => (
+                      <tr key={field.id} className="bg-background/30 hover:bg-background/50 transition-colors">
+                        <td className="p-1 border-r border-border/10">
+                          <FormField
+                            control={form.control}
+                            name={`vehicle_details.${index}.type` as const}
+                            render={({ field }) => (
+                              <FormItem className="space-y-0">
+                                <FormControl>
+                                  <Input
+                                    placeholder="Truck, Van..."
+                                    className="h-8 border-0 bg-transparent text-xs focus-visible:ring-0 shadow-none px-2"
+                                    {...field}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+                        <td className="p-1 border-r border-border/10">
+                          <FormField
+                            control={form.control}
+                            name={`vehicle_details.${index}.model` as const}
+                            render={({ field }) => (
+                              <FormItem className="space-y-0">
+                                <FormControl>
+                                  <Input
+                                    placeholder="Tata, etc."
+                                    className="h-8 border-0 bg-transparent text-xs focus-visible:ring-0 shadow-none px-2"
+                                    {...field}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+                        <td className="p-1 border-r border-border/10">
+                          <FormField
+                            control={form.control}
+                            name={`vehicle_details.${index}.registration` as const}
+                            render={({ field }) => (
+                              <FormItem className="space-y-0">
+                                <FormControl>
+                                  <Input
+                                    placeholder="Reg No"
+                                    className="h-8 border-0 bg-transparent text-xs uppercase focus-visible:ring-0 shadow-none px-2"
+                                    {...field}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+                        <td className="p-1 border-r border-border/10">
+                          <FormField
+                            control={form.control}
+                            name={`vehicle_details.${index}.capacity` as const}
+                            render={({ field }) => (
+                              <FormItem className="space-y-0">
+                                <FormControl>
+                                  <Input
+                                    placeholder="Capacity"
+                                    className="h-8 border-0 bg-transparent text-xs focus-visible:ring-0 shadow-none px-2"
+                                    {...field}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </td>
+                        <td className="p-1 text-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => remove(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
-              <div className="space-y-3">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="relative p-4 rounded-lg border border-border/50 bg-background/50"
-                  >
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive"
-                      onClick={() => remove(index)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                      <FormField
-                        control={form.control}
-                        name={`vehicle_details.${index}.type` as const}
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-[10px] font-bold">
-                              Type
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Truck, Van..."
-                                className="h-8 text-xs focus-visible:ring-primary"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-[8px]" />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`vehicle_details.${index}.model` as const}
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-[10px] font-bold">
-                              Model
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Tata, Mahindra..."
-                                className="h-8 text-xs focus-visible:ring-primary"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-[8px]" />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`vehicle_details.${index}.registration` as const}
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-[10px] font-bold">
-                              Reg No
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="GJ 01..."
-                                className="h-8 text-xs uppercase focus-visible:ring-primary"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-[8px]" />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`vehicle_details.${index}.capacity` as const}
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-[10px] font-bold">
-                              Capacity
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="1 Ton..."
-                                className="h-8 text-xs focus-visible:ring-primary"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage className="text-[8px]" />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                ))}
-
-                <div className="pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs w-full sm:w-auto"
-                    onClick={() =>
-                      append({
-                        type: "",
-                        model: "",
-                        registration: "",
-                        capacity: "",
-                      })
-                    }
-                  >
-                    Add Vehicle
-                  </Button>
-                </div>
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs w-full sm:w-auto"
+                  onClick={() =>
+                    append({
+                      type: "",
+                      model: "",
+                      registration: "",
+                      capacity: "",
+                    })
+                  }
+                >
+                  Add Vehicle
+                </Button>
               </div>
             </div>
           )}

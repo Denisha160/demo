@@ -100,6 +100,12 @@ const LeadsPage = () => {
   const updateStatusOrderMutation = useUpdateLeadStatusOrder();
   const leadStatuses = statusResponse?.items || [];
 
+  const [localLeads, setLocalLeads] = useState<any[]>([]);
+
+  useEffect(() => {
+    setLocalLeads(leads);
+  }, [leads]);
+
   useEffect(() => {
     localStorage.setItem("leadsViewMode", viewMode);
   }, [viewMode]);
@@ -153,7 +159,7 @@ const LeadsPage = () => {
       return acc;
     }, {});
 
-    leads.forEach((lead: any) => {
+    localLeads.forEach((lead: any) => {
       const columnId = getColumnIdFromLead(lead, sortedStatuses);
       leadGroups[columnId] = [...(leadGroups[columnId] || []), mapLeadToDeal(lead)];
     });
@@ -172,7 +178,7 @@ const LeadsPage = () => {
         } satisfies PipelineColumn;
       })
       .filter(Boolean) as PipelineColumn[];
-  }, [columnOrder, isDealVisible, leadStatuses, leads]);
+  }, [columnOrder, isDealVisible, leadStatuses, localLeads]);
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination, type } = result;
@@ -180,6 +186,17 @@ const LeadsPage = () => {
 
     if (type === "COLUMN") {
       if (source.index === 0 || destination.index === 0) return;
+
+      const previousColumnOrder = [...columnOrder];
+
+      // Optimistically update column order to avoid UI jump-back
+      setColumnOrder((prev) => {
+        const next = [...prev];
+        const [movedColumn] = next.splice(source.index, 1);
+        if (!movedColumn) return prev;
+        next.splice(destination.index, 0, movedColumn);
+        return next;
+      });
 
       updateStatusOrderMutation.mutate({
         orders: [
@@ -189,20 +206,11 @@ const LeadsPage = () => {
           }
         ]
       }, {
-        onSuccess: () => {
-          setColumnOrder((prev) => {
-            const next = [...prev];
-            const [movedColumn] = next.splice(source.index, 1);
-            if (!movedColumn) return prev;
-            next.splice(destination.index, 0, movedColumn);
-            return next;
-          });
+        onError: () => {
+          // Revert if mutation fails
+          setColumnOrder(previousColumnOrder);
         }
       });
-      return;
-    }
-
-    if (source.droppableId === destination.droppableId) {
       return;
     }
 
@@ -214,12 +222,56 @@ const LeadsPage = () => {
       return;
     }
 
-    updateLeadMutation.mutate(
-      {
-        leadId: movedDeal.id,
-        status_id: destCol.id,
-      },
-    );
+    // Optimistic Update locally to eliminate UI flickering
+    setLocalLeads((prev) => {
+      const next = [...prev];
+      const leadIndex = next.findIndex((l) => String(l.id) === movedDeal.id);
+      
+      if (leadIndex > -1) {
+        // Remove from current position
+        const [lead] = next.splice(leadIndex, 1);
+        
+        // Clone lead to avoid mutating the original object directly
+        const updatedLead = { ...lead };
+
+        // Update status if it's an inter-column move
+        if (source.droppableId !== destination.droppableId) {
+          updatedLead.status_id = destCol.id;
+          updatedLead.status_name = destCol.title;
+        }
+
+        // Insert at new position
+        const targetDeal = destCol.deals[destination.index];
+        if (targetDeal && targetDeal.id !== movedDeal.id) {
+          const targetIndex = next.findIndex((l) => String(l.id) === targetDeal.id);
+          if (targetIndex > -1) {
+            next.splice(targetIndex, 0, updatedLead);
+          } else {
+            next.push(updatedLead);
+          }
+        } else {
+          next.push(updatedLead);
+        }
+      }
+      return next;
+    });
+
+    // Fire API call only for inter-column moves, since intra-column reordering
+    // might not be natively supported by the backend without a specific index/order field.
+    if (source.droppableId !== destination.droppableId) {
+      updateLeadMutation.mutate(
+        {
+          leadId: movedDeal.id,
+          status_id: destCol.id,
+        },
+        {
+          onError: () => {
+             // Rollback optimistic state if the mutation eventually fails
+             setLocalLeads(leads);
+          }
+        }
+      );
+    }
   };
 
   const handleAddLead = (data: any, setError: (field: any, err: any) => void) => {
@@ -334,7 +386,7 @@ const LeadsPage = () => {
 
       <div className="min-h-0 flex-1 overflow-hidden pt-2">
         {viewMode === "pipeline" ? (
-          <LeadPipeline displayedColumns={displayedColumns} onDragEnd={onDragEnd} isUpdatingOrder={updateStatusOrderMutation.isPending} />
+          <LeadPipeline displayedColumns={displayedColumns} onDragEnd={onDragEnd} />
         ) : (
           <div className="h-full overflow-auto">
             <LeadTable displayedColumns={displayedColumns} />

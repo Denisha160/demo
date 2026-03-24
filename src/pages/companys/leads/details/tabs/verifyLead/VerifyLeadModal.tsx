@@ -248,7 +248,7 @@ export default function VerifyLeadModal({ open, onClose, leadId, initialData }: 
             />
 
             <div className="space-y-1.5 flex flex-col">
-              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Cities of Operation</Label>
+              <Label className="text-xs font-bold flex gap-1">Cities of Operation</Label>
               <Input
                 placeholder="Type city and press Enter"
                 className="h-9 text-xs"

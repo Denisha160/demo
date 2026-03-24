@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Tag } from "lucide-react";
+import { Tag, Edit2, Save, X as CloseIcon } from "lucide-react";
 
 import {
     Form,
@@ -15,16 +15,15 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/ui/combobox";
 import { TagSelector } from "@/components/ui/tag-selector";
 
 import { useLeadStatuses } from "@/hooks/useLeadStatus";
 import { useLeadSources } from "@/hooks/useLeadSource";
 import { useUsers } from "@/hooks/useUsers";
-import { useLeadTags } from "@/hooks/useLeadTags"; import { useCategoriesCombobox } from "@/hooks/useProductCategories";
+import { useLeadTags } from "@/hooks/useLeadTags";
+import { useCategoriesCombobox } from "@/hooks/useProductCategories";
 import { useCountries, useStates, useCities } from "@/hooks/useCityStateCountry";
-import { useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
 const InterestedCategorySelect = ({ value = [], onValueChange, disabled }: { value?: any[], onValueChange: (val: any[]) => void, disabled?: boolean }) => {
@@ -47,6 +46,7 @@ const InterestedCategorySelect = ({ value = [], onValueChange, disabled }: { val
             suggestions={suggestions}
             value={displayValue}
             onChange={onValueChange}
+            disabled={disabled}
         />
     );
 };
@@ -104,6 +104,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
     const [countrySearch, setCountrySearch] = useState("");
     const [stateSearch, setStateSearch] = useState("");
     const [citySearch, setCitySearch] = useState("");
+    const [isEditing, setIsEditing] = useState(false);
 
     const debouncedCountrySearch = useDebounce(countrySearch, 500);
     const debouncedStateSearch = useDebounce(stateSearch, 500);
@@ -168,6 +169,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
     const onSubmit = (data: LeadProfileFormValues) => {
         setLeadProfile(data);
+        setIsEditing(false);
     };
 
     const isDirty = form.formState.isDirty;
@@ -178,18 +180,57 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="w-full animate-fade-in rounded-2xl border border-border/50 bg-card p-4 shadow-sm"
             >
-                <div className="mb-6">
-                    <h3 className="text-xl font-semibold text-foreground">
-                        Lead Profile
-                    </h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Update any lead information below.
-                    </p>
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
+                            {isEditing ? "Edit Lead Profile" : "Lead Profile"}
+                        </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {isEditing ? "Modify lead information and click update to save." : "View lead information. Click edit to make changes."}
+                        </p>
+                    </div>
+
+                    {!isEditing ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsEditing(true)}
+                            className="h-9 px-4 flex items-center gap-2 hover:bg-primary hover:text-white transition-all duration-300"
+                        >
+                            <Edit2 className="h-3.5 w-3.5" /> Edit Profile
+                        </Button>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    form.reset(leadProfile);
+                                    setIsEditing(false);
+                                }}
+                                className="h-9 px-4 flex items-center gap-2"
+                                disabled={isSaving}
+                            >
+                                <CloseIcon className="h-3.5 w-3.5" /> Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={form.handleSubmit(onSubmit)}
+                                className="h-9 px-5 flex items-center gap-2"
+                                disabled={isSaving || !isDirty}
+                            >
+                                <Save className="h-3.5 w-3.5" /> {isSaving ? "Updating..." : "Update Profile"}
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-2">
                     {/* Basic Info */}
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                             <FormField
                                 control={form.control}
@@ -198,7 +239,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Name</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter lead name" {...field} />
+                                            <Input disabled={!isEditing || isSaving} className="h-9 text-sm" placeholder="Enter lead name" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -212,7 +253,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Company</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter company name" {...field} />
+                                            <Input disabled={!isEditing || isSaving} className="h-9 text-sm" placeholder="Enter company name" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -226,7 +267,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Email</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} type="email" className="h-9 text-sm" placeholder="Enter email" {...field} />
+                                            <Input disabled={!isEditing || isSaving} type="email" className="h-9 text-sm" placeholder="Enter email" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -240,7 +281,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Phone</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} type="tel" className="h-9 text-sm" placeholder="Enter phone number" {...field} />
+                                            <Input disabled={!isEditing || isSaving} type="tel" className="h-9 text-sm" placeholder="Enter phone number" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -260,7 +301,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                                 onValueChange={(val) => form.setValue("status_id", val, { shouldDirty: true, shouldValidate: true })}
                                                 placeholder="Select Status"
                                                 className="h-9 w-full"
-                                                disabled={isSaving}
+                                                disabled={!isEditing || isSaving}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
@@ -281,7 +322,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                                 onValueChange={(val) => form.setValue("source_id", val, { shouldDirty: true, shouldValidate: true })}
                                                 placeholder="Select Source"
                                                 className="h-9 w-full"
-                                                disabled={isSaving}
+                                                disabled={!isEditing || isSaving}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
@@ -306,7 +347,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                                 onValueChange={(val) => form.setValue("priority", val, { shouldDirty: true, shouldValidate: true })}
                                                 placeholder="Select Priority"
                                                 className="h-9 w-full"
-                                                disabled={isSaving}
+                                                disabled={!isEditing || isSaving}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
@@ -317,8 +358,8 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                     </div>
 
                     {/* Assignment & Locale */}
-                    <div className="space-y-4 pt-4 border-t border-border/50">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="space-y-2 pt-4 border-t border-border/50">
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                             <FormField
                                 control={form.control}
                                 name="assigned_to"
@@ -332,7 +373,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                                 onValueChange={(val) => form.setValue("assigned_to", val, { shouldDirty: true, shouldValidate: true })}
                                                 placeholder="Assign a user"
                                                 className="h-9 w-full"
-                                                disabled={isSaving}
+                                                disabled={!isEditing || isSaving}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
@@ -362,7 +403,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                                 }}
                                                 placeholder="Select Country"
                                                 className="h-9 w-full"
-                                                disabled={isSaving}
+                                                disabled={!isEditing || isSaving}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
@@ -391,7 +432,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                                 }}
                                                 placeholder={selectedCountryId ? "Select State" : "Select Country first"}
                                                 className="h-9 w-full"
-                                                disabled={isSaving || !selectedCountryId}
+                                                disabled={!isEditing || isSaving || !selectedCountryId}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
@@ -418,7 +459,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                                 }}
                                                 placeholder={selectedStateId ? "Select City" : "Select State first"}
                                                 className="h-9 w-full"
-                                                disabled={isSaving || !selectedStateId}
+                                                disabled={!isEditing || isSaving || !selectedStateId}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
@@ -433,7 +474,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Pincode</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter pincode" {...field} />
+                                            <Input disabled={!isEditing || isSaving} className="h-9 text-sm" placeholder="Enter pincode" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -447,7 +488,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Website</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} type="url" className="h-9 text-sm" placeholder="Enter website URL" {...field} />
+                                            <Input disabled={!isEditing || isSaving} type="url" className="h-9 text-sm" placeholder="Enter website URL" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -461,7 +502,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Alternative Phone</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} type="tel" className="h-9 text-sm" placeholder="Enter alternative phone" {...field} />
+                                            <Input disabled={!isEditing || isSaving} type="tel" className="h-9 text-sm" placeholder="Enter alternative phone" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -471,8 +512,8 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                     </div>
 
                     {/* Additional Details */}
-                    <div className="space-y-4 pt-4 border-t border-border/50">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="space-y-2 pt-4 border-t border-border/50">
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                             <FormField
                                 control={form.control}
                                 name="designation"
@@ -480,7 +521,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Designation</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter designation" {...field} />
+                                            <Input disabled={!isEditing || isSaving} className="h-9 text-sm" placeholder="Enter designation" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -494,7 +535,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">GST Number</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm uppercase" placeholder="Enter GST details" {...field} />
+                                            <Input disabled={!isEditing || isSaving} className="h-9 text-sm uppercase" placeholder="Enter GST details" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -508,7 +549,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">PAN Card Number</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm uppercase" placeholder="Enter PAN Number" {...field} />
+                                            <Input disabled={!isEditing || isSaving} className="h-9 text-sm uppercase" placeholder="Enter PAN Number" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -517,7 +558,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
 
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
                             <FormField
                                 control={form.control}
                                 name="tags"
@@ -529,6 +570,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                         <FormControl>
                                             <TagSelector
                                                 suggestions={tagSuggestions}
+                                                disabled={!isEditing || isSaving}
                                                 value={(Array.isArray(field.value) ? field.value : []).map((val: any) => {
                                                     const id = typeof val === 'string' ? val : (val?.id || val?.name);
                                                     const found = tagSuggestions.find(s => s.id === id);
@@ -552,7 +594,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                             <InterestedCategorySelect
                                                 value={field.value as any}
                                                 onValueChange={(val) => form.setValue("interested_category_id", val, { shouldValidate: true, shouldDirty: true })}
-                                                disabled={isSaving}
+                                                disabled={!isEditing || isSaving}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
@@ -561,7 +603,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                             />
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 pt-2">
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 pt-2">
                             <FormField
                                 control={form.control}
                                 name="address_line1"
@@ -569,7 +611,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Address Line 1</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter address line 1" {...field} />
+                                            <Input disabled={!isEditing || isSaving} className="h-9 text-sm" placeholder="Enter address line 1" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -582,7 +624,7 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                                     <FormItem>
                                         <FormLabel className="text-xs font-bold">Address Line 2</FormLabel>
                                         <FormControl>
-                                            <Input disabled={isSaving} className="h-9 text-sm" placeholder="Enter address line 2" {...field} />
+                                            <Input disabled={!isEditing || isSaving} className="h-9 text-sm" placeholder="Enter address line 2" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
@@ -590,17 +632,6 @@ const ProfileTab = ({ leadProfile, setLeadProfile, isSaving = false }: ProfileTa
                             />
                         </div>
                     </div>
-                </div>
-
-                <div className="mt-8 flex justify-end border-t border-border/50 pt-6">
-                    <Button
-                        type="submit"
-                        size="sm"
-                        className="h-9 px-5"
-                        disabled={!isDirty || isSaving}
-                    >
-                        {isSaving ? "Saving..." : "Save"}
-                    </Button>
                 </div>
             </form>
         </Form>

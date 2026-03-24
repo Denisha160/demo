@@ -14,9 +14,10 @@ interface TagSelectorProps {
   suggestions: { id: string; name: string }[];
   value: Tag[];
   onChange: (tags: Tag[]) => void;
+  disabled?: boolean;
 }
 
-export function TagSelector({ suggestions, value = [], onChange }: TagSelectorProps) {
+export function TagSelector({ suggestions, value = [], onChange, disabled }: TagSelectorProps) {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +49,19 @@ export function TagSelector({ suggestions, value = [], onChange }: TagSelectorPr
   const filteredSuggestions = suggestions.filter(
     (s) => !value.find((v) => v.name === s.name) && s.name.toLowerCase().includes(inputValue.toLowerCase())
   );
+
+  if (disabled) {
+    return (
+      <div className="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-sm border border-input/60 bg-muted/30 px-3 py-1 text-xs shadow-sm opacity-80 cursor-not-allowed">
+        {value.map((tag) => (
+          <Badge key={tag.name} variant="secondary" className="rounded-sm px-1.5 py-0 font-normal">
+            {tag.name}
+          </Badge>
+        ))}
+        {value.length === 0 && <span className="text-muted-foreground/50 italic">No items selected</span>}
+      </div>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal={false}>

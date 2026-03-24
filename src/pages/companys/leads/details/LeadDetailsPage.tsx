@@ -315,15 +315,6 @@ const LeadDetailsPage = () => {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0 overflow-y-auto pb-10 pr-2">
-
-                    {/* Title (Desktop only) */}
-                    <div className="hidden md:block mb-4">
-                        <h2 className="text-lg font-bold text-foreground">
-                            {filteredTabs.find(t => t.id === activeTab)?.label}
-                        </h2>
-                    </div>
-
-                    {/* Content */}
                     {renderTabContent()}
                 </div>
             </div>

@@ -39,7 +39,10 @@ const verifyFormSchema = z.object({
   cities_of_operation: z.array(z.string()).default([]),
   total_staff: z.coerce.number().int().min(0).optional(),
   years_of_experience: z.coerce.number().int().min(0).optional(),
-  annual_turnover: z.coerce.number().optional(),
+  annual_turnover: z.coerce.number({
+    required_error: "Annual turnover is required",
+    invalid_type_error: "Annual turnover must be a number",
+  }).min(0, "Annual turnover must be a positive number"),
   has_warehouse: z.boolean().default(false),
   warehouse_location: z.string().max(255).optional().nullable(),
   warehouse_size: z.coerce.number().optional().nullable(),
@@ -262,7 +265,7 @@ export default function VerifyLeadModal({
           className="max-h-[65vh] overflow-y-auto pr-2"
           onSubmit={form.handleSubmit(onSubmit)}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <FormField
               control={form.control}
               name="customer_type"
@@ -403,8 +406,8 @@ export default function VerifyLeadModal({
               name="annual_turnover"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold">
-                    Annual Turnover
+                  <FormLabel className="text-xs font-bold flex gap-1">
+                    Annual Turnover <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -509,10 +512,10 @@ export default function VerifyLeadModal({
           </div>
 
           {(form.watch("has_warehouse") || form.watch("has_showroom")) && (
-            <div className="space-y-2 p-4 mt-2 rounded-xl border border-border/40 bg-muted/5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="space-y-2 p-3 mt-1 rounded-xl border border-border/40 bg-muted/5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {form.watch("has_warehouse") && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <FormField
                       control={form.control}
                       name="warehouse_location"
@@ -594,11 +597,11 @@ export default function VerifyLeadModal({
           )}
 
           {form.watch("has_delivery_vehicles") && (
-            <div className="mt-4 p-4 rounded-xl border border-border/40 bg-muted/5">
+            <div className="mt-2 p-2 rounded-xl border border-border/40 bg-muted/5">
 
               <div className="overflow-x-auto rounded-lg border border-border/20">
                 <table className="w-full text-left text-[11px]">
-                  <thead className="bg-background/50 text-muted-foreground uppercase text-[10px] font-bold">
+                  <thead className="bg-background/50 uppercase text-[10px] font-bold">
                     <tr>
                       <th className="px-3 py-2 border-r border-border/10">Type</th>
                       <th className="px-3 py-2 border-r border-border/10">Model</th>

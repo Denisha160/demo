@@ -352,7 +352,7 @@ export default function VerifyLeadModal({
                 onChange={(e) => setCityInput(e.target.value)}
                 onKeyDown={handleAddCity}
               />
-              <div className="flex flex-wrap gap-1 mt-1.5 min-h-[24px]">
+              <div className="flex flex-wrap gap-1">
                 {cities.map((city, idx) => (
                   <Badge
                     key={idx}

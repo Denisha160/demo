@@ -431,6 +431,24 @@ const LeadsPage = () => {
 
     // Optimistic Update locally
     setPaginationData((prev) => {
+      // 1. Same-column move
+      if (source.droppableId === destination.droppableId) {
+        if (source.index === destination.index) return prev;
+        const status = prev[source.droppableId];
+        if (!status) return prev;
+
+        const newItems = [...status.items];
+        const [movedLead] = newItems.splice(source.index, 1);
+        if (!movedLead) return prev;
+        newItems.splice(destination.index, 0, movedLead);
+
+        return {
+          ...prev,
+          [source.droppableId]: { ...status, items: newItems },
+        };
+      }
+
+      // 2. Inter-column move
       const sourceStatus = prev[source.droppableId];
       const destStatus = prev[destination.droppableId];
       if (!sourceStatus || !destStatus) return prev;
@@ -439,19 +457,25 @@ const LeadsPage = () => {
       const [movedLead] = newSourceItems.splice(source.index, 1);
       if (!movedLead) return prev;
 
-      const updatedLead = { ...movedLead };
-      if (source.droppableId !== destination.droppableId) {
-        updatedLead.status_id = destination.droppableId;
-      }
-
-      const next = { ...prev };
-      next[source.droppableId] = { ...sourceStatus, items: newSourceItems, total: sourceStatus.total - 1 };
+      // Update lead status id for the destination column
+      const updatedLead = { ...movedLead, status_id: destination.droppableId };
 
       const newDestItems = [...destStatus.items];
       newDestItems.splice(destination.index, 0, updatedLead);
-      next[destination.droppableId] = { ...destStatus, items: newDestItems, total: destStatus.total + 1 };
 
-      return next;
+      return {
+        ...prev,
+        [source.droppableId]: {
+          ...sourceStatus,
+          items: newSourceItems,
+          total: Math.max(0, sourceStatus.total - 1),
+        },
+        [destination.droppableId]: {
+          ...destStatus,
+          items: newDestItems,
+          total: destStatus.total + 1,
+        },
+      };
     });
 
     // Fire API call only for inter-column moves, since intra-column reordering

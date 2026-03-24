@@ -88,7 +88,7 @@ const LeadPipeline = ({
                       ref={columnProvided.innerRef}
                       {...columnProvided.draggableProps}
                       style={columnProvided.draggableProps.style}
-                      className={`group/column relative flex h-full min-h-0 w-[300px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${columnSnapshot.isDragging
+                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${columnSnapshot.isDragging
                         ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
                         : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
                         }`}
@@ -129,25 +129,12 @@ const LeadPipeline = ({
                             </div>
                           )}
                           <div className="flex items-center gap-2">
+                            <StatusBadge
+                              status={col.title}
+                              variant={col.variant}
+                              color={col.color}
+                            />
 
-                            <div
-                              className="rounded-md border px-2 py-0.5 text-[12px] font-bold shadow-sm transition-all duration-200"
-                              style={
-                                col.color
-                                  ? {
-                                      backgroundColor: `${col.color}15`,
-                                      borderColor: `${col.color}35`,
-                                      color: col.color,
-                                    }
-                                  : {
-                                      backgroundColor: "hsl(var(--secondary) / 0.8)",
-                                      borderColor: "hsl(var(--border) / 0.4)",
-                                      color: "hsl(var(--foreground) / 0.7)",
-                                    }
-                              }
-                            >
-                              {col.title}
-                            </div>
                             <div
                               className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full border px-1.5 text-[12px] font-bold shadow-sm transition-colors duration-200"
                               style={
@@ -168,17 +155,6 @@ const LeadPipeline = ({
                             </div>
                           </div>
                         </div>
-
-                        {columnIndex !== 0 && (
-                          <span
-                            className="text-[10px] font-bold uppercase tracking-widest transition-colors duration-200"
-                            style={{
-                              color: col.color ? `${col.color}80` : "hsl(var(--muted-foreground) / 0.5)",
-                            }}
-                          >
-                            Drag
-                          </span>
-                        )}
                       </div>
 
                       <Droppable droppableId={col.id} type="DEAL">

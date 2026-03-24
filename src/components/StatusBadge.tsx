@@ -20,8 +20,17 @@ const StatusBadge = ({
   className = "",
 }: StatusBadgeProps) => (
   <span
-    className={`inline-flex items-center px-1.5 py-0.5 text-[12px] font-bold rounded-sm ${variantClasses[variant as keyof typeof variantClasses] || variantClasses.default} ${className}`}
-    style={color ? { backgroundColor: `${color}15`, color: color } : {}}
+    className={`inline-flex items-center px-2 py-0.5 text-[12px] font-extrabold uppercase tracking-wider rounded border ${variantClasses[variant as keyof typeof variantClasses] || variantClasses.default
+      } ${className}`}
+    style={
+      color
+        ? {
+          backgroundColor: "white",
+          color: color,
+          borderColor: `${color}40`,
+        }
+        : {}
+    }
   >
     {status}
   </span>

@@ -26,6 +26,7 @@ import {
   useUpdateLeadVisit,
 } from "@/hooks/useLeadVisits";
 import { useLeadContacts, useCreateLeadContact } from "@/hooks/useLeadContacts";
+import { useCreateLeadReminder } from "@/hooks/useLeadReminders";
 
 const applyServerValidationErrors = (
   error: any,
@@ -129,6 +130,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const createVisitMutation = useCreateLeadVisit(leadId);
   const updateVisitMutation = useUpdateLeadVisit(leadId);
   const deleteVisitMutation = useDeleteLeadVisit(leadId);
+  const createReminderMutation = useCreateLeadReminder(leadId);
 
   const { data: contactData } = useLeadContacts(leadId);
   const contacts = contactData?.contacts || [];
@@ -157,24 +159,31 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       return;
     }
 
+    const {
+      set_reminder,
+      reminder_time,
+      visit_image_file,
+      visit_image_name,
+      ...remainingFormData
+    } = formData;
+
     const payload: any = {
-      title: formData.title,
-      description: formData.description,
-      visit_type: formData.visit_type,
-      status: formData.status,
-      scheduled_time: toIsoDateTime(formData.scheduled_time),
-      actual_check_in: toIsoDateTime(formData.actual_check_in),
-      actual_check_out: toIsoDateTime(formData.actual_check_out),
-      location_address: formData.location_address,
-      location_latitude: toNullableNumber(formData.location_latitude),
-      location_longitude: toNullableNumber(formData.location_longitude),
-      customer_rating: toNullableNumber(formData.customer_rating),
-      contact_person_name: formData.contact_person_name,
-      contact_person_designation: formData.contact_person_designation,
-      contact_person_phone: formData.contact_person_phone,
-      outcome_summary: formData.outcome_summary,
-      next_steps: formData.next_steps,
-      set_reminder: formData.set_reminder,
+      title: remainingFormData.title,
+      description: remainingFormData.description,
+      visit_type: remainingFormData.visit_type,
+      status: remainingFormData.status,
+      scheduled_time: toIsoDateTime(remainingFormData.scheduled_time),
+      actual_check_in: toIsoDateTime(remainingFormData.actual_check_in),
+      actual_check_out: toIsoDateTime(remainingFormData.actual_check_out),
+      location_address: remainingFormData.location_address,
+      location_latitude: toNullableNumber(remainingFormData.location_latitude),
+      location_longitude: toNullableNumber(remainingFormData.location_longitude),
+      customer_rating: toNullableNumber(remainingFormData.customer_rating),
+      contact_person_name: remainingFormData.contact_person_name,
+      contact_person_designation: remainingFormData.contact_person_designation,
+      contact_person_phone: remainingFormData.contact_person_phone,
+      outcome_summary: remainingFormData.outcome_summary,
+      next_steps: remainingFormData.next_steps,
     };
 
     // Auto-create contact if it is new
@@ -209,11 +218,29 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       dataToSubmit = formDataObj;
     }
 
+    const handleReminderCreation = () => {
+      if (
+        (formData.status === "SCHEDULED" || formData.status === "RESCHEDULED") &&
+        set_reminder &&
+        formData.scheduled_time &&
+        reminder_time
+      ) {
+        createReminderMutation.mutate({
+          title: `Reminder: Visit: ${formData.title}`,
+          description:
+            formData.description || `Reminder for visit: ${formData.title}`,
+          remind_at: formData.scheduled_time.split("T")[0],
+          remind_time: reminder_time,
+        });
+      }
+    };
+
     if (editingVisit) {
       updateVisitMutation.mutate(
-        { visitId: editingVisit.id, ...dataToSubmit },
+        { visitId: editingVisit.id, data: dataToSubmit },
         {
           onSuccess: () => {
+            handleReminderCreation();
             setIsModalOpen(false);
             setEditingVisit(null);
           },
@@ -224,7 +251,10 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
     }
 
     createVisitMutation.mutate(dataToSubmit, {
-      onSuccess: () => setIsModalOpen(false),
+      onSuccess: () => {
+        handleReminderCreation();
+        setIsModalOpen(false);
+      },
       onError: (error) => applyServerValidationErrors(error, setError),
     });
   };

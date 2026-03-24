@@ -53,6 +53,7 @@ const visitSchema = z.object({
     contact_person_designation: z.string().optional().or(z.literal("")),
     contact_person_phone: z.string().optional().or(z.literal("")),
     set_reminder: z.boolean().optional().default(false),
+    reminder_time: z.string().optional().or(z.literal("")),
     visit_image_file: z.any().optional(),
 });
 
@@ -156,8 +157,25 @@ const VisitsModal = ({
         defaultValues: {
             title: "",
             description: "",
+            visit_type: "Site Visit",
+            status: "SCHEDULED",
+            scheduled_time: getDefaultDateTime(),
+            actual_check_in: "",
+            actual_check_out: "",
+            location_address: "",
+            location_latitude: "",
+            location_longitude: "",
+            visit_image: "",
+            visit_image_name: "",
+            image_url: "",
+            outcome_summary: "",
+            next_steps: "",
+            customer_rating: "",
+            contact_person_name: "",
+            contact_person_designation: "",
             contact_person_phone: "",
             set_reminder: false,
+            reminder_time: new Date().toTimeString().slice(0, 5),
         },
     });
 
@@ -168,8 +186,8 @@ const VisitsModal = ({
             form.reset({
                 title: visitData.title || "",
                 description: visitData.description || "",
-                visit_type: visitData.visit_type || "",
-                status: visitData.status || "",
+                visit_type: visitData.visit_type || "Site Visit",
+                status: visitData.status || "SCHEDULED",
                 scheduled_time: toDateTimeLocal(visitData.scheduled_time),
                 actual_check_in: toDateTimeLocal(visitData.actual_check_in),
                 actual_check_out: toDateTimeLocal(visitData.actual_check_out),
@@ -192,6 +210,7 @@ const VisitsModal = ({
                 contact_person_designation: visitData.contact_person_designation || "",
                 contact_person_phone: visitData.contact_person_phone || "",
                 set_reminder: false,
+                reminder_time: new Date().toTimeString().slice(0, 5),
             });
             return;
         }
@@ -199,9 +218,9 @@ const VisitsModal = ({
         form.reset({
             title: "",
             description: "",
-            visit_type: "",
-            status: "",
-            scheduled_time: "",
+            visit_type: "Site Visit",
+            status: "SCHEDULED",
+            scheduled_time: getDefaultDateTime(),
             actual_check_in: "",
             actual_check_out: "",
             location_address: "",
@@ -217,6 +236,7 @@ const VisitsModal = ({
             contact_person_designation: "",
             contact_person_phone: "",
             set_reminder: false,
+            reminder_time: new Date().toTimeString().slice(0, 5),
         });
         setLocationMessage("");
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -559,33 +579,58 @@ const VisitsModal = ({
 
                     {(form.watch("status") === "SCHEDULED" ||
                         form.watch("status") === "RESCHEDULED") && (
-                            <FormField
-                                control={form.control}
-                                name="set_reminder"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3 bg-muted/5">
-                                        <FormControl>
-                                            <Checkbox
-                                                id="set_reminder_checkbox"
-                                                checked={field.value}
-                                                onCheckedChange={field.onChange}
-                                                disabled={isSubmitting}
-                                            />
-                                        </FormControl>
-                                        <div className="space-y-1 leading-none">
-                                            <Label
-                                                htmlFor="set_reminder_checkbox"
-                                                className="text-xs font-bold cursor-pointer"
-                                            >
-                                                Set Reminder
-                                            </Label>
-                                            <p className="text-[10px] text-muted-foreground">
-                                                Create a reminder for this visit.
-                                            </p>
-                                        </div>
-                                    </FormItem>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <FormField
+                                    control={form.control}
+                                    name="set_reminder"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3 bg-muted/5">
+                                            <FormControl>
+                                                <Checkbox
+                                                    id="set_reminder_checkbox"
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                    disabled={isSubmitting}
+                                                />
+                                            </FormControl>
+                                            <div className="space-y-1 leading-none">
+                                                <Label
+                                                    htmlFor="set_reminder_checkbox"
+                                                    className="text-xs font-bold cursor-pointer"
+                                                >
+                                                    Set Reminder
+                                                </Label>
+                                                <p className="text-[10px] text-muted-foreground">
+                                                    Create a reminder for this visit.
+                                                </p>
+                                            </div>
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {form.watch("set_reminder") && (
+                                    <FormField
+                                        control={form.control}
+                                        name="reminder_time"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs font-bold">
+                                                    Reminder Time <span className="text-destructive">*</span>
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type="time"
+                                                        className="h-9 text-xs"
+                                                        disabled={isSubmitting}
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage className="text-[10px]" />
+                                            </FormItem>
+                                        )}
+                                    />
                                 )}
-                            />
+                            </div>
                         )}
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

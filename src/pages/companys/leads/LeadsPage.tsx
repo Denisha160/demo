@@ -8,7 +8,7 @@ import {
   isWithinInterval,
   format,
 } from "date-fns";
-import { Plus, Search, Filter, List, Kanban } from "lucide-react";
+import { Plus, Search, Filter, List, Kanban, X } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +110,16 @@ const LeadsPage = () => {
   );
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [visibleStageIds, setVisibleStageIds] = useState<string[]>([]);
+
+  const hasFilters = useMemo(() => {
+    return Boolean(searchTerm || dateRange?.from || dateRange?.to);
+  }, [searchTerm, dateRange]);
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setDateRange(undefined);
+  };
+
   const [viewMode, setViewMode] = useState<"pipeline" | "table">(() => {
     return (
       (localStorage.getItem("leadsViewMode") as "pipeline" | "table") ||
@@ -415,6 +425,20 @@ const LeadsPage = () => {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {hasFilters && (
+                <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearFilters}
+                    className="h-9 px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="mr-1 h-3.5 w-3.5" />
+                    Clear
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="flex w-full justify-center gap-1 rounded-sm border border-border/60 bg-muted/20 p-1 sm:w-auto">

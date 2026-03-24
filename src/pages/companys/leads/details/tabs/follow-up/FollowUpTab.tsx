@@ -150,6 +150,25 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
       scheduled_at: toIsoDateTime(formData.scheduled_at),
     };
 
+    const handleReminderCreation = () => {
+      if (
+        (data.status === "SCHEDULED" || data.status === "RESCHEDULED") &&
+        set_reminder &&
+        reminder_time
+      ) {
+        createReminderMutation.mutate({
+          title: `Reminder: Follow-up (${data.purpose || data.follow_up_method || "Scheduled"
+            })`,
+          description:
+            data.remarks ||
+            data.purpose ||
+            "Follow-up reminder created automatically",
+          remind_at: toIsoDateTime(data.scheduled_at),
+          remind_time: reminder_time,
+        });
+      }
+    };
+
     if (editingFollowUp) {
       updateFollowUpMutation.mutate(
         {
@@ -158,6 +177,7 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
         },
         {
           onSuccess: () => {
+            handleReminderCreation();
             setOpen(false);
             setEditingFollowUp(null);
           },
@@ -169,22 +189,7 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
 
     createFollowUpMutation.mutate(payload, {
       onSuccess: () => {
-        if (
-          (data.status === "SCHEDULED" || data.status === "RESCHEDULED") &&
-          set_reminder &&
-          reminder_time
-        ) {
-          createReminderMutation.mutate({
-            title: `Reminder: Follow-up (${data.purpose || data.follow_up_method || "Scheduled"
-              })`,
-            description:
-              data.remarks ||
-              data.purpose ||
-              "Follow-up reminder created automatically",
-            remind_at: toIsoDateTime(data.scheduled_at),
-            remind_time: reminder_time,
-          });
-        }
+        handleReminderCreation();
         setOpen(false);
       },
       onError: (error) => applyServerValidationErrors(error, setError),

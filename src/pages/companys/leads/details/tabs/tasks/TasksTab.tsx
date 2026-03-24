@@ -138,15 +138,30 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
       return;
     }
 
+    const { set_reminder, reminder_time, ...taskData } = formData;
+
+    const handleReminderCreation = () => {
+      if (formData.status === "TODO" && set_reminder && reminder_time) {
+        createReminderMutation.mutate({
+          title: `Reminder: ${formData.title}`,
+          description:
+            formData.description || `Task Reminder: ${formData.title}`,
+          remind_at: toIsoDate(formData.due_date),
+          remind_time: reminder_time,
+        });
+      }
+    };
+
     if (editingTask) {
       updateTaskMutation.mutate(
         {
           taskId: editingTask.id,
-          ...formData,
-          due_date: toIsoDate(formData.due_date),
+          ...taskData,
+          due_date: toIsoDate(taskData.due_date),
         },
         {
           onSuccess: () => {
+            handleReminderCreation();
             setIsModalOpen(false);
             setEditingTask(null);
           },
@@ -156,8 +171,6 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
       return;
     }
 
-    const { set_reminder, reminder_time, ...taskData } = formData;
-
     createTaskMutation.mutate(
       {
         ...taskData,
@@ -165,15 +178,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
       },
       {
         onSuccess: () => {
-          if (formData.status === "TODO" && set_reminder && reminder_time) {
-            createReminderMutation.mutate({
-              title: `Reminder: ${formData.title}`,
-              description:
-                formData.description || `Task Reminder: ${formData.title}`,
-              remind_at: toIsoDate(formData.due_date),
-              remind_time: reminder_time,
-            });
-          }
+          handleReminderCreation();
           setIsModalOpen(false);
         },
         onError: (error) => applyServerValidationErrors(error, setError),

@@ -1,7 +1,7 @@
-import React, { useState, useRef } from "react";
-import { X } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { X, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Command as CommandPrimitive } from "cmdk";
 import {
   Popover,
   PopoverContent,
@@ -48,17 +48,38 @@ export function TagSelector({
     setOpen(false);
   };
 
+  const exactMatch = suggestions.find(
+    (s) => s.name.toLowerCase() === inputValue.trim().toLowerCase()
+  );
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue.trim()) {
+    if (e.key === "," && inputValue.trim()) {
       e.preventDefault();
+      const val = inputValue.split(",")[0].trim();
+      if (!val) return;
+
       const existing = suggestions.find(
-        (s) => s.name.toLowerCase() === inputValue.trim().toLowerCase(),
+        (s) => s.name.toLowerCase() === val.toLowerCase(),
       );
       if (existing) {
         handleSelect(existing);
       } else {
-        handleSelect({ name: inputValue.trim() });
+        handleSelect({ name: val });
       }
+    } else if (e.key === "Backspace" && inputValue === "") {
+      e.preventDefault();
+      if (value.length > 0) {
+        const newVal = [...value];
+        newVal.pop();
+        onChange(newVal);
+      }
+    }
+
+    // Add immediate enter selection if CmdK has no options (e.g. dropdown not showing)
+    if (e.key === "Enter" && inputValue.trim() && !open) {
+       e.preventDefault();
+       if (exactMatch) handleSelect(exactMatch);
+       else handleSelect({ name: inputValue.trim() });
     }
   };
 
@@ -89,55 +110,60 @@ export function TagSelector({
     );
   }
 
+  const showCreateItem = inputValue.trim() && !exactMatch;
+  const hasItems = filteredSuggestions.length > 0 || showCreateItem;
+
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
-      <PopoverTrigger asChild>
-        <div className="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-sm border border-input/60 bg-background px-3 py-1 text-xs shadow-sm focus-within:ring-1 focus-within:ring-primary">
-          {value.map((tag) => (
-            <Badge
-              key={tag.name}
-              variant="secondary"
-              className="hover:bg-secondary/80 rounded-sm px-1.5 py-0 font-normal"
-            >
-              {tag.name}
-              <button
-                type="button"
-                className="ml-1 rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleUnselect(tag);
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                onClick={() => handleUnselect(tag)}
+    <Command
+      className="overflow-visible bg-transparent h-auto w-full"
+      shouldFilter={false}
+    >
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
+        <PopoverTrigger asChild>
+          <div className="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-sm border border-input/60 bg-background px-3 py-1 text-xs shadow-sm focus-within:ring-1 focus-within:ring-primary">
+            {value.map((tag) => (
+              <Badge
+                key={tag.name}
+                variant="secondary"
+                className="hover:bg-secondary/80 rounded-sm px-1.5 py-0 font-normal"
               >
-                <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-              </button>
-            </Badge>
-          ))}
-          <Input
-            ref={inputRef}
-            type="text"
-            className="h-6 min-w-[80px] flex-1 border-0 bg-transparent p-0 text-xs shadow-none focus-visible:ring-0"
-            placeholder={value.length === 0 ? "Select or enter tags..." : ""}
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              setOpen(true);
-            }}
-            onKeyDown={handleKeyDown}
-            onClick={() => setOpen(true)}
-          />
-        </div>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-0"
-        align="start"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-      >
-        {filteredSuggestions.length > 0 && (
-          <Command>
+                {tag.name}
+                <button
+                  type="button"
+                  className="ml-1 rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleUnselect(tag);
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={() => handleUnselect(tag)}
+                >
+                  <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              </Badge>
+            ))}
+            <CommandPrimitive.Input
+              ref={inputRef}
+              className="h-6 min-w-[80px] flex-1 border-0 bg-transparent p-0 text-xs shadow-none focus-visible:ring-0 outline-none"
+              placeholder={value.length === 0 ? "Select or enter tags..." : ""}
+              value={inputValue}
+              onValueChange={(val) => {
+                setInputValue(val);
+                setOpen(true);
+              }}
+              onKeyDown={handleKeyDown}
+              onClick={() => setOpen(true)}
+            />
+          </div>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-[var(--radix-popover-trigger-width)] p-0"
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          {hasItems && (
             <CommandList>
               <CommandGroup>
                 {filteredSuggestions.map((suggestion) => (
@@ -153,11 +179,25 @@ export function TagSelector({
                     {suggestion.name}
                   </CommandItem>
                 ))}
+                {showCreateItem && (
+                  <CommandItem
+                    key="create-new"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onSelect={() => handleSelect({ name: inputValue.trim() })}
+                    className="flex items-center gap-2 rounded-sm text-xs cursor-pointer text-primary"
+                  >
+                    <Plus className="h-3 w-3 shrink-0" />
+                    Create "{inputValue.trim()}"
+                  </CommandItem>
+                )}
               </CommandGroup>
             </CommandList>
-          </Command>
-        )}
-      </PopoverContent>
-    </Popover>
+          )}
+        </PopoverContent>
+      </Popover>
+    </Command>
   );
 }

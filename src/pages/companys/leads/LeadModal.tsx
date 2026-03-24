@@ -570,6 +570,7 @@ const LeadModal = ({
                       }}
                       placeholder="Select Country"
                       className="h-9 w-full"
+                      creatable
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
@@ -604,6 +605,7 @@ const LeadModal = ({
                       }
                       className="h-9 w-full"
                       disabled={!selectedCountryId}
+                      creatable
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
@@ -631,6 +633,7 @@ const LeadModal = ({
                       }
                       className="h-9 w-full"
                       disabled={!selectedStateId}
+                      creatable
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />

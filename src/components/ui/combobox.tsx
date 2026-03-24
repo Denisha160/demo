@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
+import { Check, ChevronsUpDown, X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +36,8 @@ interface ComboboxProps {
   onSearchChange?: (search: string) => void;
   /** Stable label to display when the selected value is not in the options list (common with server-side search) */
   selectedLabel?: string;
+  /** Allow creating a new option using the search value */
+  creatable?: boolean;
 }
 
 const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
@@ -53,6 +55,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       searchValue,
       onSearchChange,
       selectedLabel: propSelectedLabel,
+      creatable = false,
     },
     ref,
   ) => {
@@ -66,9 +69,16 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       setOpen(false);
     };
 
-    const handleClear = (e: React.MouseEvent) => {
-      e.stopPropagation();
+    const handleClear = (e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
       onValueChange("");
+    };
+
+    const handleCreate = (newVal: string) => {
+      if (!newVal) return;
+      onValueChange(newVal);
+      setOpen(false);
+      onSearchChange?.("");
     };
 
     return (
@@ -80,6 +90,11 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
+            onKeyDown={(e) => {
+              if (e.key === "Backspace") {
+                handleClear();
+              }
+            }}
             className={cn(
               "flex h-8 w-full items-center justify-between rounded-sm border border-input/60 bg-background px-2.5 py-1.5 text-sm font-normal shadow-sm transition-colors duration-150",
               "hover:border-input/80 hover:bg-background",
@@ -121,11 +136,26 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
               className="h-8 text-sm"
               value={searchValue}
               onValueChange={onSearchChange}
+              onKeyDown={(e) => {
+                if (creatable && searchValue) {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    const exactMatch = options.find((o) => o.label.toLowerCase() === searchValue.toLowerCase());
+                    if (exactMatch) {
+                      handleSelect(exactMatch.value);
+                    } else {
+                      handleCreate(searchValue);
+                    }
+                  }
+                }
+              }}
             />
             <CommandList>
-              <CommandEmpty className="py-4 text-center text-sm text-muted-foreground">
-                {emptyText}
-              </CommandEmpty>
+              {(!creatable || !searchValue) && (
+                <CommandEmpty className="py-4 text-center text-sm text-muted-foreground">
+                  {emptyText}
+                </CommandEmpty>
+              )}
               <CommandGroup>
                 {options.map((option) => (
                   <CommandItem
@@ -143,6 +173,16 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                     {option.label}
                   </CommandItem>
                 ))}
+                {creatable && searchValue && !options.some((o) => o.label.toLowerCase() === (searchValue || "").toLowerCase()) && (
+                  <CommandItem
+                    value={searchValue}
+                    onSelect={() => handleCreate(searchValue)}
+                    className="flex items-center gap-2 rounded-sm text-sm cursor-pointer text-primary"
+                  >
+                    <Plus className="h-4 w-4 shrink-0" />
+                    Create "{searchValue}"
+                  </CommandItem>
+                )}
               </CommandGroup>
             </CommandList>
           </Command>

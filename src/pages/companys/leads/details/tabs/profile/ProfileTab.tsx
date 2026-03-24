@@ -530,6 +530,7 @@ const ProfileTab = ({
                         placeholder="Select Country"
                         className="h-9 w-full"
                         disabled={!isEditing || isSaving}
+                        creatable
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
@@ -563,6 +564,7 @@ const ProfileTab = ({
                         }
                         className="h-9 w-full"
                         disabled={!isEditing || isSaving || !selectedCountryId}
+                        creatable
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
@@ -592,6 +594,7 @@ const ProfileTab = ({
                         }
                         className="h-9 w-full"
                         disabled={!isEditing || isSaving || !selectedStateId}
+                        creatable
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />

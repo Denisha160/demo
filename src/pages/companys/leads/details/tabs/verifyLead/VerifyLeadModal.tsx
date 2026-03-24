@@ -159,15 +159,20 @@ export default function VerifyLeadModal({
   const cities = form.watch("cities_of_operation") || [];
 
   const handleAddCity = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if ((e.key === "Enter" || e.key === ",") && cityInput.trim()) {
       e.preventDefault();
-      const val = cityInput.trim();
+      const val = cityInput.replace(",", "").trim();
       if (val && !cities.includes(val)) {
         form.setValue("cities_of_operation", [...cities, val], {
           shouldDirty: true,
         });
         setCityInput("");
       }
+    } else if (e.key === "Backspace" && !cityInput && cities.length > 0) {
+      e.preventDefault();
+      const newCities = [...cities];
+      newCities.pop();
+      form.setValue("cities_of_operation", newCities, { shouldDirty: true });
     }
   };
 

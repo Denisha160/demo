@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
@@ -56,28 +58,42 @@ interface TasksTabProps {
 }
 
 const TasksTab = ({ leadId }: TasksTabProps) => {
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const debouncedSearch = useDebounce(search, 500);
+  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
+  useEffect(() => {
+      setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          if (debouncedSearch) next.set("search", debouncedSearch);
+          else next.delete("search");
+          if (page > 1) next.set("page", page.toString());
+          else next.delete("page");
+          if (limit !== 10) next.set("limit", limit.toString());
+          else next.delete("limit");
+          return next;
+      }, { replace: true });
+  }, [debouncedSearch, page, limit, setSearchParams]);
+
   const { data: tasks = [], isLoading } = useLeadTasks(leadId, {
     startDate: dateRange?.from?.toISOString(),
     endDate: dateRange?.to?.toISOString(),
+    search: debouncedSearch,
+    limit,
+    offset: (page - 1) * limit
   });
   const createTaskMutation = useCreateLeadTask(leadId);
   const updateTaskMutation = useUpdateLeadTask(leadId);
   const deleteTaskMutation = useDeleteLeadTask(leadId);
 
-  const filteredTasks = useMemo(
-    () =>
-      tasks.filter((task: Task) =>
-        task.title.toLowerCase().includes(search.toLowerCase()) ||
-        String(task.assigned_to_name || task.assigned_to || "").toLowerCase().includes(search.toLowerCase())
-      ),
-    [tasks, search]
-  );
+  const serverTotal = tasks.length === limit ? page * limit + 1 : (page - 1) * limit + tasks.length;
 
   const handleCreate = () => {
     setEditingTask(null);
@@ -238,12 +254,28 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
             placeholder="Search tasks..."
             className="h-9 w-[250px] pl-9 text-sm"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+            }}
           />
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredTasks} pageSize={10} />
+      <DataTable
+        columns={columns}
+        data={tasks}
+        isLoading={isLoading}
+        serverSide={true}
+        serverPage={page}
+        pageSize={limit}
+        serverTotal={serverTotal}
+        onServerPageChange={setPage}
+        onServerPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+        }}
+      />
       {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading tasks...</p>}
 
       {isModalOpen && (

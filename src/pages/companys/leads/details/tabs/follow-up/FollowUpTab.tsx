@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Edit2, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
@@ -73,28 +75,38 @@ interface FollowUpTabProps {
 
 const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
   const [open, setOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const debouncedSearch = useDebounce(searchTerm, 500);
+  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+
   const [editingFollowUp, setEditingFollowUp] = useState<FollowUp | null>(null);
   const [followUpToDelete, setFollowUpToDelete] = useState<FollowUp | null>(null);
 
-  const { data: followups = [], isLoading } = useLeadFollowUps(leadId);
+  useEffect(() => {
+      setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          if (debouncedSearch) next.set("search", debouncedSearch);
+          else next.delete("search");
+          if (page > 1) next.set("page", page.toString());
+          else next.delete("page");
+          if (limit !== 10) next.set("limit", limit.toString());
+          else next.delete("limit");
+          return next;
+      }, { replace: true });
+  }, [debouncedSearch, page, limit, setSearchParams]);
+
+  const { data: followups = [], isLoading } = useLeadFollowUps(leadId, {
+      search: debouncedSearch,
+      limit,
+      offset: (page - 1) * limit
+  });
   const createFollowUpMutation = useCreateLeadFollowUp(leadId);
   const updateFollowUpMutation = useUpdateLeadFollowUp(leadId);
   const deleteFollowUpMutation = useDeleteLeadFollowUp(leadId);
 
-  const filteredData = useMemo(
-    () =>
-      followups.filter((item: FollowUp) => {
-        const query = searchTerm.toLowerCase();
-        return (
-          (item.purpose || "").toLowerCase().includes(query) ||
-          (item.assigned_to_name || "").toLowerCase().includes(query) ||
-          (item.follow_up_method || "").toLowerCase().includes(query) ||
-          item.status.toLowerCase().includes(query)
-        );
-      }),
-    [followups, searchTerm]
-  );
+  const serverTotal = followups.length === limit ? page * limit + 1 : (page - 1) * limit + followups.length;
 
   const handleSave = (data: FollowUpFormData, setError: (field: any, err: any) => void) => {
     const payload = {
@@ -206,12 +218,28 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
             placeholder="Search follow ups..."
             className="h-9 w-[250px] pl-9 text-sm"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+            }}
           />
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredData} pageSize={10} />
+      <DataTable
+        columns={columns}
+        data={followups}
+        isLoading={isLoading}
+        serverSide={true}
+        serverPage={page}
+        pageSize={limit}
+        serverTotal={serverTotal}
+        onServerPageChange={setPage}
+        onServerPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+        }}
+      />
       {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading follow ups...</p>}
 
       <FollowUpModal

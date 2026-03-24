@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Search, Upload, FileIcon, Trash2, Eye, FileText, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +29,38 @@ const mapAttachment = (attachment: any): Attachment => ({
   date: (attachment?.date || attachment?.created_at || new Date().toISOString()).slice(0, 10),
 });
 
+interface AttachmentsTabProps {
+  leadId: string;
+}
+
 const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const debouncedSearch = useDebounce(search, 500);
+  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [attachmentToDelete, setAttachmentToDelete] = useState<Attachment | null>(null);
 
-  const { data: attachmentsData, isLoading } = useGetLeadAttachments(leadId, { search });
+  useEffect(() => {
+      setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          if (debouncedSearch) next.set("search", debouncedSearch);
+          else next.delete("search");
+          if (page > 1) next.set("page", page.toString());
+          else next.delete("page");
+          if (limit !== 10) next.set("limit", limit.toString());
+          else next.delete("limit");
+          return next;
+      }, { replace: true });
+  }, [debouncedSearch, page, limit, setSearchParams]);
+
+  const { data: attachmentsData, isLoading } = useGetLeadAttachments(leadId, { 
+    search: debouncedSearch,
+    limit,
+    offset: (page - 1) * limit 
+  });
   const uploadAttachmentMutation = useUploadLeadAttachment(leadId);
   const deleteAttachmentMutation = useDeleteLeadAttachment(leadId);
 
@@ -40,7 +68,7 @@ const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
     return (attachmentsData?.data?.items || []).map(mapAttachment);
   }, [attachmentsData]);
 
-  const filteredAttachments = attachments;
+  const serverTotal = attachments.length === limit ? page * limit + 1 : (page - 1) * limit + attachments.length;
 
 
   const getFileIcon = (type: string) => {
@@ -124,13 +152,29 @@ const AttachmentsTab = ({ leadId }: AttachmentsTabProps) => {
               placeholder="Search files..."
               className="h-9 pl-9 w-[250px] text-sm"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+              }}
             />
           </div>
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredAttachments} pageSize={10} isLoading={isLoading} />
+      <DataTable 
+        columns={columns} 
+        data={attachments} 
+        isLoading={isLoading} 
+        serverSide={true}
+        serverPage={page}
+        pageSize={limit}
+        serverTotal={serverTotal}
+        onServerPageChange={setPage}
+        onServerPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+        }}
+      />
 
       {isModalOpen && (
         <AttachmentModal

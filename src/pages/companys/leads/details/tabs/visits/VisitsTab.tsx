@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
 import { CalendarDays, Edit, MapPin, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
@@ -86,15 +88,36 @@ interface VisitsTabProps {
 }
 
 const VisitsTab = ({ leadId }: VisitsTabProps) => {
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const debouncedSearch = useDebounce(search, 500);
+  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
   const [visitToDelete, setVisitToDelete] = useState<Visit | null>(null);
 
+  useEffect(() => {
+      setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          if (debouncedSearch) next.set("search", debouncedSearch);
+          else next.delete("search");
+          if (page > 1) next.set("page", page.toString());
+          else next.delete("page");
+          if (limit !== 10) next.set("limit", limit.toString());
+          else next.delete("limit");
+          return next;
+      }, { replace: true });
+  }, [debouncedSearch, page, limit, setSearchParams]);
+
   const { data: visits = [], isLoading } = useLeadVisits(leadId, {
     startDate: dateRange?.from?.toISOString(),
     endDate: dateRange?.to?.toISOString(),
+    search: debouncedSearch,
+    limit,
+    offset: (page - 1) * limit
   });
   const createVisitMutation = useCreateLeadVisit(leadId);
   const updateVisitMutation = useUpdateLeadVisit(leadId);
@@ -104,21 +127,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const contacts = contactData?.contacts || [];
   const createContactMutation = useCreateLeadContact();
 
-  const filteredVisits = useMemo(
-    () =>
-      visits.filter((visit: Visit) => {
-        const query = search.toLowerCase();
-
-        return (
-          visit.title.toLowerCase().includes(query) ||
-          visit.visit_type.toLowerCase().includes(query) ||
-          visit.status.toLowerCase().includes(query) ||
-          visit.location_address.toLowerCase().includes(query) ||
-          visit.contact_person_name.toLowerCase().includes(query)
-        );
-      }),
-    [visits, search]
-  );
+  const serverTotal = visits.length === limit ? page * limit + 1 : (page - 1) * limit + visits.length;
 
   const handleCreate = () => {
     setEditingVisit(null);
@@ -323,12 +332,28 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             placeholder="Search visits..."
             className="h-9 w-[250px] pl-9 text-sm"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+            }}
           />
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredVisits} pageSize={10} />
+      <DataTable
+        columns={columns}
+        data={visits}
+        isLoading={isLoading}
+        serverSide={true}
+        serverPage={page}
+        pageSize={limit}
+        serverTotal={serverTotal}
+        onServerPageChange={setPage}
+        onServerPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+        }}
+      />
       {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading visits...</p>}
 
       {isModalOpen && (

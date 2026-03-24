@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import {
@@ -86,15 +88,36 @@ interface RemindersTabProps {
 }
 
 const RemindersTab = ({ leadId }: RemindersTabProps) => {
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const debouncedSearch = useDebounce(search, 500);
+  const [page, setPage] = useState(parseInt(searchParams.get("page") || "1", 10));
+  const [limit, setLimit] = useState(parseInt(searchParams.get("limit") || "10", 10));
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(null);
 
+  useEffect(() => {
+      setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          if (debouncedSearch) next.set("search", debouncedSearch);
+          else next.delete("search");
+          if (page > 1) next.set("page", page.toString());
+          else next.delete("page");
+          if (limit !== 10) next.set("limit", limit.toString());
+          else next.delete("limit");
+          return next;
+      }, { replace: true });
+  }, [debouncedSearch, page, limit, setSearchParams]);
+
   const { data: reminders = [], isLoading } = useLeadReminders(leadId, {
     startDate: dateRange?.from?.toISOString(),
     endDate: dateRange?.to?.toISOString(),
+    search: debouncedSearch,
+    limit,
+    offset: (page - 1) * limit
   });
   const createReminderMutation = useCreateLeadReminder(leadId);
   const updateReminderMutation = useUpdateLeadReminder(leadId);
@@ -102,19 +125,7 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
 
   const reminderItems = useMemo(() => reminders.map((reminder: any) => mapReminder(reminder)), [reminders]);
 
-  const filteredReminders = useMemo(
-    () =>
-      reminderItems.filter((reminder: Reminder) => {
-        const query = search.toLowerCase();
-        return (
-          reminder.title.toLowerCase().includes(query) ||
-          reminder.description.toLowerCase().includes(query) ||
-          reminder.remind_date.toLowerCase().includes(query) ||
-          reminder.remind_time.toLowerCase().includes(query)
-        );
-      }),
-    [reminderItems, search]
-  );
+  const serverTotal = reminderItems.length === limit ? page * limit + 1 : (page - 1) * limit + reminderItems.length;
 
   const handleSaveReminder = (formData: ReminderFormData, setError: (field: any, err: any) => void) => {
     const remind_at = `${formData.remind_date}T${formData.remind_time.length === 5 ? `${formData.remind_time}:00` : formData.remind_time}`;
@@ -222,12 +233,28 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
             placeholder="Search reminders..."
             className="h-9 w-[250px] pl-9 text-sm"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+            }}
           />
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredReminders} pageSize={10} />
+      <DataTable 
+        columns={columns} 
+        data={reminderItems} 
+        isLoading={isLoading} 
+        serverSide={true}
+        serverPage={page}
+        pageSize={limit}
+        serverTotal={serverTotal}
+        onServerPageChange={setPage}
+        onServerPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+        }}
+      />
       {isLoading && <p className="mt-3 text-xs text-muted-foreground">Loading reminders...</p>}
 
       {isModalOpen && (

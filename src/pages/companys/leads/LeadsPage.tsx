@@ -160,17 +160,17 @@ const LeadsPage = () => {
     setColumnOrder((prev) =>
       prev.length
         ? [
-            ...prev.filter((id) => sortedIds.includes(id)),
-            ...sortedIds.filter((id) => !prev.includes(id)),
-          ]
+          ...prev.filter((id) => sortedIds.includes(id)),
+          ...sortedIds.filter((id) => !prev.includes(id)),
+        ]
         : sortedIds,
     );
     setVisibleStageIds((prev) =>
       prev.length
         ? [
-            ...prev.filter((id) => sortedIds.includes(id)),
-            ...sortedIds.filter((id) => !prev.includes(id)),
-          ]
+          ...prev.filter((id) => sortedIds.includes(id)),
+          ...sortedIds.filter((id) => !prev.includes(id)),
+        ]
         : sortedIds,
     );
     setCreateLeadStatusId((prev) => prev || sortedIds[0] || null);
@@ -368,19 +368,19 @@ const LeadsPage = () => {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
-      <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          <div className="relative flex-1 sm:flex-initial">
+      <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:pb-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
+          <div className="relative w-full sm:flex-initial">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
             <Input
               placeholder="Search leads..."
-              className="h-9 rounded-sm border-border/60 bg-background pl-9 text-sm focus-visible:ring-1 focus-visible:ring-primary/20"
+              className="h-9 w-full rounded-sm border-border/60 bg-background pl-9 text-sm focus-visible:ring-1 focus-visible:ring-primary/20 sm:min-w-30"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="flex w-full flex-col items-center gap-2 md:w-auto sm:flex-row">
+          <div className="flex w-full flex-col gap-2 md:w-auto sm:flex-row sm:items-center sm:gap-2">
             <div className="flex w-full items-center gap-2 sm:w-auto">
               <div className="flex-1 sm:flex-none">
                 <DatePickerWithRange date={dateRange} setDate={setDateRange} />

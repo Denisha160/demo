@@ -115,6 +115,12 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
     offset: (page - 1) * limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
+
+  const serverTotal =
+    followups.length === limit
+      ? page * limit + 1
+      : (page - 1) * limit + followups.length;
+
   const createFollowUpMutation = useCreateLeadFollowUp(leadId);
   const updateFollowUpMutation = useUpdateLeadFollowUp(leadId);
   const deleteFollowUpMutation = useDeleteLeadFollowUp(leadId);

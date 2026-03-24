@@ -97,6 +97,12 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
     offset: (page - 1) * limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
+
+  const serverTotal =
+    tasks.length === limit
+      ? page * limit + 1
+      : (page - 1) * limit + tasks.length;
+
   const createTaskMutation = useCreateLeadTask(leadId);
   const updateTaskMutation = useUpdateLeadTask(leadId);
   const deleteTaskMutation = useDeleteLeadTask(leadId);

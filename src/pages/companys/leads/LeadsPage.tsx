@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { DropResult } from "@hello-pangea/dnd";
 import {
@@ -103,30 +104,76 @@ const applyServerValidationErrors = (
 };
 
 const LeadsPage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const searchTerm = searchParams.get("search") || "";
+  const setSearchTerm = useCallback((val: string) => {
+    setSearchParams((prev) => {
+      if (val) prev.set("search", val);
+      else prev.delete("search");
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const dateRange = useMemo<DateRange | undefined>(() => {
+    const from = searchParams.get("from");
+    const to = searchParams.get("to");
+    return {
+      from: from ? parseISO(from) : undefined,
+      to: to ? parseISO(to) : undefined,
+    };
+  }, [searchParams]);
+
+  const setDateRange = useCallback((range: DateRange | undefined) => {
+    setSearchParams((prev) => {
+      if (range?.from) prev.set("from", format(range.from, "yyyy-MM-dd"));
+      else prev.delete("from");
+      if (range?.to) prev.set("to", format(range.to, "yyyy-MM-dd"));
+      else prev.delete("to");
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const viewMode = (searchParams.get("view") as "pipeline" | "table") || "pipeline";
+  const setViewMode = useCallback((mode: "pipeline" | "table") => {
+    setSearchParams((prev) => {
+      prev.set("view", mode);
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const visibleStageIds = useMemo(() => {
+    const stages = searchParams.get("stages");
+    return stages ? stages.split(",") : [];
+  }, [searchParams]);
+
+  const setVisibleStageIds = useCallback((ids: string[] | ((prev: string[]) => string[])) => {
+    setSearchParams((prev) => {
+      const nextIds = typeof ids === "function" ? ids(visibleStageIds) : ids;
+      if (nextIds.length) prev.set("stages", nextIds.join(","));
+      else prev.delete("stages");
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams, visibleStageIds]);
+
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [createLeadStatusId, setCreateLeadStatusId] = useState<string | null>(
     null,
   );
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
-  const [visibleStageIds, setVisibleStageIds] = useState<string[]>([]);
 
   const hasFilters = useMemo(() => {
     return Boolean(searchTerm || dateRange?.from || dateRange?.to);
   }, [searchTerm, dateRange]);
 
   const handleClearFilters = () => {
-    setSearchTerm("");
-    setDateRange(undefined);
+    setSearchParams((prev) => {
+      prev.delete("search");
+      prev.delete("from");
+      prev.delete("to");
+      return prev;
+    }, { replace: true });
   };
-
-  const [viewMode, setViewMode] = useState<"pipeline" | "table">(() => {
-    return (
-      (localStorage.getItem("leadsViewMode") as "pipeline" | "table") ||
-      "pipeline"
-    );
-  });
 
   const filters = useMemo(() => {
     const f: any = {};
@@ -168,7 +215,7 @@ const LeadsPage = () => {
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLeadStatus();
   const updateStatusOrderMutation = useUpdateLeadStatusOrder();
-  const leadStatuses = statusResponse?.items || [];
+  const leadStatuses = useMemo(() => statusResponse?.items || [], [statusResponse]);
 
   useEffect(() => {
     if (initialGroups) {
@@ -196,10 +243,6 @@ const LeadsPage = () => {
   }, [initialTableLeads]);
 
   useEffect(() => {
-    localStorage.setItem("leadsViewMode", viewMode);
-  }, [viewMode]);
-
-  useEffect(() => {
     if (!leadStatuses.length) return;
 
     const sortedIds = [...leadStatuses]
@@ -218,16 +261,11 @@ const LeadsPage = () => {
         ]
         : sortedIds,
     );
-    setVisibleStageIds((prev) =>
-      prev.length
-        ? [
-          ...prev.filter((id) => sortedIds.includes(id)),
-          ...sortedIds.filter((id) => !prev.includes(id)),
-        ]
-        : sortedIds,
-    );
+    if (!searchParams.has("stages")) {
+      setVisibleStageIds(sortedIds);
+    }
     setCreateLeadStatusId((prev) => prev || sortedIds[0] || null);
-  }, [leadStatuses]);
+  }, [leadStatuses, searchParams, setVisibleStageIds]);
 
   const isDealVisible = useCallback(
     (deal: Deal) => {

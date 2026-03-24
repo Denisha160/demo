@@ -103,25 +103,6 @@ const LeadPipeline = ({
                               variant={col.variant}
                               color={col.color}
                             />
-
-                            <div
-                              className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full border px-1.5 text-[12px] font-bold shadow-sm transition-colors duration-200"
-                              style={
-                                col.color
-                                  ? {
-                                    backgroundColor: `${col.color}20`,
-                                    borderColor: `${col.color}40`,
-                                    color: col.color,
-                                  }
-                                  : {
-                                    backgroundColor: "hsl(var(--secondary) / 0.8)",
-                                    borderColor: "hsl(var(--border) / 0.4)",
-                                    color: "hsl(var(--foreground) / 0.7)",
-                                  }
-                              }
-                            >
-                              {col.total}
-                            </div>
                           </div>
                         </div>
                       </div>

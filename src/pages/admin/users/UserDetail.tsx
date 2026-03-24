@@ -185,7 +185,7 @@ const UserDetailPage = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary">
+            <h2 className="text-sm font-bold leading-none truncate uppercase tracking-widest text-primary">
               User Profile Analytics
             </h2>
           </div>

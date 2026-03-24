@@ -286,7 +286,10 @@ const FollowUpModal = ({
                   onCheckedChange={(val) => setValue("set_reminder", !!val)}
                   disabled={isSubmitting}
                 />
-                <Label htmlFor="set_reminder_followup" className="text-xs font-bold cursor-pointer">
+                <Label
+                  htmlFor="set_reminder_followup"
+                  className="text-xs font-bold cursor-pointer"
+                >
                   Set Reminder
                 </Label>
               </div>
@@ -302,7 +305,11 @@ const FollowUpModal = ({
                     disabled={isSubmitting}
                     {...register("reminder_time")}
                   />
-                  {errors.reminder_time && <p className="text-[10px] text-red-500">{errors.reminder_time.message}</p>}
+                  {errors.reminder_time && (
+                    <p className="text-[10px] text-red-500">
+                      {errors.reminder_time.message}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

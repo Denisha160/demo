@@ -110,11 +110,14 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
   const filteredTasks = useMemo(
     () =>
-      tasks.filter((task: Task) =>
-        task.title.toLowerCase().includes(search.toLowerCase()) ||
-        String(task.assigned_to_name || task.assigned_to || "").toLowerCase().includes(search.toLowerCase())
+      tasks.filter(
+        (task: Task) =>
+          task.title.toLowerCase().includes(search.toLowerCase()) ||
+          String(task.assigned_to_name || task.assigned_to || "")
+            .toLowerCase()
+            .includes(search.toLowerCase()),
       ),
-    [tasks, search]
+    [tasks, search],
   );
 
   const handleCreate = () => {
@@ -155,23 +158,27 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
 
     const { set_reminder, reminder_time, ...taskData } = formData;
 
-    createTaskMutation.mutate({
-      ...taskData,
-      due_date: toIsoDate(taskData.due_date),
-    }, {
-      onSuccess: () => {
-        if (formData.status === "TODO" && set_reminder && reminder_time) {
-          createReminderMutation.mutate({
-            title: `Reminder: ${formData.title}`,
-            description: formData.description || `Task Reminder: ${formData.title}`,
-            remind_at: toIsoDate(formData.due_date),
-            remind_time: reminder_time,
-          });
-        }
-        setIsModalOpen(false);
+    createTaskMutation.mutate(
+      {
+        ...taskData,
+        due_date: toIsoDate(taskData.due_date),
       },
-      onError: (error) => applyServerValidationErrors(error, setError),
-    });
+      {
+        onSuccess: () => {
+          if (formData.status === "TODO" && set_reminder && reminder_time) {
+            createReminderMutation.mutate({
+              title: `Reminder: ${formData.title}`,
+              description:
+                formData.description || `Task Reminder: ${formData.title}`,
+              remind_at: toIsoDate(formData.due_date),
+              remind_time: reminder_time,
+            });
+          }
+          setIsModalOpen(false);
+        },
+        onError: (error) => applyServerValidationErrors(error, setError),
+      },
+    );
   };
 
   const getPriorityVariant = (priority: string) => {

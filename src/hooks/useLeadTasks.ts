@@ -9,7 +9,7 @@ import {
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
-const normalizeList = <T,>(response: unknown): T[] => {
+const normalizeList = <T>(response: unknown): T[] => {
   const r = response as any;
   if (Array.isArray(r?.data?.tasks)) return r.data.tasks;
   if (Array.isArray(r?.tasks)) return r.tasks;
@@ -57,9 +57,12 @@ export function useCreateLeadTask(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: Record<string, unknown>) => createLeadTask(leadId, payload),
+    mutationFn: (payload: Record<string, unknown>) =>
+      createLeadTask(leadId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || ""),
+      });
       toast.success("Task created successfully.");
     },
     onError: (error: unknown) => {
@@ -81,7 +84,9 @@ export function useUpdateLeadTask(leadId?: string) {
     }: { taskId: string } & Record<string, unknown>) =>
       updateLeadTask({ leadId, taskId, ...payload }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || ""),
+      });
       toast.success("Task updated successfully.");
     },
     onError: (error: unknown) => {
@@ -99,7 +104,9 @@ export function useDeleteLeadTask(leadId?: string) {
   return useMutation({
     mutationFn: (taskId: string) => deleteLeadTask({ leadId, taskId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || ""),
+      });
       toast.success("Task deleted successfully.");
     },
     onError: (error: unknown) => {

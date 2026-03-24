@@ -27,7 +27,7 @@ import { useCreateLeadReminder } from "@/hooks/useLeadReminders";
 
 const applyServerValidationErrors = (
   error: unknown,
-  setError: (field: any, err: any) => void
+  setError: (field: any, err: any) => void,
 ) => {
   const err = error as any;
   if (err?.code === "validation_error" && err?.details?.body) {
@@ -137,10 +137,13 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
           item.status.toLowerCase().includes(query)
         );
       }),
-    [followups, searchTerm]
+    [followups, searchTerm],
   );
 
-  const handleSave = (data: FollowUpFormData, setError: (field: keyof FollowUpFormData, err: any) => void) => {
+  const handleSave = (
+    data: FollowUpFormData,
+    setError: (field: keyof FollowUpFormData, err: any) => void,
+  ) => {
     const { set_reminder, reminder_time, ...formData } = data;
     const payload = {
       ...formData,
@@ -335,8 +338,8 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the follow up "{followUpToDelete?.purpose}". This action
-              cannot be undone.
+              This will permanently delete the follow up "
+              {followUpToDelete?.purpose}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

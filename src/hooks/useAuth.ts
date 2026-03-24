@@ -16,18 +16,24 @@ import type {
   VerifyLoginPayload,
 } from "@/types/Auth";
 
-const AUTH_TOKEN_KEY = 'auth_token';
-const USER_DETAILS_KEY = 'user_details';
+const AUTH_TOKEN_KEY = "auth_token";
+const USER_DETAILS_KEY = "user_details";
 const COOKIE_EXPIRY_DAYS = 1;
 
 function saveAuthToCookies(data: LoginResponse) {
-    Cookies.set(AUTH_TOKEN_KEY, data.token, { expires: COOKIE_EXPIRY_DAYS, path: '/' });
-    Cookies.set(USER_DETAILS_KEY, JSON.stringify(data.user), { expires: COOKIE_EXPIRY_DAYS, path: '/' });
+  Cookies.set(AUTH_TOKEN_KEY, data.token, {
+    expires: COOKIE_EXPIRY_DAYS,
+    path: "/",
+  });
+  Cookies.set(USER_DETAILS_KEY, JSON.stringify(data.user), {
+    expires: COOKIE_EXPIRY_DAYS,
+    path: "/",
+  });
 }
 
 function clearAuthCookies() {
-    Cookies.remove(AUTH_TOKEN_KEY, { path: '/' });
-    Cookies.remove(USER_DETAILS_KEY, { path: '/' });
+  Cookies.remove(AUTH_TOKEN_KEY, { path: "/" });
+  Cookies.remove(USER_DETAILS_KEY, { path: "/" });
 }
 
 export function useCurrentUser(): User | null {

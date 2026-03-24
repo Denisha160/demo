@@ -9,7 +9,7 @@ import {
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
-const normalizeList = <T,>(response: unknown): T[] => {
+const normalizeList = <T>(response: unknown): T[] => {
   const r = response as any;
   if (Array.isArray(r?.data?.reminders)) return r.data.reminders;
   if (Array.isArray(r?.data?.items)) return r.data.items;
@@ -48,9 +48,12 @@ export function useCreateLeadReminder(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: Record<string, unknown>) => createLeadReminder(leadId, payload),
+    mutationFn: (payload: Record<string, unknown>) =>
+      createLeadReminder(leadId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || ""),
+      });
       toast.success("Reminder created successfully.");
     },
     onError: (error: unknown) => {
@@ -72,7 +75,9 @@ export function useUpdateLeadReminder(leadId?: string) {
     }: { reminderId: string } & Record<string, unknown>) =>
       updateLeadReminder({ leadId, reminderId, ...payload }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || ""),
+      });
       toast.success("Reminder updated successfully.");
     },
     onError: (error: unknown) => {
@@ -88,9 +93,12 @@ export function useDeleteLeadReminder(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (reminderId: string) => deleteLeadReminder({ leadId, reminderId }),
+    mutationFn: (reminderId: string) =>
+      deleteLeadReminder({ leadId, reminderId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads.detail(leadId || ""),
+      });
       toast.success("Reminder deleted successfully.");
     },
     onError: (error: unknown) => {

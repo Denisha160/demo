@@ -344,7 +344,10 @@ const TaskModal = ({
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <Label htmlFor="set_reminder_task" className="text-xs font-bold cursor-pointer">
+                      <Label
+                        htmlFor="set_reminder_task"
+                        className="text-xs font-bold cursor-pointer"
+                      >
                         Set Reminder
                       </Label>
                     </div>
@@ -359,7 +362,8 @@ const TaskModal = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-bold flex gap-1">
-                        Reminder Time <span className="text-destructive">*</span>
+                        Reminder Time{" "}
+                        <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input

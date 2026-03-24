@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
-import VisitsModal, { Visit, VisitFormData } from "./VisitsMode";
+import VisitsModal, { Visit, VisitFormData } from "./VisitsModal";
 import {
   useCreateLeadVisit,
   useDeleteLeadVisit,
@@ -147,6 +147,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       contact_person_phone: formData.contact_person_phone,
       outcome_summary: formData.outcome_summary,
       next_steps: formData.next_steps,
+      set_reminder: formData.set_reminder,
     };
 
     let dataToSubmit: any = payload;

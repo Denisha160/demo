@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useVerifyLead, useUpdateVerifyLead } from "@/hooks/useLeadVerification";
-import { Car } from "lucide-react";
 import {
   Form,
   FormControl,

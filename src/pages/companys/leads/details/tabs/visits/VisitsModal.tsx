@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { compressImage } from "@/utils/imageCompression";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 const visitSchema = z.object({
     title: z.string().min(1, "Title is required").max(200, "Title is too long"),
@@ -45,6 +47,7 @@ const visitSchema = z.object({
     contact_person_name: z.string().optional().or(z.literal("")),
     contact_person_designation: z.string().optional().or(z.literal("")),
     contact_person_phone: z.string().optional().or(z.literal("")),
+    set_reminder: z.boolean().optional().default(false),
     visit_image_file: z.any().optional(),
 });
 
@@ -114,6 +117,7 @@ const VisitsModal = ({
             contact_person_name: "",
             contact_person_designation: "",
             contact_person_phone: "",
+            set_reminder: false,
         },
     });
 
@@ -141,6 +145,7 @@ const VisitsModal = ({
                 contact_person_name: visitData.contact_person_name || "",
                 contact_person_designation: visitData.contact_person_designation || "",
                 contact_person_phone: visitData.contact_person_phone || "",
+                set_reminder: false,
             });
             return;
         }
@@ -165,6 +170,7 @@ const VisitsModal = ({
             contact_person_name: "",
             contact_person_designation: "",
             contact_person_phone: "",
+            set_reminder: false,
         });
         setLocationMessage("");
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -452,6 +458,33 @@ const VisitsModal = ({
                             )}
                         />
                     </div>
+
+                    {(form.watch("status") === "SCHEDULED" || form.watch("status") === "RESCHEDULED") && (
+                        <FormField
+                            control={form.control}
+                            name="set_reminder"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3 bg-muted/5">
+                                    <FormControl>
+                                        <Checkbox
+                                            id="set_reminder_checkbox"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                            disabled={isSubmitting}
+                                        />
+                                    </FormControl>
+                                    <div className="space-y-1 leading-none">
+                                        <Label htmlFor="set_reminder_checkbox" className="text-xs font-bold cursor-pointer">
+                                            Set Reminder
+                                        </Label>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Create a reminder for this visit.
+                                        </p>
+                                    </div>
+                                </FormItem>
+                            )}
+                        />
+                    )}
 
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <FormField

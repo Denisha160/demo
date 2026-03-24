@@ -24,18 +24,22 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Combobox } from "@/components/ui/combobox";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useUsers } from "@/hooks/useUsers";
 
+const getTodayDate = () => new Date().toISOString().split("T")[0];
+const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
+
 const taskSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Title is required")
-    .max(200, "Title cannot exceed 100 characters"),
-  description: z.string().min(1, "Description is required"),
+  title: z.string().min(1, "Title is required").max(255, "Title is too long"),
+  description: z.string().nullish().or(z.literal("")),
   status: z.string().min(1, "Status is required"),
   priority: z.string().min(1, "Priority is required"),
   assigned_to: z.string().min(1, "Assigned to is required"),
-  due_date: z.string().optional().or(z.literal("")),
+  due_date: z.string().min(1, "Due date is required"),
+  set_reminder: z.boolean().optional().default(false),
+  reminder_time: z.string().optional().or(z.literal("")),
 });
 
 export type TaskFormData = z.infer<typeof taskSchema>;
@@ -74,7 +78,7 @@ const TaskModal = ({
 }: TaskModalProps) => {
   const { data: usersResponse } = useUsers({ limit: 100 });
   const users = usersResponse?.items || usersResponse || [];
-  const userOptions = users.map((user: any) => ({
+  const userOptions = users.map((user: { id: string; name: string }) => ({
     value: user.id,
     label: user.name,
   }));
@@ -87,7 +91,9 @@ const TaskModal = ({
       status: "TODO",
       priority: "MEDIUM",
       assigned_to: "",
-      due_date: "",
+      due_date: getTodayDate(),
+      set_reminder: false,
+      reminder_time: getCurrentTime(),
     },
   });
 
@@ -100,7 +106,9 @@ const TaskModal = ({
           status: taskData.status || "TODO",
           priority: taskData.priority || "MEDIUM",
           assigned_to: taskData.assigned_to || "",
-          due_date: getDateOnly(taskData.due_date),
+          due_date: getDateOnly(taskData.due_date as string) || getTodayDate(),
+          set_reminder: false,
+          reminder_time: getCurrentTime(),
         });
       } else {
         form.reset({
@@ -109,7 +117,9 @@ const TaskModal = ({
           status: "TODO",
           priority: "MEDIUM",
           assigned_to: "",
-          due_date: "",
+          due_date: getTodayDate(),
+          set_reminder: false,
+          reminder_time: getCurrentTime(),
         });
       }
     }
@@ -227,8 +237,8 @@ const TaskModal = ({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="TODO">TODO</SelectItem>
-                      <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
-                      <SelectItem value="IN_REVIEW">IN_REVIEW</SelectItem>
+                      <SelectItem value="IN_PROGRESS">IN PROGRESS</SelectItem>
+                      <SelectItem value="IN_REVIEW">IN REVIEW</SelectItem>
                       <SelectItem value="COMPLETED">COMPLETED</SelectItem>
                       <SelectItem value="CANCELLED">CANCELLED</SelectItem>
                     </SelectContent>
@@ -300,7 +310,9 @@ const TaskModal = ({
               name="due_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold">Due Date</FormLabel>
+                  <FormLabel className="text-xs font-bold flex gap-1">
+                    Due Date <span className="text-destructive">*</span>
+                  </FormLabel>
                   <FormControl>
                     <DatePicker
                       value={field.value}
@@ -316,6 +328,54 @@ const TaskModal = ({
               )}
             />
           </div>
+          {form.watch("status") === "TODO" && (
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="set_reminder"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3 bg-muted/5">
+                    <FormControl>
+                      <Checkbox
+                        id="set_reminder_task"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <Label htmlFor="set_reminder_task" className="text-xs font-bold cursor-pointer">
+                        Set Reminder
+                      </Label>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("set_reminder") && (
+                <FormField
+                  control={form.control}
+                  name="reminder_time"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold flex gap-1">
+                        Reminder Time <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="time"
+                          className="h-9 text-xs"
+                          disabled={isSubmitting}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+          )}
         </form>
       </Form>
     </Modal>

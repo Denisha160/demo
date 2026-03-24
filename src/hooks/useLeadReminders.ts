@@ -9,11 +9,12 @@ import {
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
-const normalizeList = <T>(response: any): T[] => {
-  if (Array.isArray(response?.data?.reminders)) return response.data.reminders;
-  if (Array.isArray(response?.data?.items)) return response.data.items;
-  if (Array.isArray(response?.data)) return response.data;
-  if (Array.isArray(response?.items)) return response.items;
+const normalizeList = <T,>(response: unknown): T[] => {
+  const r = response as any;
+  if (Array.isArray(r?.data?.reminders)) return r.data.reminders;
+  if (Array.isArray(r?.data?.items)) return r.data.items;
+  if (Array.isArray(r?.data)) return r.data;
+  if (Array.isArray(r?.items)) return r.items;
   return [];
 };
 
@@ -47,17 +48,15 @@ export function useCreateLeadReminder(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: Record<string, unknown>) =>
-      createLeadReminder(leadId, payload),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.leads.reminders(leadId || ""),
-      });
+    mutationFn: (payload: Record<string, unknown>) => createLeadReminder(leadId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
       toast.success("Reminder created successfully.");
     },
-    onError: (error: any) => {
-      if (error?.code !== "validation_error") {
-        toast.error(error?.message || "Failed to create reminder.");
+    onError: (error: unknown) => {
+      const apiError = error as { code?: string; message?: string };
+      if (apiError?.code !== "validation_error") {
+        toast.error(apiError?.message || "Failed to create reminder.");
       }
     },
   });
@@ -72,15 +71,14 @@ export function useUpdateLeadReminder(leadId?: string) {
       ...payload
     }: { reminderId: string } & Record<string, unknown>) =>
       updateLeadReminder({ leadId, reminderId, ...payload }),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.leads.reminders(leadId || ""),
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
       toast.success("Reminder updated successfully.");
     },
-    onError: (error: any) => {
-      if (error?.code !== "validation_error") {
-        toast.error(error?.message || "Failed to update reminder.");
+    onError: (error: unknown) => {
+      const apiError = error as { code?: string; message?: string };
+      if (apiError?.code !== "validation_error") {
+        toast.error(apiError?.message || "Failed to update reminder.");
       }
     },
   });
@@ -90,16 +88,14 @@ export function useDeleteLeadReminder(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (reminderId: string) =>
-      deleteLeadReminder({ leadId, reminderId }),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.leads.reminders(leadId || ""),
-      });
+    mutationFn: (reminderId: string) => deleteLeadReminder({ leadId, reminderId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.detail(leadId || "") });
       toast.success("Reminder deleted successfully.");
     },
-    onError: (error: any) => {
-      toast.error(error?.message || "Failed to delete reminder.");
+    onError: (error: unknown) => {
+      const apiError = error as { message?: string };
+      toast.error(apiError?.message || "Failed to delete reminder.");
     },
   });
 }

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -25,6 +26,8 @@ const followUpSchema = z.object({
   remarks: z.string().optional().or(z.literal("")),
   assigned_to: z.string().min(1, "Assigned To is required"),
   scheduled_at: z.string().min(1, "Scheduled date is required"),
+  set_reminder: z.boolean().optional().default(false),
+  reminder_time: z.string().optional().or(z.literal("")),
 });
 
 export type FollowUpFormData = z.infer<typeof followUpSchema>;
@@ -48,12 +51,14 @@ interface FollowUpModalProps {
   isSubmitting?: boolean;
 }
 
+const getTodayDate = () => new Date().toISOString().split("T")[0];
+const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
+
 const getDateOnly = (value?: string | null) => {
-  if (!value) return new Date().toISOString().split("T")[0];
+  if (!value) return getTodayDate();
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime()))
-    return new Date().toISOString().split("T")[0];
+  if (Number.isNaN(parsed.getTime())) return getTodayDate();
   const year = parsed.getFullYear();
   const month = String(parsed.getMonth() + 1).padStart(2, "0");
   const day = String(parsed.getDate()).padStart(2, "0");
@@ -91,7 +96,9 @@ const FollowUpModal = ({
       purpose: "",
       remarks: "",
       assigned_to: "",
-      scheduled_at: new Date().toISOString().split("T")[0],
+      scheduled_at: getTodayDate(),
+      set_reminder: false,
+      reminder_time: getCurrentTime(),
     },
   });
 
@@ -106,6 +113,8 @@ const FollowUpModal = ({
         remarks: followUpData.remarks || "",
         assigned_to: followUpData.assigned_to || "",
         scheduled_at: getDateOnly(followUpData.scheduled_at),
+        set_reminder: false,
+        reminder_time: getCurrentTime(),
       });
       return;
     }
@@ -116,7 +125,9 @@ const FollowUpModal = ({
       purpose: "",
       remarks: "",
       assigned_to: "",
-      scheduled_at: new Date().toISOString().split("T")[0],
+      scheduled_at: getTodayDate(),
+      set_reminder: false,
+      reminder_time: getCurrentTime(),
     });
   }, [open, isEditing, followUpData, reset]);
 
@@ -265,6 +276,37 @@ const FollowUpModal = ({
               <p className="text-xs text-red-500">{errors.remarks.message}</p>
             )}
           </div>
+
+          {(status === "SCHEDULED" || status === "RESCHEDULED") && (
+            <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
+              <div className="flex flex-row items-center space-x-2 rounded-md border p-3 bg-muted/5">
+                <Checkbox
+                  id="set_reminder_followup"
+                  checked={watch("set_reminder")}
+                  onCheckedChange={(val) => setValue("set_reminder", !!val)}
+                  disabled={isSubmitting}
+                />
+                <Label htmlFor="set_reminder_followup" className="text-xs font-bold cursor-pointer">
+                  Set Reminder
+                </Label>
+              </div>
+
+              {watch("set_reminder") && (
+                <div>
+                  <Label className="text-xs font-bold flex gap-1 mb-1.5">
+                    Reminder Time <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="time"
+                    className="h-9 text-xs"
+                    disabled={isSubmitting}
+                    {...register("reminder_time")}
+                  />
+                  {errors.reminder_time && <p className="text-[10px] text-red-500">{errors.reminder_time.message}</p>}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </form>
     </Modal>

@@ -23,13 +23,15 @@ import {
   useLeadFollowUps,
   useUpdateLeadFollowUp,
 } from "@/hooks/useLeadFollowUps";
+import { useCreateLeadReminder } from "@/hooks/useLeadReminders";
 
 const applyServerValidationErrors = (
-  error: any,
-  setError: (field: any, err: any) => void,
+  error: unknown,
+  setError: (field: any, err: any) => void
 ) => {
-  if (error?.code === "validation_error" && error?.details?.body) {
-    Object.entries(error.details.body).forEach(([key, message]) => {
+  const err = error as any;
+  if (err?.code === "validation_error" && err?.details?.body) {
+    Object.entries(err.details.body).forEach(([key, message]) => {
       setError(key as any, { type: "server", message: String(message) });
     });
   }
@@ -116,19 +118,27 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
   const createFollowUpMutation = useCreateLeadFollowUp(leadId);
   const updateFollowUpMutation = useUpdateLeadFollowUp(leadId);
   const deleteFollowUpMutation = useDeleteLeadFollowUp(leadId);
+  const createReminderMutation = useCreateLeadReminder(leadId);
 
-  const serverTotal =
-    followups.length === limit
-      ? page * limit + 1
-      : (page - 1) * limit + followups.length;
+  const filteredData = useMemo(
+    () =>
+      followups.filter((item: FollowUp) => {
+        const query = searchTerm.toLowerCase();
+        return (
+          (item.purpose || "").toLowerCase().includes(query) ||
+          (item.assigned_to_name || "").toLowerCase().includes(query) ||
+          (item.follow_up_method || "").toLowerCase().includes(query) ||
+          item.status.toLowerCase().includes(query)
+        );
+      }),
+    [followups, searchTerm]
+  );
 
-  const handleSave = (
-    data: FollowUpFormData,
-    setError: (field: any, err: any) => void,
-  ) => {
+  const handleSave = (data: FollowUpFormData, setError: (field: keyof FollowUpFormData, err: any) => void) => {
+    const { set_reminder, reminder_time, ...formData } = data;
     const payload = {
-      ...data,
-      scheduled_at: toIsoDateTime(data.scheduled_at),
+      ...formData,
+      scheduled_at: toIsoDateTime(formData.scheduled_at),
     };
 
     if (editingFollowUp) {
@@ -149,7 +159,26 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
     }
 
     createFollowUpMutation.mutate(payload, {
-      onSuccess: () => setOpen(false),
+      onSuccess: () => {
+        if (
+          (data.status === "SCHEDULED" || data.status === "RESCHEDULED") &&
+          set_reminder &&
+          reminder_time
+        ) {
+          createReminderMutation.mutate({
+            title: `Reminder: Follow-up (${
+              data.purpose || data.follow_up_method || "Scheduled"
+            })`,
+            description:
+              data.remarks ||
+              data.purpose ||
+              "Follow-up reminder created automatically",
+            remind_at: toIsoDateTime(data.scheduled_at),
+            remind_time: reminder_time,
+          });
+        }
+        setOpen(false);
+      },
       onError: (error) => applyServerValidationErrors(error, setError),
     });
   };
@@ -300,8 +329,8 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the follow up "
-              {followUpToDelete?.purpose}". This action cannot be undone.
+              This will permanently delete the follow up "{followUpToDelete?.purpose}". This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

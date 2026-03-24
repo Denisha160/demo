@@ -25,6 +25,7 @@ import {
   useLeadTasks,
   useUpdateLeadTask,
 } from "@/hooks/useLeadTasks";
+import { useCreateLeadReminder } from "@/hooks/useLeadReminders";
 
 const applyServerValidationErrors = (
   error: any,
@@ -99,11 +100,16 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
   const createTaskMutation = useCreateLeadTask(leadId);
   const updateTaskMutation = useUpdateLeadTask(leadId);
   const deleteTaskMutation = useDeleteLeadTask(leadId);
+  const createReminderMutation = useCreateLeadReminder(leadId);
 
-  const serverTotal =
-    tasks.length === limit
-      ? page * limit + 1
-      : (page - 1) * limit + tasks.length;
+  const filteredTasks = useMemo(
+    () =>
+      tasks.filter((task: Task) =>
+        task.title.toLowerCase().includes(search.toLowerCase()) ||
+        String(task.assigned_to_name || task.assigned_to || "").toLowerCase().includes(search.toLowerCase())
+      ),
+    [tasks, search]
+  );
 
   const handleCreate = () => {
     setEditingTask(null);
@@ -141,16 +147,25 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
       return;
     }
 
-    createTaskMutation.mutate(
-      {
-        ...formData,
-        due_date: toIsoDate(formData.due_date),
+    const { set_reminder, reminder_time, ...taskData } = formData;
+
+    createTaskMutation.mutate({
+      ...taskData,
+      due_date: toIsoDate(taskData.due_date),
+    }, {
+      onSuccess: () => {
+        if (formData.status === "TODO" && set_reminder && reminder_time) {
+          createReminderMutation.mutate({
+            title: `Reminder: ${formData.title}`,
+            description: formData.description || `Task Reminder: ${formData.title}`,
+            remind_at: toIsoDate(formData.due_date),
+            remind_time: reminder_time,
+          });
+        }
+        setIsModalOpen(false);
       },
-      {
-        onSuccess: () => setIsModalOpen(false),
-        onError: (error) => applyServerValidationErrors(error, setError),
-      },
-    );
+      onError: (error) => applyServerValidationErrors(error, setError),
+    });
   };
 
   const getPriorityVariant = (priority: string) => {

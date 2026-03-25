@@ -99,6 +99,7 @@ const mapLeadToDeal = (
   status_name: lead?.status_name,
   status_color: lead?.status_color,
   tags: lead?.tags,
+  phone: lead?.phone || lead?.mobile || "-",
 });
 
 const applyServerValidationErrors = (

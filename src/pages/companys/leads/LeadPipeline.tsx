@@ -167,6 +167,11 @@ const LeadPipeline = ({
                                             <p className="mt-1 truncate text-[11px] text-muted-foreground">
                                               {deal.company}
                                             </p>
+                                            {deal.phone && deal.phone !== "-" && (
+                                              <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
+                                                {deal.phone}
+                                              </p>
+                                            )}
 
                                             <div className="mt-3.5 flex items-center justify-between border-t border-border/10 pt-3">
                                               <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">

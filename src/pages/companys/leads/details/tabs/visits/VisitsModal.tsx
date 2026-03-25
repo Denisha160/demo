@@ -24,8 +24,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { compressImage } from "@/utils/imageCompression";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import {
     ComboboxWithAdd,
     ComboboxOption,
@@ -38,8 +36,6 @@ const visitSchema = z.object({
     visit_type: z.string().min(1, "Visit type is required"),
     status: z.string().min(1, "Status is required"),
     scheduled_time: z.string().optional().or(z.literal("")),
-    actual_check_in: z.string().optional().or(z.literal("")),
-    actual_check_out: z.string().optional().or(z.literal("")),
     location_address: z.string().optional().or(z.literal("")),
     location_latitude: z.string().optional().or(z.literal("")),
     location_longitude: z.string().optional().or(z.literal("")),
@@ -52,8 +48,6 @@ const visitSchema = z.object({
     contact_person_name: z.string().optional().or(z.literal("")),
     contact_person_designation: z.string().optional().or(z.literal("")),
     contact_person_phone: z.string().optional().or(z.literal("")),
-    set_reminder: z.boolean().optional().default(false),
-    reminder_time: z.string().optional().or(z.literal("")),
     visit_image_file: z.any().optional(),
 });
 
@@ -160,8 +154,6 @@ const VisitsModal = ({
             visit_type: "Site Visit",
             status: "SCHEDULED",
             scheduled_time: getDefaultDateTime(),
-            actual_check_in: "",
-            actual_check_out: "",
             location_address: "",
             location_latitude: "",
             location_longitude: "",
@@ -174,8 +166,6 @@ const VisitsModal = ({
             contact_person_name: "",
             contact_person_designation: "",
             contact_person_phone: "",
-            set_reminder: false,
-            reminder_time: new Date().toTimeString().slice(0, 5),
         },
     });
 
@@ -189,8 +179,6 @@ const VisitsModal = ({
                 visit_type: visitData.visit_type || "Site Visit",
                 status: visitData.status || "SCHEDULED",
                 scheduled_time: toDateTimeLocal(visitData.scheduled_time),
-                actual_check_in: toDateTimeLocal(visitData.actual_check_in),
-                actual_check_out: toDateTimeLocal(visitData.actual_check_out),
                 location_address: visitData.location_address || "",
                 location_latitude: visitData.location_latitude
                     ? String(visitData.location_latitude)
@@ -209,8 +197,6 @@ const VisitsModal = ({
                 contact_person_name: visitData.contact_person_name || "",
                 contact_person_designation: visitData.contact_person_designation || "",
                 contact_person_phone: visitData.contact_person_phone || "",
-                set_reminder: false,
-                reminder_time: new Date().toTimeString().slice(0, 5),
             });
             return;
         }
@@ -221,8 +207,6 @@ const VisitsModal = ({
             visit_type: "Site Visit",
             status: "SCHEDULED",
             scheduled_time: getDefaultDateTime(),
-            actual_check_in: "",
-            actual_check_out: "",
             location_address: "",
             location_latitude: "",
             location_longitude: "",
@@ -235,8 +219,6 @@ const VisitsModal = ({
             contact_person_name: "",
             contact_person_designation: "",
             contact_person_phone: "",
-            set_reminder: false,
-            reminder_time: new Date().toTimeString().slice(0, 5),
         });
         setLocationMessage("");
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -586,108 +568,6 @@ const VisitsModal = ({
                                             type="datetime-local"
                                             className="h-9 text-xs"
                                             disabled={isSubmitting}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage className="text-[10px]" />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-
-                    {(form.watch("status") === "SCHEDULED" ||
-                        form.watch("status") === "RESCHEDULED") && (
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <FormField
-                                    control={form.control}
-                                    name="set_reminder"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3 bg-muted/5">
-                                            <FormControl>
-                                                <Checkbox
-                                                    id="set_reminder_checkbox"
-                                                    checked={field.value}
-                                                    onCheckedChange={field.onChange}
-                                                    disabled={isSubmitting}
-                                                />
-                                            </FormControl>
-                                            <div className="space-y-1 leading-none">
-                                                <Label
-                                                    htmlFor="set_reminder_checkbox"
-                                                    className="text-xs font-bold cursor-pointer"
-                                                >
-                                                    Set Reminder
-                                                </Label>
-                                                <p className="text-[10px] text-muted-foreground">
-                                                    Create a reminder for this visit.
-                                                </p>
-                                            </div>
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {form.watch("set_reminder") && (
-                                    <FormField
-                                        control={form.control}
-                                        name="reminder_time"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-xs font-bold">
-                                                    Reminder Time <span className="text-destructive">*</span>
-                                                </FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="time"
-                                                        className="h-9 text-xs"
-                                                        disabled={isSubmitting}
-                                                        {...field}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                )}
-                            </div>
-                        )}
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField
-                            control={form.control}
-                            name="actual_check_in"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs font-bold">
-                                        Actual Check In
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="datetime-local"
-                                            className="h-9 text-xs"
-                                            disabled={isSubmitting}
-                                            min={new Date().toISOString().slice(0, 16)}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage className="text-[10px]" />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name="actual_check_out"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs font-bold">
-                                        Actual Check Out
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="datetime-local"
-                                            className="h-9 text-xs"
-                                            disabled={isSubmitting}
-                                            min={form.watch("actual_check_in") || new Date().toISOString().slice(0, 16)}
                                             {...field}
                                         />
                                     </FormControl>

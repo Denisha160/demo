@@ -160,8 +160,6 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
     }
 
     const {
-      set_reminder,
-      reminder_time,
       visit_image_file,
       visit_image_name,
       ...remainingFormData
@@ -173,8 +171,6 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       visit_type: remainingFormData.visit_type,
       status: remainingFormData.status,
       scheduled_time: toIsoDateTime(remainingFormData.scheduled_time),
-      actual_check_in: toIsoDateTime(remainingFormData.actual_check_in),
-      actual_check_out: toIsoDateTime(remainingFormData.actual_check_out),
       location_address: remainingFormData.location_address,
       location_latitude: toNullableNumber(remainingFormData.location_latitude),
       location_longitude: toNullableNumber(remainingFormData.location_longitude),
@@ -221,16 +217,13 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
     const handleReminderCreation = () => {
       if (
         (formData.status === "SCHEDULED" || formData.status === "RESCHEDULED") &&
-        set_reminder &&
-        formData.scheduled_time &&
-        reminder_time
+        formData.scheduled_time
       ) {
         createReminderMutation.mutate({
           title: `Reminder: Visit: ${formData.title}`,
           description:
             formData.description || `Reminder for visit: ${formData.title}`,
           remind_at: formData.scheduled_time.split("T")[0],
-          remind_time: reminder_time,
         });
       }
     };
@@ -271,9 +264,6 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
           <div className="flex flex-col">
             <span className="text-sm font-medium text-foreground">
               {formatDateTime(item.scheduled_time)}
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              Check in: {formatDateTime(item.actual_check_in)}
             </span>
           </div>
         </div>

@@ -38,7 +38,6 @@ const applyServerValidationErrors = (
   }
 };
 
-
 const formatDateTime = (value?: string) => {
   return formatDate(value);
 };
@@ -143,8 +142,9 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
         reminder_time
       ) {
         createReminderMutation.mutate({
-          title: `Reminder: Follow-up (${data.purpose || data.follow_up_method || "Scheduled"
-            })`,
+          title: `Reminder: Follow-up (${
+            data.purpose || data.follow_up_method || "Scheduled"
+          })`,
           description:
             data.remarks ||
             data.purpose ||

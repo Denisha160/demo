@@ -264,7 +264,10 @@ const App = () => (
           <Route path="followups" element={<FollowUpsPage />} />
           <Route path="sales" element={<SalesPage />} />
           <Route path="sales/:userId" element={<SalesMemberDetailPage />} />
-          <Route path="sales/:userId/:tab" element={<SalesMemberDetailPage />} />
+          <Route
+            path="sales/:userId/:tab"
+            element={<SalesMemberDetailPage />}
+          />
           <Route path="*" element={<NotFound />} />
         </Route>
 

@@ -25,8 +25,18 @@ export function DatePicker({
     if (value.includes("/")) {
       const [day, month, year] = value.split("/");
       if (day && month && year) {
-        const fullYear = parseInt(year, 10) < 100 ? 2000 + parseInt(year, 10) : parseInt(year, 10);
-        return new Date(fullYear, parseInt(month, 10) - 1, parseInt(day, 10), 12, 0, 0);
+        const fullYear =
+          parseInt(year, 10) < 100
+            ? 2000 + parseInt(year, 10)
+            : parseInt(year, 10);
+        return new Date(
+          fullYear,
+          parseInt(month, 10) - 1,
+          parseInt(day, 10),
+          12,
+          0,
+          0,
+        );
       }
     }
 

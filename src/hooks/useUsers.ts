@@ -170,7 +170,11 @@ export const useUpdateUserPermissions = () => {
   });
 };
 
-export const useUserSessions = (id: string, params?: Record<string, unknown>, enabled: boolean = true) => {
+export const useUserSessions = (
+  id: string,
+  params?: Record<string, unknown>,
+  enabled: boolean = true,
+) => {
   return useQuery({
     queryKey: queryKeys.users.sessions(id, params),
     queryFn: async () => {

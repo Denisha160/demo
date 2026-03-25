@@ -1,3 +1,3 @@
 export const serverDetails = {
-  serverProxyURL: `${import.meta.env.VITE_SERVER_URL}/api`
+  serverProxyURL: `${import.meta.env.VITE_SERVER_URL}/api`,
 };

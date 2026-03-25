@@ -14,7 +14,10 @@ import type {
   UpdateLeadStatusPayload,
 } from "@/types/leadStatus";
 
-export function useLeadStatuses(filters?: Record<string, unknown>, options?: any) {
+export function useLeadStatuses(
+  filters?: Record<string, unknown>,
+  options?: any,
+) {
   return useQuery({
     queryKey: queryKeys.leadStatus.list(filters),
     queryFn: () => listStatus(filters),

@@ -149,11 +149,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       return;
     }
 
-    const {
-      visit_image_file,
-      visit_image_name,
-      ...remainingFormData
-    } = formData;
+    const { visit_image_file, visit_image_name, ...remainingFormData } =
+      formData;
 
     const payload: any = {
       title: remainingFormData.title,
@@ -163,7 +160,9 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       scheduled_time: toIsoDateTime(remainingFormData.scheduled_time),
       location_address: remainingFormData.location_address,
       location_latitude: toNullableNumber(remainingFormData.location_latitude),
-      location_longitude: toNullableNumber(remainingFormData.location_longitude),
+      location_longitude: toNullableNumber(
+        remainingFormData.location_longitude,
+      ),
       customer_rating: toNullableNumber(remainingFormData.customer_rating),
       contact_person_name: remainingFormData.contact_person_name,
       contact_person_designation: remainingFormData.contact_person_designation,
@@ -206,7 +205,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
 
     const handleReminderCreation = () => {
       if (
-        (formData.status === "SCHEDULED" || formData.status === "RESCHEDULED") &&
+        (formData.status === "SCHEDULED" ||
+          formData.status === "RESCHEDULED") &&
         formData.scheduled_time
       ) {
         createReminderMutation.mutate({

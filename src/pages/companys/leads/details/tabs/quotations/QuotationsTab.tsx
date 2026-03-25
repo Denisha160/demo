@@ -179,9 +179,9 @@ const QuotationsTab = () => {
         prev.map((quotation) =>
           quotation.id === editingQuotation.id
             ? {
-              ...quotation,
-              ...formData,
-            }
+                ...quotation,
+                ...formData,
+              }
             : quotation,
         ),
       );

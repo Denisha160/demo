@@ -73,7 +73,7 @@ const mapReminder = (reminder: any): Reminder => {
 const formatReminderDateTime = (date: string, time: string) => {
   if (!date && !time) return "-";
   if (!date) return time;
-  
+
   return formatDate(date);
 };
 
@@ -141,7 +141,9 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
     setError: (field: any, err: any) => void,
   ) => {
     const parsedDate = parseFormattedDate(formData.remind_date);
-    const datePart = parsedDate ? parsedDate.toISOString().split("T")[0] : formData.remind_date;
+    const datePart = parsedDate
+      ? parsedDate.toISOString().split("T")[0]
+      : formData.remind_date;
     const remind_at = `${datePart}T${formData.remind_time.length === 5 ? `${formData.remind_time}:00` : formData.remind_time}`;
     const payload = {
       title: formData.title,

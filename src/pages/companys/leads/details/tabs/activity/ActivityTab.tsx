@@ -143,15 +143,25 @@ const ActivityTab = () => {
                         if (
                           key.endsWith("_id") ||
                           key === "id" ||
-                          ["updated_at", "updated_by", "created_at", "created_by", "deleted_at"].includes(key)
+                          [
+                            "updated_at",
+                            "updated_by",
+                            "created_at",
+                            "created_by",
+                            "deleted_at",
+                          ].includes(key)
                         ) {
                           return null;
                         }
 
                         // Skip if redundant with description (rough check)
                         if (
-                          activity.description.toLowerCase().includes(key.toLowerCase()) &&
-                          activity.description.toLowerCase().includes(String(newVal).toLowerCase())
+                          activity.description
+                            .toLowerCase()
+                            .includes(key.toLowerCase()) &&
+                          activity.description
+                            .toLowerCase()
+                            .includes(String(newVal).toLowerCase())
                         ) {
                           return null;
                         }

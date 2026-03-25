@@ -162,20 +162,18 @@ const quotationSchema = z
   .superRefine((data, ctx) => {
     const validUntilDate = parseFormattedDate(data.valid_until);
     const quotationDate = parseFormattedDate(data.quotation_date);
-    const expectedDeliveryDate = parseFormattedDate(data.expected_delivery_date);
- 
-    if (
-      validUntilDate &&
-      quotationDate &&
-      validUntilDate < quotationDate
-    ) {
+    const expectedDeliveryDate = parseFormattedDate(
+      data.expected_delivery_date,
+    );
+
+    if (validUntilDate && quotationDate && validUntilDate < quotationDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["valid_until"],
         message: "Valid until must be on or after quotation date",
       });
     }
- 
+
     if (
       expectedDeliveryDate &&
       quotationDate &&
@@ -420,9 +418,12 @@ const QuotationModal = ({
     onSave(
       {
         ...data,
-        quotation_date: formatDateForAPI(data.quotation_date) || data.quotation_date,
+        quotation_date:
+          formatDateForAPI(data.quotation_date) || data.quotation_date,
         valid_until: formatDateForAPI(data.valid_until) || data.valid_until,
-        expected_delivery_date: formatDateForAPI(data.expected_delivery_date) || data.expected_delivery_date,
+        expected_delivery_date:
+          formatDateForAPI(data.expected_delivery_date) ||
+          data.expected_delivery_date,
         total_tax_amount: Number(totalTaxAmount.toFixed(2)),
         total_additional_charges: Number(totalAdditionalCharges.toFixed(2)),
       },

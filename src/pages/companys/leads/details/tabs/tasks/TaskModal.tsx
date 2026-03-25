@@ -215,7 +215,9 @@ const TaskModal = ({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold">Status<span className="text-destructive">*</span></FormLabel>
+                  <FormLabel className="text-xs font-bold">
+                    Status<span className="text-destructive">*</span>
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
@@ -244,7 +246,9 @@ const TaskModal = ({
               name="priority"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold">Priority<span className="text-destructive">*</span></FormLabel>
+                  <FormLabel className="text-xs font-bold">
+                    Priority<span className="text-destructive">*</span>
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}

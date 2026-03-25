@@ -2,7 +2,8 @@ export function formatDate(dateInput?: string | Date | null): string {
   if (!dateInput) return "-";
 
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-  if (isNaN(date.getTime())) return typeof dateInput === 'string' ? dateInput : "-";
+  if (isNaN(date.getTime()))
+    return typeof dateInput === "string" ? dateInput : "-";
 
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -14,7 +15,7 @@ export function formatDate(dateInput?: string | Date | null): string {
 export function parseFormattedDate(dateStr?: string | null): Date | null {
   if (!dateStr) return null;
 
-  if (typeof dateStr === 'string' && dateStr.includes("/")) {
+  if (typeof dateStr === "string" && dateStr.includes("/")) {
     const parts = dateStr.split("/");
     if (parts.length === 3) {
       const day = parseInt(parts[0], 10);
@@ -34,9 +35,12 @@ export function parseFormattedDate(dateStr?: string | null): Date | null {
   return isNaN(date.getTime()) ? null : date;
 }
 
-export function formatDateForAPI(dateInput?: string | Date | null): string | undefined {
+export function formatDateForAPI(
+  dateInput?: string | Date | null,
+): string | undefined {
   if (!dateInput) return undefined;
-  const date = dateInput instanceof Date ? dateInput : parseFormattedDate(dateInput);
+  const date =
+    dateInput instanceof Date ? dateInput : parseFormattedDate(dateInput);
   if (!date || isNaN(date.getTime())) return undefined;
 
   const year = date.getFullYear();

@@ -13,7 +13,10 @@ import type {
   UpdateLeadSourcePayload,
 } from "@/types/leadSource";
 
-export function useLeadSources(filters?: Record<string, unknown>, options?: any) {
+export function useLeadSources(
+  filters?: Record<string, unknown>,
+  options?: any,
+) {
   return useQuery({
     queryKey: queryKeys.leadSource.list(filters),
     queryFn: () => listSource(filters),

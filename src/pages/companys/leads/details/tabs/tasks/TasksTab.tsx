@@ -39,8 +39,6 @@ const applyServerValidationErrors = (
   }
 };
 
-
-
 interface TasksTabProps {
   leadId: string;
 }

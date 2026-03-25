@@ -103,6 +103,62 @@ const SalesPage = () => {
       ),
     },
     {
+      key: "lead_priorities",
+      header: "Priorities",
+      render: (item) => (
+        <div className="flex items-center gap-2 pr-4">
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-tighter">
+              Hot
+            </span>
+            <span className="text-xs font-bold text-rose-500">
+              {item.lead_priorities?.HOT || 0}
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-tighter">
+              Warm
+            </span>
+            <span className="text-xs font-bold text-amber-500">
+              {item.lead_priorities?.WARM || 0}
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-tighter">
+              Cold
+            </span>
+            <span className="text-xs font-bold text-blue-500">
+              {item.lead_priorities?.COLD || 0}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "lead_statuses",
+      header: "Status Breakdown",
+      render: (item) => (
+        <div className="flex flex-wrap gap-1 max-w-[200px]">
+          {item.lead_statuses?.map((s: any, i: number) => (
+            <div
+              key={i}
+              className="flex items-center gap-1 text-[10px] bg-primary/5 px-1.5 py-0.5 rounded-xs border border-primary/10"
+            >
+              <span className="text-muted-foreground">{s.status}</span>
+              <span className="font-bold text-primary select-none">
+                {s.count}
+              </span>
+            </div>
+          ))}
+          {(!item.lead_statuses || item.lead_statuses.length === 0) && (
+            <span className="text-muted-foreground text-[10px] italic">
+              No leads assigned
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
       key: "is_active",
       header: "Status",
       className: "w-[100px]",

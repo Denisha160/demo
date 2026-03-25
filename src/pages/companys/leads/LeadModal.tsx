@@ -59,6 +59,7 @@ const InterestedCategorySelect = ({
       suggestions={suggestions}
       value={displayValue}
       onChange={onValueChange}
+      creatable={false}
     />
   );
 };

@@ -24,6 +24,7 @@ interface TagSelectorProps {
   value: Tag[];
   onChange: (tags: Tag[]) => void;
   disabled?: boolean;
+  creatable?: boolean;
 }
 
 export function TagSelector({
@@ -31,6 +32,7 @@ export function TagSelector({
   value = [],
   onChange,
   disabled,
+  creatable = true,
 }: TagSelectorProps) {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -63,7 +65,7 @@ export function TagSelector({
       );
       if (existing) {
         handleSelect(existing);
-      } else {
+      } else if (creatable) {
         handleSelect({ name: val });
       }
     } else if (e.key === "Backspace" && inputValue === "") {
@@ -79,7 +81,7 @@ export function TagSelector({
     if (e.key === "Enter" && inputValue.trim() && !open) {
        e.preventDefault();
        if (exactMatch) handleSelect(exactMatch);
-       else handleSelect({ name: inputValue.trim() });
+       else if (creatable) handleSelect({ name: inputValue.trim() });
     }
   };
 
@@ -110,7 +112,7 @@ export function TagSelector({
     );
   }
 
-  const showCreateItem = inputValue.trim() && !exactMatch;
+  const showCreateItem = creatable && inputValue.trim() && !exactMatch;
   const hasItems = filteredSuggestions.length > 0 || showCreateItem;
 
   return (
@@ -179,20 +181,6 @@ export function TagSelector({
                     {suggestion.name}
                   </CommandItem>
                 ))}
-                {showCreateItem && (
-                  <CommandItem
-                    key="create-new"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onSelect={() => handleSelect({ name: inputValue.trim() })}
-                    className="flex items-center gap-2 rounded-sm text-xs cursor-pointer text-primary"
-                  >
-                    <Plus className="h-3 w-3 shrink-0" />
-                    Create "{inputValue.trim()}"
-                  </CommandItem>
-                )}
               </CommandGroup>
             </CommandList>
           )}

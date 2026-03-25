@@ -64,6 +64,9 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
     const handleSelect = (selectedValue: string) => {
       onValueChange(selectedValue === value ? "" : selectedValue);
       setOpen(false);
+      if (onSearchChange) {
+        onSearchChange("");
+      }
     };
 
     const handleClear = (e?: React.MouseEvent) => {
@@ -171,16 +174,6 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                     {option.label}
                   </CommandItem>
                 ))}
-                {creatable && searchValue && !options.some((o) => o.label.toLowerCase() === (searchValue || "").toLowerCase()) && (
-                  <CommandItem
-                    value={searchValue}
-                    onSelect={() => handleCreate(searchValue)}
-                    className="flex items-center gap-2 rounded-sm text-sm cursor-pointer text-primary"
-                  >
-                    <Plus className="h-4 w-4 shrink-0" />
-                    Create "{searchValue}"
-                  </CommandItem>
-                )}
               </CommandGroup>
             </CommandList>
           </Command>

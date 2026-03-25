@@ -220,7 +220,7 @@ const RoleDetail = () => {
           </Button>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-foreground leading-none truncate font-mono uppercase tracking-widest text-primary">
+              <h2 className="text-sm font-bold leading-none truncate font-mono uppercase tracking-widest text-primary">
                 Role Permissions
               </h2>
             </div>

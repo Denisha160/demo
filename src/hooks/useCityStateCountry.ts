@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { listCityStateCountry, listCity } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -19,13 +19,15 @@ export function useCityStateCountry(params: GeoParams, options?: any) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     select: (data: any) => data?.data,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
     ...options,
   });
 }
 
 export function useCountries(
   params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true },
-  options?: any
+  options?: any,
 ) {
   return useQuery({
     queryKey: queryKeys.locations.list(params),
@@ -33,6 +35,8 @@ export function useCountries(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     select: (data: any) => data?.data,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
     ...options,
   });
 }
@@ -40,7 +44,7 @@ export function useCountries(
 export function useStates(
   countryId?: string,
   params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true },
-  options?: any
+  options?: any,
 ) {
   return useQuery({
     queryKey: queryKeys.locations.list({ ...params, country_id: countryId }),
@@ -49,6 +53,8 @@ export function useStates(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     select: (data: any) => data?.data,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
     ...options,
   });
 }
@@ -56,7 +62,7 @@ export function useStates(
 export function useCities(
   stateId?: string,
   params: Omit<GeoParams, "country_id" | "state_id"> = { combobox: true },
-  options?: any
+  options?: any,
 ) {
   return useQuery({
     queryKey: queryKeys.locations.list({ ...params, state_id: stateId }),
@@ -65,6 +71,8 @@ export function useCities(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     select: (data: any) => data?.data,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
     ...options,
   });
 }
@@ -76,6 +84,8 @@ export function useListCity(params: GeoParams, options?: any) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     select: (data: any) => data?.data,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
     ...options,
   });
 }

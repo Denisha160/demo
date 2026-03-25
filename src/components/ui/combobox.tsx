@@ -57,9 +57,20 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
     ref,
   ) => {
     const [open, setOpen] = React.useState(false);
+    const labelCache = React.useRef<Record<string, string>>({});
+
+    React.useEffect(() => {
+      options.forEach((o) => {
+        if (o.value && o.label) {
+          labelCache.current[o.value] = o.label;
+        }
+      });
+    }, [options]);
 
     const selectedLabel =
-      options.find((o) => o.value === value)?.label ?? propSelectedLabel;
+      options.find((o) => o.value === value)?.label ??
+      (value ? labelCache.current[value] : undefined) ??
+      propSelectedLabel;
 
     const handleSelect = (selectedValue: string) => {
       onValueChange(selectedValue === value ? "" : selectedValue);
@@ -130,7 +141,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
           align="start"
           sideOffset={4}
         >
-          <Command>
+          <Command shouldFilter={!onSearchChange}>
             <CommandInput
               placeholder={searchPlaceholder}
               className="h-8 text-sm"

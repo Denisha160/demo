@@ -188,6 +188,9 @@ const LeadModal = ({
   const [countrySearch, setCountrySearch] = useState("");
   const [stateSearch, setStateSearch] = useState("");
   const [citySearch, setCitySearch] = useState("");
+  const [selectedCountryName, setSelectedCountryName] = useState("");
+  const [selectedStateName, setSelectedStateName] = useState("");
+  const [selectedCityName, setSelectedCityName] = useState("");
 
   const debouncedCountrySearch = useDebounce(countrySearch, 500);
   const debouncedStateSearch = useDebounce(stateSearch, 500);
@@ -562,16 +565,22 @@ const LeadModal = ({
                       value={field.value}
                       searchValue={countrySearch}
                       onSearchChange={setCountrySearch}
+                      selectedLabel={selectedCountryName}
                       onValueChange={(id) => {
+                        const label = countryOptions.find(
+                          (o) => o.value === id,
+                        )?.label;
+                        setSelectedCountryName(label || "");
                         field.onChange(id);
                         setSelectedCountryId(id);
+                        setSelectedStateName("");
+                        setSelectedCityName("");
                         setSelectedStateId(null);
                         form.setValue("state_id", "");
                         form.setValue("city_id", "");
                       }}
                       placeholder="Select Country"
                       className="h-9 w-full"
-                      creatable
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
@@ -593,9 +602,15 @@ const LeadModal = ({
                       value={field.value}
                       searchValue={stateSearch}
                       onSearchChange={setStateSearch}
+                      selectedLabel={selectedStateName}
                       onValueChange={(id) => {
+                        const label = stateOptions.find(
+                          (o) => o.value === id,
+                        )?.label;
+                        setSelectedStateName(label || "");
                         field.onChange(id);
                         setSelectedStateId(id);
+                        setSelectedCityName("");
                         form.setValue("city_id", "");
                         setCitySearch("");
                       }}
@@ -606,7 +621,6 @@ const LeadModal = ({
                       }
                       className="h-9 w-full"
                       disabled={!selectedCountryId}
-                      creatable
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
@@ -628,13 +642,19 @@ const LeadModal = ({
                       value={field.value}
                       searchValue={citySearch}
                       onSearchChange={setCitySearch}
-                      onValueChange={field.onChange}
+                      selectedLabel={selectedCityName}
+                      onValueChange={(id) => {
+                        const label = cityOptions.find(
+                          (o) => o.value === id,
+                        )?.label;
+                        setSelectedCityName(label || "");
+                        field.onChange(id);
+                      }}
                       placeholder={
                         selectedStateId ? "Select City" : "Select State first"
                       }
                       className="h-9 w-full"
                       disabled={!selectedStateId}
-                      creatable
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />

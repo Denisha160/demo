@@ -169,7 +169,7 @@ const LeadPipeline = ({
                                             </p>
                                             {deal.phone && deal.phone !== "-" && (
                                               <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
-                                                ``               {deal.phone}
+                                                {deal.phone}
                                               </p>
                                             )}
 

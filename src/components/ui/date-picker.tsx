@@ -2,6 +2,7 @@ import React from "react";
 import { DatePicker as RSuiteDatePicker } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 import { FaCalendar } from "react-icons/fa";
+import { formatDate } from "@/utils/date";
 
 interface DatePickerProps {
   value?: string;
@@ -20,6 +21,14 @@ export function DatePicker({
 }: DatePickerProps) {
   const parsedDate = React.useMemo(() => {
     if (!value) return null;
+
+    if (value.includes("/")) {
+      const [day, month, year] = value.split("/");
+      if (day && month && year) {
+        const fullYear = parseInt(year, 10) < 100 ? 2000 + parseInt(year, 10) : parseInt(year, 10);
+        return new Date(fullYear, parseInt(month, 10) - 1, parseInt(day, 10), 12, 0, 0);
+      }
+    }
 
     // Handle YYYY-MM-DD format
     if (value.includes("-")) {
@@ -43,14 +52,7 @@ export function DatePicker({
   }, [value]);
 
   const handleDateChange = (date: Date | null) => {
-    if (date) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      onChange(`${year}-${month}-${day}`);
-    } else {
-      onChange("");
-    }
+    onChange(date ? formatDate(date) : "");
   };
 
   React.useEffect(() => {

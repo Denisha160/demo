@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatDate, formatDateForAPI, parseFormattedDate } from "@/utils/date";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
 import ReminderModal, { Reminder, ReminderFormData } from "./ReminderModal";
@@ -72,18 +73,8 @@ const mapReminder = (reminder: any): Reminder => {
 const formatReminderDateTime = (date: string, time: string) => {
   if (!date && !time) return "-";
   if (!date) return time;
-  if (!time) return date;
-
-  const parsed = new Date(`${date}T${time}`);
-  if (Number.isNaN(parsed.getTime())) return `${date} ${time}`;
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(parsed);
+  
+  return formatDate(date);
 };
 
 interface RemindersTabProps {
@@ -125,8 +116,8 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: reminders = [], isLoading } = useLeadReminders(leadId, {
-    startDate: dateRange?.from?.toISOString(),
-    endDate: dateRange?.to?.toISOString(),
+    startDate: formatDateForAPI(dateRange?.from),
+    endDate: formatDateForAPI(dateRange?.to),
     limit,
     offset: (page - 1) * limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
@@ -149,7 +140,9 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
     formData: ReminderFormData,
     setError: (field: any, err: any) => void,
   ) => {
-    const remind_at = `${formData.remind_date}T${formData.remind_time.length === 5 ? `${formData.remind_time}:00` : formData.remind_time}`;
+    const parsedDate = parseFormattedDate(formData.remind_date);
+    const datePart = parsedDate ? parsedDate.toISOString().split("T")[0] : formData.remind_date;
+    const remind_at = `${datePart}T${formData.remind_time.length === 5 ? `${formData.remind_time}:00` : formData.remind_time}`;
     const payload = {
       title: formData.title,
       description: formData.description,
@@ -190,7 +183,7 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
             {formatReminderDateTime(item.remind_date, item.remind_time)}
           </span>
           <span className="text-[11px] text-muted-foreground">
-            {item.remind_date} at {item.remind_time}
+            {formatDate(item.remind_date)} at {item.remind_time}
           </span>
         </div>
       ),

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatDate, formatDateForAPI } from "@/utils/date";
 import FollowUpModal, { FollowUp, FollowUpFormData } from "./FollowUpModal";
 import {
   useCreateLeadFollowUp,
@@ -37,24 +38,9 @@ const applyServerValidationErrors = (
   }
 };
 
-const toIsoDateTime = (value?: string) => {
-  if (!value) return "";
-  if (value.includes("T")) return value;
-  return `${value}T00:00:00.000Z`;
-};
 
 const formatDateTime = (value?: string) => {
-  if (!value) return "-";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(parsed);
+  return formatDate(value);
 };
 
 const getStatusVariant = (status: string) => {
@@ -147,7 +133,7 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
     const { set_reminder, reminder_time, ...formData } = data;
     const payload = {
       ...formData,
-      scheduled_at: toIsoDateTime(formData.scheduled_at),
+      scheduled_at: formatDateForAPI(formData.scheduled_at),
     };
 
     const handleReminderCreation = () => {
@@ -163,7 +149,7 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
             data.remarks ||
             data.purpose ||
             "Follow-up reminder created automatically",
-          remind_at: toIsoDateTime(data.scheduled_at),
+          remind_at: formatDateForAPI(data.scheduled_at),
           remind_time: reminder_time,
         });
       }

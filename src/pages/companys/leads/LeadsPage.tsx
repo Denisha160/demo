@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { formatDate, formatDateForAPI } from "@/utils/date";
 import { Combobox } from "@/components/ui/combobox";
 import LeadModal, { LeadFormData } from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
@@ -87,10 +88,7 @@ const mapLeadToDeal = (
       ? String(lead.budget)
       : "-",
   contact: lead?.contact || lead?.email || lead?.phone || "-",
-  date: (lead?.created_at || lead?.date || new Date().toISOString()).slice(
-    0,
-    10,
-  ),
+  date: formatDate(lead?.created_at || lead?.date),
   priority: lead?.priority || "NORMAL",
   quotationStatus: lead?.quotationStatus || lead?.quotation_status,
   isVerified: !!lead?.is_verified,
@@ -100,6 +98,7 @@ const mapLeadToDeal = (
   status_color: lead?.status_color,
   tags: lead?.tags,
   phone: lead?.phone || lead?.mobile || "-",
+  raw_date: lead?.created_at || lead?.date,
 });
 
 const applyServerValidationErrors = (
@@ -165,7 +164,7 @@ const LeadsPage = () => {
       return prev;
     }, { replace: true });
   }, [setSearchParams, visibleStageIds]);
- 
+
   const priority = searchParams.get("priority") || "";
   const setPriority = useCallback((val: string) => {
     setSearchParams((prev) => {
@@ -203,11 +202,11 @@ const LeadsPage = () => {
   const filters = useMemo(() => {
     const f: any = {};
     if (searchTerm) f.search = searchTerm;
-    if (dateRange?.from) f.start_date = format(dateRange.from, "yyyy-MM-dd");
+    if (dateRange?.from) {
+      f.start_date = formatDateForAPI(dateRange.from);
+    }
     if (dateRange?.to) {
-      f.end_date = format(dateRange.to, "yyyy-MM-dd");
-    } else if (dateRange?.from) {
-      f.end_date = format(dateRange.from, "yyyy-MM-dd");
+      f.end_date = formatDateForAPI(dateRange.to);
     }
     if (priority && priority !== "ALL") f.priority = priority;
     return f;
@@ -302,8 +301,8 @@ const LeadsPage = () => {
         deal.company.toLowerCase().includes(searchTerm.toLowerCase());
 
       let matchesDate = true;
-      if (dateRange?.from) {
-        const dealDate = parseISO(deal.date);
+      if (dateRange?.from && deal.raw_date) {
+        const dealDate = new Date(deal.raw_date);
         const fromDate = startOfDay(dateRange.from);
         const toDate = dateRange.to
           ? endOfDay(dateRange.to)
@@ -601,7 +600,7 @@ const LeadsPage = () => {
               <div className="flex-1 sm:flex-none">
                 <DatePickerWithRange date={dateRange} setDate={setDateRange} />
               </div>
- 
+
               <div className="w-[140px]">
                 <Combobox
                   options={PRIORITY_OPTIONS}
@@ -611,7 +610,7 @@ const LeadsPage = () => {
                   className="h-9"
                 />
               </div>
- 
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

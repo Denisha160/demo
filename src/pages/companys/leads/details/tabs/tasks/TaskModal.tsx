@@ -27,9 +27,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useUsers } from "@/hooks/useUsers";
-
-const getTodayDate = () => new Date().toISOString().split("T")[0];
-const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
+import { formatDate } from "@/utils/date";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(255, "Title is too long"),
@@ -59,14 +57,7 @@ interface TaskModalProps {
 }
 
 const getDateOnly = (value?: string | null) => {
-  if (!value) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "";
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return formatDate(value);
 };
 
 const TaskModal = ({
@@ -77,7 +68,7 @@ const TaskModal = ({
   isSubmitting,
 }: TaskModalProps) => {
   const { data: usersResponse } = useUsers({ limit: 100 });
-  const users = usersResponse?.items || usersResponse || [];
+  const users = (usersResponse as any)?.items || usersResponse || [];
   const userOptions = users.map((user: { id: string; name: string }) => ({
     value: user.id,
     label: user.name,

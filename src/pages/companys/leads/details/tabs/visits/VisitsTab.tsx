@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatDate, formatDateForAPI } from "@/utils/date";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
 import VisitsModal, { Visit, VisitFormData } from "./VisitsModal";
@@ -52,18 +53,7 @@ const toNullableNumber = (value?: string) => {
 };
 
 const formatDateTime = (value?: string) => {
-  if (!value) return "-";
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(parsed);
+  return formatDate(value);
 };
 
 const getStatusVariant = (status: string) => {
@@ -121,8 +111,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: visits = [], isLoading } = useLeadVisits(leadId, {
-    startDate: dateRange?.from?.toISOString(),
-    endDate: dateRange?.to?.toISOString(),
+    startDate: formatDateForAPI(dateRange?.from),
+    endDate: formatDateForAPI(dateRange?.to),
     limit,
     offset: (page - 1) * limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
@@ -223,7 +213,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
           title: `Reminder: Visit: ${formData.title}`,
           description:
             formData.description || `Reminder for visit: ${formData.title}`,
-          remind_at: formData.scheduled_time.split("T")[0],
+          remind_at: formatDateForAPI(formData.scheduled_time),
         });
       }
     };

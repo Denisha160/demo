@@ -16,6 +16,7 @@ export interface Deal {
   status_color?: string;
   tags?: { id: string; name: string }[];
   phone?: string;
+  raw_date?: string;
 }
 
 export interface PipelineColumn {

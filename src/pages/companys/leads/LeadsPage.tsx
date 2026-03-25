@@ -27,7 +27,7 @@ import LeadModal, { LeadFormData } from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
 import { Deal, PipelineColumn } from "../../../types/leads";
-import { useCreateLead, useLeads, useUpdateLeadStatus, useUpdateLead } from "@/hooks/useLeads";
+import { useCreateLead, useLeads, useUpdateLeadStatus, useBulkUpdateLeads } from "@/hooks/useLeads";
 import {
   useLeadStatuses,
   useUpdateLeadStatusOrder,
@@ -164,7 +164,7 @@ const LeadsPage = () => {
     null,
   );
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
-  const updateLeadDetailsMutation = useUpdateLead();
+  const bulkUpdateLeadsMutation = useBulkUpdateLeads();
   const [isAssigning, setIsAssigning] = useState(false);
   const [tableResetKey, setTableResetKey] = useState(0);
 
@@ -529,20 +529,19 @@ const LeadsPage = () => {
   const handleBatchAssign = async (assignedToId: string) => {
     setIsAssigning(true);
     try {
-      const promises = selectedLeads.map((lead) =>
-        updateLeadDetailsMutation.mutateAsync({
-          leadId: lead.id,
+      await bulkUpdateLeadsMutation.mutateAsync({
+        lead_ids: selectedLeads.map((lead) => lead.id),
+        updates: {
           assigned_to: assignedToId,
-        }),
-      );
-      await Promise.all(promises);
+        },
+      });
       toast.success(`Successfully assigned ${selectedLeads.length} leads.`);
       setSelectedLeads([]);
       setTableResetKey((prev) => prev + 1);
       setIsBatchAssignOpen(false);
     } catch (error) {
       console.error("Batch assignment failed:", error);
-      toast.error("Failed to assign some leads.");
+      // mutateAsync will reject if there's an error, and useMutation will toast the error already
     } finally {
       setIsAssigning(false);
     }

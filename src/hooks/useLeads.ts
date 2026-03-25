@@ -6,8 +6,25 @@ import {
   listLeads,
   updateLead,
   updateLeadStatus,
+  bulkUpdateLeads,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
+
+export function useBulkUpdateLeads() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { lead_ids: string[]; updates: Record<string, unknown> }) =>
+      bulkUpdateLeads(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update leads.");
+    },
+  });
+}
+
 
 const normalizeList = <T>(response: any): T[] => {
   if (Array.isArray(response?.data?.lead)) return response.data.lead;

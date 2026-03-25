@@ -326,6 +326,11 @@ export const convertLead = (leadId) => {
   return axios({ method: "POST", url });
 };
 
+export const bulkUpdateLeads = (data) => {
+  const url = `leads/bulkupdate`;
+  return axios({ method: "PATCH", url, data });
+};
+
 // end region
 
 // region Lead Follow Ups

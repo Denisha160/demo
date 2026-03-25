@@ -20,6 +20,8 @@ interface LeadTableProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  enableSelection?: boolean;
+  onSelectionChange?: (selectedItems: (Deal & { stage: string; stageVariant: string })[]) => void;
 }
 
 const PRIORITIES = [
@@ -33,6 +35,8 @@ const LeadTable = ({
   onLoadMore,
   hasMore,
   isLoadingMore,
+  enableSelection,
+  onSelectionChange,
 }: LeadTableProps) => {
   const navigate = useNavigate();
   const updateLeadMutation = useUpdateLead();
@@ -60,6 +64,16 @@ const LeadTable = ({
 
   const tableColumns: Column<Deal & { stage: string; stageVariant: string }>[] =
     [
+      {
+        key: "index",
+        header: "#",
+        render: (_: Deal) => (
+          <div className="text-center font-mono opacity-50 text-[10px]">
+            {flatDeals.findIndex((item) => item.id === _.id) + 1}
+          </div>
+        ),
+        className: "w-[40px] text-center",
+      },
       {
         key: "title",
         header: "Lead Name",
@@ -232,6 +246,8 @@ const LeadTable = ({
           columns={tableColumns}
           pageSize={Math.max(flatDeals.length, 1)}
           onRowClick={(item) => navigate(item.id)}
+          enableSelection={enableSelection}
+          onSelectionChange={(items) => onSelectionChange?.(items as any)}
         />
       </div>
       <div className="flex items-center justify-center p-4 bg-background/50 border-t border-border/40">

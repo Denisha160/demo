@@ -27,13 +27,14 @@ import LeadModal, { LeadFormData } from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
 import { Deal, PipelineColumn } from "../../../types/leads";
-import { useCreateLead, useLeads, useUpdateLeadStatus } from "@/hooks/useLeads";
+import { useCreateLead, useLeads, useUpdateLeadStatus, useUpdateLead } from "@/hooks/useLeads";
 import {
   useLeadStatuses,
   useUpdateLeadStatusOrder,
 } from "@/hooks/useLeadStatus";
 import type { LeadStatus } from "@/types/leadStatus";
 import { listLeads } from "@/services/api";
+import BatchAssignModal from "./BatchAssignModal";
 
 const VARIANTS: PipelineColumn["variant"][] = [
   "default",
@@ -157,10 +158,15 @@ const LeadsPage = () => {
   }, [setSearchParams, visibleStageIds]);
 
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [isBatchAssignOpen, setIsBatchAssignOpen] = useState(false);
+  const [selectedLeads, setSelectedLeads] = useState<any[]>([]);
   const [createLeadStatusId, setCreateLeadStatusId] = useState<string | null>(
     null,
   );
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const updateLeadDetailsMutation = useUpdateLead();
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [tableResetKey, setTableResetKey] = useState(0);
 
   const hasFilters = useMemo(() => {
     return Boolean(searchTerm || dateRange?.from || dateRange?.to);
@@ -520,6 +526,28 @@ const LeadsPage = () => {
     return columns.filter((column) => visibleStageIds.includes(column.id));
   }, [columns, visibleStageIds]);
 
+  const handleBatchAssign = async (assignedToId: string) => {
+    setIsAssigning(true);
+    try {
+      const promises = selectedLeads.map((lead) =>
+        updateLeadDetailsMutation.mutateAsync({
+          leadId: lead.id,
+          assigned_to: assignedToId,
+        }),
+      );
+      await Promise.all(promises);
+      toast.success(`Successfully assigned ${selectedLeads.length} leads.`);
+      setSelectedLeads([]);
+      setTableResetKey((prev) => prev + 1);
+      setIsBatchAssignOpen(false);
+    } catch (error) {
+      console.error("Batch assignment failed:", error);
+      toast.error("Failed to assign some leads.");
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
   const tableColumns = useMemo(() => {
     return [
       {
@@ -628,7 +656,19 @@ const LeadsPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          {selectedLeads.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsBatchAssignOpen(true)}
+              className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-primary hover:text-primary-foreground animate-in slide-in-from-right-4"
+              disabled={isAssigning}
+            >
+              Assign To ({selectedLeads.length})
+            </Button>
+          )}
+
           <Button
             onClick={() => {
               setCreateLeadStatusId(
@@ -656,10 +696,13 @@ const LeadsPage = () => {
         ) : (
           <div className="h-full overflow-auto">
             <LeadTable
+              key={tableResetKey}
               displayedColumns={tableColumns}
               onLoadMore={handleLoadMoreTable}
               hasMore={tableData.items.length < tableData.total}
               isLoadingMore={isTableLoadingMore}
+              enableSelection={true}
+              onSelectionChange={setSelectedLeads}
             />
           </div>
         )}
@@ -675,6 +718,14 @@ const LeadsPage = () => {
         addModalCol={createLeadStatusId}
         columns={columns}
         isSubmitting={createLeadMutation.isPending}
+      />
+
+      <BatchAssignModal
+        open={isBatchAssignOpen}
+        onClose={() => setIsBatchAssignOpen(false)}
+        onAssign={handleBatchAssign}
+        selectedCount={selectedLeads.length}
+        isSubmitting={isAssigning}
       />
     </div>
   );

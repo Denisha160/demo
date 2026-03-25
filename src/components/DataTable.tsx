@@ -80,6 +80,10 @@ function DataTable<T extends Record<string, any>>({
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
 
+  useEffect(() => {
+    setPageSizeState(pageSize);
+  }, [pageSize]);
+
   const activePage = serverSide ? serverPage : currentPage;
   const activePageSize = serverSide ? pageSize : pageSizeState;
   const activeTotal = serverSide ? serverTotal : data.length;
@@ -252,7 +256,7 @@ function DataTable<T extends Record<string, any>>({
                   className={cn(
                     "h-8 px-3 text-left align-middle font-medium text-muted-foreground whitespace-nowrap transition-colors",
                     col.sortable &&
-                      "cursor-pointer select-none hover:text-foreground",
+                    "cursor-pointer select-none hover:text-foreground",
                     col.className,
                   )}
                 >

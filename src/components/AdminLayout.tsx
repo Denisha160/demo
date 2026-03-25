@@ -291,7 +291,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                 setSidebarCollapsed(true);
                 setSidebarOpen(false);
               }}
-              className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
+              className="h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
               title="Hide sidebar"
             >
               <PanelLeftClose className="h-4 w-4" />

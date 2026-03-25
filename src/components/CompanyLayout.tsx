@@ -67,7 +67,7 @@ const navItems: NavItemEntry[] = [
       { label: "Tasks", icon: ClipboardList, path: "tasks", permission: "lead-task.read" },
     ],
   },
-  { label: "Salesmen", icon: UserCheck, path: "salesmen"},
+  // { label: "Salesmen", icon: UserCheck, path: "salesmen"},
   // { label: "Employees", icon: Users, path: "employees"},
   // { label: "Attendance", icon: Clock, path: "attendance" },
   // { label: "Suppliers", icon: Truck, path: "suppliers" },

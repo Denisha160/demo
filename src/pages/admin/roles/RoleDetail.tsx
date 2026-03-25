@@ -309,7 +309,7 @@ const RoleDetail = () => {
               </div>
 
               {/* Module cards grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 {section.groups.map((group) => (
                   <div
                     key={group.moduleKey}

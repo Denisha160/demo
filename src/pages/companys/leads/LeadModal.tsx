@@ -287,8 +287,8 @@ const LeadModal = ({
       ...data,
       interested_category_id: data.interested_category_id?.length
         ? data.interested_category_id.map((c: any) =>
-            c.id ? String(c.id) : c.name,
-          )
+          c.id ? String(c.id) : c.name,
+        )
         : [],
       tags: data.tags?.length
         ? data.tags.map((t: any) => (t.id ? String(t.id) : t.name))
@@ -414,7 +414,7 @@ const LeadModal = ({
               name="assigned_to"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Assigned To
                   </FormLabel>
                   <FormControl>
@@ -493,7 +493,7 @@ const LeadModal = ({
               name="email"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Email Address
                   </FormLabel>
                   <FormControl>
@@ -535,7 +535,7 @@ const LeadModal = ({
               name="alternate_phone"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Alternative Phone
                   </FormLabel>
                   <FormControl>
@@ -556,7 +556,7 @@ const LeadModal = ({
               name="country_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Country
                   </FormLabel>
                   <FormControl>
@@ -593,7 +593,7 @@ const LeadModal = ({
               name="state_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     State
                   </FormLabel>
                   <FormControl>
@@ -633,7 +633,7 @@ const LeadModal = ({
               name="city_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     City
                   </FormLabel>
                   <FormControl>
@@ -667,7 +667,7 @@ const LeadModal = ({
               name="pincode"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Pincode
                   </FormLabel>
                   <FormControl>
@@ -687,7 +687,7 @@ const LeadModal = ({
               name="company_name"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Company Name
                   </FormLabel>
                   <FormControl>
@@ -707,7 +707,7 @@ const LeadModal = ({
               name="designation"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Designation
                   </FormLabel>
                   <FormControl>
@@ -727,7 +727,7 @@ const LeadModal = ({
               name="website"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Website
                   </FormLabel>
                   <FormControl>
@@ -747,7 +747,7 @@ const LeadModal = ({
               name="gst_number"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     GST Number
                   </FormLabel>
                   <FormControl>
@@ -767,7 +767,7 @@ const LeadModal = ({
               name="interested_category_id"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Interested Category
                   </FormLabel>
                   <FormControl>
@@ -786,7 +786,7 @@ const LeadModal = ({
               name="pan_number"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     PAN Card Number
                   </FormLabel>
                   <FormControl>
@@ -806,7 +806,7 @@ const LeadModal = ({
               name="address_line1"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Address Line 1
                   </FormLabel>
                   <FormControl>
@@ -826,7 +826,7 @@ const LeadModal = ({
               name="address_line2"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold text-foreground">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
                     Address Line 2
                   </FormLabel>
                   <FormControl>

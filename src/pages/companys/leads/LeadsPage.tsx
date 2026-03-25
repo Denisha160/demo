@@ -23,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
 import LeadModal, { LeadFormData } from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
@@ -42,6 +43,13 @@ const VARIANTS: PipelineColumn["variant"][] = [
   "warning",
   "success",
   "destructive",
+];
+
+const PRIORITY_OPTIONS = [
+  { value: "ALL", label: "All Priorities" },
+  { value: "HOT", label: "Hot" },
+  { value: "WARM", label: "Warm" },
+  { value: "COLD", label: "Cold" },
 ];
 
 const slugify = (value?: string) =>
@@ -156,6 +164,15 @@ const LeadsPage = () => {
       return prev;
     }, { replace: true });
   }, [setSearchParams, visibleStageIds]);
+ 
+  const priority = searchParams.get("priority") || "";
+  const setPriority = useCallback((val: string) => {
+    setSearchParams((prev) => {
+      if (val && val !== "ALL") prev.set("priority", val);
+      else prev.delete("priority");
+      return prev;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isBatchAssignOpen, setIsBatchAssignOpen] = useState(false);
@@ -169,14 +186,15 @@ const LeadsPage = () => {
   const [tableResetKey, setTableResetKey] = useState(0);
 
   const hasFilters = useMemo(() => {
-    return Boolean(searchTerm || dateRange?.from || dateRange?.to);
-  }, [searchTerm, dateRange]);
+    return Boolean(searchTerm || dateRange?.from || dateRange?.to || priority);
+  }, [searchTerm, dateRange, priority]);
 
   const handleClearFilters = () => {
     setSearchParams((prev) => {
       prev.delete("search");
       prev.delete("from");
       prev.delete("to");
+      prev.delete("priority");
       return prev;
     }, { replace: true });
   };
@@ -190,8 +208,9 @@ const LeadsPage = () => {
     } else if (dateRange?.from) {
       f.end_date = format(dateRange.from, "yyyy-MM-dd");
     }
+    if (priority && priority !== "ALL") f.priority = priority;
     return f;
-  }, [searchTerm, dateRange]);
+  }, [searchTerm, dateRange, priority]);
 
   const [paginationData, setPaginationData] = useState<Record<string, {
     items: any[];
@@ -294,9 +313,11 @@ const LeadsPage = () => {
         });
       }
 
-      return matchesSearch && matchesDate;
+      const matchesPriority = priority ? deal.priority === priority : true;
+
+      return matchesSearch && matchesDate && matchesPriority;
     },
-    [searchTerm, dateRange],
+    [searchTerm, dateRange, priority],
   );
 
   const columns = useMemo(() => {
@@ -579,7 +600,17 @@ const LeadsPage = () => {
               <div className="flex-1 sm:flex-none">
                 <DatePickerWithRange date={dateRange} setDate={setDateRange} />
               </div>
-
+ 
+              <div className="w-[140px]">
+                <Combobox
+                  options={PRIORITY_OPTIONS}
+                  value={priority || "ALL"}
+                  onValueChange={setPriority}
+                  placeholder="Priority"
+                  className="h-9"
+                />
+              </div>
+ 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

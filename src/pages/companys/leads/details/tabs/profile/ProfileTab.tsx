@@ -61,6 +61,7 @@ const InterestedCategorySelect = ({
       value={displayValue}
       onChange={onValueChange}
       disabled={disabled}
+      creatable={false}
     />
   );
 };
@@ -141,16 +142,17 @@ const ProfileTab = ({
   const { data: tagsResponse } = useLeadTags();
 
   const statusOptions =
-    statusResponse?.items?.map((item: any) => ({
+    (statusResponse as any)?.items?.map((item: any) => ({
       value: item.id,
       label: item.name,
     })) || [];
   const sourceOptions =
-    sourceResponse?.items?.map((item: any) => ({
+    (sourceResponse as any)?.items?.map((item: any) => ({
       value: item.id,
       label: item.name,
     })) || [];
-  const users = usersResponse?.items || usersResponse || [];
+  const users =
+    (usersResponse as any)?.items || (usersResponse as any) || [];
   const userOptions = users.map((user: any) => ({
     value: user.id,
     label: user.name,
@@ -164,6 +166,9 @@ const ProfileTab = ({
   const [countrySearch, setCountrySearch] = useState("");
   const [stateSearch, setStateSearch] = useState("");
   const [citySearch, setCitySearch] = useState("");
+  const [selectedCountryName, setSelectedCountryName] = useState("");
+  const [selectedStateName, setSelectedStateName] = useState("");
+  const [selectedCityName, setSelectedCityName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
   const debouncedCountrySearch = useDebounce(countrySearch, 500);
@@ -243,6 +248,28 @@ const ProfileTab = ({
       setSelectedCityId(leadProfile.city_id);
     }
   }, [leadProfile.city_id, selectedCityId]);
+
+  // Handle initialization of labels for existing data
+  useEffect(() => {
+    if (leadProfile.country_id && countryOptions.length > 0 && !selectedCountryName) {
+      const label = countryOptions.find(o => o.value === leadProfile.country_id)?.label;
+      if (label) setSelectedCountryName(label);
+    }
+  }, [leadProfile.country_id, countryOptions, selectedCountryName]);
+
+  useEffect(() => {
+    if (leadProfile.state_id && stateOptions.length > 0 && !selectedStateName) {
+      const label = stateOptions.find(o => o.value === leadProfile.state_id)?.label;
+      if (label) setSelectedStateName(label);
+    }
+  }, [leadProfile.state_id, stateOptions, selectedStateName]);
+
+  useEffect(() => {
+    if (leadProfile.city_id && cityOptions.length > 0 && !selectedCityName) {
+      const label = cityOptions.find(o => o.value === leadProfile.city_id)?.label;
+      if (label) setSelectedCityName(label);
+    }
+  }, [leadProfile.city_id, cityOptions, selectedCityName]);
 
   const onSubmit = (data: LeadProfileFormValues) => {
     setLeadProfile(data);
@@ -519,9 +546,14 @@ const ProfileTab = ({
                         value={field.value}
                         searchValue={countrySearch}
                         onSearchChange={setCountrySearch}
+                        selectedLabel={selectedCountryName}
                         onValueChange={(id) => {
+                          const label = countryOptions.find(o => o.value === id)?.label;
+                          setSelectedCountryName(label || "");
                           field.onChange(id);
                           setSelectedCountryId(id);
+                          setSelectedStateName("");
+                          setSelectedCityName("");
                           setSelectedStateId(null);
                           setSelectedCityId(null);
                           form.setValue("state_id", "");
@@ -530,7 +562,6 @@ const ProfileTab = ({
                         placeholder="Select Country"
                         className="h-9 w-full"
                         disabled={!isEditing || isSaving}
-                        creatable
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
@@ -550,9 +581,13 @@ const ProfileTab = ({
                         value={field.value}
                         searchValue={stateSearch}
                         onSearchChange={setStateSearch}
+                        selectedLabel={selectedStateName}
                         onValueChange={(id) => {
+                          const label = stateOptions.find(o => o.value === id)?.label;
+                          setSelectedStateName(label || "");
                           field.onChange(id);
                           setSelectedStateId(id);
+                          setSelectedCityName("");
                           setSelectedCityId(null);
                           form.setValue("city_id", "");
                           setCitySearch("");
@@ -564,7 +599,6 @@ const ProfileTab = ({
                         }
                         className="h-9 w-full"
                         disabled={!isEditing || isSaving || !selectedCountryId}
-                        creatable
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
@@ -584,7 +618,10 @@ const ProfileTab = ({
                         value={field.value}
                         searchValue={citySearch}
                         onSearchChange={setCitySearch}
+                        selectedLabel={selectedCityName}
                         onValueChange={(id) => {
+                          const label = cityOptions.find(o => o.value === id)?.label;
+                          setSelectedCityName(label || "");
                           field.onChange(id);
                           setSelectedCityId(id);
                           setCitySearch("");
@@ -594,7 +631,6 @@ const ProfileTab = ({
                         }
                         className="h-9 w-full"
                         disabled={!isEditing || isSaving || !selectedStateId}
-                        creatable
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />

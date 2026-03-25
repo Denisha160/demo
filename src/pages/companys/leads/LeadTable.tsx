@@ -42,11 +42,11 @@ const LeadTable = ({
   const updateLeadMutation = useUpdateLead();
   const updateLeadStatusMutation = useUpdateLeadStatus();
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
-  const leadStatuses = statusResponse?.items || [];
+  const leadStatuses = (statusResponse as any)?.items || [];
 
   const flatDeals = useMemo(() => {
-    return displayedColumns.flatMap((col) =>
-      col.deals.map((deal) => ({
+    return (displayedColumns as any[]).flatMap((col: any) =>
+      col.deals.map((deal: any) => ({
         ...deal,
         stage: col.title,
         stageVariant: col.variant,

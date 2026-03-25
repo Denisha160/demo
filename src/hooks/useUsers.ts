@@ -19,13 +19,14 @@ import {
 } from "@/types/user";
 import { queryKeys } from "@/lib/queryKeys";
 
-export const useUsers = (params?: Record<string, unknown>) => {
+export const useUsers = (params?: Record<string, unknown>, options?: any) => {
   return useQuery({
     queryKey: queryKeys.users.list(params),
     queryFn: async () => {
       const response = await listUsers(params);
       return response.data;
     },
+    ...options,
   });
 };
 

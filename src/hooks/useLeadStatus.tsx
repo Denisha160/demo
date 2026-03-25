@@ -14,14 +14,15 @@ import type {
   UpdateLeadStatusPayload,
 } from "@/types/leadStatus";
 
-export function useLeadStatuses(filters?: Record<string, unknown>) {
+export function useLeadStatuses(filters?: Record<string, unknown>, options?: any) {
   return useQuery({
     queryKey: queryKeys.leadStatus.list(filters),
     queryFn: () => listStatus(filters),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    select: (data): LeadStatusListResponse | undefined => data?.data,
+    select: (data: any): LeadStatusListResponse | undefined => data?.data,
+    ...options,
   });
 }
 

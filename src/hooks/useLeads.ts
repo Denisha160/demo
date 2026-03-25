@@ -46,6 +46,7 @@ const normalizeDetail = <T>(response: any): T | null => {
 export function useLeads<T = any[]>(
   params?: Record<string, unknown>,
   select?: (data: any) => T,
+  options?: any,
 ) {
   return useQuery({
     queryKey: queryKeys.leads.list(params),
@@ -54,6 +55,7 @@ export function useLeads<T = any[]>(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     select: select || ((data) => normalizeList(data) as any),
+    ...options,
   });
 }
 

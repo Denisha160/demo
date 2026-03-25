@@ -206,14 +206,16 @@ const LeadsPage = () => {
     offset: number;
   }>({ items: [], total: 0, offset: 0 });
 
-  const { data: initialGroups, isLoading: isGroupLoading } = useLeads(
+  const { data: initialGroups, isLoading: isGroupLoading } = useLeads<any[]>(
     { ...filters, grouped: true, limit_per_status: 10 },
-    (res) => res?.data?.groups || []
+    (res) => res?.data?.groups || [],
+    { enabled: viewMode === "pipeline" },
   );
 
-  const { data: initialTableLeads, isLoading: isTableLoading } = useLeads(
+  const { data: initialTableLeads, isLoading: isTableLoading } = useLeads<any>(
     { ...filters, limit: 20, offset: 0 },
-    (res) => res?.data
+    (res) => res?.data,
+    { enabled: viewMode === "table" },
   );
 
   const isLoading = viewMode === "pipeline" ? isGroupLoading : isTableLoading;
@@ -221,12 +223,12 @@ const LeadsPage = () => {
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLeadStatus();
   const updateStatusOrderMutation = useUpdateLeadStatusOrder();
-  const leadStatuses = useMemo(() => statusResponse?.items || [], [statusResponse]);
+  const leadStatuses = useMemo(() => (statusResponse as any)?.items || [], [statusResponse]);
 
   useEffect(() => {
     if (initialGroups) {
       const newPagination: Record<string, any> = {};
-      initialGroups.forEach((group: any) => {
+      (initialGroups as any[]).forEach((group: any) => {
         newPagination[group.status_id] = {
           items: group.items,
           total: group.total,
@@ -241,8 +243,8 @@ const LeadsPage = () => {
   useEffect(() => {
     if (initialTableLeads) {
       setTableData({
-        items: initialTableLeads.items,
-        total: initialTableLeads.pagination.total,
+        items: (initialTableLeads as any).items,
+        total: (initialTableLeads as any).pagination.total,
         offset: 0,
       });
     }
@@ -343,7 +345,7 @@ const LeadsPage = () => {
         offset: nextOffset,
       });
 
-      const newItems = response?.data?.items || [];
+      const newItems = (response as any)?.data?.items || [];
       setPaginationData((prev) => ({
         ...prev,
         [statusId]: {
@@ -374,7 +376,7 @@ const LeadsPage = () => {
         offset: nextOffset,
       });
 
-      const newItems = response?.data?.items || [];
+      const newItems = (response as any)?.data?.items || [];
       setTableData((prev) => ({
         ...prev,
         items: [...prev.items, ...newItems],

@@ -165,7 +165,7 @@ const LeadModal = ({
     },
   });
 
-  const { data: leadTagsData } = useLeadTags();
+  const { data: leadTagsData } = useLeadTags(undefined, { enabled: open });
   const leadTags = Array.isArray(leadTagsData)
     ? leadTagsData
     : Array.isArray((leadTagsData as any)?.items)
@@ -177,9 +177,9 @@ const LeadModal = ({
     name: tag.name,
   }));
 
-  const { data: statusResponse } = useLeadStatuses({ limit: 100 });
-  const { data: sourceResponse } = useLeadSources({ limit: 100 });
-  const { data: usersResponse } = useUsers({ limit: 100 });
+  const { data: statusResponse } = useLeadStatuses({ limit: 100 }, { enabled: open });
+  const { data: sourceResponse } = useLeadSources({ limit: 100 }, { enabled: open });
+  const { data: usersResponse } = useUsers({ limit: 100 }, { enabled: open });
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(
     null,
   );
@@ -196,17 +196,17 @@ const LeadModal = ({
     search: debouncedCountrySearch,
     combobox: true,
     limit: 100,
-  });
+  }, { enabled: open });
   const { data: statesData } = useStates(selectedCountryId || undefined, {
     search: debouncedStateSearch,
     combobox: true,
     limit: 100,
-  });
+  }, { enabled: open && !!selectedCountryId });
   const { data: citiesData } = useCities(selectedStateId || undefined, {
     search: debouncedCitySearch,
     combobox: true,
     limit: 100,
-  });
+  }, { enabled: open && !!selectedStateId });
 
   const countryOptions =
     (countriesData as any)?.items?.map((item: any) => ({
@@ -226,20 +226,20 @@ const LeadModal = ({
       label: item.name,
     })) || [];
 
-  const users = usersResponse?.items || usersResponse || [];
+  const users = (usersResponse as any)?.items || usersResponse || [];
   const userOptions = users.map((user: any) => ({
     value: user.id,
     label: user.name,
   }));
 
   const statusOptions =
-    statusResponse?.items?.map((item: any) => ({
+    (statusResponse as any)?.items?.map((item: any) => ({
       value: item.id,
       label: item.name,
     })) || [];
 
   const sourceOptions =
-    sourceResponse?.items?.map((item: any) => ({
+    (sourceResponse as any)?.items?.map((item: any) => ({
       value: item.id,
       label: item.name,
     })) || [];

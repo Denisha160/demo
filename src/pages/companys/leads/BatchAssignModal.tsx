@@ -43,8 +43,8 @@ const BatchAssignModal = ({
     },
   });
 
-  const { data: usersResponse } = useUsers({ limit: 100 });
-  const users = usersResponse?.items || usersResponse || [];
+  const { data: usersResponse } = useUsers({ limit: 100 }, { enabled: open });
+  const users = (usersResponse as any)?.items || usersResponse || [];
   const userOptions = users.map((user: any) => ({
     value: user.id,
     label: user.name,

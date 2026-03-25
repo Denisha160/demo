@@ -51,6 +51,7 @@ import VerifyLeadPage from "./tabs/verifyLead/VerifyLeadPage";
 import { useLead, useUpdateLead } from "@/hooks/useLeads";
 import VerifyLeadModal from "./tabs/verifyLead/VerifyLeadModal";
 import { useConvertLead } from "@/hooks/useLeadVerification";
+import { useHasPermission } from "@/hooks/useAuth";
 
 export interface LeadProfileFormValues {
   name: string;
@@ -118,23 +119,24 @@ interface LeadDetailsData {
 }
 
 const TABS = [
-  { id: "profile", label: "Profile", icon: User },
+  { id: "profile", label: "Profile", icon: User }, // always visible
   {
     id: "verify",
     label: "Verify",
     icon: ShieldCheck,
+    permission: "lead-verification.update",
     showIf: (lead: any) => !!lead?.is_verified,
   },
-  { id: "contacts", label: "Contacts", icon: Users },
-  { id: "follow-up", label: "Follow Up", icon: Clock },
-  { id: "visits", label: "Visits", icon: MapPin },
-  { id: "tasks", label: "Tasks", icon: ClipboardList },
-  { id: "call-logs", label: "Call Logs", icon: PhoneCall },
-  { id: "products", label: "Interested Products", icon: Package },
-  { id: "attachments", label: "Attachment", icon: Paperclip },
-  { id: "activity", label: "Activity", icon: Activity },
+  { id: "contacts", label: "Contacts", icon: Users, permission: "lead-contact.read" },
+  { id: "follow-up", label: "Follow Up", icon: Clock, permission: "lead-followup.read" },
+  { id: "visits", label: "Visits", icon: MapPin, permission: "lead-visit.read" },
+  { id: "tasks", label: "Tasks", icon: ClipboardList, permission: "lead-task.read" },
+  { id: "call-logs", label: "Call Logs", icon: PhoneCall }, // no specific backend perm yet
+  { id: "products", label: "Interested Products", icon: Package, permission: "lead-interested-product.read" },
+  { id: "attachments", label: "Attachment", icon: Paperclip, permission: "lead-attachment.read" },
+  { id: "activity", label: "Activity", icon: Activity, permission: "lead-activity.read" },
   // { id: "quotations", label: "Quotations", icon: FileText },
-  { id: "reminders", label: "Reminder", icon: Bell },
+  { id: "reminders", label: "Reminder", icon: Bell, permission: "lead-reminder.read" },
 ];
 
 const mapLeadToProfile = (
@@ -188,9 +190,11 @@ const LeadDetailsPage = () => {
   const { data: lead, isLoading } = useLead<LeadDetailsData>(id);
   const updateLeadMutation = useUpdateLead();
   const convertMutation = useConvertLead();
+  const { hasPermission } = useHasPermission();
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const leadProfile = useMemo(() => mapLeadToProfile(lead), [lead]);
+  const canVerify = hasPermission("lead-verification.update");
 
   const handleConvert = () => {
     if (id) {
@@ -313,8 +317,12 @@ const LeadDetailsPage = () => {
   };
 
   const filteredTabs = useMemo(() => {
-    return TABS.filter((tab) => !tab.showIf || tab.showIf(lead));
-  }, [lead]);
+    return TABS.filter((tab) => {
+      if (tab.permission && !hasPermission(tab.permission)) return false;
+      if (tab.showIf && !tab.showIf(lead)) return false;
+      return true;
+    });
+  }, [lead, hasPermission]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in">
@@ -347,6 +355,7 @@ const LeadDetailsPage = () => {
         </div>
 
         {id &&
+          canVerify &&
           !lead?.customer_id &&
           lead?.lead_type !== "CUSTOMER" &&
           !convertMutation.isSuccess && (

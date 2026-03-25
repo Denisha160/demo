@@ -8,6 +8,11 @@ import {
   CheckCircle2,
   Circle,
   Loader2,
+  Package,
+  Users,
+  Warehouse,
+  Briefcase,
+  Key,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -25,8 +30,56 @@ interface Permission {
 
 interface PermissionGroup {
   module: string;
+  moduleKey: string;
   permissions: Permission[];
 }
+
+interface Category {
+  label: string;
+  icon: React.ReactNode;
+  moduleKeys: string[]; // use "__other__" to catch all remaining
+}
+
+const CATEGORIES: Category[] = [
+  {
+    label: "Leads",
+    icon: <Briefcase className="h-3.5 w-3.5" />,
+    moduleKeys: [
+      "lead", "lead-status", "lead-source", "lead-contact",
+      "lead-followup", "lead-task", "lead-visit", "lead-attachment",
+      "lead-reminder", "lead-activity", "lead-tag",
+      "lead-interested-product", "lead-verification",
+    ],
+  },
+  {
+    label: "Products",
+    icon: <Package className="h-3.5 w-3.5" />,
+    moduleKeys: [
+      "product", "product-category", "product-brand", "product-fragrance",
+      "product-package", "product-kit", "product-bom",
+      "product-interested", "product-image",
+    ],
+  },
+  {
+    label: "Inventory",
+    icon: <Warehouse className="h-3.5 w-3.5" />,
+    moduleKeys: ["inventory", "inventory-batch", "inventory-serial"],
+  },
+  {
+    label: "Users & Roles",
+    icon: <Users className="h-3.5 w-3.5" />,
+    moduleKeys: ["user", "role"],
+  },
+  {
+    label: "Other",
+    icon: <Key className="h-3.5 w-3.5" />,
+    moduleKeys: ["__other__"],
+  },
+];
+
+const ALL_KNOWN_KEYS = new Set(
+  CATEGORIES.flatMap((c) => c.moduleKeys).filter((k) => k !== "__other__")
+);
 
 const RoleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,39 +98,50 @@ const RoleDetail = () => {
     }
   }, [role]);
 
-  const groups: PermissionGroup[] = useMemo(() => {
+  const allGroups: PermissionGroup[] = useMemo(() => {
     if (!availablePermissions) return [];
     const groupMap: Record<string, Permission[]> = {};
 
     availablePermissions.forEach((perm: string) => {
       const parts = perm.split(".");
-      const moduleName = parts[0] || "Misc";
+      const moduleKey = parts[0] || "misc";
       const action = parts[1] || perm;
 
-      if (!groupMap[moduleName]) {
-        groupMap[moduleName] = [];
-      }
+      if (!groupMap[moduleKey]) groupMap[moduleKey] = [];
 
-      const formattedModule = moduleName
+      const formattedModule = moduleKey
         .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
 
-      groupMap[moduleName].push({
+      groupMap[moduleKey].push({
         id: perm,
         label: `${action.charAt(0).toUpperCase() + action.slice(1)} ${formattedModule}`,
         enabled: selectedPerms.has(perm),
       });
     });
 
-    return Object.entries(groupMap).map(([module, permissions]) => ({
-      module: module
+    return Object.entries(groupMap).map(([moduleKey, permissions]) => ({
+      module: moduleKey
         .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" "),
+      moduleKey,
       permissions,
     }));
   }, [availablePermissions, selectedPerms]);
+
+  // Build ordered list of { category, groups[] } for rendering
+  const sections = useMemo(() => {
+    return CATEGORIES.map((cat) => {
+      const groups = allGroups.filter((g) =>
+        cat.moduleKeys.includes("__other__")
+          ? !ALL_KNOWN_KEYS.has(g.moduleKey)
+          : cat.moduleKeys.includes(g.moduleKey)
+      );
+      return { ...cat, groups };
+    }).filter((s) => s.groups.length > 0);
+  }, [allGroups]);
 
   const togglePermission = (permissionId: string) => {
     setSelectedPerms((prev) => {
@@ -111,6 +175,11 @@ const RoleDetail = () => {
       });
       return newSet;
     });
+  };
+
+  const toggleCategorySelection = (groups: PermissionGroup[], select: boolean) => {
+    const allPerms = groups.flatMap((g) => g.permissions);
+    toggleGroupSelection(allPerms, select);
   };
 
   const handleSave = async () => {
@@ -198,68 +267,116 @@ const RoleDetail = () => {
         </div>
       </div>
 
-      {/* Permissions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {groups.map((group, groupIdx) => (
-          <div
-            key={group.module}
-            className="border border-border rounded-sm bg-card overflow-hidden shadow-sm flex flex-col"
-          >
-            <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shield className="h-3.5 w-3.5 text-primary" />
-                <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest">
-                  {group.module}
-                </h3>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-[10px] px-2"
-                  onClick={() => toggleGroupSelection(group.permissions, true)}
-                >
-                  All
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-[10px] px-2"
-                  onClick={() => toggleGroupSelection(group.permissions, false)}
-                >
-                  None
-                </Button>
-              </div>
-            </div>
-            <div className="p-4 space-y-2 flex-1">
-              {group.permissions.map((permission) => (
-                <div
-                  key={permission.id}
-                  className="flex items-center justify-between p-2 rounded-sm hover:bg-muted/30 transition-colors cursor-pointer border border-transparent hover:border-border"
-                  onClick={() => togglePermission(permission.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    {permission.enabled ? (
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    ) : (
-                      <Circle className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span
-                      className={`text-sm ${permission.enabled ? "font-semibold text-foreground" : "text-muted-foreground"}`}
-                    >
-                      {permission.label}
-                    </span>
-                  </div>
-                  <Checkbox
-                    checked={permission.enabled}
-                    onCheckedChange={() => togglePermission(permission.id)}
-                    className="rounded-sm border-muted-foreground/30 data-[state=checked]:bg-primary"
-                  />
+      {/* Permissions — grouped by category */}
+      <div className="space-y-6">
+        {sections.map((section) => {
+          const totalInCat = section.groups.flatMap((g) => g.permissions).length;
+          const selectedInCat = section.groups
+            .flatMap((g) => g.permissions)
+            .filter((p) => p.enabled).length;
+
+          return (
+            <div key={section.label}>
+              {/* Category heading */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{section.icon}</span>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">
+                    {section.label}
+                  </h3>
+                  <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                    {selectedInCat}/{totalInCat} selected
+                  </span>
                 </div>
-              ))}
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-[10px] px-2 text-muted-foreground"
+                    onClick={() => toggleCategorySelection(section.groups, true)}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-[10px] px-2 text-muted-foreground"
+                    onClick={() => toggleCategorySelection(section.groups, false)}
+                  >
+                    None
+                  </Button>
+                </div>
+              </div>
+
+              {/* Module cards grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {section.groups.map((group) => (
+                  <div
+                    key={group.moduleKey}
+                    className="border border-border rounded-sm bg-card overflow-hidden shadow-sm flex flex-col"
+                  >
+                    <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-3.5 w-3.5 text-primary" />
+                        <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest">
+                          {group.module}
+                        </h3>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {group.permissions.filter((p) => p.enabled).length}/{group.permissions.length}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-[10px] px-2"
+                          onClick={() => toggleGroupSelection(group.permissions, true)}
+                        >
+                          All
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-[10px] px-2"
+                          onClick={() => toggleGroupSelection(group.permissions, false)}
+                        >
+                          None
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="p-2 space-y-2 flex-1">
+                      {group.permissions.map((permission) => (
+                        <div
+                          key={permission.id}
+                          className="flex items-center justify-between p-2 rounded-sm hover:bg-muted/30 transition-colors cursor-pointer border border-transparent hover:border-border"
+                          onClick={() => togglePermission(permission.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            {permission.enabled ? (
+                              <CheckCircle2 className="h-4 w-4 text-primary" />
+                            ) : (
+                              <Circle className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <span
+                              className={`text-sm ${permission.enabled ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                            >
+                              {permission.label}
+                            </span>
+                          </div>
+                          <Checkbox
+                            checked={permission.enabled}
+                            onCheckedChange={() => togglePermission(permission.id)}
+                            className="rounded-sm border-muted-foreground/30 data-[state=checked]:bg-primary"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="p-4 border border-dashed border-border rounded-sm bg-primary/5">

@@ -27,7 +27,6 @@ import {
   useUpdateLeadVisit,
 } from "@/hooks/useLeadVisits";
 import { useLeadContacts, useCreateLeadContact } from "@/hooks/useLeadContacts";
-import { useCreateLeadReminder } from "@/hooks/useLeadReminders";
 
 const applyServerValidationErrors = (
   error: any,
@@ -54,24 +53,6 @@ const toNullableNumber = (value?: string) => {
 
 const formatDateTime = (value?: string) => {
   return formatDate(value);
-};
-
-const getStatusVariant = (status: string) => {
-  switch (status) {
-    case "COMPLETED":
-      return "success";
-    case "SCHEDULED":
-    case "RESCHEDULED":
-      return "info";
-    case "CANCELLED":
-    case "MISSED":
-      return "destructive";
-    case "CHECKED_IN":
-    case "IN_PROGRESS":
-      return "warning";
-    default:
-      return "default";
-  }
 };
 
 interface VisitsTabProps {
@@ -120,7 +101,6 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const createVisitMutation = useCreateLeadVisit(leadId);
   const updateVisitMutation = useUpdateLeadVisit(leadId);
   const deleteVisitMutation = useDeleteLeadVisit(leadId);
-  const createReminderMutation = useCreateLeadReminder(leadId);
 
   const { data: contactData } = useLeadContacts(leadId);
   const contacts = contactData?.contacts || [];
@@ -156,8 +136,6 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       title: remainingFormData.title,
       description: remainingFormData.description,
       visit_type: remainingFormData.visit_type,
-      status: remainingFormData.status,
-      scheduled_time: toIsoDateTime(remainingFormData.scheduled_time),
       location_address: remainingFormData.location_address,
       location_latitude: toNullableNumber(remainingFormData.location_latitude),
       location_longitude: toNullableNumber(
@@ -203,27 +181,11 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       dataToSubmit = formDataObj;
     }
 
-    const handleReminderCreation = () => {
-      if (
-        (formData.status === "SCHEDULED" ||
-          formData.status === "RESCHEDULED") &&
-        formData.scheduled_time
-      ) {
-        createReminderMutation.mutate({
-          title: `Reminder: Visit: ${formData.title}`,
-          description:
-            formData.description || `Reminder for visit: ${formData.title}`,
-          remind_at: formatDateForAPI(formData.scheduled_time),
-        });
-      }
-    };
-
     if (editingVisit) {
       updateVisitMutation.mutate(
         { visitId: editingVisit.id, data: dataToSubmit },
         {
           onSuccess: () => {
-            handleReminderCreation();
             setIsModalOpen(false);
             setEditingVisit(null);
           },
@@ -235,30 +197,14 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
 
     createVisitMutation.mutate(dataToSubmit, {
       onSuccess: () => {
-        handleReminderCreation();
         setIsModalOpen(false);
+        setEditingVisit(null);
       },
       onError: (error) => applyServerValidationErrors(error, setError),
     });
   };
 
   const columns: Column<Visit>[] = [
-    {
-      key: "scheduled_time",
-      header: "Visit Date",
-      render: (item) => (
-        <div className="flex items-start gap-2">
-          <div className="rounded-full bg-primary/10 p-1.5 text-primary">
-            <CalendarDays className="h-3.5 w-3.5" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-foreground">
-              {formatDateTime(item.scheduled_time)}
-            </span>
-          </div>
-        </div>
-      ),
-    },
     {
       key: "title",
       header: "Visit Details",
@@ -278,21 +224,6 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             <span className="line-clamp-2 text-[11px] text-muted-foreground">
               {item.description}
             </span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (item) => (
-        <div className="space-y-1">
-          <StatusBadge
-            status={item.status.replace(/_/g, " ")}
-            variant={getStatusVariant(item.status)}
-          />
-          <div className="text-[11px] capitalize text-muted-foreground">
-            {item.visit_type.replace("_", " ")}
           </div>
         </div>
       ),

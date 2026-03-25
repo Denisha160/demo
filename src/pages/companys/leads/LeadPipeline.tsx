@@ -173,7 +173,7 @@ const LeadPipeline = ({
                                               </p>
                                             )}
 
-                                            <div className="mt-3.5 flex items-center justify-between border-t border-border/10 pt-3">
+                                            <div className=" flex items-center justify-between border-t border-border/10 pt-3">
                                               <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
                                                 {deal.priority}
                                               </span>

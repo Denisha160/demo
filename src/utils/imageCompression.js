@@ -12,7 +12,7 @@
 export const compressImage = (
   file,
   targetMaxSize = 0.7 * 1024 * 1024,
-  absoluteMaxSize = 20 * 1024 * 1024
+  absoluteMaxSize = 20 * 1024 * 1024,
 ) => {
   return new Promise((resolve, reject) => {
     // Check file extension first
@@ -24,8 +24,8 @@ export const compressImage = (
     if (!supportedExtensions.includes(fileExtension)) {
       reject(
         new Error(
-          `File type ${fileExtension} is not supported. Please use: JPG, PNG, GIF, WebP`
-        )
+          `File type ${fileExtension} is not supported. Please use: JPG, PNG, GIF, WebP`,
+        ),
       );
       return;
     }
@@ -41,11 +41,11 @@ export const compressImage = (
       reject(
         new Error(
           `${file.name} is too large (${(file.size / (1024 * 1024)).toFixed(
-            1
+            1,
           )}MB). Maximum allowed is ${(absoluteMaxSize / (1024 * 1024)).toFixed(
-            0
-          )}MB.`
-        )
+            0,
+          )}MB.`,
+        ),
       );
       return;
     }
@@ -99,7 +99,7 @@ export const compressImage = (
               }
             },
             file.type,
-            quality
+            quality,
           );
         });
       };

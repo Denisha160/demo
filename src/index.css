@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Gotham Regular';
-  src: local('Gotham Regular'), url('../fonts/Gotham Regular.otf') format('opentype');
+  font-family: "Gotham Regular";
+  src:
+    local("Gotham Regular"),
+    url("../fonts/Gotham Regular.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -54,9 +56,15 @@
     --sidebar-ring: 221.2 83.2% 53.3%;
 
     --shadow-sm: 0 1px 2px 0 hsl(220 10% 10% / 0.04);
-    --shadow-md: 0 1px 3px 0 hsl(220 10% 10% / 0.06), 0 1px 2px -1px hsl(220 10% 10% / 0.06);
-    --shadow-lg: 0 4px 12px -2px hsl(220 10% 10% / 0.08), 0 2px 4px -2px hsl(220 10% 10% / 0.04);
-    --shadow-input: 0 1px 2px 0 hsl(220 10% 10% / 0.02), inset 0 1px 2px 0 hsl(220 10% 10% / 0.02); /* Added input shadow */
+    --shadow-md:
+      0 1px 3px 0 hsl(220 10% 10% / 0.06),
+      0 1px 2px -1px hsl(220 10% 10% / 0.06);
+    --shadow-lg:
+      0 4px 12px -2px hsl(220 10% 10% / 0.08),
+      0 2px 4px -2px hsl(220 10% 10% / 0.04);
+    --shadow-input:
+      0 1px 2px 0 hsl(220 10% 10% / 0.02),
+      inset 0 1px 2px 0 hsl(220 10% 10% / 0.02); /* Added input shadow */
 
     --success: 142 60% 40%;
     --success-foreground: 0 0% 100%;
@@ -78,23 +86,30 @@
   }
 
   /* Improved input styles */
-  input, textarea, select {
+  input,
+  textarea,
+  select {
     @apply bg-input text-foreground border-border rounded-md px-3 py-2;
     box-shadow: var(--shadow-input);
     transition: all 0.15s ease;
   }
 
-  input:focus, textarea:focus, select:focus {
+  input:focus,
+  textarea:focus,
+  select:focus {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background border-transparent;
     box-shadow: var(--shadow-md);
   }
 
-  input::placeholder, textarea::placeholder {
+  input::placeholder,
+  textarea::placeholder {
     color: hsl(var(--input-placeholder));
     opacity: 1;
   }
 
-  input:disabled, textarea:disabled, select:disabled {
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
     @apply opacity-50 cursor-not-allowed bg-muted;
   }
 
@@ -108,7 +123,8 @@
   }
 
   /* Checkbox and radio improvements */
-  input[type="checkbox"], input[type="radio"] {
+  input[type="checkbox"],
+  input[type="radio"] {
     @apply w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring;
     box-shadow: var(--shadow-sm);
   }
@@ -118,7 +134,8 @@
   }
 
   /* Better focus styles for interactive elements */
-  button:focus-visible, a:focus-visible {
+  button:focus-visible,
+  a:focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
@@ -144,7 +161,11 @@
     box-shadow: var(--shadow-lg);
   }
   .gradient-active {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75));
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)),
+      hsl(var(--primary) / 0.75)
+    );
     color: hsl(var(--primary-foreground));
   }
   .scrollbar-hide {
@@ -170,5 +191,5 @@
 }
 
 a {
-    text-decoration: none !important;
+  text-decoration: none !important;
 }

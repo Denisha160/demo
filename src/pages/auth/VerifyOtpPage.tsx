@@ -46,9 +46,14 @@ const VerifyOtp = () => {
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
     const newOtp = [...otp];
-    pasted.split("").forEach((char, i) => { newOtp[i] = char; });
+    pasted.split("").forEach((char, i) => {
+      newOtp[i] = char;
+    });
     setOtp(newOtp);
     inputRefs.current[Math.min(pasted.length, 5)]?.focus();
   };
@@ -70,7 +75,7 @@ const VerifyOtp = () => {
           setOtp(["", "", "", "", "", ""]);
           inputRefs.current[0]?.focus();
         },
-      }
+      },
     );
   };
 
@@ -92,13 +97,18 @@ const VerifyOtp = () => {
             <div className="h-8 w-8 bg-primary/10 flex items-center justify-center rounded-sm mb-3">
               <ShieldCheck className="h-4 w-4 text-primary" />
             </div>
-            <h1 className="text-xl font-semibold text-foreground">Verify your identity</h1>
+            <h1 className="text-xl font-semibold text-foreground">
+              Verify your identity
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Enter the 6-digit code
               {identifier && (
                 <>
-                  {" "}sent to{" "}
-                  <span className="text-foreground font-medium">{identifier}</span>
+                  {" "}
+                  sent to{" "}
+                  <span className="text-foreground font-medium">
+                    {identifier}
+                  </span>
                 </>
               )}
             </p>
@@ -110,7 +120,9 @@ const VerifyOtp = () => {
               {otp.map((digit, i) => (
                 <input
                   key={i}
-                  ref={(el) => { inputRefs.current[i] = el; }}
+                  ref={(el) => {
+                    inputRefs.current[i] = el;
+                  }}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
@@ -123,9 +135,7 @@ const VerifyOtp = () => {
               ))}
             </div>
 
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <Button
               type="submit"

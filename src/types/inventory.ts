@@ -37,6 +37,8 @@ export interface ListInventoryParams {
   offset?: number;
   limit?: number;
   type?: "PRODUCT" | "KIT" | "all";
+  product_id?: string;
+  kit_id?: string;
   sort_by?: "name" | "code" | "stock" | "created_at";
   sort_direction?: "asc" | "desc";
 }

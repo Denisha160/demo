@@ -1,5 +1,15 @@
 import axios from "./httpRequest";
 
+// Analytics
+// ===================== Analytics =====================
+
+export const getDashboardStats = () => {
+  const url = `analytics/dashboard-stats`;
+  return axios({ method: "GET", url });
+};
+
+// end region
+
 // region Auth
 // ===================== Auth =====================
 
@@ -96,6 +106,11 @@ export const updateUserPermissions = (id, data) => {
   return axios({ method: "PUT", url, data });
 };
 
+export const listUserSessions = (id, params) => {
+  const url = `users/${id}/sessions`;
+  return axios({ method: "GET", url, params });
+};
+
 // end region
 
 // region Companies
@@ -158,27 +173,32 @@ export const getAvailablePermissions = () => {
 
 export const listProducts = (params) => {
   const url = `products`;
-  return axios({ method: "GET", url, params })
-}
+  return axios({ method: "GET", url, params });
+};
 
 export const getProductDetails = (id) => {
   const url = `products/${id}`;
-  return axios({ method: 'GET', url });
-}
+  return axios({ method: "GET", url });
+};
 
 export const createProduct = (data) => {
   const url = `products`;
-  return axios({ method: 'POST', url, data });
-}
+  return axios({ method: "POST", url, data });
+};
 
 export const updateProduct = (id, data) => {
   const url = `products/${id}`;
-  return axios({ method: 'PATCH', url, data });
-}
+  return axios({ method: "PATCH", url, data });
+};
 
 export const uploadProductPhoto = (id, formData) => {
   const url = `products/${id}/images`;
-  return axios({ method: "POST", url, data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const deleteProductPhoto = (id, imageId) => {
@@ -233,28 +253,264 @@ export const deleteFragrance = (id) => {
 
 export const listPackages = (params) => {
   const url = `package`;
-  return axios({ method: "GET", url, params })
-}
+  return axios({ method: "GET", url, params });
+};
 
 export const getPackageDetails = (id) => {
   const url = `package/${id}`;
-  return axios({ method: 'GET', url });
-}
+  return axios({ method: "GET", url });
+};
 
 export const createPackage = (data) => {
   const url = `package`;
-  return axios({ method: 'POST', url, data });
-}
+  return axios({ method: "POST", url, data });
+};
 
 export const updatePackage = ({ id, ...data }) => {
   const url = `package/${id}`;
-  return axios({ method: 'PATCH', url, data });
-}
+  return axios({ method: "PATCH", url, data });
+};
 
 export const deletePackage = (id) => {
   const url = `package/${id}`;
   return axios({ method: "DELETE", url });
-}
+};
+
+// end region
+
+// region Leads
+// ===================== Leads =====================
+
+export const listLeads = (params) => {
+  const url = `leads`;
+  return axios({ method: "GET", url, params });
+};
+
+export const listLeadTags = (params) => {
+  const url = `leads/tags`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLead = (data) => {
+  const url = `leads`;
+  return axios({ method: "POST", url, data });
+};
+
+export const getLeadDetails = (leadId) => {
+  const url = `leads/${leadId}`;
+  return axios({ method: "GET", url });
+};
+
+export const updateLead = ({ leadId, ...data }) => {
+  const url = `leads/${leadId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const updateLeadStatus = ({ leadId, ...data }) => {
+  const url = `leads/${leadId}/status`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const verifyLead = (leadId, data) => {
+  const url = `leads/${leadId}/verification`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateVerifyLead = (leadId, data) => {
+  const url = `leads/${leadId}/verification`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const convertLead = (leadId) => {
+  const url = `leads/${leadId}/convert-to-customer`;
+  return axios({ method: "POST", url });
+};
+
+export const bulkUpdateLeads = (data) => {
+  const url = `leads/bulkupdate`;
+  return axios({ method: "PATCH", url, data });
+};
+
+// end region
+
+// region Lead Follow Ups
+// ===================== Lead Follow Ups =====================
+
+export const listLeadFollowUps = (leadId, params) => {
+  const url = `leads/${leadId}/follow-ups`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadFollowUp = (leadId, data) => {
+  const url = `leads/${leadId}/follow-ups`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadFollowUp = ({ leadId, followupId, ...data }) => {
+  const url = `leads/${leadId}/follow-ups/${followupId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadFollowUp = ({ leadId, followupId }) => {
+  const url = `leads/${leadId}/follow-ups/${followupId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Tasks
+// ===================== Lead Tasks =====================
+
+export const listLeadTasks = (leadId, params) => {
+  const url = `leads/${leadId}/tasks`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadTask = (leadId, data) => {
+  const url = `leads/${leadId}/tasks`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadTask = ({ leadId, taskId, ...data }) => {
+  const url = `leads/${leadId}/tasks/${taskId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadTask = ({ leadId, taskId }) => {
+  const url = `leads/${leadId}/tasks/${taskId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Visits
+// ===================== Lead Visits =====================
+
+export const listLeadVisits = (leadId, params) => {
+  const url = `leads/${leadId}/visits`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadVisit = (leadId, data) => {
+  const url = `leads/${leadId}/visits`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadVisit = ({ leadId, visitId, data }) => {
+  const url = `leads/${leadId}/visits/${visitId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadVisit = ({ leadId, visitId }) => {
+  const url = `leads/${leadId}/visits/${visitId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Interested Products
+// ===================== Lead Interested Products =====================
+
+export const listInterestedProducts = (leadId, params) => {
+  const url = `leads/${leadId}/interested-products`;
+  return axios({ method: "GET", url, params });
+};
+
+export const addInterestedProduct = (leadId, data) => {
+  const url = `leads/${leadId}/interested-products`;
+  return axios({ method: "POST", url, data });
+};
+
+export const removeInterestedProduct = ({ leadId, productId }) => {
+  const url = `leads/${leadId}/interested-products/${productId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Attachments
+// ===================== Lead Attachments =====================
+
+export const listLeadAttachments = (leadId, params) => {
+  const url = `leads/${leadId}/attachments`;
+  return axios({ method: "GET", url, params });
+};
+
+export const uploadLeadAttachment = (leadId, formData, onUploadProgress) => {
+  const url = `leads/${leadId}/attachments`;
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+    onUploadProgress,
+  });
+};
+
+export const deleteLeadAttachment = (attachmentId) => {
+  const url = `leads/attachments/${attachmentId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Reminders
+// ===================== Lead Reminders =====================
+
+export const listLeadReminders = (leadId, params) => {
+  const url = `leads/${leadId}/reminders`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadReminder = (leadId, data) => {
+  const url = `leads/${leadId}/reminders`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadReminder = ({ leadId, reminderId, ...data }) => {
+  const url = `leads/${leadId}/reminders/${reminderId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadReminder = ({ leadId, reminderId }) => {
+  const url = `leads/${leadId}/reminders/${reminderId}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+
+// region Lead Reminders
+// ===================== Lead Activities =====================
+
+export const listLeadActivities = (leadId, params) => {
+  const url = `leads/${leadId}/activities`;
+  return axios({ method: "GET", url, params });
+};
+
+// end region
+
+// region Lead Contacts
+// ===================== Lead Contacts =====================
+
+export const listContacts = (leadId, params) => {
+  const url = `leads/${leadId}/contacts`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createLeadContacts = (leadId, data) => {
+  const url = `leads/${leadId}/contacts`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateLeadContacts = ({ leadId, contactId, ...data }) => {
+  const url = `leads/${leadId}/contacts/${contactId}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteLeadContacts = ({ leadId, contactId }) => {
+  const url = `leads/${leadId}/contacts/${contactId}`;
+  return axios({ method: "DELETE", url });
+};
 
 // end region
 
@@ -263,58 +519,58 @@ export const deletePackage = (id) => {
 
 export const listBOM = (params) => {
   const url = `bom`;
-  return axios({ method: "GET", url, params })
-}
+  return axios({ method: "GET", url, params });
+};
 
 export const getBOMDetails = (bom_id) => {
   const url = `bom/${bom_id}`;
-  return axios({ method: 'GET', url });
-}
+  return axios({ method: "GET", url });
+};
 
 export const createBOM = (data) => {
   const url = `bom`;
-  return axios({ method: 'POST', url, data });
-}
+  return axios({ method: "POST", url, data });
+};
 
 export const updateBOM = ({ bom_id, ...data }) => {
   const url = `bom/${bom_id}`;
-  return axios({ method: 'PATCH', url, data });
-}
+  return axios({ method: "PATCH", url, data });
+};
 
 export const deleteBOM = (bom_id) => {
   const url = `bom/${bom_id}`;
   return axios({ method: "DELETE", url });
-}
+};
 
 // end region
 
-// start region
+// region Kits
 // ===================== Kits =====================
 
 export const listKits = (params) => {
   const url = `kit`;
-  return axios({ method: "GET", url, params })
-}
+  return axios({ method: "GET", url, params });
+};
 
 export const getKitDetails = (id) => {
   const url = `kit/${id}`;
-  return axios({ method: 'GET', url });
-}
+  return axios({ method: "GET", url });
+};
 
 export const createKit = (data) => {
   const url = `kit`;
-  return axios({ method: 'POST', url, data });
-}
+  return axios({ method: "POST", url, data });
+};
 
 export const updateKit = ({ id, ...data }) => {
   const url = `kit/${id}`;
-  return axios({ method: 'PATCH', url, data });
-}
+  return axios({ method: "PATCH", url, data });
+};
 
 export const deleteKit = (id) => {
   const url = `kit/${id}`;
   return axios({ method: "DELETE", url });
-}
+};
 
 export const associateProductToKit = (data) => {
   const url = `kit/associate`;
@@ -333,46 +589,49 @@ export const listKitsByProduct = (productId) => {
 
 // end region
 
-// start region
+// region Batches
 // ===================== Batches =====================
 
 export const listBatch = (params) => {
-  const url = `inventory/batches`
-  return axios({ method: "GET", url, params })
-}
+  const url = `inventory/batches`;
+  return axios({ method: "GET", url, params });
+};
 
 export const createBatch = (data) => {
-  const url = `inventory/batches`
-  return axios({ method: "POST", url, data })
-}
+  const url = `inventory/batches`;
+  return axios({ method: "POST", url, data });
+};
 
 export const getBatch = (id) => {
-  const url = `inventory/batches/${id}`
-  return axios({ method: "GET", url })
-}
+  const url = `inventory/batches/${id}`;
+  return axios({ method: "GET", url });
+};
 
 export const updateBatch = ({ id, ...data }) => {
-  const url = `inventory/batches/${id}`
-  return axios({ method: "PATCH", url, data })
-}
+  const url = `inventory/batches/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
 
+// region Serials
 // ===================== Serials =====================
 
 export const listSerials = (params) => {
-  const url = `inventory/serials`
-  return axios({ method: "GET", url, params })
-}
+  const url = `inventory/serials`;
+  return axios({ method: "GET", url, params });
+};
 
 export const generateSerials = (data) => {
-  const url = `inventory/serials/generate`
-  return axios({ method: "POST", url, data })
-}
+  const url = `inventory/serials/generate`;
+  return axios({ method: "POST", url, data });
+};
 
 export const bulkSyncSerials = (data) => {
-  const url = `inventory/serials/bulk-sync`
-  return axios({ method: "POST", url, data })
-}
+  const url = `inventory/serials/bulk-sync`;
+  return axios({ method: "POST", url, data });
+};
+// end region
 
+// region Inventory
 // ===================== Inventory =====================
 
 export const listInventories = (params) => {
@@ -385,4 +644,86 @@ export const listTransactions = (params) => {
   return axios({ method: "GET", url, params });
 };
 
+// end region
+
+// region Lead Status
+// ===================== Lead Status =====================
+
+export const listStatus = (params) => {
+  const url = `leads/lead-status`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createStatus = (data) => {
+  const url = `leads/lead-status`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateStatus = ({ id, ...data }) => {
+  const url = `leads/lead-status/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteStatus = (id) => {
+  const url = `leads/lead-status/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
+export const updateLeadStatusOrder = (data) => {
+  return axios({ method: "PATCH", url: "leads/lead-status/order", data });
+};
+// end region
+
+// region Lead source 
+// ===================== Lead Source =====================
+export const listSource = (params) => {
+  const url = `leads/lead-source`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createSource = (data) => {
+  const url = `leads/lead-source`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateSource = ({ id, ...data }) => {
+  const url = `leads/lead-source/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteSource = (id) => {
+  const url = `leads/lead-source/${id}`;
+  return axios({ method: "DELETE", url });
+};
+// end region
+
+// region General Visits, Followps, Reminders and Tasks
+export const listAllVisits = (params) => {
+  return axios({ method: "GET", url: `visits`, params });
+};
+
+export const listAllFollowUps = (params) => {
+  return axios({ method: "GET", url: `followups`, params });
+};
+
+export const listAllReminders = (params) => {
+  return axios({ method: "GET", url: `reminders`, params });
+};
+
+export const listAllTasks = (params) => {
+  return axios({ method: "GET", url: `tasks`, params });
+};
+// end region
+
+// region City State Country
+// ===================== City State Country =====================
+export const listCityStateCountry = (params) => {
+  const url = `city-state-country`;
+  return axios({ method: "GET", url, params });
+};
+
+export const listCity = (params) => {
+  const url = `city-state-country/city`;
+  return axios({ method: "GET", url, params });
+};
 // end region

@@ -8,7 +8,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -74,9 +74,15 @@ function DataTable<T extends Record<string, any>>({
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSizeState, setPageSizeState] = useState(pageSize);
-  const [selectedRowIds, setSelectedRowIds] = useState<Set<T[keyof T]>>(new Set());
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<T[keyof T]>>(
+    new Set(),
+  );
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+
+  useEffect(() => {
+    setPageSizeState(pageSize);
+  }, [pageSize]);
 
   const activePage = serverSide ? serverPage : currentPage;
   const activePageSize = serverSide ? pageSize : pageSizeState;
@@ -93,7 +99,9 @@ function DataTable<T extends Record<string, any>>({
 
     return [...data].sort((a, b) => {
       if (column.sortFn) {
-        return activeSortDirection === "asc" ? column.sortFn(a, b) : column.sortFn(b, a);
+        return activeSortDirection === "asc"
+          ? column.sortFn(a, b)
+          : column.sortFn(b, a);
       }
 
       const valA = a[activeSortKey];
@@ -118,71 +126,93 @@ function DataTable<T extends Record<string, any>>({
     return sortedData.slice(start, start + activePageSize);
   }, [sortedData, serverSide, data, start, activePageSize]);
 
-  const handleSort = useCallback((key: string) => {
-    // Default to asc when clicking a new column
-    let newDirection: SortDirection = "asc";
+  const handleSort = useCallback(
+    (key: string) => {
+      // Default to asc when clicking a new column
+      let newDirection: SortDirection = "asc";
 
-    if (activeSortKey === key) {
-      // Strictly toggle between asc and desc (no null state)
-      newDirection = activeSortDirection === "asc" ? "desc" : "asc";
-    }
+      if (activeSortKey === key) {
+        // Strictly toggle between asc and desc (no null state)
+        newDirection = activeSortDirection === "asc" ? "desc" : "asc";
+      }
 
-    if (serverSide) {
-      onServerSortChange?.(key, newDirection);
-    } else {
-      setSortKey(key);
-      setSortDirection(newDirection);
-    }
-  }, [activeSortKey, activeSortDirection, serverSide, onServerSortChange]);
+      if (serverSide) {
+        onServerSortChange?.(key, newDirection);
+      } else {
+        setSortKey(key);
+        setSortDirection(newDirection);
+      }
+    },
+    [activeSortKey, activeSortDirection, serverSide, onServerSortChange],
+  );
 
-  const handlePageSizeChange = useCallback((newValue: string) => {
-    const size = parseInt(newValue);
-    if (serverSide) {
-      onServerPageSizeChange?.(size);
-    } else {
-      setPageSizeState(size);
-      setCurrentPage(1);
-    }
-  }, [serverSide, onServerPageSizeChange]);
+  const handlePageSizeChange = useCallback(
+    (newValue: string) => {
+      const size = parseInt(newValue);
+      if (serverSide) {
+        onServerPageSizeChange?.(size);
+      } else {
+        setPageSizeState(size);
+        setCurrentPage(1);
+      }
+    },
+    [serverSide, onServerPageSizeChange],
+  );
 
-  const handlePageChange = useCallback((newPage: number) => {
-    if (serverSide) {
-      onServerPageChange?.(newPage);
-    } else {
-      setCurrentPage(newPage);
-    }
-  }, [serverSide, onServerPageChange]);
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      if (serverSide) {
+        onServerPageChange?.(newPage);
+      } else {
+        setCurrentPage(newPage);
+      }
+    },
+    [serverSide, onServerPageChange],
+  );
 
-  const updateSelection = useCallback((newSet: Set<T[keyof T]>) => {
-    setSelectedRowIds(newSet);
-    if (onSelectionChange) {
-      const selectedItems = data.filter((item) => newSet.has(item[idKey]));
-      onSelectionChange(selectedItems);
-    }
-  }, [data, idKey, onSelectionChange]);
+  const updateSelection = useCallback(
+    (newSet: Set<T[keyof T]>) => {
+      setSelectedRowIds(newSet);
+      if (onSelectionChange) {
+        const selectedItems = data.filter((item) => newSet.has(item[idKey]));
+        onSelectionChange(selectedItems);
+      }
+    },
+    [data, idKey, onSelectionChange],
+  );
 
-  const handleSelectAll = useCallback((checked: boolean) => {
-    const newSelected = new Set(selectedRowIds);
-    if (checked) {
-      paginatedData.forEach((item) => newSelected.add(item[idKey]));
-    } else {
-      paginatedData.forEach((item) => newSelected.delete(item[idKey]));
-    }
-    updateSelection(newSelected);
-  }, [selectedRowIds, paginatedData, idKey, updateSelection]);
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      const newSelected = new Set(selectedRowIds);
+      if (checked) {
+        paginatedData.forEach((item) => newSelected.add(item[idKey]));
+      } else {
+        paginatedData.forEach((item) => newSelected.delete(item[idKey]));
+      }
+      updateSelection(newSelected);
+    },
+    [selectedRowIds, paginatedData, idKey, updateSelection],
+  );
 
-  const handleSelectRow = useCallback((item: T, checked: boolean) => {
-    const newSelected = new Set(selectedRowIds);
-    if (checked) {
-      newSelected.add(item[idKey]);
-    } else {
-      newSelected.delete(item[idKey]);
-    }
-    updateSelection(newSelected);
-  }, [selectedRowIds, idKey, updateSelection]);
+  const handleSelectRow = useCallback(
+    (item: T, checked: boolean) => {
+      const newSelected = new Set(selectedRowIds);
+      if (checked) {
+        newSelected.add(item[idKey]);
+      } else {
+        newSelected.delete(item[idKey]);
+      }
+      updateSelection(newSelected);
+    },
+    [selectedRowIds, idKey, updateSelection],
+  );
 
-  const isAllPageSelected = paginatedData.length > 0 && paginatedData.every((item) => selectedRowIds.has(item[idKey]));
-  const isSomePageSelected = !isAllPageSelected && paginatedData.some((item) => selectedRowIds.has(item[idKey]));
+  const isAllPageSelected =
+    paginatedData.length > 0 &&
+    paginatedData.every((item) => selectedRowIds.has(item[idKey]));
+  const isSomePageSelected =
+    !isAllPageSelected &&
+    paginatedData.some((item) => selectedRowIds.has(item[idKey]));
 
   useEffect(() => {
     if (!serverSide && currentPage > totalPages && totalPages > 0) {
@@ -192,7 +222,6 @@ function DataTable<T extends Record<string, any>>({
 
   return (
     <div className="relative flex flex-col rounded-md border border-border/60 bg-card shadow-sm shadow-card">
-
       {/* Aesthetic Loader - Only covers the tbody (rows) and leaves Headers visible! */}
       {isLoading && paginatedData.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 top-[33px] z-20 flex items-center justify-center rounded-b-md bg-background/50 backdrop-blur-[1px]">
@@ -207,7 +236,13 @@ function DataTable<T extends Record<string, any>>({
               {enableSelection && (
                 <th className="h-8 w-[40px] px-3 align-middle text-center">
                   <Checkbox
-                    checked={isAllPageSelected ? true : isSomePageSelected ? "indeterminate" : false}
+                    checked={
+                      isAllPageSelected
+                        ? true
+                        : isSomePageSelected
+                          ? "indeterminate"
+                          : false
+                    }
                     onCheckedChange={(c) => handleSelectAll(c === true)}
                     aria-label="Select all"
                     className="translate-y-[1px]"
@@ -220,8 +255,9 @@ function DataTable<T extends Record<string, any>>({
                   onClick={() => col.sortable && handleSort(col.key)}
                   className={cn(
                     "h-8 px-3 text-left align-middle font-medium text-muted-foreground whitespace-nowrap transition-colors",
-                    col.sortable && "cursor-pointer select-none hover:text-foreground",
-                    col.className
+                    col.sortable &&
+                    "cursor-pointer select-none hover:text-foreground",
+                    col.className,
                   )}
                 >
                   <div className="flex items-center gap-1.5">
@@ -254,8 +290,10 @@ function DataTable<T extends Record<string, any>>({
                   onClick={() => onRowClick?.(item)}
                   className={cn(
                     "group transition-all duration-200",
-                    isSelected ? "bg-primary/5 hover:bg-primary/10" : "even:bg-muted/20 hover:bg-muted/40",
-                    onRowClick && "cursor-pointer"
+                    isSelected
+                      ? "bg-primary/5 hover:bg-primary/10"
+                      : "even:bg-muted/20 hover:bg-muted/40",
+                    onRowClick && "cursor-pointer",
                   )}
                 >
                   {enableSelection && (
@@ -265,7 +303,9 @@ function DataTable<T extends Record<string, any>>({
                     >
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={(c) => handleSelectRow(item, c === true)}
+                        onCheckedChange={(c) =>
+                          handleSelectRow(item, c === true)
+                        }
                         aria-label="Select row"
                         className="translate-y-[1px]"
                       />
@@ -276,7 +316,7 @@ function DataTable<T extends Record<string, any>>({
                       key={col.key}
                       className={cn(
                         "px-3 py-1.5 align-middle t ext-foreground/90 tabular-nums",
-                        col.className
+                        col.className,
                       )}
                     >
                       {col.render ? col.render(item) : item[col.key]}
@@ -316,18 +356,38 @@ function DataTable<T extends Record<string, any>>({
             )}
 
             <p className="whitespace-nowrap text-[11px] font-medium text-muted-foreground">
-              Showing <span className="text-foreground">{serverSide ? (activePage - 1) * activePageSize + 1 : start + 1}-{Math.min(serverSide ? activePage * activePageSize : start + activePageSize, activeTotal)}</span> of <span className="text-foreground">{activeTotal}</span>
+              Showing{" "}
+              <span className="text-foreground">
+                {serverSide ? (activePage - 1) * activePageSize + 1 : start + 1}
+                -
+                {Math.min(
+                  serverSide
+                    ? activePage * activePageSize
+                    : start + activePageSize,
+                  activeTotal,
+                )}
+              </span>{" "}
+              of <span className="text-foreground">{activeTotal}</span>
             </p>
 
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-medium text-muted-foreground">Rows:</span>
-              <Select value={activePageSize.toString()} onValueChange={handlePageSizeChange}>
+              <span className="text-[11px] font-medium text-muted-foreground">
+                Rows:
+              </span>
+              <Select
+                value={activePageSize.toString()}
+                onValueChange={handlePageSizeChange}
+              >
                 <SelectTrigger className="h-6 w-[60px] border-border/60 bg-transparent px-2 py-0 text-[11px] focus:ring-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {[5, 10, 15, 20, 50, 100].map((size) => (
-                    <SelectItem key={size} value={size.toString()} className="text-[11px]">
+                    <SelectItem
+                      key={size}
+                      value={size.toString()}
+                      className="text-[11px]"
+                    >
                       {size}
                     </SelectItem>
                   ))}

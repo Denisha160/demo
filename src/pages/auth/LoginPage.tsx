@@ -1,13 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, Lock, ArrowRight, Eye, EyeOff, LogOut, Mail, Monitor } from "lucide-react";
+import {
+  Phone,
+  Lock,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  LogOut,
+  Mail,
+  Monitor,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Modal from "@/components/Modal";
 import { useLogin } from "@/hooks/useAuth";
 import { useLogoutSession } from "@/hooks/useSession";
-import type { OtpResponse, Session, ApiError as LoginApiError } from "@/types/Auth";
+import type {
+  OtpResponse,
+  Session,
+  ApiError as LoginApiError,
+} from "@/types/Auth";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
@@ -42,7 +55,7 @@ const Login = () => {
             });
           }
         },
-      }
+      },
     );
   };
 
@@ -65,10 +78,10 @@ const Login = () => {
                   });
                 }
               },
-            }
+            },
           );
         },
-      }
+      },
     );
   };
 
@@ -97,7 +110,10 @@ const Login = () => {
         <div className="space-y-2">
           {sessionModal?.sessions.map((session) => {
             const device = session.user_agent
-              ? session.user_agent.replace(/\s*\(.*?\)\s*/g, " ").trim().slice(0, 60)
+              ? session.user_agent
+                  .replace(/\s*\(.*?\)\s*/g, " ")
+                  .trim()
+                  .slice(0, 60)
               : "Unknown device";
             const time = new Date(session.created_at).toLocaleString("en-IN", {
               day: "2-digit",
@@ -116,7 +132,9 @@ const Login = () => {
                     <Monitor className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{device}</p>
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {device}
+                    </p>
                     <p className="text-xs text-muted-foreground">{time}</p>
                   </div>
                 </div>
@@ -143,18 +161,29 @@ const Login = () => {
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-1">
                 <div className="h-7 w-7 bg-primary flex items-center justify-center rounded-sm">
-                  <span className="text-primary-foreground text-sm font-bold">CRM</span>
+                  <span className="text-primary-foreground text-sm font-bold">
+                    CRM
+                  </span>
                 </div>
-                <span className="text-sm font-semibold text-foreground">BASALT CRM</span>
+                <span className="text-sm font-semibold text-foreground">
+                  BASALT CRM
+                </span>
               </div>
-              <h1 className="text-xl font-semibold text-foreground mt-4">Welcome back</h1>
-              <p className="text-sm text-muted-foreground mt-1">Sign in to your account</p>
+              <h1 className="text-xl font-semibold text-foreground mt-4">
+                Welcome back
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Sign in to your account
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* Email or mobile */}
               <div className="space-y-1">
-                <Label htmlFor="identifier" className="text-sm font-medium text-foreground">
+                <Label
+                  htmlFor="identifier"
+                  className="text-sm font-medium text-foreground"
+                >
                   Email or mobile number
                 </Label>
                 <div className="relative">
@@ -179,7 +208,10 @@ const Login = () => {
               {/* Password */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                  <Label
+                    htmlFor="password"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Password
                   </Label>
                 </div>

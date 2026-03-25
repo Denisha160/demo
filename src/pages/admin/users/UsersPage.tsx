@@ -10,12 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, Eye, Trash2 } from "lucide-react";
+import { Combobox } from "@/components/ui/combobox";
+import { Plus, Search } from "lucide-react";
 import UserModal from "./UserModal";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useDeleteUser, useUpdateUser } from "@/hooks/useUsers";
 import { User, UserUpdatePayload } from "@/types/user";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useRoles } from "@/hooks/useRoles";
 
 // Helper component for the inline shift selector
 const ShiftSelect = ({ user }: { user: User }) => {
@@ -51,12 +53,22 @@ const Users = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const { data: rolesData } = useRoles({});
+  const roleOptions = (rolesData?.items || []).map(
+    (r: { id: string; name: string }) => ({ value: r.id, label: r.name })
+  );
+
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
 
   const [filterStatus, setFilterStatus] = useState<
     "All" | "Active" | "Inactive"
   >((searchParams.get("status") as "All" | "Active" | "Inactive") || "All");
+
+  // Single role filter — stored in URL as ?role=
+  const [filterRoleId, setFilterRoleId] = useState<string>(
+    searchParams.get("role") || ""
+  );
 
   const [page, setPage] = useState(
     parseInt(searchParams.get("page") || "1", 10),
@@ -71,11 +83,14 @@ const Users = () => {
     (searchParams.get("sortDirection") as "asc" | "desc") || null,
   );
 
-  const hasFilters = Boolean(search || filterStatus !== "All" || sortKey);
+  const hasFilters = Boolean(
+    search || filterStatus !== "All" || sortKey || filterRoleId
+  );
 
   const handleClearFilters = () => {
     setSearch("");
     setFilterStatus("All");
+    setFilterRoleId("");
     setSortKey(null);
     setSortDirection(null);
     setPage(1);
@@ -92,6 +107,9 @@ const Users = () => {
 
         if (filterStatus !== "All") next.set("status", filterStatus);
         else next.delete("status");
+
+        if (filterRoleId) next.set("role", filterRoleId);
+        else next.delete("role");
 
         if (page > 1) next.set("page", page.toString());
         else next.delete("page");
@@ -112,6 +130,7 @@ const Users = () => {
   }, [
     debouncedSearch,
     filterStatus,
+    filterRoleId,
     page,
     limit,
     sortKey,
@@ -127,6 +146,7 @@ const Users = () => {
         : filterStatus === "Active"
           ? true
           : false,
+    role_id: filterRoleId ? [filterRoleId] : undefined,
     sort_by: sortKey || undefined,
     sort_direction: sortDirection || undefined,
     offset: (page - 1) * limit,
@@ -141,7 +161,6 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const handleSave = () => {
-    // Form logic is handled within the modal using the dedicated hooks
     setModalOpen(false);
     setSelectedUser(null);
   };
@@ -169,7 +188,6 @@ const Users = () => {
           className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
-            // Assuming companyId might not always be present based on previous route structures
             navigate(`${item.id}`);
           }}
         >
@@ -227,7 +245,36 @@ const Users = () => {
       className: "hidden md:table-cell",
       render: (item) => (
         <p className="text-sm text-foreground/80">{item.department || "—"}</p>
-      ), // Use department instead of department_id
+      ),
+    },
+    {
+      key: "role_assignments" as keyof User,
+      header: "Roles",
+      className: "hidden lg:table-cell",
+      render: (item: User & { role_assignments?: { company: string; role: string }[] }) => {
+        const assignments = item.role_assignments ?? [];
+        if (assignments.length === 0) {
+          return <p className="text-xs text-muted-foreground">—</p>;
+        }
+        return (
+          <div className="flex flex-col gap-0.5 max-w-[220px]">
+            {assignments.map((a, i) => (
+              <div key={i} className="flex items-center gap-1 min-w-0">
+                <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px]" title={a.company}>
+                  {a.company}
+                </span>
+                <span className="text-[10px] text-muted-foreground">·</span>
+                <span
+                  className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm truncate"
+                  title={a.role}
+                >
+                  {a.role}
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+      },
     },
     {
       key: "work_shift",
@@ -239,21 +286,21 @@ const Users = () => {
   return (
     <div className="w-full mx-auto space-y-2 animate-fade-in">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-2">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search contacts..."
+              placeholder="Search users..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="h-8 pl-7 text-sm rounded-sm w-full sm:w-[280px]"
+              className="h-8 pl-7 text-sm rounded-sm w-full sm:w-[240px]"
             />
           </div>
 
-          {/* Select dropdown for filter */}
+          {/* Status filter */}
           <Select
             value={filterStatus}
             onValueChange={(value: "All" | "Active" | "Inactive") => {
@@ -261,7 +308,7 @@ const Users = () => {
               setPage(1);
             }}
           >
-            <SelectTrigger className="w-[130px] h-8 text-sm rounded-sm">
+            <SelectTrigger className="w-[120px] h-8 text-sm rounded-sm">
               <SelectValue placeholder="Filter status" />
             </SelectTrigger>
             <SelectContent>
@@ -270,6 +317,22 @@ const Users = () => {
               <SelectItem value="Inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Role filter — Combobox */}
+          <div className="w-[170px]">
+            <Combobox
+              options={roleOptions}
+              value={filterRoleId}
+              onValueChange={(val) => {
+                setFilterRoleId(val);
+                setPage(1);
+              }}
+              placeholder="Filter by role"
+              searchPlaceholder="Search roles…"
+              emptyText="No roles found"
+              clearable
+            />
+          </div>
 
           {hasFilters && (
             <div className="animate-in fade-in slide-in-from-left-2 duration-300">

@@ -26,7 +26,8 @@ import {
   Wind,
   ClipboardList,
   MapPin,
-  FileText,
+  UserCheck,
+  Users,
 } from "lucide-react";
 
 import { useLogout, useCurrentUser, useHasPermission } from "@/hooks/useAuth";
@@ -45,11 +46,13 @@ interface NavItemEntry {
   icon: React.ElementType;
   path?: string;
   permission?: string | string[];
+  isRootOnly?: boolean;
   children?: NavItemEntry[];
 }
 
 const navItems: NavItemEntry[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "dashboard" },
+  { label: "Sales Team", icon: Users, path: "sales", permission: "user.read", isRootOnly: true },
   {
     label: "CRM",
     icon: Blocks,
@@ -64,7 +67,7 @@ const navItems: NavItemEntry[] = [
       { label: "Tasks", icon: ClipboardList, path: "tasks", permission: "lead-task.read" },
     ],
   },
-  // { label: "Salesmen", icon: UserCheck, path: "salesmen"},
+  { label: "Salesmen", icon: UserCheck, path: "salesmen"},
   // { label: "Employees", icon: Users, path: "employees"},
   // { label: "Attendance", icon: Clock, path: "attendance" },
   // { label: "Suppliers", icon: Truck, path: "suppliers" },
@@ -424,6 +427,9 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {navItems
             .filter((item) => {
+              if (item.isRootOnly && !user?.is_root_user) {
+                return false;
+              }
               if (item.permission) {
                 return hasPermission(item.permission);
               }

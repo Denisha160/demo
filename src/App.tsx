@@ -59,6 +59,8 @@ import VisitsPage from "./pages/companys/leads/visits/VisitsPage";
 import TasksPage from "./pages/companys/leads/tasks/TasksPage";
 import RemindersPage from "./pages/companys/leads/reminders/RemindersPage";
 import FollowUpsPage from "./pages/companys/leads/followups/FollowUps";
+import SalesPage from "./pages/companys/sales/SalesPage";
+import SalesMemberDetailPage from "./pages/companys/sales/SalesMemberDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -260,6 +262,9 @@ const App = () => (
           <Route path="tasks" element={<TasksPage />} />
           <Route path="reminders" element={<RemindersPage />} />
           <Route path="followups" element={<FollowUpsPage />} />
+          <Route path="sales" element={<SalesPage />} />
+          <Route path="sales/:userId" element={<SalesMemberDetailPage />} />
+          <Route path="sales/:userId/:tab" element={<SalesMemberDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

@@ -760,183 +760,187 @@ const LeadsPage = () => {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
-      <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:pb-2">
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-          <div className="relative w-full sm:flex-initial">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
-            <Input
-              placeholder="Search leads..."
-              className="h-9 w-full rounded-sm border-border/60 bg-background pl-9 text-sm focus-visible:ring-1 focus-visible:ring-primary/20 sm:min-w-30"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="flex w-full flex-col gap-2 md:w-auto sm:flex-row sm:items-center sm:gap-2">
-            <div className="flex w-full items-center gap-2 sm:w-auto">
-              <div className="flex-1 sm:flex-none">
-                <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-              </div>
-
-              <div className="w-[140px]">
-                <Combobox
-                  options={PRIORITY_OPTIONS}
-                  value={priority || "ALL"}
-                  onValueChange={setPriority}
-                  placeholder="Priority"
-                  className="h-9"
+      <div className="border-b border-border">
+        <div className="overflow-x-auto 2xl:overflow-x-visible scrollbar-premium py-2">
+          <div className="flex items-center justify-between gap-2 min-w-max px-2 2xl:min-w-0 2xl:w-full">
+            <div className="flex items-center gap-2">
+              {/* Search */}
+              <div className="relative w-64 2xl:w-72">
+                <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
+                <Input
+                  placeholder="Search leads..."
+                  className="h-9 w-full rounded-sm border-border/60 bg-background pl-9 text-sm focus-visible:ring-1 focus-visible:ring-primary/20"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
-              {currentUser?.is_root_user && (
-                <div className="w-[180px]">
-                  <Select
-                    value={assignedTo || "all"}
-                    onValueChange={setAssignedTo}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Assigned To" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Users</SelectItem>
-                      {usersList.map((u: { id: string; name: string }) => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {/* Filters Group */}
+              <div className="flex items-center gap-2">
+                <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+
+                <div className="w-[140px]">
+                  <Combobox
+                    options={PRIORITY_OPTIONS}
+                    value={priority || "ALL"}
+                    onValueChange={setPriority}
+                    placeholder="Priority"
+                    className="h-9"
+                  />
                 </div>
-              )}
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9 shrink-0 border-border/60 bg-background hover:bg-accent/50"
-                  >
-                    <Filter className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="text-xs font-semibold">
-                    Filter Stages
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {columns.map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      checked={visibleStageIds.includes(column.id)}
-                      onCheckedChange={() => toggleStageVisibility(column.id)}
-                      onSelect={(e) => e.preventDefault()}
-                      className="text-sm"
+                {currentUser?.is_root_user && (
+                  <div className="w-[180px]">
+                    <Select
+                      value={assignedTo || "all"}
+                      onValueChange={setAssignedTo}
                     >
-                      {column.title}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Assigned To" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Users</SelectItem>
+                        {usersList.map((u: { id: string; name: string }) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 gap-2 border-border/60 bg-background hover:bg-accent/50"
-                onClick={() => setIsExportDialogOpen(true)}
-              >
-                <FileDown className="h-4 w-4" />
-                <span className="hidden sm:inline text-xs font-semibold">Export Sheet</span>
-              </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 border-border/60 bg-background hover:bg-accent/50"
+                    >
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="text-xs font-semibold">
+                      Filter Stages
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {columns.map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        checked={visibleStageIds.includes(column.id)}
+                        onCheckedChange={() => toggleStageVisibility(column.id)}
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-sm"
+                      >
+                        {column.title}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-              {hasFilters && (
-                <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-2 border-border/60 bg-background hover:bg-accent/50"
+                  onClick={() => setIsExportDialogOpen(true)}
+                >
+                  <FileDown className="h-4 w-4" />
+                  <span className="text-xs font-semibold">Export Sheet</span>
+                </Button>
+
+                {hasFilters && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleClearFilters}
-                    className="h-9 px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                    className="h-9 px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground animate-in fade-in slide-in-from-left-2 duration-300"
                   >
                     <X className="mr-1 h-3.5 w-3.5" />
                     Clear
                   </Button>
+                )}
+              </div>
+
+              <div className="h-6 w-px bg-border/60 mx-1" />
+
+              {/* View Switcher */}
+              <TooltipProvider>
+                <div className="flex items-center gap-1 rounded-sm border border-border/60 bg-muted/20 p-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={viewMode === "pipeline" ? "secondary" : "ghost"}
+                        size="sm"
+                        className={cn(
+                          "h-7 px-2.5 rounded-xs text-xs font-semibold transition-all",
+                          viewMode === "pipeline"
+                            ? "bg-background shadow-xs text-primary"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                        onClick={() => setViewMode("pipeline")}
+                      >
+                        <Kanban className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="text-[11px] font-medium">Pipeline View</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={viewMode === "table" ? "secondary" : "ghost"}
+                        size="sm"
+                        className={cn(
+                          "h-7 px-2.5 rounded-xs text-xs font-semibold transition-all",
+                          viewMode === "table"
+                            ? "bg-background shadow-xs text-primary"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                        onClick={() => setViewMode("table")}
+                      >
+                        <List className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="text-[11px] font-medium">Table View</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-              )}
+              </TooltipProvider>
             </div>
 
-            <TooltipProvider>
-              <div className="flex w-full justify-center gap-1 rounded-sm border border-border/60 bg-muted/20 p-1 sm:w-auto">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={viewMode === "pipeline" ? "secondary" : "ghost"}
-                      size="sm"
-                      className={cn(
-                        "h-7 flex-1 rounded-xs px-2.5 text-xs font-semibold transition-all sm:flex-none",
-                        viewMode === "pipeline"
-                          ? "bg-background shadow-xs text-primary"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                      onClick={() => setViewMode("pipeline")}
-                    >
-                      <Kanban className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p className="text-[11px] font-medium">Pipeline View</p>
-                  </TooltipContent>
-                </Tooltip>
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              {selectedLeads.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsBatchAssignOpen(true)}
+                  className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-accent animate-in slide-in-from-right-4"
+                  disabled={isAssigning}
+                >
+                  Bulk Operation ({selectedLeads.length})
+                </Button>
+              )}
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={viewMode === "table" ? "secondary" : "ghost"}
-                      size="sm"
-                      className={cn(
-                        "h-7 flex-1 rounded-xs px-2.5 text-xs font-semibold transition-all sm:flex-none",
-                        viewMode === "table"
-                          ? "bg-background shadow-xs text-primary"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                      onClick={() => setViewMode("table")}
-                    >
-                      <List className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p className="text-[11px] font-medium">Table View</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </TooltipProvider>
+              <Button
+                onClick={() => {
+                  setCreateLeadStatusId(
+                    columns[0]?.id || createLeadStatusId || null,
+                  );
+                  setIsLeadModalOpen(true);
+                }}
+                size="sm"
+                className="h-9 px-6 font-semibold shadow-sm transition-all active:scale-95"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="whitespace-nowrap">Create Lead</span>
+              </Button>
+            </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {selectedLeads.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsBatchAssignOpen(true)}
-              className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-primary hover:text-primary-foreground animate-in slide-in-from-right-4"
-              disabled={isAssigning}
-            >
-              Bulk Operation ({selectedLeads.length})
-            </Button>
-          )}
-
-          <Button
-            onClick={() => {
-              setCreateLeadStatusId(
-                columns[0]?.id || createLeadStatusId || null,
-              );
-              setIsLeadModalOpen(true);
-            }}
-            size="sm"
-            className="h-9 w-full px-4 font-semibold shadow-sm transition-all hover:shadow-md active:scale-95 lg:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="whitespace-nowrap">Create Lead</span>
-          </Button>
         </div>
       </div>
 

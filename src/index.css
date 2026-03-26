@@ -176,6 +176,20 @@
     display: none;
   }
 
+  .scrollbar-premium::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+  .scrollbar-premium::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-premium::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+  .scrollbar-premium:hover::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/40;
+  }
+
   /* New utility classes for inputs */
   .input-error {
     @apply border-destructive ring-destructive/20 focus:ring-destructive;

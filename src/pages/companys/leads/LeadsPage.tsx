@@ -17,7 +17,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import confetti from "canvas-confetti";
-import { Plus, Search, Filter, List, Kanban, X } from "lucide-react";
+import { Plus, Search, Filter, List, Kanban, X, FileDown } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { formatDate, formatDateForAPI } from "@/utils/date";
 import { Combobox } from "@/components/ui/combobox";
@@ -43,6 +53,7 @@ import {
   useLeads,
   useUpdateLeadStatus,
   useBulkUpdateLeads,
+  useExportLeads,
 } from "@/hooks/useLeads";
 import {
   useLeadStatuses,
@@ -248,6 +259,8 @@ const LeadsPage = () => {
 
   const currentUser = useCurrentUser();
   const assignedTo = searchParams.get("assigned_to") || "";
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const exportLeadsMutation = useExportLeads();
   const setAssignedTo = useCallback(
     (val: string) => {
       setSearchParams(
@@ -825,6 +838,16 @@ const LeadsPage = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-2 border-border/60 bg-background hover:bg-accent/50"
+                onClick={() => setIsExportDialogOpen(true)}
+              >
+                <FileDown className="h-4 w-4" />
+                <span className="hidden sm:inline text-xs font-semibold">Export Sheet</span>
+              </Button>
+
               {hasFilters && (
                 <div className="animate-in fade-in slide-in-from-left-2 duration-300">
                   <Button
@@ -897,7 +920,7 @@ const LeadsPage = () => {
               className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-primary hover:text-primary-foreground animate-in slide-in-from-right-4"
               disabled={isAssigning}
             >
-              Assign To ({selectedLeads.length})
+              Bulk Operation ({selectedLeads.length})
             </Button>
           )}
 
@@ -959,6 +982,49 @@ const LeadsPage = () => {
         selectedCount={selectedLeads.length}
         isSubmitting={isAssigning}
       />
+
+      <AlertDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Export Leads to CSV</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to export the filtered leads to a CSV file?
+              This will include all the current applied filters.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={exportLeadsMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                const params = {
+                  search: searchTerm,
+                  status_id: searchParams.get("status_id"),
+                  source_id: searchParams.get("source_id"),
+                  priority: priority,
+                  start_date: formatDateForAPI(dateRange?.from),
+                  end_date: formatDateForAPI(dateRange?.to),
+                  assigned_to: assignedTo,
+                  sort_by: "updated_at",
+                  sort_direction: "desc",
+                };
+                exportLeadsMutation.mutate(params, {
+                  onSuccess: () => setIsExportDialogOpen(false),
+                });
+              }}
+              className="bg-primary hover:bg-primary/90"
+              disabled={exportLeadsMutation.isPending}
+            >
+              {exportLeadsMutation.isPending ? "Exporting..." : "Yes, Export"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

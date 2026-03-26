@@ -7,6 +7,7 @@ import {
   updateLead,
   updateLeadStatus,
   bulkUpdateLeads,
+  exportLeads,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -133,6 +134,24 @@ export function useUpdateLeadStatus() {
       if (error?.code !== "validation_error") {
         toast.error(error?.message || "Failed to update lead.");
       }
+    },
+  });
+}
+export function useExportLeads() {
+  return useMutation({
+    mutationFn: (params: Record<string, unknown>) => exportLeads(params),
+    onSuccess: (data: any) => {
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `leads_export_${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Leads exported successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to export leads.");
     },
   });
 }

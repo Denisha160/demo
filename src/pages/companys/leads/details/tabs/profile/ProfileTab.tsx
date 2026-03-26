@@ -47,14 +47,17 @@ const InterestedCategorySelect = ({
       name: cat.name,
     }));
 
-  const displayValue = (Array.isArray(value) ? value : []).map((val: any) => {
-    const id = typeof val === "string" ? val : val?.id || String(val);
-    const categoryMatch = categories.find((c) => String(c.id) === id);
-    return {
-      id,
-      name: categoryMatch ? categoryMatch.name : (typeof val === "object" ? val?.name : id),
-    };
-  });
+  const displayValue = (Array.isArray(value) ? value : [])
+    .map((val: any) => {
+      const id = typeof val === "string" ? val : val?.id || String(val);
+      const categoryMatch = categories.find((c) => String(c.id) === id);
+      return categoryMatch
+        ? { id, name: categoryMatch.name }
+        : typeof val === "object" && val?.name
+          ? { id, name: val.name }
+          : null;
+    })
+    .filter((v: any): v is { id: string; name: string } => !!v);
 
   return (
     <TagSelector

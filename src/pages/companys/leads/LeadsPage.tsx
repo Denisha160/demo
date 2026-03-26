@@ -106,14 +106,17 @@ const mapLeadToDeal = (
   status_color: lead?.status_color,
   tags: lead?.tags,
   interested_categories: Array.isArray(lead?.interested_category_id)
-    ? lead.interested_category_id.map((cat: any) => {
-        const id = typeof cat === "string" ? cat : String(cat?.id || "");
-        const categoryMatch = categories.find((c) => String(c.id) === id);
-        return {
-          id,
-          name: categoryMatch ? categoryMatch.name : (typeof cat === "object" ? cat?.name : id),
-        };
-      })
+    ? lead.interested_category_id
+        .map((cat: any) => {
+          const id = typeof cat === "string" ? cat : String(cat?.id || "");
+          const categoryMatch = categories.find((c) => String(c.id) === id);
+          return categoryMatch
+            ? { id, name: categoryMatch.name }
+            : typeof cat === "object" && cat?.name
+              ? { id, name: cat.name }
+              : null;
+        })
+        .filter((c: any): c is { id: string; name: string } => !!c)
     : [],
   phone: lead?.phone || lead?.mobile || "-",
   raw_date: lead?.created_at || lead?.date,

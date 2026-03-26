@@ -27,12 +27,7 @@ import { useListCity } from "@/hooks/useCityStateCountry";
 import { useDebounce } from "@/hooks/useDebounce";
 
 const verifyFormSchema = z.object({
-  property_type: z.enum(
-    ["HOTEL", "RESTAURANT", "CHAIN_PROPERTY", "RESORT", "SPA", "OTHER"],
-    {
-      required_error: "Property Type is required",
-    },
-  ),
+  property_type: z.string().min(1, "Property Type is required"),
   property_name: z.string().min(1, "Property Name is required").max(100),
   number_of_properties: z.coerce
     .number()
@@ -65,26 +60,7 @@ const verifyFormSchema = z.object({
       }),
     )
     .default([]),
-  customer_type: z.enum(
-    [
-      "DEALER",
-      "DISTRIBUTOR",
-      "RETAIL",
-      "HOTEL",
-      "RESORT",
-      "CHAIN_HOTEL_RESORT",
-      "SPA_WELLNESS",
-      "CONSULTANT",
-      "SCHOOL",
-      "HOSPITAL",
-      "CORPORATE_OFFICE",
-      "BANK",
-      "BUILDER",
-    ],
-    {
-      required_error: "Customer Type is required",
-    },
-  ),
+  customer_type: z.string().min(1, "Customer Type is required"),
   verification_notes: z.string().optional().nullable(),
 });
 
@@ -114,7 +90,7 @@ export default function VerifyLeadModal({
   });
 
   const cityOptions = useMemo(() => {
-    return (cityResults?.items || []).map((c: any) => ({
+    return ((cityResults as any)?.items || []).map((c: any) => ({
       label: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`
         .replace(/, , /g, ", ")
         .trim(),
@@ -134,12 +110,13 @@ export default function VerifyLeadModal({
       has_showroom: false,
       has_delivery_vehicles: false,
       number_of_vehicles: 0,
-      total_staff: 0,
-      years_of_experience: 0,
-      annual_turnover: 0,
-      number_of_properties: 1,
-      property_type: "OTHER" as const,
-      customer_type: "RETAIL" as const,
+      total_staff: "" as any,
+      years_of_experience: "" as any,
+      annual_turnover: "" as any,
+      number_of_properties: "" as any,
+      property_type: "" as any,
+      property_name: "",
+      customer_type: "" as any,
       cities_of_operation: [],
       vehicle_details: [],
     },
@@ -158,13 +135,13 @@ export default function VerifyLeadModal({
           has_showroom: initialData.has_showroom ?? false,
           has_delivery_vehicles: initialData.has_delivery_vehicles ?? false,
           number_of_vehicles: initialData.number_of_vehicles ?? 0,
-          total_staff: initialData.total_staff ?? 0,
-          years_of_experience: initialData.years_of_experience ?? 0,
-          annual_turnover: initialData.annual_turnover ?? 0,
-          number_of_properties: initialData.number_of_properties ?? 1,
-          property_type: initialData.property_type ?? "OTHER",
+          total_staff: initialData.total_staff ?? "",
+          years_of_experience: initialData.years_of_experience ?? "",
+          annual_turnover: initialData.annual_turnover ?? "",
+          number_of_properties: initialData.number_of_properties ?? "",
+          property_type: initialData.property_type ?? "",
           property_name: initialData.property_name ?? "",
-          customer_type: initialData.customer_type ?? "RETAIL",
+          customer_type: initialData.customer_type ?? "",
           warehouse_location: initialData.warehouse_location ?? "",
           warehouse_size: initialData.warehouse_size ?? null,
           showroom_location: initialData.showroom_location ?? "",

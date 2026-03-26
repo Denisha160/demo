@@ -14,11 +14,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate, formatDateForAPI } from "@/utils/date";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
+import { X } from "lucide-react";
 import VisitsModal, { Visit, VisitFormData } from "./VisitsModal";
 import {
   useCreateLeadVisit,
@@ -74,6 +81,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
   const [visitToDelete, setVisitToDelete] = useState<Visit | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setSearchParams(
@@ -214,7 +222,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             <img
               src={item.image_url}
               alt={item.visit_image_name || item.title}
-              className="h-12 w-12 rounded-md border border-border/60 object-cover"
+              className="h-12 w-12 cursor-pointer rounded-md border border-border/60 object-cover transition-transform hover:scale-105 active:scale-95"
+              onClick={() => setSelectedImageUrl(item.image_url || null)}
             />
           ) : null}
           <div className="flex flex-col">
@@ -250,7 +259,20 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       header: "Location",
       render: (item) => (
         <div className="flex max-w-xs items-start gap-2">
-          <MapPin className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
+          {item.location_latitude && item.location_longitude ? (
+            <button
+              title="Open in Google Maps"
+              className="mt-0.5 rounded-full p-1 transition-colors hover:bg-primary/10 hover:text-primary"
+              onClick={() => {
+                const url = `https://www.google.com/maps?q=${item.location_latitude},${item.location_longitude}`;
+                window.open(url, "_blank");
+              }}
+            >
+              <MapPin className="h-3.5 w-3.5" />
+            </button>
+          ) : (
+            <MapPin className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
+          )}
           <div className="flex flex-col">
             <span className="line-clamp-2 text-xs text-foreground">
               {item.location_address}
@@ -383,6 +405,34 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={!!selectedImageUrl}
+        onOpenChange={(open) => !open && setSelectedImageUrl(null)}
+      >
+        <DialogContent className="max-w-3xl border-none bg-transparent p-0 shadow-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Image Preview</DialogTitle>
+          </DialogHeader>
+          <div className="relative flex h-full w-full items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-50 h-8 w-8 rounded-full bg-background/50 text-foreground hover:bg-background/80"
+              onClick={() => setSelectedImageUrl(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            {selectedImageUrl && (
+              <img
+                src={selectedImageUrl}
+                alt="Enlarged visit view"
+                className="max-h-[85vh] w-auto rounded-lg object-contain shadow-2xl"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

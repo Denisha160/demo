@@ -7,17 +7,17 @@
 
 # # 2. Create a new .env file with specific content
 # echo "
-# VITE_SERVER_URL=https://srv829422.hstgr.cloud
+# VITE_SERVER_URL=https://api.basalt.dev.topgrowth.in
 # " > .env
 
 # # 3. Run npm build to generate the build artifacts
 # npm run build
 
 # # 4. Remove existing assets folder on the server
-# ssh -p 65002 u371241921@147.93.101.85 "rm -rf /home/u371241921/domains/topgrowth.in/public_html/basalt/assets"
+# ssh -p 65002 u371241921@147.93.101.85 "rm -rf /home/u371241921/domains/basalt.dev.topgrowth.in/public_html/basalt/assets"
 
 # # 5. Upload contents of 'dist' directly into 'basalt' directory
-# scp -P 65002 -r dist/* u371241921@147.93.101.85:/home/u371241921/domains/topgrowth.in/public_html/basalt
+# scp -P 65002 -r dist/* u371241921@147.93.101.85:/home/u371241921/domains/basalt.dev.topgrowth.in/public_html/basalt
 
 
 

@@ -896,6 +896,12 @@ const LeadModal = ({
                       placeholder="Enter Expected Revenue"
                       className="h-9 text-xs border-border/60"
                       {...field}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d+$/.test(value)) {
+                          field.onChange(value);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />

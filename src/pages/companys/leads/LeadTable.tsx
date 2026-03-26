@@ -190,7 +190,7 @@ const LeadTable = ({
                   className={cn(
                     "text-[10px] font-extrabold uppercase tracking-wide",
                     PRIORITIES.find((p) => p.value === item.priority)?.color ||
-                      "text-muted-foreground",
+                    "text-muted-foreground",
                   )}
                 >
                   {item.priority || "NORMAL"}
@@ -251,23 +251,6 @@ const LeadTable = ({
           enableSelection={enableSelection}
           onSelectionChange={(items) => onSelectionChange?.(items as any)}
         />
-      </div>
-      <div className="flex items-center justify-center p-4 bg-background/50 border-t border-border/40">
-        {hasMore ? (
-          <Button
-            onClick={onLoadMore}
-            disabled={isLoadingMore}
-            variant="outline"
-            size="sm"
-            className="px-8 font-semibold shadow-sm hover:shadow-md transition-all h-9"
-          >
-            {isLoadingMore ? "Loading..." : "Load More"}
-          </Button>
-        ) : (
-          <div className="text-xs font-medium text-muted-foreground bg-muted/30 px-4 py-2 rounded-full border border-border/40">
-            All leads loaded
-          </div>
-        )}
       </div>
       {updateLeadMutation.isPending && (
         <div className="fixed bottom-4 right-4 animate-pulse bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs shadow-lg">

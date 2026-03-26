@@ -138,6 +138,11 @@ const formSchema = z.object({
   tags: z
     .array(z.object({ id: z.string().optional(), name: z.string() }))
     .optional(),
+  expected_revenue: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^[0-9]+$/.test(val), "Must be a number")
+    .or(z.literal("")),
 });
 
 export type LeadFormData = z.infer<typeof formSchema>;
@@ -311,6 +316,7 @@ const LeadModal = ({
       assigned_to: "",
       interested_category_id: [],
       tags: [],
+      expected_revenue: "",
     });
     setSelectedCountryId(null);
     setSelectedStateId(null);
@@ -868,6 +874,26 @@ const LeadModal = ({
                   <FormControl>
                     <Input
                       placeholder="Enter Address Line 2"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="expected_revenue"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
+                    Expected Revenue
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter Expected Revenue"
                       className="h-9 text-xs border-border/60"
                       {...field}
                     />

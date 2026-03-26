@@ -132,6 +132,7 @@ const mapLeadToDeal = (
     : [],
   phone: lead?.phone || lead?.mobile || "-",
   raw_date: lead?.created_at || lead?.date,
+  expected_revenue: lead?.expected_revenue,
 });
 
 const applyServerValidationErrors = (
@@ -439,24 +440,31 @@ const LeadsPage = () => {
         const statusIndex = sortedStatuses.findIndex(
           (status) => status.id === columnId,
         );
-        const status = sortedStatuses.find((item) => item.id === columnId);
+        const status = sortedStatuses.find((status) => status.id === columnId);
         if (!status) return null;
 
         const paginated = paginationData[columnId];
         const statusItems = paginated?.items || [];
+        const deals = statusItems
+          .map((item) => mapLeadToDeal(item, categories as any[]))
+          .filter(isDealVisible);
+
+        const totalRevenue = deals.reduce(
+          (sum, d) => sum + (Number(d.expected_revenue) || 0),
+          0,
+        );
 
         return {
           id: status.id,
           title: status.name,
           variant: VARIANTS[statusIndex % VARIANTS.length] || "default",
           color: status.color,
-          deals: statusItems
-            .map((item) => mapLeadToDeal(item, categories as any[]))
-            .filter(isDealVisible),
+          deals,
           total: paginated?.total || 0,
-        } satisfies PipelineColumn & { total: number };
+          total_expected_revenue: totalRevenue,
+        } satisfies PipelineColumn & { total: number; total_expected_revenue: number };
       })
-      .filter(Boolean) as (PipelineColumn & { total: number })[];
+      .filter(Boolean) as (PipelineColumn & { total: number; total_expected_revenue: number })[];
   }, [columnOrder, isDealVisible, leadStatuses, paginationData, categories]);
 
   const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(

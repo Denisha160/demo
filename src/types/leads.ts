@@ -18,6 +18,7 @@ export interface Deal {
   interested_categories?: { id: string; name: string }[];
   phone?: string;
   raw_date?: string;
+  expected_revenue?: string | number;
 }
 
 export interface PipelineColumn {

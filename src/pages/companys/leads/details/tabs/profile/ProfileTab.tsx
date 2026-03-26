@@ -144,6 +144,11 @@ const leadSchema = z.object({
     .optional(),
   address_line1: z.string().optional(),
   address_line2: z.string().optional(),
+  expected_revenue: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^[0-9]+$/.test(val), "Must be a number")
+    .or(z.literal("")),
 });
 
 const ProfileTab = ({
@@ -789,6 +794,26 @@ const ProfileTab = ({
                         disabled={!isEditing || isSaving}
                         className="h-9 text-sm uppercase"
                         placeholder="Enter PAN Number"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="expected_revenue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold">
+                      Expected Revenue
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={!isEditing || isSaving}
+                        className="h-9 text-sm"
+                        placeholder="Enter Expected Revenue"
                         {...field}
                       />
                     </FormControl>

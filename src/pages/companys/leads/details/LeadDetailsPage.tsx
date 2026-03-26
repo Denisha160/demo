@@ -75,6 +75,7 @@ export interface LeadProfileFormValues {
   address_line2: string;
   tags: { id?: string; name: string }[];
   interested_category_id: { id?: string; name: string }[];
+  expected_revenue: string;
 }
 
 interface LeadDetailsData {
@@ -110,6 +111,7 @@ interface LeadDetailsData {
   address?: string;
   address_line1?: string;
   address_line2?: string;
+  expected_revenue?: string;
   tags?: any[] | string;
   attachments?: any[];
   is_verified?: boolean;
@@ -217,6 +219,7 @@ const mapLeadToProfile = (
           : { id: String(id?.id), name: id?.name || id?.id },
       )
     : [],
+  expected_revenue: lead?.expected_revenue || "",
 });
 
 const LeadDetailsPage = () => {
@@ -284,6 +287,8 @@ const LeadDetailsPage = () => {
       payload.address_line1 = profile.address_line1;
     if (profile.address_line2 !== leadProfile.address_line2)
       payload.address_line2 = profile.address_line2;
+    if (profile.expected_revenue !== leadProfile.expected_revenue)
+      payload.expected_revenue = profile.expected_revenue;
 
     const compareTags = (a: any[], b: any[]) =>
       JSON.stringify(a.map((x) => x.id || x.name).sort()) ===

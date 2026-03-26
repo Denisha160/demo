@@ -32,21 +32,30 @@ const formatCurrency = (amount: number) => {
 };
 
 const activityColumns: Column<Record<string, unknown>>[] = [
-  { 
-    key: "id", 
+  {
+    key: "id",
     header: "ID",
-    render: (v) => <span className="text-[10px] text-muted-foreground">{(v as Record<string, string>).id?.split('-')[0]?.toUpperCase() || "N/A"}</span> 
+    render: (v) => (
+      <span className="text-[10px] text-muted-foreground">
+        {(v as Record<string, string>).id?.split("-")[0]?.toUpperCase() ||
+          "N/A"}
+      </span>
+    ),
   },
   { key: "name", header: "Deal Name" },
-  { 
-    key: "contact", 
-    header: "Contact", 
-    render: (v) => (v as Record<string, string>).contact || "-" 
+  {
+    key: "contact",
+    header: "Contact",
+    render: (v) => (v as Record<string, string>).contact || "-",
   },
   {
     key: "value",
     header: "Value",
-    render: (v) => <span className="font-medium">{formatCurrency((v as Record<string, number>).value || 0)}</span>,
+    render: (v) => (
+      <span className="font-medium">
+        {formatCurrency((v as Record<string, number>).value || 0)}
+      </span>
+    ),
   },
   {
     key: "stage",
@@ -55,17 +64,25 @@ const activityColumns: Column<Record<string, unknown>>[] = [
       <StatusBadge
         status={(q as Record<string, string>).stage as string}
         variant={
-          q.stage === "Closed Won" || q.stage === "Converted" || q.stage === "Delivered"
+          q.stage === "Closed Won" ||
+          q.stage === "Converted" ||
+          q.stage === "Delivered"
             ? "success"
             : "info"
         }
       />
     ),
   },
-  { 
-    key: "created_at", 
+  {
+    key: "created_at",
     header: "Date",
-    render: (v) => <span className="text-xs">{(v as Record<string, string>).created_at ? format(new Date((v as Record<string, string>).created_at), "MMM dd") : "-"}</span>
+    render: (v) => (
+      <span className="text-xs">
+        {(v as Record<string, string>).created_at
+          ? format(new Date((v as Record<string, string>).created_at), "MMM dd")
+          : "-"}
+      </span>
+    ),
   },
 ];
 
@@ -73,7 +90,11 @@ const LeadsTab = ({ userData }: LeadsTabProps) => {
   const { data, isLoading } = useAnalytics({ user_id: userData.id });
 
   if (isLoading) {
-    return <div className="animate-pulse p-8 text-center text-muted-foreground w-full">Loading analytics data...</div>;
+    return (
+      <div className="animate-pulse p-8 text-center text-muted-foreground w-full">
+        Loading analytics data...
+      </div>
+    );
   }
 
   const counters = data?.counters;
@@ -119,14 +140,19 @@ const LeadsTab = ({ userData }: LeadsTabProps) => {
           <div className="p-5 border border-border rounded-sm bg-card shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
-                <PieChart className="h-3 w-3 text-primary" /> Lead Pipeline Distribution
+                <PieChart className="h-3 w-3 text-primary" /> Lead Pipeline
+                Distribution
               </h3>
               <span className="text-[9px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-sm">
                 5-Stage Workflow
               </span>
             </div>
             <div className="flex flex-col md:flex-row items-center gap-8">
-              <ResponsiveContainer width="100%" height={180} className="md:w-1/2">
+              <ResponsiveContainer
+                width="100%"
+                height={180}
+                className="md:w-1/2"
+              >
                 <RePieChart>
                   <Pie
                     data={pipeline}
@@ -139,7 +165,10 @@ const LeadsTab = ({ userData }: LeadsTabProps) => {
                     paddingAngle={2}
                   >
                     {pipeline.map((entry, i) => (
-                      <Cell key={i} fill={entry.color || "hsl(215, 60%, 50%)"} />
+                      <Cell
+                        key={i}
+                        fill={entry.color || "hsl(215, 60%, 50%)"}
+                      />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number) => [value, "Leads"]} />
@@ -152,10 +181,19 @@ const LeadsTab = ({ userData }: LeadsTabProps) => {
                     className="flex items-center justify-between p-2.5 rounded-sm bg-muted/20 border border-border/50"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: s.color || "hsl(215, 60%, 50%)" }} />
-                      <span className="text-[11px] font-semibold text-foreground">{s.name}</span>
+                      <div
+                        className="h-2 w-2 rounded-full"
+                        style={{
+                          backgroundColor: s.color || "hsl(215, 60%, 50%)",
+                        }}
+                      />
+                      <span className="text-[11px] font-semibold text-foreground">
+                        {s.name}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-bold text-primary">{s.value} leads</span>
+                    <span className="text-[11px] font-bold text-primary">
+                      {s.value} leads
+                    </span>
                   </div>
                 ))}
               </div>
@@ -166,7 +204,8 @@ const LeadsTab = ({ userData }: LeadsTabProps) => {
           <div className="p-5 border border-border rounded-sm bg-card shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
-                <IndianRupee className="h-3 w-3 text-primary" /> Recent Business Activity
+                <IndianRupee className="h-3 w-3 text-primary" /> Recent Business
+                Activity
               </h3>
             </div>
             <DataTable data={activities} columns={activityColumns} />

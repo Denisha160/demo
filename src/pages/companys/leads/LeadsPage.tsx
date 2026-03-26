@@ -133,19 +133,19 @@ const mapLeadToDeal = (
   tags: lead?.tags,
   interested_categories: Array.isArray(lead?.interested_category_id)
     ? lead.interested_category_id
-      .map((cat: any) => {
-        if (typeof cat === "string") return { id: cat, name: cat };
-        const id = String(cat?.id || "");
-        const categoryMatch = (categories as any[]).find(
-          (c) => String(c.id) === id,
-        );
-        return categoryMatch
-          ? { id, name: categoryMatch.name }
-          : cat?.name
-            ? { id, name: cat.name }
-            : null;
-      })
-      .filter((c: any): c is { id: string; name: string } => !!c)
+        .map((cat: any) => {
+          if (typeof cat === "string") return { id: cat, name: cat };
+          const id = String(cat?.id || "");
+          const categoryMatch = (categories as any[]).find(
+            (c) => String(c.id) === id,
+          );
+          return categoryMatch
+            ? { id, name: categoryMatch.name }
+            : cat?.name
+              ? { id, name: cat.name }
+              : null;
+        })
+        .filter((c: any): c is { id: string; name: string } => !!c)
     : [],
   phone: lead?.phone || lead?.mobile || "-",
   raw_date: lead?.created_at || lead?.date,
@@ -411,9 +411,9 @@ const LeadsPage = () => {
     setColumnOrder((prev) =>
       prev.length
         ? [
-          ...prev.filter((id) => sortedIds.includes(id)),
-          ...sortedIds.filter((id) => !prev.includes(id)),
-        ]
+            ...prev.filter((id) => sortedIds.includes(id)),
+            ...sortedIds.filter((id) => !prev.includes(id)),
+          ]
         : sortedIds,
     );
     if (!searchParams.has("stages")) {
@@ -482,9 +482,15 @@ const LeadsPage = () => {
           deals,
           total: paginated?.total || 0,
           total_expected_revenue: totalRevenue,
-        } satisfies PipelineColumn & { total: number; total_expected_revenue: number };
+        } satisfies PipelineColumn & {
+          total: number;
+          total_expected_revenue: number;
+        };
       })
-      .filter(Boolean) as (PipelineColumn & { total: number; total_expected_revenue: number })[];
+      .filter(Boolean) as (PipelineColumn & {
+      total: number;
+      total_expected_revenue: number;
+    })[];
   }, [columnOrder, isDealVisible, leadStatuses, paginationData, categories]);
 
   const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(
@@ -871,7 +877,9 @@ const LeadsPage = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant={viewMode === "pipeline" ? "secondary" : "ghost"}
+                        variant={
+                          viewMode === "pipeline" ? "secondary" : "ghost"
+                        }
                         size="sm"
                         className={cn(
                           "h-7 px-2.5 rounded-xs text-xs font-semibold transition-all",
@@ -915,17 +923,17 @@ const LeadsPage = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-            {viewMode === "table" && selectedLeads.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsBatchAssignOpen(true)}
-                className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-accent animate-in slide-in-from-right-4"
-                disabled={isAssigning}
-              >
-                Bulk Operation ({selectedLeads.length})
-              </Button>
-            )}
+              {viewMode === "table" && selectedLeads.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsBatchAssignOpen(true)}
+                  className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-accent animate-in slide-in-from-right-4"
+                  disabled={isAssigning}
+                >
+                  Bulk Operation ({selectedLeads.length})
+                </Button>
+              )}
 
               <Button
                 onClick={() => {

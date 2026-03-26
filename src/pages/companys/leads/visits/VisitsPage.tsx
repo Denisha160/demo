@@ -128,7 +128,6 @@ const VisitsPage = () => {
     }));
   }, [leadsDataRaw]);
 
-
   const filters = useMemo(() => {
     const f: any = {
       limit: pageSize,

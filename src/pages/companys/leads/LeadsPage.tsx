@@ -9,6 +9,7 @@ import {
   isWithinInterval,
   format,
 } from "date-fns";
+import confetti from "canvas-confetti";
 import { Plus, Search, Filter, List, Kanban, X } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -23,12 +24,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { formatDate, formatDateForAPI } from "@/utils/date";
 import { Combobox } from "@/components/ui/combobox";
 import LeadModal, { LeadFormData } from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
 import { Deal, PipelineColumn } from "../../../types/leads";
-import { useCreateLead, useLeads, useUpdateLeadStatus, useBulkUpdateLeads } from "@/hooks/useLeads";
+import {
+  useCreateLead,
+  useLeads,
+  useUpdateLeadStatus,
+  useBulkUpdateLeads,
+} from "@/hooks/useLeads";
 import {
   useLeadStatuses,
   useUpdateLeadStatusOrder,
@@ -87,10 +94,7 @@ const mapLeadToDeal = (
       ? String(lead.budget)
       : "-",
   contact: lead?.contact || lead?.email || lead?.phone || "-",
-  date: (lead?.created_at || lead?.date || new Date().toISOString()).slice(
-    0,
-    10,
-  ),
+  date: formatDate(lead?.created_at || lead?.date),
   priority: lead?.priority || "NORMAL",
   quotationStatus: lead?.quotationStatus || lead?.quotation_status,
   isVerified: !!lead?.is_verified,
@@ -100,6 +104,7 @@ const mapLeadToDeal = (
   status_color: lead?.status_color,
   tags: lead?.tags,
   phone: lead?.phone || lead?.mobile || "-",
+  raw_date: lead?.created_at || lead?.date,
 });
 
 const applyServerValidationErrors = (
@@ -117,13 +122,19 @@ const LeadsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const searchTerm = searchParams.get("search") || "";
-  const setSearchTerm = useCallback((val: string) => {
-    setSearchParams((prev) => {
-      if (val) prev.set("search", val);
-      else prev.delete("search");
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const setSearchTerm = useCallback(
+    (val: string) => {
+      setSearchParams(
+        (prev) => {
+          if (val) prev.set("search", val);
+          else prev.delete("search");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const dateRange = useMemo<DateRange | undefined>(() => {
     const from = searchParams.get("from");
@@ -134,46 +145,72 @@ const LeadsPage = () => {
     };
   }, [searchParams]);
 
-  const setDateRange = useCallback((range: DateRange | undefined) => {
-    setSearchParams((prev) => {
-      if (range?.from) prev.set("from", format(range.from, "yyyy-MM-dd"));
-      else prev.delete("from");
-      if (range?.to) prev.set("to", format(range.to, "yyyy-MM-dd"));
-      else prev.delete("to");
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const setDateRange = useCallback(
+    (range: DateRange | undefined) => {
+      setSearchParams(
+        (prev) => {
+          if (range?.from) prev.set("from", format(range.from, "yyyy-MM-dd"));
+          else prev.delete("from");
+          if (range?.to) prev.set("to", format(range.to, "yyyy-MM-dd"));
+          else prev.delete("to");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
-  const viewMode = (searchParams.get("view") as "pipeline" | "table") || "pipeline";
-  const setViewMode = useCallback((mode: "pipeline" | "table") => {
-    setSearchParams((prev) => {
-      prev.set("view", mode);
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const viewMode =
+    (searchParams.get("view") as "pipeline" | "table") || "pipeline";
+  const setViewMode = useCallback(
+    (mode: "pipeline" | "table") => {
+      setSearchParams(
+        (prev) => {
+          prev.set("view", mode);
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const visibleStageIds = useMemo(() => {
     const stages = searchParams.get("stages");
     return stages ? stages.split(",") : [];
   }, [searchParams]);
 
-  const setVisibleStageIds = useCallback((ids: string[] | ((prev: string[]) => string[])) => {
-    setSearchParams((prev) => {
-      const nextIds = typeof ids === "function" ? ids(visibleStageIds) : ids;
-      if (nextIds.length) prev.set("stages", nextIds.join(","));
-      else prev.delete("stages");
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams, visibleStageIds]);
- 
+  const setVisibleStageIds = useCallback(
+    (ids: string[] | ((prev: string[]) => string[])) => {
+      setSearchParams(
+        (prev) => {
+          const nextIds =
+            typeof ids === "function" ? ids(visibleStageIds) : ids;
+          if (nextIds.length) prev.set("stages", nextIds.join(","));
+          else prev.delete("stages");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams, visibleStageIds],
+  );
+
   const priority = searchParams.get("priority") || "";
-  const setPriority = useCallback((val: string) => {
-    setSearchParams((prev) => {
-      if (val && val !== "ALL") prev.set("priority", val);
-      else prev.delete("priority");
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const setPriority = useCallback(
+    (val: string) => {
+      setSearchParams(
+        (prev) => {
+          if (val && val !== "ALL") prev.set("priority", val);
+          else prev.delete("priority");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isBatchAssignOpen, setIsBatchAssignOpen] = useState(false);
@@ -191,34 +228,42 @@ const LeadsPage = () => {
   }, [searchTerm, dateRange, priority]);
 
   const handleClearFilters = () => {
-    setSearchParams((prev) => {
-      prev.delete("search");
-      prev.delete("from");
-      prev.delete("to");
-      prev.delete("priority");
-      return prev;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        prev.delete("search");
+        prev.delete("from");
+        prev.delete("to");
+        prev.delete("priority");
+        return prev;
+      },
+      { replace: true },
+    );
   };
 
   const filters = useMemo(() => {
     const f: any = {};
     if (searchTerm) f.search = searchTerm;
-    if (dateRange?.from) f.start_date = format(dateRange.from, "yyyy-MM-dd");
+    if (dateRange?.from) {
+      f.start_date = formatDateForAPI(dateRange.from);
+    }
     if (dateRange?.to) {
-      f.end_date = format(dateRange.to, "yyyy-MM-dd");
-    } else if (dateRange?.from) {
-      f.end_date = format(dateRange.from, "yyyy-MM-dd");
+      f.end_date = formatDateForAPI(dateRange.to);
     }
     if (priority && priority !== "ALL") f.priority = priority;
     return f;
   }, [searchTerm, dateRange, priority]);
 
-  const [paginationData, setPaginationData] = useState<Record<string, {
-    items: any[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>>({});
+  const [paginationData, setPaginationData] = useState<
+    Record<
+      string,
+      {
+        items: any[];
+        total: number;
+        offset: number;
+        limit: number;
+      }
+    >
+  >({});
 
   const [tableData, setTableData] = useState<{
     items: any[];
@@ -243,7 +288,10 @@ const LeadsPage = () => {
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLeadStatus();
   const updateStatusOrderMutation = useUpdateLeadStatusOrder();
-  const leadStatuses = useMemo(() => (statusResponse as any)?.items || [], [statusResponse]);
+  const leadStatuses = useMemo(
+    () => (statusResponse as any)?.items || [],
+    [statusResponse],
+  );
 
   useEffect(() => {
     if (initialGroups) {
@@ -284,9 +332,9 @@ const LeadsPage = () => {
     setColumnOrder((prev) =>
       prev.length
         ? [
-          ...prev.filter((id) => sortedIds.includes(id)),
-          ...sortedIds.filter((id) => !prev.includes(id)),
-        ]
+            ...prev.filter((id) => sortedIds.includes(id)),
+            ...sortedIds.filter((id) => !prev.includes(id)),
+          ]
         : sortedIds,
     );
     if (!searchParams.has("stages")) {
@@ -302,8 +350,8 @@ const LeadsPage = () => {
         deal.company.toLowerCase().includes(searchTerm.toLowerCase());
 
       let matchesDate = true;
-      if (dateRange?.from) {
-        const dealDate = parseISO(deal.date);
+      if (dateRange?.from && deal.raw_date) {
+        const dealDate = new Date(deal.raw_date);
         const fromDate = startOfDay(dateRange.from);
         const toDate = dateRange.to
           ? endOfDay(dateRange.to)
@@ -351,7 +399,9 @@ const LeadsPage = () => {
       .filter(Boolean) as (PipelineColumn & { total: number })[];
   }, [columnOrder, isDealVisible, leadStatuses, paginationData]);
 
-  const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(null);
+  const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(
+    null,
+  );
 
   const handleLoadMore = async (statusId: string) => {
     const current = paginationData[statusId];
@@ -511,6 +561,38 @@ const LeadsPage = () => {
     // Fire API call only for inter-column moves, since intra-column reordering
     // might not be natively supported by the backend without a specific index/order field.
     if (source.droppableId !== destination.droppableId) {
+      const destStatus = leadStatuses.find(
+        (s: any) => s.id === destination.droppableId,
+      );
+      if (destStatus?.name?.toLowerCase().includes("won")) {
+        const duration = 5 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+        const randomInRange = (min: number, max: number) =>
+          Math.random() * (max - min) + min;
+
+        const interval = window.setInterval(() => {
+          const timeLeft = animationEnd - Date.now();
+
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
+
+          const particleCount = 50 * (timeLeft / duration);
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          });
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          });
+        }, 250);
+      }
+
       updateLeadMutation.mutate(
         {
           leadId: movedDeal.id,
@@ -601,7 +683,7 @@ const LeadsPage = () => {
               <div className="flex-1 sm:flex-none">
                 <DatePickerWithRange date={dateRange} setDate={setDateRange} />
               </div>
- 
+
               <div className="w-[140px]">
                 <Combobox
                   options={PRIORITY_OPTIONS}
@@ -611,7 +693,7 @@ const LeadsPage = () => {
                   className="h-9"
                 />
               </div>
- 
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

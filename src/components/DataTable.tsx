@@ -256,7 +256,7 @@ function DataTable<T extends Record<string, any>>({
                   className={cn(
                     "h-8 px-3 text-left align-middle font-medium text-muted-foreground whitespace-nowrap transition-colors",
                     col.sortable &&
-                    "cursor-pointer select-none hover:text-foreground",
+                      "cursor-pointer select-none hover:text-foreground",
                     col.className,
                   )}
                 >

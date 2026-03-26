@@ -1,7 +1,15 @@
 import { useNavigate, useParams, Link } from "react-router-dom";
 import {
-  ArrowLeft, MapPin, Clock, ClipboardList, User, Phone, Mail,
-  Briefcase, AlertCircle, Activity,
+  ArrowLeft,
+  MapPin,
+  Clock,
+  ClipboardList,
+  User,
+  Phone,
+  Mail,
+  Briefcase,
+  AlertCircle,
+  Activity,
 } from "lucide-react";
 import { useUser } from "@/hooks/useUsers";
 import UserVisitsTab from "./tabs/UserVisitsTab";
@@ -10,7 +18,12 @@ import UserTasksTab from "./tabs/UserTasksTab";
 import UserActivitiesTab from "./tabs/UserActivitiesTab";
 
 const getInitials = (name: string) =>
-  (name || "?").split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  (name || "?")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
 const GRADIENTS = [
   "from-violet-500 to-purple-600",
@@ -35,7 +48,11 @@ const SalesMemberDetailPage = () => {
   const activeTabClass = tab || "visits";
 
   const { data: userData, isLoading: userLoading } = useUser(userId || "");
-  const user: any = (userData as any)?.data?.user || (userData as any)?.user || (userData as any)?.data || userData;
+  const user: any =
+    (userData as any)?.data?.user ||
+    (userData as any)?.user ||
+    (userData as any)?.data ||
+    userData;
 
   const colorIdx = (user?.name || "").charCodeAt(0) % GRADIENTS.length;
 
@@ -54,7 +71,12 @@ const SalesMemberDetailPage = () => {
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
         <AlertCircle className="h-10 w-10 mb-2 opacity-30" />
         <p className="text-sm font-medium">Member not found</p>
-        <button onClick={() => navigate(-1)} className="text-xs text-primary mt-2 underline underline-offset-2">Go back</button>
+        <button
+          onClick={() => navigate(-1)}
+          className="text-xs text-primary mt-2 underline underline-offset-2"
+        >
+          Go back
+        </button>
       </div>
     );
   }
@@ -70,22 +92,34 @@ const SalesMemberDetailPage = () => {
         </button>
         <div>
           <h1 className="text-lg font-bold text-foreground">Member Activity</h1>
-          <p className="text-xs text-muted-foreground">Overall activity layout across all assigned leads for {user.name}</p>
+          <p className="text-xs text-muted-foreground">
+            Overall activity layout across all assigned leads for {user.name}
+          </p>
         </div>
       </div>
 
       <div className="bg-card border border-border rounded-sm p-3 shadow-sm">
         <div className="flex flex-col md:flex-row gap-5 items-start">
-          <div className={`h-16 w-16 rounded-full bg-gradient-to-br ${GRADIENTS[colorIdx]} flex items-center justify-center text-white text-xl font-bold shrink-0 shadow`}>
+          <div
+            className={`h-16 w-16 rounded-full bg-gradient-to-br ${GRADIENTS[colorIdx]} flex items-center justify-center text-white text-xl font-bold shrink-0 shadow`}
+          >
             {getInitials(user.name)}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-foreground">{user.name}</h2>
-                {user.department && <p className="text-sm text-muted-foreground">{user.department}</p>}
+                <h2 className="text-lg font-bold text-foreground">
+                  {user.name}
+                </h2>
+                {user.department && (
+                  <p className="text-sm text-muted-foreground">
+                    {user.department}
+                  </p>
+                )}
               </div>
-              <span className={`shrink-0 text-xs px-2.5 py-1 rounded-sm font-medium ${user.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+              <span
+                className={`shrink-0 text-xs px-2.5 py-1 rounded-sm font-medium ${user.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+              >
                 {user.is_active ? "Active" : "Inactive"}
               </span>
             </div>
@@ -93,22 +127,26 @@ const SalesMemberDetailPage = () => {
             <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
               {user.email && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4 shrink-0 text-primary/60" /><span>{user.email}</span>
+                  <Mail className="h-4 w-4 shrink-0 text-primary/60" />
+                  <span>{user.email}</span>
                 </div>
               )}
               {user.phone_number && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4 shrink-0 text-primary/60" /><span>{user.phone_number}</span>
+                  <Phone className="h-4 w-4 shrink-0 text-primary/60" />
+                  <span>{user.phone_number}</span>
                 </div>
               )}
               {user.employee_code && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4 shrink-0 text-primary/60" /><span>ID: {user.employee_code}</span>
+                  <User className="h-4 w-4 shrink-0 text-primary/60" />
+                  <span>ID: {user.employee_code}</span>
                 </div>
               )}
               {user.work_shift && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Briefcase className="h-4 w-4 shrink-0 text-primary/60" /><span className="capitalize">{user.work_shift} shift</span>
+                  <Briefcase className="h-4 w-4 shrink-0 text-primary/60" />
+                  <span className="capitalize">{user.work_shift} shift</span>
                 </div>
               )}
             </div>
@@ -122,10 +160,11 @@ const SalesMemberDetailPage = () => {
             <Link
               key={t.key}
               to={`/${companyId}/sales/${userId}/${t.key}`}
-              className={`flex items-center whitespace-nowrap gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${activeTabClass === t.key
+              className={`flex items-center whitespace-nowrap gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTabClass === t.key
                   ? "border-primary text-primary bg-card"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-t-sm"
-                }`}
+              }`}
             >
               <t.icon className="h-4 w-4" />
               {t.label}
@@ -134,12 +173,19 @@ const SalesMemberDetailPage = () => {
         </div>
 
         {/* Tab Content */}
-        {activeTabClass === "visits" && <UserVisitsTab userId={userId as string} />}
-        {activeTabClass === "followups" && <UserFollowUpsTab userId={userId as string} />}
-        {activeTabClass === "tasks" && <UserTasksTab userId={userId as string} />}
-        {activeTabClass === "activity" && <UserActivitiesTab userId={userId as string} />}
+        {activeTabClass === "visits" && (
+          <UserVisitsTab userId={userId as string} />
+        )}
+        {activeTabClass === "followups" && (
+          <UserFollowUpsTab userId={userId as string} />
+        )}
+        {activeTabClass === "tasks" && (
+          <UserTasksTab userId={userId as string} />
+        )}
+        {activeTabClass === "activity" && (
+          <UserActivitiesTab userId={userId as string} />
+        )}
       </div>
-
     </div>
   );
 };

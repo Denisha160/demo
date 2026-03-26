@@ -14,8 +14,10 @@ export function useBulkUpdateLeads() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { lead_ids: string[]; updates: Record<string, unknown> }) =>
-      bulkUpdateLeads(data),
+    mutationFn: (data: {
+      lead_ids: string[];
+      updates: Record<string, unknown>;
+    }) => bulkUpdateLeads(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     },
@@ -24,7 +26,6 @@ export function useBulkUpdateLeads() {
     },
   });
 }
-
 
 const normalizeList = <T>(response: any): T[] => {
   if (Array.isArray(response?.data?.lead)) return response.data.lead;

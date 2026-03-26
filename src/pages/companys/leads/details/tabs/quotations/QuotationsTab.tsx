@@ -4,6 +4,7 @@ import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatDate } from "@/utils/date";
 import QuotationModal, {
   Quotation,
   QuotationFormData,
@@ -178,9 +179,9 @@ const QuotationsTab = () => {
         prev.map((quotation) =>
           quotation.id === editingQuotation.id
             ? {
-              ...quotation,
-              ...formData,
-            }
+                ...quotation,
+                ...formData,
+              }
             : quotation,
         ),
       );
@@ -231,13 +232,15 @@ const QuotationsTab = () => {
     {
       key: "quotation_date",
       header: "Date",
-      render: (item) => <span className="text-sm">{item.quotation_date}</span>,
+      render: (item) => (
+        <span className="text-sm">{formatDate(item.quotation_date)}</span>
+      ),
     },
     {
       key: "valid_until",
       header: "Valid Until",
       render: (item) => (
-        <span className="text-sm">{item.valid_until || "-"}</span>
+        <span className="text-sm">{formatDate(item.valid_until)}</span>
       ),
     },
     {

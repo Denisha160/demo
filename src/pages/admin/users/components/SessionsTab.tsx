@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Loader2, Monitor, Smartphone, Globe, Clock, ShieldCheck } from "lucide-react";
+import {
+  Loader2,
+  Monitor,
+  Smartphone,
+  Globe,
+  Clock,
+  ShieldCheck,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useUserSessions } from "@/hooks/useUsers";
 import { cn } from "@/lib/utils";
@@ -21,7 +28,7 @@ const SessionsTab = ({ user_id }: { user_id: string }) => {
 
   const parseUserAgent = (ua: string) => {
     if (!ua) return { device: "Unknown", os: "Unknown", browser: "Unknown" };
-    
+
     let device = "Desktop";
     if (/mobile/i.test(ua)) device = "Mobile";
     else if (/tablet/i.test(ua)) device = "Tablet";
@@ -50,11 +57,19 @@ const SessionsTab = ({ user_id }: { user_id: string }) => {
         const { device, os, browser } = parseUserAgent(session.user_agent);
         return (
           <div className="flex items-center gap-3">
-            <div className={cn(
-              "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-              session.is_deleted ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
-            )}>
-              {device === "Mobile" ? <Smartphone className="h-4 w-4" /> : <Monitor className="h-4 w-4" />}
+            <div
+              className={cn(
+                "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
+                session.is_deleted
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-primary/10 text-primary",
+              )}
+            >
+              {device === "Mobile" ? (
+                <Smartphone className="h-4 w-4" />
+              ) : (
+                <Monitor className="h-4 w-4" />
+              )}
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-foreground">
@@ -66,7 +81,7 @@ const SessionsTab = ({ user_id }: { user_id: string }) => {
             </div>
           </div>
         );
-      }
+      },
     },
     {
       key: "ip_address",
@@ -76,7 +91,7 @@ const SessionsTab = ({ user_id }: { user_id: string }) => {
           <Globe className="h-3 w-3 text-muted-foreground/60" />
           {session.ip_address.replace("::ffff:", "")}
         </div>
-      )
+      ),
     },
     {
       key: "is_deleted",
@@ -89,7 +104,7 @@ const SessionsTab = ({ user_id }: { user_id: string }) => {
             <StatusBadge status="Active" variant="success" />
           )}
         </div>
-      )
+      ),
     },
     {
       key: "created_at",
@@ -98,13 +113,17 @@ const SessionsTab = ({ user_id }: { user_id: string }) => {
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Clock className="h-3 w-3" />
-            <span>{formatDistanceToNow(new Date(session.created_at), { addSuffix: true })}</span>
+            <span>
+              {formatDistanceToNow(new Date(session.created_at), {
+                addSuffix: true,
+              })}
+            </span>
           </div>
           <span className="text-[9px] opacity-60">
             {new Date(session.created_at).toLocaleString()}
           </span>
         </div>
-      )
+      ),
     },
     {
       key: "expires_at",
@@ -113,8 +132,8 @@ const SessionsTab = ({ user_id }: { user_id: string }) => {
         <div className="text-muted-foreground">
           {new Date(session.expires_at).toLocaleDateString()}
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   return (

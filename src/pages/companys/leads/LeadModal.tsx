@@ -178,8 +178,14 @@ const LeadModal = ({
     name: tag.name,
   }));
 
-  const { data: statusResponse } = useLeadStatuses({ limit: 100 }, { enabled: open });
-  const { data: sourceResponse } = useLeadSources({ limit: 100 }, { enabled: open });
+  const { data: statusResponse } = useLeadStatuses(
+    { limit: 100 },
+    { enabled: open },
+  );
+  const { data: sourceResponse } = useLeadSources(
+    { limit: 100 },
+    { enabled: open },
+  );
   const { data: usersResponse } = useUsers({ limit: 100 }, { enabled: open });
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(
     null,
@@ -196,21 +202,32 @@ const LeadModal = ({
   const debouncedStateSearch = useDebounce(stateSearch, 500);
   const debouncedCitySearch = useDebounce(citySearch, 500);
 
-  const { data: countriesData } = useCountries({
-    search: debouncedCountrySearch,
-    combobox: true,
-    limit: 100,
-  }, { enabled: open });
-  const { data: statesData } = useStates(selectedCountryId || undefined, {
-    search: debouncedStateSearch,
-    combobox: true,
-    limit: 100,
-  }, { enabled: open && !!selectedCountryId });
-  const { data: citiesData } = useCities(selectedStateId || undefined, {
-    search: debouncedCitySearch,
-    combobox: true,
-    limit: 100,
-  }, { enabled: open && !!selectedStateId });
+  const { data: countriesData } = useCountries(
+    {
+      search: debouncedCountrySearch,
+      combobox: true,
+      limit: 100,
+    },
+    { enabled: open },
+  );
+  const { data: statesData } = useStates(
+    selectedCountryId || undefined,
+    {
+      search: debouncedStateSearch,
+      combobox: true,
+      limit: 100,
+    },
+    { enabled: open && !!selectedCountryId },
+  );
+  const { data: citiesData } = useCities(
+    selectedStateId || undefined,
+    {
+      search: debouncedCitySearch,
+      combobox: true,
+      limit: 100,
+    },
+    { enabled: open && !!selectedStateId },
+  );
 
   const countryOptions =
     (countriesData as any)?.items?.map((item: any) => ({
@@ -287,8 +304,8 @@ const LeadModal = ({
       ...data,
       interested_category_id: data.interested_category_id?.length
         ? data.interested_category_id.map((c: any) =>
-          c.id ? String(c.id) : c.name,
-        )
+            c.id ? String(c.id) : c.name,
+          )
         : [],
       tags: data.tags?.length
         ? data.tags.map((t: any) => (t.id ? String(t.id) : t.name))

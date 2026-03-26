@@ -55,7 +55,7 @@ const Users = () => {
 
   const { data: rolesData } = useRoles({});
   const roleOptions = (rolesData?.items || []).map(
-    (r: { id: string; name: string }) => ({ value: r.id, label: r.name })
+    (r: { id: string; name: string }) => ({ value: r.id, label: r.name }),
   );
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
@@ -67,7 +67,7 @@ const Users = () => {
 
   // Single role filter — stored in URL as ?role=
   const [filterRoleId, setFilterRoleId] = useState<string>(
-    searchParams.get("role") || ""
+    searchParams.get("role") || "",
   );
 
   const [page, setPage] = useState(
@@ -84,7 +84,7 @@ const Users = () => {
   );
 
   const hasFilters = Boolean(
-    search || filterStatus !== "All" || sortKey || filterRoleId
+    search || filterStatus !== "All" || sortKey || filterRoleId,
   );
 
   const handleClearFilters = () => {
@@ -251,7 +251,9 @@ const Users = () => {
       key: "role_assignments" as keyof User,
       header: "Roles",
       className: "hidden lg:table-cell",
-      render: (item: User & { role_assignments?: { company: string; role: string }[] }) => {
+      render: (
+        item: User & { role_assignments?: { company: string; role: string }[] },
+      ) => {
         const assignments = item.role_assignments ?? [];
         if (assignments.length === 0) {
           return <p className="text-xs text-muted-foreground">—</p>;
@@ -260,7 +262,10 @@ const Users = () => {
           <div className="flex flex-col gap-0.5 max-w-[220px]">
             {assignments.map((a, i) => (
               <div key={i} className="flex items-center gap-1 min-w-0">
-                <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px]" title={a.company}>
+                <span
+                  className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px]"
+                  title={a.company}
+                >
                   {a.company}
                 </span>
                 <span className="text-[10px] text-muted-foreground">·</span>

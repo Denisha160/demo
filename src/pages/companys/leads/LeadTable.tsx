@@ -21,7 +21,9 @@ interface LeadTableProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   enableSelection?: boolean;
-  onSelectionChange?: (selectedItems: (Deal & { stage: string; stageVariant: string })[]) => void;
+  onSelectionChange?: (
+    selectedItems: (Deal & { stage: string; stageVariant: string })[],
+  ) => void;
 }
 
 const PRIORITIES = [

@@ -15,13 +15,6 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { compressImage } from "@/utils/imageCompression";
 import {
@@ -29,16 +22,15 @@ import {
     ComboboxOption,
 } from "@/components/ui/comboBoxWithAdd";
 import { useLeadContacts } from "@/hooks/useLeadContacts";
+import { formatDateForAPI, formatDateTimeLocal } from "@/utils/date";
 
 const visitSchema = z.object({
     title: z.string().min(1, "Title is required").max(200, "Title is too long"),
     description: z.string().optional().or(z.literal("")),
     visit_type: z.string().min(1, "Visit type is required"),
-    status: z.string().min(1, "Status is required"),
-    scheduled_time: z.string().optional().or(z.literal("")),
     location_address: z.string().optional().or(z.literal("")),
-    location_latitude: z.string().optional().or(z.literal("")),
-    location_longitude: z.string().optional().or(z.literal("")),
+    location_latitude: z.string().min(1, "Location latitude is required (use Live Location)"),
+    location_longitude: z.string().min(1, "Location longitude is required (use Live Location)"),
     visit_image: z.string().optional().or(z.literal("")),
     visit_image_name: z.string().optional().or(z.literal("")),
     outcome_summary: z.string().optional().or(z.literal("")),
@@ -48,6 +40,8 @@ const visitSchema = z.object({
     contact_person_name: z.string().optional().or(z.literal("")),
     contact_person_designation: z.string().optional().or(z.literal("")),
     contact_person_phone: z.string().optional().or(z.literal("")),
+    scheduled_time: z.string().min(1, "Scheduled time is required"),
+    status: z.string().optional().or(z.literal("")),
     visit_image_file: z.any().optional(),
 });
 
@@ -69,24 +63,7 @@ interface VisitsModalProps {
     isSubmitting?: boolean;
 }
 
-const getDefaultDateTime = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
-};
 
-const toDateTimeLocal = (value?: string) => {
-    if (!value) return "";
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return "";
-    const year = parsed.getFullYear();
-    const month = String(parsed.getMonth() + 1).padStart(2, "0");
-    const day = String(parsed.getDate()).padStart(2, "0");
-    const hours = String(parsed.getHours()).padStart(2, "0");
-    const minutes = String(parsed.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
 
 const VisitsModal = ({
     open,
@@ -152,8 +129,6 @@ const VisitsModal = ({
             title: "",
             description: "",
             visit_type: "Site Visit",
-            status: "SCHEDULED",
-            scheduled_time: getDefaultDateTime(),
             location_address: "",
             location_latitude: "",
             location_longitude: "",
@@ -166,6 +141,8 @@ const VisitsModal = ({
             contact_person_name: "",
             contact_person_designation: "",
             contact_person_phone: "",
+            scheduled_time: formatDateTimeLocal(new Date()),
+            status: "COMPLETED",
         },
     });
 
@@ -177,8 +154,6 @@ const VisitsModal = ({
                 title: visitData.title || "",
                 description: visitData.description || "",
                 visit_type: visitData.visit_type || "Site Visit",
-                status: visitData.status || "SCHEDULED",
-                scheduled_time: toDateTimeLocal(visitData.scheduled_time),
                 location_address: visitData.location_address || "",
                 location_latitude: visitData.location_latitude
                     ? String(visitData.location_latitude)
@@ -197,6 +172,8 @@ const VisitsModal = ({
                 contact_person_name: visitData.contact_person_name || "",
                 contact_person_designation: visitData.contact_person_designation || "",
                 contact_person_phone: visitData.contact_person_phone || "",
+                scheduled_time: formatDateTimeLocal(visitData.scheduled_time || new Date()),
+                status: visitData.status || "COMPLETED",
             });
             return;
         }
@@ -205,8 +182,6 @@ const VisitsModal = ({
             title: "",
             description: "",
             visit_type: "Site Visit",
-            status: "SCHEDULED",
-            scheduled_time: getDefaultDateTime(),
             location_address: "",
             location_latitude: "",
             location_longitude: "",
@@ -219,6 +194,8 @@ const VisitsModal = ({
             contact_person_name: "",
             contact_person_designation: "",
             contact_person_phone: "",
+            scheduled_time: formatDateTimeLocal(new Date()),
+            status: "COMPLETED",
         });
         setLocationMessage("");
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -327,18 +304,6 @@ const VisitsModal = ({
             .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(" ");
 
-    const statusOptions = [
-        "SCHEDULED",
-        "CHECKED_IN",
-        "IN_PROGRESS",
-        "COMPLETED",
-        "CANCELLED",
-        "MISSED",
-        "RESCHEDULED",
-    ].map((s) => ({
-        label: formatLabel(s),
-        value: s,
-    }));
 
     return (
         <Modal
@@ -424,6 +389,29 @@ const VisitsModal = ({
                                     <FormControl>
                                         <Input
                                             placeholder="Site Visit, Meeting, etc."
+                                            className="h-9 text-xs"
+                                            disabled={isSubmitting}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-[10px]" />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-1">
+                        <FormField
+                            control={form.control}
+                            name="scheduled_time"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs font-bold flex gap-1">
+                                        Scheduled Date & Time <span className="text-destructive">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="datetime-local"
                                             className="h-9 text-xs"
                                             disabled={isSubmitting}
                                             {...field}
@@ -523,60 +511,6 @@ const VisitsModal = ({
                         )}
                     />
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <FormField
-                            control={form.control}
-                            name="status"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs font-bold flex gap-1">
-                                        Status<span className="text-destructive">*</span>
-                                    </FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        value={field.value}
-                                        disabled={isSubmitting}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger className="h-9 text-xs">
-                                                <SelectValue placeholder="Select status" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {statusOptions.map((opt) => (
-                                                <SelectItem key={opt.value} value={opt.value}>
-                                                    {opt.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage className="text-[10px]" />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name="scheduled_time"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs font-bold flex gap-1">
-                                        Scheduled Time
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="datetime-local"
-                                            className="h-9 text-xs"
-                                            disabled={isSubmitting}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage className="text-[10px]" />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-
                     <FormField
                         control={form.control}
                         name="location_address"
@@ -635,7 +569,9 @@ const VisitsModal = ({
                             name="location_latitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-xs font-bold">Latitude</FormLabel>
+                                    <FormLabel className="text-xs font-bold flex gap-1">
+                                        Latitude <span className="text-destructive">*</span>
+                                    </FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder="12.9716"
@@ -655,7 +591,9 @@ const VisitsModal = ({
                             name="location_longitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-xs font-bold">Longitude</FormLabel>
+                                    <FormLabel className="text-xs font-bold flex gap-1">
+                                        Longitude <span className="text-destructive">*</span>
+                                    </FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder="77.5946"

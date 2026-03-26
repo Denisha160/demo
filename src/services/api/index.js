@@ -674,7 +674,7 @@ export const updateLeadStatusOrder = (data) => {
 };
 // end region
 
-// region Lead source 
+// region Lead source
 // ===================== Lead Source =====================
 export const listSource = (params) => {
   const url = `leads/lead-source`;

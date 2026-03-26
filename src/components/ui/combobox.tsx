@@ -151,7 +151,10 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                 if (creatable && searchValue) {
                   if (e.key === "Enter" || e.key === ",") {
                     e.preventDefault();
-                    const exactMatch = options.find((o) => o.label.toLowerCase() === searchValue.toLowerCase());
+                    const exactMatch = options.find(
+                      (o) =>
+                        o.label.toLowerCase() === searchValue.toLowerCase(),
+                    );
                     if (exactMatch) {
                       handleSelect(exactMatch.value);
                     } else {

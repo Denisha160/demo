@@ -173,7 +173,6 @@ const SalesPage = () => {
 
   return (
     <div className="w-full space-y-4 animate-fade-in pb-10">
-
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-1">

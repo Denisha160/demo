@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatDate, formatDateForAPI } from "@/utils/date";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
 import TaskModal, { Task, TaskFormData } from "./TaskModal";
@@ -36,22 +37,6 @@ const applyServerValidationErrors = (
       setError(key as any, { type: "server", message: String(message) });
     });
   }
-};
-
-const toIsoDate = (value?: string) => {
-  if (!value) return null;
-  if (value.includes("T")) return value;
-  return `${value}T00:00:00.000Z`;
-};
-
-const formatDate = (value?: string) => {
-  if (!value) return "No date";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 };
 
 interface TasksTabProps {
@@ -146,7 +131,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
           title: `Reminder: ${formData.title}`,
           description:
             formData.description || `Task Reminder: ${formData.title}`,
-          remind_at: toIsoDate(formData.due_date),
+          remind_at: formatDateForAPI(formData.due_date),
           remind_time: reminder_time,
         });
       }
@@ -157,7 +142,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
         {
           taskId: editingTask.id,
           ...taskData,
-          due_date: toIsoDate(taskData.due_date),
+          due_date: formatDateForAPI(taskData.due_date),
         },
         {
           onSuccess: () => {
@@ -174,7 +159,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
     createTaskMutation.mutate(
       {
         ...taskData,
-        due_date: toIsoDate(taskData.due_date),
+        due_date: formatDateForAPI(taskData.due_date),
       },
       {
         onSuccess: () => {

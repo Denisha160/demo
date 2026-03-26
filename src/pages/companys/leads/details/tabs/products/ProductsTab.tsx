@@ -83,7 +83,10 @@ const ProductsTab = () => {
       key: "product_name",
       header: "Product",
       render: (item) => (
-        <div className="flex flex-col cursor-pointer" onClick={() => navigate(`/${companyId}/products/${item.id}`)}>
+        <div
+          className="flex flex-col cursor-pointer"
+          onClick={() => navigate(`/${companyId}/products/${item.id}`)}
+        >
           <span className="font-bold text-foreground text-xs">
             {item.product_name}
           </span>

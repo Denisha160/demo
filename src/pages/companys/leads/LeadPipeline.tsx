@@ -57,10 +57,11 @@ const LeadPipeline = ({
                       ref={columnProvided.innerRef}
                       {...columnProvided.draggableProps}
                       style={columnProvided.draggableProps.style}
-                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${columnSnapshot.isDragging
-                        ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
-                        : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
-                        }`}
+                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${
+                        columnSnapshot.isDragging
+                          ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
+                          : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
+                      }`}
                     >
                       {/* Top side hover highlight */}
                       <div
@@ -68,24 +69,25 @@ const LeadPipeline = ({
                         style={
                           col.color
                             ? {
-                              background: `linear-gradient(to right, transparent, ${col.color}, transparent)`,
-                            }
+                                background: `linear-gradient(to right, transparent, ${col.color}, transparent)`,
+                              }
                             : {
-                              background: `linear-gradient(to right, transparent, hsl(var(--primary)/0.6), transparent)`,
-                            }
+                                background: `linear-gradient(to right, transparent, hsl(var(--primary)/0.6), transparent)`,
+                              }
                         }
                       />
 
                       <div
                         {...columnProvided.dragHandleProps}
-                        className={`flex cursor-grab items-center justify-between border-b px-4 py-3.5 backdrop-blur-xl transition-colors duration-200 active:cursor-grabbing ${!col.color ? "border-border/20 bg-background/90" : ""
-                          }`}
+                        className={`flex cursor-grab items-center justify-between border-b px-4 py-3.5 backdrop-blur-xl transition-colors duration-200 active:cursor-grabbing ${
+                          !col.color ? "border-border/20 bg-background/90" : ""
+                        }`}
                         style={
                           col.color
                             ? {
-                              background: `linear-gradient(to bottom, ${col.color}25, ${col.color}05)`,
-                              borderColor: `${col.color}30`,
-                            }
+                                background: `linear-gradient(to bottom, ${col.color}25, ${col.color}05)`,
+                                borderColor: `${col.color}30`,
+                              }
                             : undefined
                         }
                       >
@@ -112,10 +114,11 @@ const LeadPipeline = ({
                           <div
                             ref={dealProvided.innerRef}
                             {...dealProvided.droppableProps}
-                            className={`flex min-h-0 flex-1 flex-col transition-colors ${dealSnapshot.isDraggingOver
-                              ? "bg-primary/5"
-                              : "bg-transparent"
-                              }`}
+                            className={`flex min-h-0 flex-1 flex-col transition-colors ${
+                              dealSnapshot.isDraggingOver
+                                ? "bg-primary/5"
+                                : "bg-transparent"
+                            }`}
                           >
                             <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-thin">
                               <div className="space-y-3">
@@ -133,10 +136,11 @@ const LeadPipeline = ({
                                         style={
                                           dealDragProvided.draggableProps.style
                                         }
-                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${dealDragSnapshot.isDragging
-                                          ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
-                                          : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
-                                          }`}
+                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${
+                                          dealDragSnapshot.isDragging
+                                            ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
+                                            : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
+                                        }`}
                                       >
                                         <div
                                           onClick={() => navigate(deal.id)}
@@ -167,11 +171,12 @@ const LeadPipeline = ({
                                             <p className="mt-1 truncate text-[11px] text-muted-foreground">
                                               {deal.company}
                                             </p>
-                                            {deal.phone && deal.phone !== "-" && (
-                                              <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
-                                                {deal.phone}
-                                              </p>
-                                            )}
+                                            {deal.phone &&
+                                              deal.phone !== "-" && (
+                                                <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
+                                                  {deal.phone}
+                                                </p>
+                                              )}
 
                                             <div className="flex items-center justify-between border-t border-border/10 pt-3">
                                               <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
@@ -204,11 +209,11 @@ const LeadPipeline = ({
                                   size="sm"
                                   className="h-9 w-full"
                                   disabled={isLoadingMore === col.id}
-                                  onClick={() =>
-                                    onLoadMore?.(col.id)
-                                  }
+                                  onClick={() => onLoadMore?.(col.id)}
                                 >
-                                  {isLoadingMore === col.id ? "Loading..." : "Load More"}
+                                  {isLoadingMore === col.id
+                                    ? "Loading..."
+                                    : "Load More"}
                                 </Button>
                               ) : (
                                 <div className="text-center text-xs text-muted-foreground">

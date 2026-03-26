@@ -92,7 +92,10 @@ const BatchAssignModal = ({
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-2">
+        <form
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4 pt-2"
+        >
           <FormField
             control={form.control}
             name="assigned_to"

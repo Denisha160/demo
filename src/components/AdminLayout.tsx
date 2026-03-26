@@ -176,10 +176,11 @@ const NavGroup = ({ item, active, onCloseSidebar }: NavGroupProps) => {
                 onClick={onCloseSidebar}
                 className={`
                                     flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-md transition-all duration-200
-                                    ${childActive
-                    ? "bg-primary/15 text-primary font-bold"
-                    : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
-                  }
+                                    ${
+                                      childActive
+                                        ? "bg-primary/15 text-primary font-bold"
+                                        : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
+                                    }
                                 `}
                 style={childActive ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
               >
@@ -214,11 +215,11 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
   // Derive initials from user name (e.g. "Admin" → "AD", "John Doe" → "JD")
   const initials = user?.name
     ? user.name
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : "AD";
 
   const activeNavItem = navItems.find((item) => {
@@ -291,7 +292,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                 setSidebarCollapsed(true);
                 setSidebarOpen(false);
               }}
-              className="h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
+              className="h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
               title="Hide sidebar"
             >
               <PanelLeftClose className="h-4 w-4" />
@@ -317,12 +318,12 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
             .map((item) => {
               const active = item.children
                 ? item.children.some(
-                  (child) =>
-                    location.pathname === child.path ||
-                    location.pathname.startsWith(`${child.path}/`),
-                )
+                    (child) =>
+                      location.pathname === child.path ||
+                      location.pathname.startsWith(`${child.path}/`),
+                  )
                 : location.pathname === item.path ||
-                location.pathname.startsWith(`${item.path}/`);
+                  location.pathname.startsWith(`${item.path}/`);
 
               if (item.children) {
                 const visibleChildren = item.children.filter(
@@ -348,10 +349,11 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                   onClick={() => setSidebarOpen(false)}
                   className={`
                                         flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
-                                        ${active
-                      ? "bg-primary/10 text-primary font-bold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    }
+                                        ${
+                                          active
+                                            ? "bg-primary/10 text-primary font-bold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                                        }
                                 `}
                   style={active ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
                 >

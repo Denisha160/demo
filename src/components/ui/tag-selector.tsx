@@ -51,7 +51,7 @@ export function TagSelector({
   };
 
   const exactMatch = suggestions.find(
-    (s) => s.name.toLowerCase() === inputValue.trim().toLowerCase()
+    (s) => s.name.toLowerCase() === inputValue.trim().toLowerCase(),
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -79,9 +79,9 @@ export function TagSelector({
 
     // Add immediate enter selection if CmdK has no options (e.g. dropdown not showing)
     if (e.key === "Enter" && inputValue.trim() && !open) {
-       e.preventDefault();
-       if (exactMatch) handleSelect(exactMatch);
-       else if (creatable) handleSelect({ name: inputValue.trim() });
+      e.preventDefault();
+      if (exactMatch) handleSelect(exactMatch);
+      else if (creatable) handleSelect({ name: inputValue.trim() });
     }
   };
 

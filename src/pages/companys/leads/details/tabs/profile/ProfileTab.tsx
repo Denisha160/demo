@@ -151,8 +151,7 @@ const ProfileTab = ({
       value: item.id,
       label: item.name,
     })) || [];
-  const users =
-    (usersResponse as any)?.items || (usersResponse as any) || [];
+  const users = (usersResponse as any)?.items || (usersResponse as any) || [];
   const userOptions = users.map((user: any) => ({
     value: user.id,
     label: user.name,
@@ -251,22 +250,32 @@ const ProfileTab = ({
 
   // Handle initialization of labels for existing data
   useEffect(() => {
-    if (leadProfile.country_id && countryOptions.length > 0 && !selectedCountryName) {
-      const label = countryOptions.find(o => o.value === leadProfile.country_id)?.label;
+    if (
+      leadProfile.country_id &&
+      countryOptions.length > 0 &&
+      !selectedCountryName
+    ) {
+      const label = countryOptions.find(
+        (o) => o.value === leadProfile.country_id,
+      )?.label;
       if (label) setSelectedCountryName(label);
     }
   }, [leadProfile.country_id, countryOptions, selectedCountryName]);
 
   useEffect(() => {
     if (leadProfile.state_id && stateOptions.length > 0 && !selectedStateName) {
-      const label = stateOptions.find(o => o.value === leadProfile.state_id)?.label;
+      const label = stateOptions.find(
+        (o) => o.value === leadProfile.state_id,
+      )?.label;
       if (label) setSelectedStateName(label);
     }
   }, [leadProfile.state_id, stateOptions, selectedStateName]);
 
   useEffect(() => {
     if (leadProfile.city_id && cityOptions.length > 0 && !selectedCityName) {
-      const label = cityOptions.find(o => o.value === leadProfile.city_id)?.label;
+      const label = cityOptions.find(
+        (o) => o.value === leadProfile.city_id,
+      )?.label;
       if (label) setSelectedCityName(label);
     }
   }, [leadProfile.city_id, cityOptions, selectedCityName]);
@@ -548,7 +557,9 @@ const ProfileTab = ({
                         onSearchChange={setCountrySearch}
                         selectedLabel={selectedCountryName}
                         onValueChange={(id) => {
-                          const label = countryOptions.find(o => o.value === id)?.label;
+                          const label = countryOptions.find(
+                            (o) => o.value === id,
+                          )?.label;
                           setSelectedCountryName(label || "");
                           field.onChange(id);
                           setSelectedCountryId(id);
@@ -583,7 +594,9 @@ const ProfileTab = ({
                         onSearchChange={setStateSearch}
                         selectedLabel={selectedStateName}
                         onValueChange={(id) => {
-                          const label = stateOptions.find(o => o.value === id)?.label;
+                          const label = stateOptions.find(
+                            (o) => o.value === id,
+                          )?.label;
                           setSelectedStateName(label || "");
                           field.onChange(id);
                           setSelectedStateId(id);
@@ -620,7 +633,9 @@ const ProfileTab = ({
                         onSearchChange={setCitySearch}
                         selectedLabel={selectedCityName}
                         onValueChange={(id) => {
-                          const label = cityOptions.find(o => o.value === id)?.label;
+                          const label = cityOptions.find(
+                            (o) => o.value === id,
+                          )?.label;
                           setSelectedCityName(label || "");
                           field.onChange(id);
                           setSelectedCityId(id);

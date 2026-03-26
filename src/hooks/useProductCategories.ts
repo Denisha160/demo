@@ -27,14 +27,18 @@ export function useCategories(filters?: Record<string, unknown>) {
   });
 }
 
-export function useCategoriesCombobox(filters?: Record<string, unknown>) {
+export function useCategoriesCombobox(
+  filters?: Record<string, unknown>,
+  options?: any,
+) {
   return useQuery({
     queryKey: queryKeys.categories.list({ ...filters, combobox: true }),
     queryFn: () => listProductCategories({ ...filters, combobox: true }),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    select: (data): Category[] => data?.data?.categories ?? [],
+    select: (data: any): Category[] => data?.data?.categories ?? [],
+    ...options,
   });
 }
 

@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
 import { PipelineColumn } from "../../../types/leads";
+import { getDaysSince } from "@/utils/date";
+import { Clock } from "lucide-react";
 
 interface LeadPipelineProps {
   displayedColumns: (PipelineColumn & { total: number })[];
@@ -163,9 +165,15 @@ const LeadPipeline = ({
                                                   </span>
                                                 )}
                                               </p>
-                                              <span className="whitespace-nowrap rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground/80">
-                                                {deal.date}
-                                              </span>
+                                              <div className="flex flex-col items-end gap-1">
+                                                <span className="whitespace-nowrap rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground/80">
+                                                  {deal.date}
+                                                </span>
+                                                <span className="flex items-center gap-1 text-[10px] font-semibold text-primary/80">
+                                                  <Clock className="h-3 w-3" />
+                                                  {getDaysSince(deal.raw_date)} Days
+                                                </span>
+                                              </div>
                                             </div>
 
                                             <p className="mt-1 truncate text-[11px] text-muted-foreground">

@@ -98,3 +98,22 @@ export function formatDateTimeLocal(dateInput?: string | Date | null): string {
 
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
+
+export function getDaysSince(dateInput?: string | Date | null): number {
+  if (!dateInput) return 0;
+  const createdDate =
+    dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(createdDate.getTime())) return 0;
+
+  const today = new Date();
+  const d1 = new Date(
+    createdDate.getFullYear(),
+    createdDate.getMonth(),
+    createdDate.getDate(),
+  );
+  const d2 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const diffTime = Math.abs(d2.getTime() - d1.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+}

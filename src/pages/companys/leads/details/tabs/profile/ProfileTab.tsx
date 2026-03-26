@@ -46,7 +46,7 @@ const InterestedCategorySelect = ({
     search: debouncedSearch,
   });
 
-  const suggestions = categories
+  const suggestions = (categories as any[])
     .filter((cat: any) => !cat.parent_name)
     .map((cat: any) => ({
       id: String(cat.id),
@@ -57,7 +57,9 @@ const InterestedCategorySelect = ({
     .map((val: any) => {
       if (typeof val === "string") return { id: val, name: val };
       const id = val?.id || String(val);
-      const categoryMatch = categories.find((c) => String(c.id) === id);
+      const categoryMatch = (categories as any[]).find(
+        (c) => String(c.id) === id,
+      );
       return categoryMatch
         ? { id, name: categoryMatch.name }
         : val?.name

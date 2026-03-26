@@ -110,7 +110,9 @@ const mapLeadToDeal = (
         .map((cat: any) => {
           if (typeof cat === "string") return { id: cat, name: cat };
           const id = String(cat?.id || "");
-          const categoryMatch = categories.find((c) => String(c.id) === id);
+          const categoryMatch = (categories as any[]).find(
+            (c) => String(c.id) === id,
+          );
           return categoryMatch
             ? { id, name: categoryMatch.name }
             : cat?.name
@@ -301,7 +303,9 @@ const LeadsPage = () => {
 
   const isLoading = viewMode === "pipeline" ? isGroupLoading : isTableLoading;
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
-  const { data: categories = [] } = useCategoriesCombobox();
+  const { data: categories = [] } = useCategoriesCombobox(undefined, {
+    enabled: isLeadModalOpen,
+  });
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLeadStatus();
   const updateStatusOrderMutation = useUpdateLeadStatusOrder();
@@ -409,7 +413,9 @@ const LeadsPage = () => {
           title: status.name,
           variant: VARIANTS[statusIndex % VARIANTS.length] || "default",
           color: status.color,
-          deals: statusItems.map((item) => mapLeadToDeal(item, categories)).filter(isDealVisible),
+          deals: statusItems
+            .map((item) => mapLeadToDeal(item, categories as any[]))
+            .filter(isDealVisible),
           total: paginated?.total || 0,
         } satisfies PipelineColumn & { total: number };
       })
@@ -676,7 +682,9 @@ const LeadsPage = () => {
         id: "all",
         title: "All Leads",
         variant: "default" as const,
-        deals: tableData.items.map((item) => mapLeadToDeal(item, categories)),
+        deals: tableData.items.map((item) =>
+          mapLeadToDeal(item, categories as any[]),
+        ),
       },
     ];
   }, [tableData.items, categories]);

@@ -35,18 +35,21 @@ const InterestedCategorySelect = ({
   value = [],
   onValueChange,
   disabled,
+  open,
 }: {
   value?: any[];
   onValueChange: (val: any[]) => void;
   disabled?: boolean;
+  open?: boolean;
 }) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data: categories = [], isLoading } = useCategoriesCombobox({
-    search: debouncedSearch,
-  });
-  const suggestions = categories
+  const { data: categories = [] } = useCategoriesCombobox(
+    { search: debouncedSearch },
+    { enabled: open },
+  );
+  const suggestions = (categories as any[])
     .filter((cat: any) => !cat.parent_name)
     .map((cat: any) => ({
       id: String(cat.id),
@@ -57,7 +60,9 @@ const InterestedCategorySelect = ({
     .map((val: any) => {
       if (typeof val === "string") return { id: val, name: val };
       const id = val?.id || String(val);
-      const categoryMatch = categories.find((c) => String(c.id) === id);
+      const categoryMatch = (categories as any[]).find(
+        (c) => String(c.id) === id,
+      );
       return categoryMatch
         ? { id, name: categoryMatch.name }
         : val?.name
@@ -804,6 +809,7 @@ const LeadModal = ({
                     <InterestedCategorySelect
                       value={field.value as any}
                       onValueChange={field.onChange}
+                      open={open}
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />

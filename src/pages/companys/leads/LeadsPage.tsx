@@ -48,6 +48,12 @@ import {
   useLeadStatuses,
   useUpdateLeadStatusOrder,
 } from "@/hooks/useLeadStatus";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { LeadStatus } from "@/types/leadStatus";
 import { listLeads } from "@/services/api";
 import BatchAssignModal from "./BatchAssignModal";
@@ -116,19 +122,19 @@ const mapLeadToDeal = (
   tags: lead?.tags,
   interested_categories: Array.isArray(lead?.interested_category_id)
     ? lead.interested_category_id
-        .map((cat: any) => {
-          if (typeof cat === "string") return { id: cat, name: cat };
-          const id = String(cat?.id || "");
-          const categoryMatch = (categories as any[]).find(
-            (c) => String(c.id) === id,
-          );
-          return categoryMatch
-            ? { id, name: categoryMatch.name }
-            : cat?.name
-              ? { id, name: cat.name }
-              : null;
-        })
-        .filter((c: any): c is { id: string; name: string } => !!c)
+      .map((cat: any) => {
+        if (typeof cat === "string") return { id: cat, name: cat };
+        const id = String(cat?.id || "");
+        const categoryMatch = (categories as any[]).find(
+          (c) => String(c.id) === id,
+        );
+        return categoryMatch
+          ? { id, name: categoryMatch.name }
+          : cat?.name
+            ? { id, name: cat.name }
+            : null;
+      })
+      .filter((c: any): c is { id: string; name: string } => !!c)
     : [],
   phone: lead?.phone || lead?.mobile || "-",
   raw_date: lead?.created_at || lead?.date,
@@ -391,9 +397,9 @@ const LeadsPage = () => {
     setColumnOrder((prev) =>
       prev.length
         ? [
-            ...prev.filter((id) => sortedIds.includes(id)),
-            ...sortedIds.filter((id) => !prev.includes(id)),
-          ]
+          ...prev.filter((id) => sortedIds.includes(id)),
+          ...sortedIds.filter((id) => !prev.includes(id)),
+        ]
         : sortedIds,
     );
     if (!searchParams.has("stages")) {
@@ -834,36 +840,51 @@ const LeadsPage = () => {
               )}
             </div>
 
-            <div className="flex w-full justify-center gap-1 rounded-sm border border-border/60 bg-muted/20 p-1 sm:w-auto">
-              <Button
-                variant={viewMode === "pipeline" ? "secondary" : "ghost"}
-                size="sm"
-                className={cn(
-                  "h-7 flex-1 rounded-xs px-3 text-xs font-semibold transition-all sm:flex-none",
-                  viewMode === "pipeline"
-                    ? "bg-background shadow-xs text-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                onClick={() => setViewMode("pipeline")}
-              >
-                <Kanban className="mr-1.5 h-3.5 w-3.5" />
-                <span>Pipeline</span>
-              </Button>
-              <Button
-                variant={viewMode === "table" ? "secondary" : "ghost"}
-                size="sm"
-                className={cn(
-                  "h-7 flex-1 rounded-xs px-3 text-xs font-semibold transition-all sm:flex-none",
-                  viewMode === "table"
-                    ? "bg-background shadow-xs text-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                onClick={() => setViewMode("table")}
-              >
-                <List className="mr-1.5 h-3.5 w-3.5" />
-                <span>Table</span>
-              </Button>
-            </div>
+            <TooltipProvider>
+              <div className="flex w-full justify-center gap-1 rounded-sm border border-border/60 bg-muted/20 p-1 sm:w-auto">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={viewMode === "pipeline" ? "secondary" : "ghost"}
+                      size="sm"
+                      className={cn(
+                        "h-7 flex-1 rounded-xs px-2.5 text-xs font-semibold transition-all sm:flex-none",
+                        viewMode === "pipeline"
+                          ? "bg-background shadow-xs text-primary"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                      onClick={() => setViewMode("pipeline")}
+                    >
+                      <Kanban className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p className="text-[11px] font-medium">Pipeline View</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={viewMode === "table" ? "secondary" : "ghost"}
+                      size="sm"
+                      className={cn(
+                        "h-7 flex-1 rounded-xs px-2.5 text-xs font-semibold transition-all sm:flex-none",
+                        viewMode === "table"
+                          ? "bg-background shadow-xs text-primary"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                      onClick={() => setViewMode("table")}
+                    >
+                      <List className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p className="text-[11px] font-medium">Table View</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
           </div>
         </div>
 

@@ -5,13 +5,19 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { GripVertical, CheckCircle, ShieldCheck } from "lucide-react";
+import { GripVertical, CheckCircle, ShieldCheck, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
 import { PipelineColumn } from "../../../types/leads";
 import { getDaysSince } from "@/utils/date";
 import { Clock } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface LeadPipelineProps {
   displayedColumns: (PipelineColumn & {
@@ -157,50 +163,52 @@ const LeadPipeline = ({
                                         >
                                           <div className="min-w-0 flex-1">
                                             <div className="flex items-start justify-between gap-2">
-                                              <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary flex items-center gap-1.5">
-                                                <span className="truncate max-w-[140px] block">
-                                                  {deal.title}
+                                              <TooltipProvider>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <div className="flex items-center gap-1 group/title cursor-help">
+                                                      <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary flex items-center gap-1.5">
+                                                        <span className="truncate max-w-[140px] block">
+                                                          {deal.title}
+                                                        </span>
+                                                        {deal.isVerified && (
+                                                          <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
+                                                        )}
+                                                        {deal.isCustomer && (
+                                                          <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
+                                                        )}
+                                                      </p>
+                                                    </div>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent side="bottom" className="max-w-[250px] bg-popover text-popover-foreground shadow-lg border border-border">
+                                                    <p className="text-xs font-semibold">{deal.title}</p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                              <div className="flex gap-1 mt-0.5">
+                                                <span className="flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                                                  {getDaysSince(deal.raw_date)} D
                                                 </span>
-                                                {deal.isVerified && (
-                                                  <span title="Verified">
-                                                    <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
-                                                  </span>
-                                                )}
-                                                {deal.isCustomer && (
-                                                  <span title="Customer">
-                                                    <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
-                                                  </span>
-                                                )}
-                                              </p>
-                                              <div className="flex flex-col items-end gap-1">
-                                                <span className="whitespace-nowrap rounded-full bg-secondary/60  py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground/80">
+                                                <span className="whitespace-nowrap rounded bg-secondary/60 px-1.5 py-0.5 text-[9px] font-medium tabular-nums text-muted-foreground/80">
                                                   {deal.date}
                                                 </span>
                                               </div>
                                             </div>
 
-                                            <div className="flex justify-between">
-                                              <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                                                {deal.company}
-                                              </p>
-                                              <span className="flex items-center gap-1 text-[10px] font-semibold text-primary/80">
-                                                <Clock className="h-3 w-3" />
-                                                {getDaysSince(
-                                                  deal.raw_date,
-                                                )}{" "}
-                                                Days
-                                              </span>
-                                            </div>
-
-                                            <div className="flex justify-between">
-                                              {deal.phone &&
-                                                deal.phone !== "-" && (
-                                                  <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
-                                                    {deal.phone}
-                                                  </p>
-                                                )}
+                                            <div className="flex justify-between items-center">
+                                              <div>
+                                                <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                                                  {deal.company}
+                                                </p>
+                                                {deal.phone &&
+                                                  deal.phone !== "-" && (
+                                                    <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
+                                                      {deal.phone}
+                                                    </p>
+                                                  )}
+                                              </div>
                                               {deal.expected_revenue && (
-                                                <span className="text-[10px] font-bold text-green-600">
+                                                <span className="text-[16px] font-bold text-green-600">
                                                   ₹{Number(deal.expected_revenue).toLocaleString()}
                                                 </span>
                                               )}

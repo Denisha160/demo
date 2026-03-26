@@ -317,9 +317,7 @@ const LeadModal = ({
     const payload = {
       ...data,
       interested_category_id: data.interested_category_id?.length
-        ? data.interested_category_id.map((c: any) =>
-          c.id ? String(c.id) : c.name,
-        )
+        ? data.interested_category_id.map((c: any) => c.name)
         : [],
       tags: data.tags?.length
         ? data.tags.map((t: any) => (t.id ? String(t.id) : t.name))

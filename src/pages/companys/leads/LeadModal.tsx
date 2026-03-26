@@ -55,11 +55,12 @@ const InterestedCategorySelect = ({
 
   const displayValue = (Array.isArray(value) ? value : [])
     .map((val: any) => {
-      const id = typeof val === "string" ? val : val?.id || String(val);
+      if (typeof val === "string") return { id: val, name: val };
+      const id = val?.id || String(val);
       const categoryMatch = categories.find((c) => String(c.id) === id);
       return categoryMatch
         ? { id, name: categoryMatch.name }
-        : typeof val === "object" && val?.name
+        : val?.name
           ? { id, name: val.name }
           : null;
     })

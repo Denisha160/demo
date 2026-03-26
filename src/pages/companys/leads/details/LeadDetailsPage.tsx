@@ -212,9 +212,7 @@ const mapLeadToProfile = (
     : [],
   interested_category_id: Array.isArray((lead as any)?.interested_category_id)
     ? (lead as any).interested_category_id.map((id: any) =>
-      typeof id === "string"
-        ? { id, name: id }
-        : { id: String(id?.id), name: id?.name || id?.id },
+      typeof id === "string" ? { id, name: id } : { id: String(id?.id), name: id?.name || id?.id },
     )
     : [],
 });

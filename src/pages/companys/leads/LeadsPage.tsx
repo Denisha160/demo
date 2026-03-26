@@ -108,11 +108,12 @@ const mapLeadToDeal = (
   interested_categories: Array.isArray(lead?.interested_category_id)
     ? lead.interested_category_id
         .map((cat: any) => {
-          const id = typeof cat === "string" ? cat : String(cat?.id || "");
+          if (typeof cat === "string") return { id: cat, name: cat };
+          const id = String(cat?.id || "");
           const categoryMatch = categories.find((c) => String(c.id) === id);
           return categoryMatch
             ? { id, name: categoryMatch.name }
-            : typeof cat === "object" && cat?.name
+            : cat?.name
               ? { id, name: cat.name }
               : null;
         })

@@ -44,6 +44,8 @@ import {
 import type { LeadStatus } from "@/types/leadStatus";
 import { listLeads } from "@/services/api";
 import BatchAssignModal from "./BatchAssignModal";
+import { useCurrentUser } from "@/hooks/useAuth";
+import { useUsers } from "@/hooks/useUsers";
 
 const VARIANTS: PipelineColumn["variant"][] = [
   "default",
@@ -230,6 +232,28 @@ const LeadsPage = () => {
     [setSearchParams],
   );
 
+  const currentUser = useCurrentUser();
+  const assignedTo = searchParams.get("assigned_to") || "";
+  const setAssignedTo = useCallback(
+    (val: string) => {
+      setSearchParams(
+        (prev) => {
+          if (val && val !== "all") prev.set("assigned_to", val);
+          else prev.delete("assigned_to");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const { data: usersResponse } = useUsers(
+    { limit: 100 },
+    { enabled: !!currentUser?.is_root_user }
+  );
+  const usersList = usersResponse?.items || [];
+
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isBatchAssignOpen, setIsBatchAssignOpen] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState<any[]>([]);
@@ -242,8 +266,8 @@ const LeadsPage = () => {
   const [tableResetKey, setTableResetKey] = useState(0);
 
   const hasFilters = useMemo(() => {
-    return Boolean(searchTerm || dateRange?.from || dateRange?.to || priority);
-  }, [searchTerm, dateRange, priority]);
+    return Boolean(searchTerm || dateRange?.from || dateRange?.to || priority || assignedTo);
+  }, [searchTerm, dateRange, priority, assignedTo]);
 
   const handleClearFilters = () => {
     setSearchParams(
@@ -252,6 +276,7 @@ const LeadsPage = () => {
         prev.delete("from");
         prev.delete("to");
         prev.delete("priority");
+        prev.delete("assigned_to");
         return prev;
       },
       { replace: true },
@@ -268,8 +293,11 @@ const LeadsPage = () => {
       f.end_date = formatDateForAPI(dateRange.to);
     }
     if (priority && priority !== "ALL") f.priority = priority;
+    if (currentUser?.is_root_user && assignedTo && assignedTo !== "all") {
+      f.assigned_to = assignedTo;
+    }
     return f;
-  }, [searchTerm, dateRange, priority]);
+  }, [searchTerm, dateRange, priority, assignedTo, currentUser]);
 
   const [paginationData, setPaginationData] = useState<
     Record<
@@ -718,6 +746,24 @@ const LeadsPage = () => {
                   className="h-9"
                 />
               </div>
+
+              {currentUser?.is_root_user && (
+                <div className="w-[180px]">
+                  <Select value={assignedTo || "all"} onValueChange={setAssignedTo}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Assigned To" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Users</SelectItem>
+                      {usersList.map((u: { id: string; name: string }) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

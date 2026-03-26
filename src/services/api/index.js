@@ -3,9 +3,9 @@ import axios from "./httpRequest";
 // Analytics
 // ===================== Analytics =====================
 
-export const getDashboardStats = () => {
+export const getDashboardStats = (params) => {
   const url = `analytics/dashboard-stats`;
-  return axios({ method: "GET", url });
+  return axios({ method: "GET", url, params });
 };
 
 // end region

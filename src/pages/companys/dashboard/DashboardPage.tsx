@@ -2,6 +2,16 @@ import StatCard from "@/components/StatCard";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Users, IndianRupee, TrendingUp, Target, Layers } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useAuth";
+import { useUsers } from "@/hooks/useUsers";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart,
@@ -70,15 +80,31 @@ const columns: Column<RecentDeal>[] = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { data, isLoading } = useAnalytics();
+  const currentUser = useCurrentUser();
+  const [selectedUserId, setSelectedUserId] = useState<string>("all");
 
-  if (isLoading) {
+  const analyticsParams = currentUser?.is_root_user && selectedUserId !== "all" 
+    ? { user_id: selectedUserId } 
+    : undefined;
+
+  const { data, isLoading: analyticsLoading } = useAnalytics(analyticsParams);
+
+  const { data: usersResponse, isLoading: usersLoading } = useUsers(
+    { limit: 100 }, 
+    { enabled: !!currentUser?.is_root_user }
+  );
+
+  const isLoading = analyticsLoading || (currentUser?.is_root_user && usersLoading);
+
+  if (isLoading && !data) {
     return (
       <div className="p-8 text-center text-muted-foreground">
         Loading dashboard data...
       </div>
     );
   }
+
+  const users = usersResponse?.items || [];
 
   const counters = data?.counters;
   const dealsByStage = data?.dealsByStage || [];
@@ -94,6 +120,24 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-4 animate-fade-in pb-8">
+      {currentUser?.is_root_user && (
+        <div className="flex justify-end">
+          <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder="Select User" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Users</SelectItem>
+              {users.map((u: { id: string; name: string }) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard

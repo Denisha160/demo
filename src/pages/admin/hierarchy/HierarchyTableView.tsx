@@ -37,7 +37,7 @@ interface HierarchyTableViewProps {
   newNodeRelation: string;
   setNewNodeRelation: (v: string) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, relation: string) => void;
+  onUpdate: (id: string, name: string, role: string, relation: string, userId: string) => void;
   onAddGlobal: () => void;
   currentNodeName: string;
 }
@@ -125,16 +125,38 @@ const NestedHierarchyRow = ({
   onUpdate
 }: any) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [editUserId, setEditUserId] = useState(node.userId);
   const [editRelation, setEditRelation] = useState(node.relation);
 
   const hasChildren = node.children.length > 0;
   const isAddingHere = inlineAddingToId === node.id;
   
+  const handleStartEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+    if (!openAccordionIds.includes(node.id)) {
+        setOpenAccordionIds([...openAccordionIds, node.id]);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    const selectedUser = userOptions.find((u: any) => u.value === editUserId);
+    if (!selectedUser) return;
+    onUpdate(node.id, selectedUser.label, selectedUser.role, editRelation, editUserId);
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditUserId(node.userId);
+    setEditRelation(node.relation);
+    setIsEditing(false);
+  };
+
   return (
     <AccordionItem value={node.id} className="border-none relative">
-      <div className={cn("flex items-center justify-between px-5 py-3 hover:bg-muted/5 transition-colors group border-b border-border/40", (hasChildren || isAddingHere) && "data-[state=open]:bg-primary/5")}>
+      <div className={cn("flex items-center justify-between px-5 py-3 hover:bg-muted/5 transition-colors group border-b border-border/40", (hasChildren || isAddingHere || isEditing) && "data-[state=open]:bg-primary/5")}>
         <div className="flex items-center gap-4 flex-1 truncate">
-          {(hasChildren || isAddingHere) ? (
+          {(hasChildren || isAddingHere || isEditing) ? (
             <AccordionTrigger className="p-0 hover:no-underline [&[data-state=open]>svg]:rotate-90">
               <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
             </AccordionTrigger>
@@ -150,21 +172,10 @@ const NestedHierarchyRow = ({
         </div>
 
         <div className="flex items-center gap-4 md:gap-8 shrink-0 ml-4 pr-6">
-          <div className="hidden sm:flex flex-col items-end w-[130px]">
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Relation</p>
-            {isEditing ? (
-              <div className="flex items-center gap-2 mt-1 px-1">
-                <Input 
-                  className="h-7 text-xs w-[110px]" 
-                  value={editRelation} 
-                  onChange={e => setEditRelation(e.target.value)}
-                  autoFocus
-                  onBlur={() => { onUpdate(node.id, editRelation); setIsEditing(false); }}
-                />
-              </div>
-            ) : (
-              <p className="text-xs font-bold text-primary italic leading-none truncate w-full text-right">{node.relation || "Reports To"}</p>
-            )}
+          <div className="flex items-center gap-1 w-[110px] justify-start opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={e => { e.stopPropagation(); onInlineAdd(node.id); }}><Plus className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleStartEdit}><Edit2 className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={e => { e.stopPropagation(); onDelete(node.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>
 
           <div className="hidden md:flex flex-col items-center w-10">
@@ -175,16 +186,32 @@ const NestedHierarchyRow = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1 w-[120px] justify-end">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => { e.stopPropagation(); onInlineAdd(node.id); }}><Plus className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => { e.stopPropagation(); setIsEditing(true); }}><Edit2 className="h-3.5 w-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => { e.stopPropagation(); onDelete(node.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+          <div className="hidden sm:flex flex-col items-end w-[130px]">
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Relation</p>
+            <p className="text-xs font-bold text-primary italic leading-none truncate w-full text-right mt-1">{node.relation || "Reports To"}</p>
           </div>
         </div>
       </div>
 
-      {(hasChildren || isAddingHere) && (
+      {(hasChildren || isAddingHere || isEditing) && (
         <AccordionContent className="pb-0 pt-0 pl-10 border-l border-primary/20 translate-x-2 bg-muted/5">
+          {/* Inline Edit Form - Pre-filled Mode with User re-selection via Combobox */}
+          {isEditing && (
+            <div className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-muted/10 border-b border-border/40 animate-in slide-in-from-top-2">
+              <Combobox options={userOptions} value={editUserId} onValueChange={setEditUserId} placeholder="Re-select user..." className="h-8 w-full sm:w-[200px] text-xs shadow-xs" />
+              <Input 
+                placeholder="Modify Relation..." 
+                value={editRelation} 
+                onChange={e => setEditRelation(e.target.value)} 
+                className="h-8 text-xs bg-background w-full sm:w-[200px]" 
+              />
+              <div className="flex items-center gap-2">
+                <Button size="sm" className="h-8 shadow-xs text-[10px] font-bold uppercase tracking-tight" onClick={handleSaveEdit}>Update</Button>
+                <Button variant="ghost" size="sm" className="h-8 px-3 text-[10px] font-bold uppercase tracking-tight" onClick={handleCancelEdit}>Cancel</Button>
+              </div>
+            </div>
+          )}
+
           {isAddingHere && (
             <div className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-primary/5 border-b border-border/40 animate-in slide-in-from-top-2">
               <Combobox options={userOptions} value={selectedUserId} onValueChange={setSelectedUserId} placeholder="Select User..." className="h-8 w-full sm:w-[200px] text-xs shadow-xs" />

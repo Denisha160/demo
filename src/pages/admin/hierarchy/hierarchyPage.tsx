@@ -179,10 +179,10 @@ const HierarchyPage = () => {
         });
     };
 
-    const handleUpdateNode = (id: string, relation: string) => {
+    const handleUpdateNode = (id: string, name: string, role: string, relation: string, userId: string) => {
         setNodes(prev => ({
             ...prev,
-            [id]: { ...prev[id], relation }
+            [id]: { ...prev[id], name, role, relation, userId }
         }));
     };
 

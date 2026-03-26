@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatDate, formatDateForAPI } from "@/utils/date";
 import { Combobox } from "@/components/ui/combobox";
+import { useCategoriesCombobox } from "@/hooks/useProductCategories";
 import LeadModal, { LeadFormData } from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
@@ -84,6 +85,7 @@ const getColumnIdFromLead = (lead: any, statuses: LeadStatus[]) => {
 
 const mapLeadToDeal = (
   lead: any,
+  categories: any[] = [],
 ): Deal & { isVerified?: boolean; isCustomer?: boolean } => ({
   id: String(lead?.id || ""),
   title: lead?.name || lead?.title || "Untitled Lead",
@@ -103,6 +105,16 @@ const mapLeadToDeal = (
   status_name: lead?.status_name,
   status_color: lead?.status_color,
   tags: lead?.tags,
+  interested_categories: Array.isArray(lead?.interested_category_id)
+    ? lead.interested_category_id.map((cat: any) => {
+        const id = typeof cat === "string" ? cat : String(cat?.id || "");
+        const categoryMatch = categories.find((c) => String(c.id) === id);
+        return {
+          id,
+          name: categoryMatch ? categoryMatch.name : (typeof cat === "object" ? cat?.name : id),
+        };
+      })
+    : [],
   phone: lead?.phone || lead?.mobile || "-",
   raw_date: lead?.created_at || lead?.date,
 });
@@ -285,6 +297,7 @@ const LeadsPage = () => {
 
   const isLoading = viewMode === "pipeline" ? isGroupLoading : isTableLoading;
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
+  const { data: categories = [] } = useCategoriesCombobox();
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLeadStatus();
   const updateStatusOrderMutation = useUpdateLeadStatusOrder();
@@ -392,12 +405,12 @@ const LeadsPage = () => {
           title: status.name,
           variant: VARIANTS[statusIndex % VARIANTS.length] || "default",
           color: status.color,
-          deals: statusItems.map(mapLeadToDeal).filter(isDealVisible),
+          deals: statusItems.map((item) => mapLeadToDeal(item, categories)).filter(isDealVisible),
           total: paginated?.total || 0,
         } satisfies PipelineColumn & { total: number };
       })
       .filter(Boolean) as (PipelineColumn & { total: number })[];
-  }, [columnOrder, isDealVisible, leadStatuses, paginationData]);
+  }, [columnOrder, isDealVisible, leadStatuses, paginationData, categories]);
 
   const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(
     null,
@@ -659,10 +672,10 @@ const LeadsPage = () => {
         id: "all",
         title: "All Leads",
         variant: "default" as const,
-        deals: tableData.items.map(mapLeadToDeal),
+        deals: tableData.items.map((item) => mapLeadToDeal(item, categories)),
       },
     ];
-  }, [tableData.items]);
+  }, [tableData.items, categories]);
 
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">

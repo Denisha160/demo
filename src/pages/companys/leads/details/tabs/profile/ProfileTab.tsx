@@ -41,18 +41,19 @@ const InterestedCategorySelect = ({
 }) => {
   const { data: categories = [] } = useCategoriesCombobox();
   const suggestions = categories
-    .filter((cat: any) => !!cat.parent_name)
+    .filter((cat: any) => !cat.parent_name)
     .map((cat: any) => ({
       id: String(cat.id),
       name: cat.name,
     }));
 
   const displayValue = (Array.isArray(value) ? value : []).map((val: any) => {
-    const id = typeof val === "string" ? val : val?.id || val?.name;
-    const suggestion = suggestions.find((s) => s.id === id);
-    return (
-      suggestion || (typeof val === "string" ? { id: val, name: val } : val)
-    );
+    const id = typeof val === "string" ? val : val?.id || String(val);
+    const categoryMatch = categories.find((c) => String(c.id) === id);
+    return {
+      id,
+      name: categoryMatch ? categoryMatch.name : (typeof val === "object" ? val?.name : id),
+    };
   });
 
   return (

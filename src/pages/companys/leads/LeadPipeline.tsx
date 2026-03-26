@@ -178,6 +178,23 @@ const LeadPipeline = ({
                                                 </p>
                                               )}
 
+                                            {deal.interested_categories &&
+                                              deal.interested_categories.length >
+                                                0 && (
+                                                <div className="mt-2 flex flex-wrap gap-1">
+                                                  {deal.interested_categories.map(
+                                                    (cat, idx) => (
+                                                      <span
+                                                        key={`${cat.id}-${idx}`}
+                                                        className="inline-flex items-center rounded-sm bg-blue-50 px-1.5 py-0.5 text-[9px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10"
+                                                      >
+                                                        {cat.name}
+                                                      </span>
+                                                    ),
+                                                  )}
+                                                </div>
+                                              )}
+
                                             <div className="flex items-center justify-between border-t border-border/10 pt-3">
                                               <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
                                                 {deal.priority}

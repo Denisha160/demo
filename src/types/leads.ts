@@ -15,6 +15,7 @@ export interface Deal {
   status_name?: string;
   status_color?: string;
   tags?: { id: string; name: string }[];
+  interested_categories?: { id: string; name: string }[];
   phone?: string;
   raw_date?: string;
 }

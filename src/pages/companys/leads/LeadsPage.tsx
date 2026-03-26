@@ -210,6 +210,7 @@ const LeadsPage = () => {
     (searchParams.get("view") as "pipeline" | "table") || "pipeline";
   const setViewMode = useCallback(
     (mode: "pipeline" | "table") => {
+      setSelectedLeads([]);
       setSearchParams(
         (prev) => {
           prev.set("view", mode);
@@ -914,17 +915,17 @@ const LeadsPage = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              {selectedLeads.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsBatchAssignOpen(true)}
-                  className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-accent animate-in slide-in-from-right-4"
-                  disabled={isAssigning}
-                >
-                  Bulk Operation ({selectedLeads.length})
-                </Button>
-              )}
+            {viewMode === "table" && selectedLeads.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsBatchAssignOpen(true)}
+                className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-accent animate-in slide-in-from-right-4"
+                disabled={isAssigning}
+              >
+                Bulk Operation ({selectedLeads.length})
+              </Button>
+            )}
 
               <Button
                 onClick={() => {

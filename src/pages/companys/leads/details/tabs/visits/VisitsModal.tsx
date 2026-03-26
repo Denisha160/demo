@@ -22,14 +22,15 @@ import {
     ComboboxOption,
 } from "@/components/ui/comboBoxWithAdd";
 import { useLeadContacts } from "@/hooks/useLeadContacts";
+import { formatDateForAPI, formatDateTimeLocal } from "@/utils/date";
 
 const visitSchema = z.object({
     title: z.string().min(1, "Title is required").max(200, "Title is too long"),
     description: z.string().optional().or(z.literal("")),
     visit_type: z.string().min(1, "Visit type is required"),
     location_address: z.string().optional().or(z.literal("")),
-    location_latitude: z.string().optional().or(z.literal("")),
-    location_longitude: z.string().optional().or(z.literal("")),
+    location_latitude: z.string().min(1, "Location latitude is required (use Live Location)"),
+    location_longitude: z.string().min(1, "Location longitude is required (use Live Location)"),
     visit_image: z.string().optional().or(z.literal("")),
     visit_image_name: z.string().optional().or(z.literal("")),
     outcome_summary: z.string().optional().or(z.literal("")),
@@ -39,6 +40,8 @@ const visitSchema = z.object({
     contact_person_name: z.string().optional().or(z.literal("")),
     contact_person_designation: z.string().optional().or(z.literal("")),
     contact_person_phone: z.string().optional().or(z.literal("")),
+    scheduled_time: z.string().min(1, "Scheduled time is required"),
+    status: z.string().optional().or(z.literal("")),
     visit_image_file: z.any().optional(),
 });
 
@@ -138,6 +141,8 @@ const VisitsModal = ({
             contact_person_name: "",
             contact_person_designation: "",
             contact_person_phone: "",
+            scheduled_time: formatDateTimeLocal(new Date()),
+            status: "COMPLETED",
         },
     });
 
@@ -167,6 +172,8 @@ const VisitsModal = ({
                 contact_person_name: visitData.contact_person_name || "",
                 contact_person_designation: visitData.contact_person_designation || "",
                 contact_person_phone: visitData.contact_person_phone || "",
+                scheduled_time: formatDateTimeLocal(visitData.scheduled_time || new Date()),
+                status: visitData.status || "COMPLETED",
             });
             return;
         }
@@ -187,6 +194,8 @@ const VisitsModal = ({
             contact_person_name: "",
             contact_person_designation: "",
             contact_person_phone: "",
+            scheduled_time: formatDateTimeLocal(new Date()),
+            status: "COMPLETED",
         });
         setLocationMessage("");
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -391,6 +400,29 @@ const VisitsModal = ({
                         />
                     </div>
 
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-1">
+                        <FormField
+                            control={form.control}
+                            name="scheduled_time"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs font-bold flex gap-1">
+                                        Scheduled Date & Time <span className="text-destructive">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="datetime-local"
+                                            className="h-9 text-xs"
+                                            disabled={isSubmitting}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage className="text-[10px]" />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
                     <FormField
                         control={form.control}
                         name="visit_image"
@@ -537,7 +569,9 @@ const VisitsModal = ({
                             name="location_latitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-xs font-bold">Latitude</FormLabel>
+                                    <FormLabel className="text-xs font-bold flex gap-1">
+                                        Latitude <span className="text-destructive">*</span>
+                                    </FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder="12.9716"
@@ -557,7 +591,9 @@ const VisitsModal = ({
                             name="location_longitude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-xs font-bold">Longitude</FormLabel>
+                                    <FormLabel className="text-xs font-bold flex gap-1">
+                                        Longitude <span className="text-destructive">*</span>
+                                    </FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder="77.5946"

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatDate, formatDateForAPI } from "@/utils/date";
+import { formatDate, formatDateForAPI, formatDateTime } from "@/utils/date";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
 import { X } from "lucide-react";
@@ -58,9 +58,6 @@ const toNullableNumber = (value?: string) => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
-const formatDateTime = (value?: string) => {
-  return formatDate(value);
-};
 
 interface VisitsTabProps {
   leadId: string;
@@ -155,6 +152,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       contact_person_phone: remainingFormData.contact_person_phone,
       outcome_summary: remainingFormData.outcome_summary,
       next_steps: remainingFormData.next_steps,
+      status: formData.status || "COMPLETED", // Default status as requested
+      scheduled_time: formatDateForAPI(formData.scheduled_time),
     };
 
     // Auto-create contact if it is new
@@ -238,6 +237,23 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       ),
     },
     {
+      key: "scheduled_time",
+      header: "Scheduled",
+      render: (item) => (
+        <div className="flex items-center gap-2 text-xs text-foreground">
+          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+          {formatDateTime(item.scheduled_time)}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (item) => (
+        <StatusBadge status={item.status || "COMPLETED"} />
+      ),
+    },
+    {
       key: "contact_person_name",
       header: "Contact",
       render: (item) => (
@@ -260,25 +276,27 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       render: (item) => (
         <div className="flex max-w-xs items-start gap-2">
           {item.location_latitude && item.location_longitude ? (
-            <button
-              title="Open in Google Maps"
-              className="mt-0.5 rounded-full p-1 transition-colors hover:bg-primary/10 hover:text-primary"
-              onClick={() => {
-                const url = `https://www.google.com/maps?q=${item.location_latitude},${item.location_longitude}`;
-                window.open(url, "_blank");
-              }}
-            >
-              <MapPin className="h-3.5 w-3.5" />
-            </button>
+            <div className="flex flex-col items-center gap-1">
+              <button
+                title="Open in Google Maps"
+                className="rounded-full p-1 transition-colors hover:bg-primary/10 hover:text-primary"
+                onClick={() => {
+                  const url = `https://www.google.com/maps?q=${item.location_latitude},${item.location_longitude}`;
+                  window.open(url, "_blank");
+                }}
+              >
+                <MapPin className="h-3.5 w-3.5 text-primary" />
+              </button>
+              <span className="rounded-full bg-green-500/10 px-1.5 py-0.5 text-[9px] font-bold text-green-600 dark:bg-green-500/20 dark:text-green-400">
+                LIVE
+              </span>
+            </div>
           ) : (
             <MapPin className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
           )}
           <div className="flex flex-col">
-            <span className="line-clamp-2 text-xs text-foreground">
+            <span className="line-clamp-2 text-sm text-foreground">
               {item.location_address}
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              Rating: {item.customer_rating || "-"}
             </span>
           </div>
         </div>

@@ -12,6 +12,31 @@ export function formatDate(dateInput?: string | Date | null): string {
   return `${day}/${month}/${year}`;
 }
 
+export function formatDateTime(dateInput?: string | Date | null): string {
+  if (!dateInput) return "-";
+
+  let date: Date;
+  if (dateInput instanceof Date) {
+    date = dateInput;
+  } else {
+    // Treat as local even if it has 'Z', by substituting it with local format first
+    // to ensure what was stored is what is shown regardless of browser timezone conversion
+    const localInput = typeof dateInput === "string" ? dateInput.replace("Z", "") : dateInput;
+    date = new Date(localInput);
+  }
+
+  if (isNaN(date.getTime()))
+    return typeof dateInput === "string" ? dateInput : "-";
+
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = (date.getFullYear() % 100).toString().padStart(2, "0");
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
 export function parseFormattedDate(dateStr?: string | null): Date | null {
   if (!dateStr) return null;
 
@@ -29,6 +54,13 @@ export function parseFormattedDate(dateStr?: string | null): Date | null {
       const date = new Date(year, month, day, 12, 0, 0);
       return isNaN(date.getTime()) ? null : date;
     }
+  }
+
+  // Handle ISO strings potentially with 'Z' but treat them as local if they match our stored pattern
+  if (typeof dateStr === "string" && dateStr.endsWith(".000Z")) {
+    const localStr = dateStr.replace(".000Z", ".000");
+    const date = new Date(localStr);
+    if (!isNaN(date.getTime())) return date;
   }
 
   const date = new Date(dateStr);
@@ -50,8 +82,19 @@ export function formatDateForAPI(
   const minutes = date.getMinutes().toString().padStart(2, "0");
   const seconds = date.getSeconds().toString().padStart(2, "0");
 
-  // Return a full ISO 8601-like string that preserves the LOCAL date and time
-  // instead of converting to UTC. This satisfies server validation while maintaining
-  // the user's selected date/time values in the payload string.
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000Z`;
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000`;
+}
+
+export function formatDateTimeLocal(dateInput?: string | Date | null): string {
+  if (!dateInput) return "";
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(date.getTime())) return "";
+
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }

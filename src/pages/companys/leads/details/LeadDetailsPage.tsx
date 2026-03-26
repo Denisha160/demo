@@ -329,11 +329,27 @@ const LeadDetailsPage = () => {
       case "contacts":
         return <ContactsTab />;
       case "follow-up":
-        return id ? <FollowUpTab leadId={id} /> : null;
+        return id ? (
+          <FollowUpTab
+            leadId={id}
+            defaultAssignedTo={{
+              id: leadProfile.assigned_to,
+              name: (lead as any)?.assigned_to_name || leadProfile.assigned_to,
+            }}
+          />
+        ) : null;
       case "visits":
         return id ? <VisitsTab leadId={id} /> : null;
       case "tasks":
-        return id ? <TasksTab leadId={id} /> : null;
+        return id ? (
+          <TasksTab
+            leadId={id}
+            defaultAssignedTo={{
+              id: leadProfile.assigned_to,
+              name: (lead as any)?.assigned_to_name || leadProfile.assigned_to,
+            }}
+          />
+        ) : null;
       case "call-logs":
         return <CallLogsTab />;
       case "products":

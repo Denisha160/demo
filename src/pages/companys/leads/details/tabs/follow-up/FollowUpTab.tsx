@@ -58,9 +58,10 @@ const getStatusVariant = (status: string) => {
 
 interface FollowUpTabProps {
   leadId: string;
+  defaultAssignedTo?: { id: string; name: string };
 }
 
-const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
+const FollowUpTab = ({ leadId, defaultAssignedTo }: FollowUpTabProps) => {
   const [open, setOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(
@@ -314,6 +315,7 @@ const FollowUpTab = ({ leadId }: FollowUpTabProps) => {
         }}
         onSave={handleSave}
         followUpData={editingFollowUp}
+        defaultAssignedTo={defaultAssignedTo}
         isEditing={!!editingFollowUp}
         isSubmitting={
           createFollowUpMutation.isPending || updateFollowUpMutation.isPending

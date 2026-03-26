@@ -44,6 +44,7 @@ interface FollowUpModalProps {
   open: boolean;
   onClose: () => void;
   followUpData?: FollowUp | null;
+  defaultAssignedTo?: { id: string; name: string };
   isEditing?: boolean;
   onSave: (
     data: FollowUpFormData,
@@ -62,6 +63,7 @@ const FollowUpModal = ({
   open,
   onClose,
   followUpData,
+  defaultAssignedTo,
   isEditing = false,
   onSave,
   isSubmitting = false,
@@ -117,12 +119,12 @@ const FollowUpModal = ({
       follow_up_method: "",
       purpose: "",
       remarks: "",
-      assigned_to: "",
+      assigned_to: defaultAssignedTo?.id || "",
       scheduled_at: "",
       set_reminder: false,
       reminder_time: "",
     });
-  }, [open, isEditing, followUpData, reset]);
+  }, [open, isEditing, followUpData, reset, defaultAssignedTo]);
 
   const handleFormSubmit = (data: FollowUpFormData) => {
     onSave(data, setError);

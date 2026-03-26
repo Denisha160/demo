@@ -48,10 +48,16 @@ export interface Task extends TaskFormData {
   assigned_to_name?: string;
 }
 
+interface TasksTabProps {
+  leadId: string;
+  defaultAssignedTo?: { id: string; name: string };
+}
+
 interface TaskModalProps {
   open: boolean;
   onClose: () => void;
   taskData?: Task | null;
+  defaultAssignedTo?: { id: string; name: string };
   onSave: (data: TaskFormData, setError: UseFormSetError<TaskFormData>) => void;
   isSubmitting?: boolean;
 }
@@ -64,6 +70,7 @@ const TaskModal = ({
   open,
   onClose,
   taskData,
+  defaultAssignedTo,
   onSave,
   isSubmitting,
 }: TaskModalProps) => {
@@ -107,14 +114,14 @@ const TaskModal = ({
           description: "",
           status: "",
           priority: "",
-          assigned_to: "",
+          assigned_to: defaultAssignedTo?.id || "",
           due_date: "",
           set_reminder: false,
           reminder_time: "",
         });
       }
     }
-  }, [open, taskData, form]);
+  }, [open, taskData, form, defaultAssignedTo]);
 
   const onSubmit = (data: TaskFormData) => {
     onSave(data, form.setError);

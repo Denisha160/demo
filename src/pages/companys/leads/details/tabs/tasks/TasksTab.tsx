@@ -41,9 +41,10 @@ const applyServerValidationErrors = (
 
 interface TasksTabProps {
   leadId: string;
+  defaultAssignedTo?: { id: string; name: string };
 }
 
-const TasksTab = ({ leadId }: TasksTabProps) => {
+const TasksTab = ({ leadId, defaultAssignedTo }: TasksTabProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
@@ -333,6 +334,7 @@ const TasksTab = ({ leadId }: TasksTabProps) => {
             setEditingTask(null);
           }}
           taskData={editingTask}
+          defaultAssignedTo={defaultAssignedTo}
           onSave={handleSaveTask}
           isSubmitting={
             createTaskMutation.isPending || updateTaskMutation.isPending

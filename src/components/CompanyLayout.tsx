@@ -30,7 +30,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { useLogout, useCurrentUser, useHasPermission } from "@/hooks/useAuth";
+import { useLogout, useCurrentUser, useHasPermission, ADMIN_PERMISSIONS } from "@/hooks/useAuth";
 import { createPortal } from "react-dom";
 import { getCompanyTheme } from "@/data/companyData";
 import { useCompanies } from "@/hooks/useCompanies";
@@ -259,6 +259,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const user = useCurrentUser();
   const { hasPermission } = useHasPermission();
+  const hasAdminPerm = hasPermission(ADMIN_PERMISSIONS);
   const { data: companiesData, isLoading: isLoadingCompanies } = useCompanies();
   const companies = useMemo(
     () => companiesData?.items || [],
@@ -532,7 +533,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             })}
         </nav>
 
-        {user?.is_root_user && (
+        {Boolean(user?.is_root_user || hasAdminPerm) && (
           <div className="p-2 border-t border-border">
             <Link
               to="/admin/companies"

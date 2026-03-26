@@ -304,6 +304,9 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {navItems
             .filter((item) => {
+              if (item.isRootOnly && !user?.is_root_user) {
+                return false;
+              }
               if (item.permission) {
                 return hasPermission(item.permission);
               }

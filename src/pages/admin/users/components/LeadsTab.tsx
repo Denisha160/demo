@@ -44,20 +44,6 @@ const activityColumns: Column<Record<string, unknown>>[] = [
   },
   { key: "name", header: "Deal Name" },
   {
-    key: "contact",
-    header: "Contact",
-    render: (v) => (v as Record<string, string>).contact || "-",
-  },
-  {
-    key: "value",
-    header: "Value",
-    render: (v) => (
-      <span className="font-medium">
-        {formatCurrency((v as Record<string, number>).value || 0)}
-      </span>
-    ),
-  },
-  {
     key: "stage",
     header: "Stage",
     render: (q) => (

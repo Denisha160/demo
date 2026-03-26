@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer, Zoom } from "react-toastify";
 import Cookies from "js-cookie";
+import { useHasPermission, ADMIN_PERMISSIONS } from "@/hooks/useAuth";
 import AdminLayout from "./components/AdminLayout";
 import CompanyLayout from "./components/CompanyLayout";
 import Login from "@/pages/auth/LoginPage";
@@ -92,17 +94,49 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { hasPermission, isLoading } = useHasPermission();
+  
   const user = getStoredUser();
   const token = Cookies.get("auth_token");
   if (!token || !user) return <Navigate to="/login" replace />;
-  if (!user.is_root_user)
+  
+  if (user.is_root_user) {
+    return <>{children}</>;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-secondary/30">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!hasPermission(ADMIN_PERMISSIONS)) {
     return (
       <Navigate
         to={`/${user.companies?.[0]?.id || "no-access"}/dashboard`}
         replace
       />
     );
+  }
+
   return <>{children}</>;
+}
+
+function AdminIndexRedirect() {
+  const { hasPermission, isLoading } = useHasPermission();
+  const user = getStoredUser();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-secondary/30">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return <Navigate to="companies" replace />;
 }
 
 function DashboardRedirect() {
@@ -110,6 +144,35 @@ function DashboardRedirect() {
   if (!user) return <Navigate to="/login" replace />;
   const companyId = user.companies?.[0]?.id || "no-access";
   return <Navigate to={`/${companyId}/dashboard`} replace />;
+}
+
+function PermissionRoute({ permission, children, fallback = "/no-access" }: { permission: string | string[], children: React.ReactNode, fallback?: string }) {
+  const { hasPermission, isLoading } = useHasPermission();
+  const user = getStoredUser();
+  
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.is_root_user) return <>{children}</>;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-secondary/30">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!hasPermission(permission)) {
+    return <Navigate to={fallback} replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function RootOnlyRoute({ children, fallback = "/no-access" }: { children: React.ReactNode, fallback?: string }) {
+  const user = getStoredUser();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.is_root_user) return <>{children}</>;
+  return <Navigate to={fallback} replace />;
 }
 
 const App = () => (
@@ -168,7 +231,7 @@ const App = () => (
             </AdminRoute>
           }
         >
-          <Route index element={<Navigate to="companies" replace />} />
+          <Route index element={<AdminIndexRedirect />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="inbox" element={<InboxPage />} />
           <Route path="products" element={<Products />} />
@@ -189,10 +252,10 @@ const App = () => (
           />
           <Route path="brands" element={<BrandsPage />} />
           <Route path="fragrances" element={<FragrancesPage />} />
-          <Route path="users" element={<Users />} />
-          <Route path="users/:id" element={<UserDetail />} />
-          <Route path="roles" element={<Roles />} />
-          <Route path="roles/:id" element={<RoleDetail />} />
+          <Route path="users" element={<PermissionRoute permission="user.read" fallback="/admin"><Users /></PermissionRoute>} />
+          <Route path="users/:id" element={<PermissionRoute permission="user.read" fallback="/admin"><UserDetail /></PermissionRoute>} />
+          <Route path="roles" element={<PermissionRoute permission="role.read" fallback="/admin"><Roles /></PermissionRoute>} />
+          <Route path="roles/:id" element={<PermissionRoute permission="role.read" fallback="/admin"><RoleDetail /></PermissionRoute>} />
           <Route path="companies" element={<CompaniesPage />} />
           <Route path="companies/:id" element={<CompanyDetailPage />} />
           <Route path="batches" element={<BatchesPage />} />

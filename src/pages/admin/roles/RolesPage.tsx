@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Edit, Eye, Trash2, Shield } from "lucide-react";
 import RoleModal from "./RoleModal";
 import { useNavigate } from "react-router-dom";
+import { useHasPermission } from "@/hooks/useAuth";
 
 import {
   useRoles,
@@ -26,6 +27,7 @@ import {
 
 const RolesPage = () => {
   const navigate = useNavigate();
+  const { hasPermission } = useHasPermission();
   const { data, isLoading } = useRoles();
   const roles: Role[] = data?.items || [];
   const createRoleMutation = useCreateRole();
@@ -166,16 +168,18 @@ const RolesPage = () => {
             />
           </div>
         </div>
-        <Button
-          size="sm"
-          className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
-          onClick={() => {
-            setSelectedRole(null);
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="h-3.5 w-3.5" /> Add Role
-        </Button>
+        {hasPermission("role.create") && (
+          <Button
+            size="sm"
+            className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
+            onClick={() => {
+              setSelectedRole(null);
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" /> Add Role
+          </Button>
+        )}
       </div>
 
       <div className="border border-border rounded-sm overflow-hidden bg-card shadow-sm">

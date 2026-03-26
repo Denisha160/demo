@@ -15,6 +15,7 @@ import { Plus, Search } from "lucide-react";
 import UserModal from "./UserModal";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useDeleteUser, useUpdateUser } from "@/hooks/useUsers";
+import { useHasPermission } from "@/hooks/useAuth";
 import { User, UserUpdatePayload } from "@/types/user";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRoles } from "@/hooks/useRoles";
@@ -22,18 +23,20 @@ import { useRoles } from "@/hooks/useRoles";
 // Helper component for the inline shift selector
 const ShiftSelect = ({ user }: { user: User }) => {
   const { mutate: updateUser, isPending } = useUpdateUser();
+  const { hasPermission } = useHasPermission();
+  const canUpdate = hasPermission("user.update");
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
       <Select
         value={user.work_shift || "morning"}
         onValueChange={(val: "morning" | "evening" | "night" | "rotating") => {
-          if (val !== user.work_shift) {
+          if (val !== user.work_shift && canUpdate) {
             const payload: UserUpdatePayload = { id: user.id, work_shift: val };
             updateUser(payload);
           }
         }}
-        disabled={isPending}
+        disabled={isPending || !canUpdate}
       >
         <SelectTrigger className="w-[110px] h-8 text-xs">
           <SelectValue placeholder="Select shift" />
@@ -52,8 +55,9 @@ const ShiftSelect = ({ user }: { user: User }) => {
 const Users = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { hasPermission } = useHasPermission();
 
-  const { data: rolesData } = useRoles({});
+  const { data: rolesData } = useRoles({}, { enabled: hasPermission("role.read") });
   const roleOptions = (rolesData?.items || []).map(
     (r: { id: string; name: string }) => ({ value: r.id, label: r.name }),
   );
@@ -185,10 +189,12 @@ const Users = () => {
       className: "w-[300px]",
       render: (item) => (
         <div
-          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+          className={`flex items-center gap-3 transition-opacity ${hasPermission("user.update") ? "cursor-pointer hover:opacity-80" : ""}`}
           onClick={(e) => {
-            e.stopPropagation();
-            navigate(`${item.id}`);
+            if (hasPermission("user.update")) {
+              e.stopPropagation();
+              navigate(`${item.id}`);
+            }
           }}
         >
           <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
@@ -352,16 +358,18 @@ const Users = () => {
             </div>
           )}
         </div>
-        <Button
-          size="sm"
-          className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
-          onClick={() => {
-            setSelectedUser(null);
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" /> Add User
-        </Button>
+        {hasPermission("user.create") && (
+          <Button
+            size="sm"
+            className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
+            onClick={() => {
+              setSelectedUser(null);
+              setModalOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" /> Add User
+          </Button>
+        )}
       </div>
 
       <div className="border border-border/60 rounded-sm shadow-sm">
@@ -385,7 +393,7 @@ const Users = () => {
             setSortDirection(direction);
             setPage(1);
           }}
-          onRowClick={(item) => navigate(`${item.id}`)}
+          onRowClick={(item) => hasPermission("user.update") && navigate(`${item.id}`)}
         />
       </div>
 

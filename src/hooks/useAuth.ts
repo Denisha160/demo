@@ -16,6 +16,21 @@ import type {
   VerifyLoginPayload,
 } from "@/types/Auth";
 
+export const ADMIN_PERMISSIONS = [
+  "user.read",
+  "role.read",
+  "inventory.read",
+  "product.read",
+  "product-bom.read",
+  "product-package.read",
+  "product-kit.read",
+  "product-category.read",
+  "product-brand.read",
+  "product-fragrance.read",
+  "inventory-batch.read",
+  "inventory-serial.read"
+];
+
 const AUTH_TOKEN_KEY = "auth_token";
 const USER_DETAILS_KEY = "user_details";
 const COOKIE_EXPIRY_DAYS = 1;

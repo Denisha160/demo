@@ -63,6 +63,7 @@ import RemindersPage from "./pages/companys/leads/reminders/RemindersPage";
 import FollowUpsPage from "./pages/companys/leads/followups/FollowUps";
 import SalesPage from "./pages/companys/sales/SalesPage";
 import SalesMemberDetailPage from "./pages/companys/sales/SalesMemberDetailPage";
+import HierarchyPage from "./pages/admin/hierarchy/hierarchyPage";
 
 const queryClient = new QueryClient();
 
@@ -95,11 +96,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { hasPermission, isLoading } = useHasPermission();
-  
+
   const user = getStoredUser();
   const token = Cookies.get("auth_token");
   if (!token || !user) return <Navigate to="/login" replace />;
-  
+
   if (user.is_root_user) {
     return <>{children}</>;
   }
@@ -149,7 +150,7 @@ function DashboardRedirect() {
 function PermissionRoute({ permission, children, fallback = "/no-access" }: { permission: string | string[], children: React.ReactNode, fallback?: string }) {
   const { hasPermission, isLoading } = useHasPermission();
   const user = getStoredUser();
-  
+
   if (!user) return <Navigate to="/login" replace />;
   if (user.is_root_user) return <>{children}</>;
 
@@ -267,6 +268,7 @@ const App = () => (
           <Route path="inventory/:type/:id" element={<InventoryDetailPage />} />
           <Route path="accounts" element={<AccountPage />} />
           <Route path="accounts/:id" element={<AccountViewPage />} />
+          <Route path="hierarchy" element={<HierarchyPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

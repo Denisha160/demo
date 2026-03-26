@@ -39,7 +39,13 @@ const InterestedCategorySelect = ({
   onValueChange: (val: any[]) => void;
   disabled?: boolean;
 }) => {
-  const { data: categories = [] } = useCategoriesCombobox();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
+  const { data: categories = [] } = useCategoriesCombobox({
+    search: debouncedSearch,
+  });
+
   const suggestions = categories
     .filter((cat: any) => !cat.parent_name)
     .map((cat: any) => ({
@@ -64,6 +70,8 @@ const InterestedCategorySelect = ({
       suggestions={suggestions}
       value={displayValue}
       onChange={onValueChange}
+      onSearchChange={setSearch}
+      searchValue={search}
       disabled={disabled}
       creatable={false}
     />

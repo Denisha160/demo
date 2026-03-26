@@ -34,11 +34,18 @@ import { useDebounce } from "@/hooks/useDebounce";
 const InterestedCategorySelect = ({
   value = [],
   onValueChange,
+  disabled,
 }: {
   value?: any[];
   onValueChange: (val: any[]) => void;
+  disabled?: boolean;
 }) => {
-  const { data: categories = [], isLoading } = useCategoriesCombobox();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
+  const { data: categories = [], isLoading } = useCategoriesCombobox({
+    search: debouncedSearch,
+  });
   const suggestions = categories
     .filter((cat: any) => !cat.parent_name)
     .map((cat: any) => ({
@@ -63,6 +70,9 @@ const InterestedCategorySelect = ({
       suggestions={suggestions}
       value={displayValue}
       onChange={onValueChange}
+      onSearchChange={setSearch}
+      searchValue={search}
+      disabled={disabled}
       creatable={false}
     />
   );

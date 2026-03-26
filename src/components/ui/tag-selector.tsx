@@ -25,6 +25,8 @@ interface TagSelectorProps {
   onChange: (tags: Tag[]) => void;
   disabled?: boolean;
   creatable?: boolean;
+  onSearchChange?: (value: string) => void;
+  searchValue?: string;
 }
 
 export function TagSelector({
@@ -33,9 +35,13 @@ export function TagSelector({
   onChange,
   disabled,
   creatable = true,
+  onSearchChange,
+  searchValue,
 }: TagSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [localInputValue, setLocalInputValue] = useState("");
+  const inputValue = searchValue !== undefined ? searchValue : localInputValue;
+  const setInputValue = onSearchChange || setLocalInputValue;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleUnselect = (tag: Tag) => {
@@ -88,7 +94,9 @@ export function TagSelector({
   const filteredSuggestions = suggestions.filter(
     (s) =>
       !value.find((v) => v.name === s.name) &&
-      s.name.toLowerCase().includes(inputValue.toLowerCase()),
+      (onSearchChange
+        ? true
+        : s.name.toLowerCase().includes(inputValue.toLowerCase())),
   );
 
   if (disabled) {

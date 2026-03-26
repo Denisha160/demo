@@ -21,7 +21,8 @@ export function formatDateTime(dateInput?: string | Date | null): string {
   } else {
     // Treat as local even if it has 'Z', by substituting it with local format first
     // to ensure what was stored is what is shown regardless of browser timezone conversion
-    const localInput = typeof dateInput === "string" ? dateInput.replace("Z", "") : dateInput;
+    const localInput =
+      typeof dateInput === "string" ? dateInput.replace("Z", "") : dateInput;
     date = new Date(localInput);
   }
 

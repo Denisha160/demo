@@ -83,18 +83,20 @@ const Dashboard = () => {
   const currentUser = useCurrentUser();
   const [selectedUserId, setSelectedUserId] = useState<string>("all");
 
-  const analyticsParams = currentUser?.is_root_user && selectedUserId !== "all" 
-    ? { user_id: selectedUserId } 
-    : undefined;
+  const analyticsParams =
+    currentUser?.is_root_user && selectedUserId !== "all"
+      ? { user_id: selectedUserId }
+      : undefined;
 
   const { data, isLoading: analyticsLoading } = useAnalytics(analyticsParams);
 
   const { data: usersResponse, isLoading: usersLoading } = useUsers(
-    { limit: 100 }, 
-    { enabled: !!currentUser?.is_root_user }
+    { limit: 100 },
+    { enabled: !!currentUser?.is_root_user },
   );
 
-  const isLoading = analyticsLoading || (currentUser?.is_root_user && usersLoading);
+  const isLoading =
+    analyticsLoading || (currentUser?.is_root_user && usersLoading);
 
   if (isLoading && !data) {
     return (

@@ -58,7 +58,6 @@ const toNullableNumber = (value?: string) => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
-
 interface VisitsTabProps {
   leadId: string;
 }
@@ -249,9 +248,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
     {
       key: "status",
       header: "Status",
-      render: (item) => (
-        <StatusBadge status={item.status || "COMPLETED"} />
-      ),
+      render: (item) => <StatusBadge status={item.status || "COMPLETED"} />,
     },
     {
       key: "contact_person_name",

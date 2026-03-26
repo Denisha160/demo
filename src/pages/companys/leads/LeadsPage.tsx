@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectItem
+  SelectItem,
 } from "@/components/ui/select";
 import confetti from "canvas-confetti";
 import { Plus, Search, Filter, List, Kanban, X } from "lucide-react";
@@ -116,19 +116,19 @@ const mapLeadToDeal = (
   tags: lead?.tags,
   interested_categories: Array.isArray(lead?.interested_category_id)
     ? lead.interested_category_id
-      .map((cat: any) => {
-        if (typeof cat === "string") return { id: cat, name: cat };
-        const id = String(cat?.id || "");
-        const categoryMatch = (categories as any[]).find(
-          (c) => String(c.id) === id,
-        );
-        return categoryMatch
-          ? { id, name: categoryMatch.name }
-          : cat?.name
-            ? { id, name: cat.name }
-            : null;
-      })
-      .filter((c: any): c is { id: string; name: string } => !!c)
+        .map((cat: any) => {
+          if (typeof cat === "string") return { id: cat, name: cat };
+          const id = String(cat?.id || "");
+          const categoryMatch = (categories as any[]).find(
+            (c) => String(c.id) === id,
+          );
+          return categoryMatch
+            ? { id, name: categoryMatch.name }
+            : cat?.name
+              ? { id, name: cat.name }
+              : null;
+        })
+        .filter((c: any): c is { id: string; name: string } => !!c)
     : [],
   phone: lead?.phone || lead?.mobile || "-",
   raw_date: lead?.created_at || lead?.date,
@@ -257,9 +257,9 @@ const LeadsPage = () => {
 
   const { data: usersResponse } = useUsers(
     { limit: 100 },
-    { enabled: !!currentUser?.is_root_user }
+    { enabled: !!currentUser?.is_root_user },
   );
-  const usersList = usersResponse?.items || [];
+  const usersList = (usersResponse as any)?.items || [];
 
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isBatchAssignOpen, setIsBatchAssignOpen] = useState(false);
@@ -273,7 +273,9 @@ const LeadsPage = () => {
   const [tableResetKey, setTableResetKey] = useState(0);
 
   const hasFilters = useMemo(() => {
-    return Boolean(searchTerm || dateRange?.from || dateRange?.to || priority || assignedTo);
+    return Boolean(
+      searchTerm || dateRange?.from || dateRange?.to || priority || assignedTo,
+    );
   }, [searchTerm, dateRange, priority, assignedTo]);
 
   const handleClearFilters = () => {
@@ -388,9 +390,9 @@ const LeadsPage = () => {
     setColumnOrder((prev) =>
       prev.length
         ? [
-          ...prev.filter((id) => sortedIds.includes(id)),
-          ...sortedIds.filter((id) => !prev.includes(id)),
-        ]
+            ...prev.filter((id) => sortedIds.includes(id)),
+            ...sortedIds.filter((id) => !prev.includes(id)),
+          ]
         : sortedIds,
     );
     if (!searchParams.has("stages")) {
@@ -625,7 +627,12 @@ const LeadsPage = () => {
       if (destStatus?.name?.toLowerCase().includes("won")) {
         const duration = 5 * 1000;
         const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+        const defaults = {
+          startVelocity: 30,
+          spread: 360,
+          ticks: 60,
+          zIndex: 9999,
+        };
 
         const randomInRange = (min: number, max: number) =>
           Math.random() * (max - min) + min;
@@ -756,7 +763,10 @@ const LeadsPage = () => {
 
               {currentUser?.is_root_user && (
                 <div className="w-[180px]">
-                  <Select value={assignedTo || "all"} onValueChange={setAssignedTo}>
+                  <Select
+                    value={assignedTo || "all"}
+                    onValueChange={setAssignedTo}
+                  >
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Assigned To" />
                     </SelectTrigger>

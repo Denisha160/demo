@@ -102,24 +102,24 @@ const LeadPipeline = ({
                               <GripVertical className="h-4 w-4" />
                             </div>
                           )}
-                          <div className="flex items-center gap-2">
-                            <StatusBadge
-                              status={col.title}
-                              variant={col.variant}
-                              color={col.color}
-                            />
-                            <div className="flex items-center gap-1.5 ml-1">
-                              <span className="text-[11px] font-bold text-muted-foreground/60">
-                                Vol:
-                              </span>
-                              <span className="text-[12px] font-bold text-primary">
-                                ₹{col.total_expected_revenue.toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
+
+                          <StatusBadge
+                            status={col.title}
+                            variant={col.variant}
+                            color={col.color}
+                          />
+                        </div>
+
+                        {/* RIGHT SIDE */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-muted-foreground/60">
+                            Vol:
+                          </span>
+                          <span className="text-[12px] font-bold text-primary">
+                            ₹{col.total_expected_revenue.toLocaleString()}
+                          </span>
                         </div>
                       </div>
-
                       <Droppable droppableId={col.id} type="DEAL">
                         {(dealProvided, dealSnapshot) => (
                           <div

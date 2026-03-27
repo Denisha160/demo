@@ -8,8 +8,28 @@ import {
   updateLeadStatus,
   bulkUpdateLeads,
   exportLeads,
+  downloadDemoCSV,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
+
+export function useDownloadDemoCSV() {
+  return useMutation({
+    mutationFn: () => downloadDemoCSV(),
+    onSuccess: (data: any) => {
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `sample_leads_import.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Sample CSV downloaded successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to download sample CSV.");
+    },
+  });
+}
 
 export function useBulkUpdateLeads() {
   const queryClient = useQueryClient();

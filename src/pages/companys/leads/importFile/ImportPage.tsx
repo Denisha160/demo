@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { useLeadStatuses } from "@/hooks/useLeadStatus";
+import { useDownloadDemoCSV } from "@/hooks/useLeads";
 import DataTable, { Column } from "@/components/DataTable";
 import { toast } from "react-toastify";
 
@@ -21,6 +22,8 @@ const ImportPage = () => {
   const { companyId } = useParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fallbackStatus, setFallbackStatus] = useState("");
+
+  const downloadDemoMutation = useDownloadDemoCSV();
 
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const statusOptions =
@@ -125,13 +128,13 @@ const ImportPage = () => {
           variant="outline"
           size="sm"
           className="h-9 gap-2 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
-          onClick={() => {
-            // Logic for downloading sample CSV
-            toast.success("Sample CSV download started.");
-          }}
+          onClick={() => downloadDemoMutation.mutate()}
+          disabled={downloadDemoMutation.isPending}
         >
           <Download className="h-4 w-4" />
-          <span className="font-semibold text-xs">Download Sample CSV</span>
+          <span className="font-semibold text-xs">
+            {downloadDemoMutation.isPending ? "Downloading..." : "Download Sample CSV"}
+          </span>
         </Button>
       </div>
 

@@ -164,8 +164,8 @@ const Users = () => {
   });
 
   const { mutate: deleteUser } = useDeleteUser();
-  const users = usersResponse?.items || [];
-  const totalItems = usersResponse?.pagination?.total || 0;
+  const users = (usersResponse as any)?.items || [];
+  const totalItems = (usersResponse as any)?.pagination?.total || 0;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);

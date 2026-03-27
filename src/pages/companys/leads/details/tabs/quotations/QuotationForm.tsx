@@ -101,61 +101,62 @@ const keyValueSchema = z.object({
 });
 
 export const quotationSchema = z.object({
-    subject: z.string().min(1, "Subject is required"),
     quotation_number: z.string().min(1, "Quotation number is required"),
+    lead_id: z.string().min(1, "Lead is required"),
     quotation_date: z.string().min(1, "Quotation date is required"),
     valid_until: optionalText,
     status: z.enum(quotationStatuses),
 
-    related_to: optionalText, // e.g. "Lead", "Customer"
-    lead_id: optionalText,
-    account_id: optionalText,
-    currency: z.string().default("USD $"),
-    tags: z.array(z.string()).optional(),
-    allow_comments: z.boolean().default(true),
-
-    assigned_to: optionalText,
     customer_name: z.string().min(1, "Customer name is required"),
     customer_email: z.string().email("Invalid email").optional().or(z.literal("")),
     customer_phone: optionalText,
+    customer_address: optionalText,
     customer_gst: optionalText,
     customer_pan: optionalText,
-    customer_address: optionalText,
+
+    contact_person_id: optionalText,
     contact_person_name: optionalText,
     contact_person_email: optionalText,
     contact_person_phone: optionalText,
     contact_person_designation: optionalText,
-    city: optionalText,
-    state: optionalText,
-    country: optionalText,
-    zip_code: optionalText,
 
     subtotal: requiredNumber,
-    discount_type: z.enum(discountTypes).optional(),
+    discount_type: z.enum(discountTypes).optional().or(z.literal("NONE")),
     discount_value: optionalNumber,
     tax_details: z.array(keyValueSchema),
     total_tax_amount: requiredNumber,
     additional_charges: z.array(keyValueSchema),
     total_additional_charges: requiredNumber,
 
+    amount_in_words: optionalText,
     payment_terms: z.enum(paymentTermsOptions).optional(),
+    payment_terms_custom: optionalText,
     delivery_terms: z.enum(deliveryTermsOptions).optional(),
+    delivery_terms_custom: optionalText,
     delivery_charges: requiredNumber,
     delivery_address: optionalText,
     expected_delivery_date: optionalText,
 
     notes: optionalText,
-    amount_in_words: optionalText,
     requires_approval: z.boolean().default(false),
     approval_status: optionalText,
+    approval_remarks: optionalText,
+}).refine((data) => {
+    if (data.valid_until && data.quotation_date) {
+        return new Date(data.valid_until) >= new Date(data.quotation_date);
+    }
+    return true;
+}, {
+    message: "Valid until date must be after or equal to quotation date",
+    path: ["valid_until"],
 });
 
 export type QuotationFormData = z.infer<typeof quotationSchema>;
 
-export interface Quotation extends QuotationFormData {
+export type Quotation = QuotationFormData & {
     id: string;
     created_at: string;
-}
+};
 
 const quotationFormLabelBase = "text-xs font-bold";
 
@@ -199,14 +200,11 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
     const form = useForm<QuotationFormData>({
         resolver: zodResolver(quotationSchema),
         defaultValues: quotationData || {
-            subject: "",
             quotation_number: createQuotationNumber(),
             quotation_date: formatDate(new Date()),
             valid_until: "",
             status: "DRAFT",
-            related_to: "Lead",
-            currency: "USD $",
-            allow_comments: true,
+            lead_id: "",
             subtotal: 0,
             tax_details: [],
             additional_charges: [],
@@ -221,6 +219,9 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
             contact_person_phone: "",
             contact_person_designation: "",
             amount_in_words: "",
+            payment_terms_custom: "",
+            delivery_terms_custom: "",
+            approval_remarks: "",
         },
     });
 
@@ -299,466 +300,513 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
             <div className="flex-1 ">
                 <Form {...form}>
                     <form className="max-w-6xl mx-auto">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pb-20">
 
-                            {/* LEFT COLUMN */}
-                            <div className="space-y-6">
+                            {/* LEFT COLUMN: Essential Details & Customer */}
+                            <div className="space-y-8">
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/20">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        <h3 className="text-sm font-bold uppercase tracking-wider">Quotation Basics</h3>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="quotation_number"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel required>Quotation #</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="QT-2026-1024" className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage className="text-[10px]" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="status"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Status</QuotationFormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-10 text-sm font-medium border-border/60">
+                                                                <SelectValue placeholder="Select status" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {quotationStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage className="text-[10px]" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
 
-                                <FormField
-                                    control={form.control}
-                                    name="subject"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <QuotationFormLabel required>
-                                                Subject
-                                            </QuotationFormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Enter quotation subject..." className="h-10 text-sm italic font-medium border-border/60 focus:ring-primary/20" {...field} />
-                                            </FormControl>
-                                            <FormMessage className="text-[10px]" />
-                                        </FormItem>
-                                    )}
-                                />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="quotation_date"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel required>Date</QuotationFormLabel>
+                                                    <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-10 rounded-md border-border/60" />
+                                                    <FormMessage className="text-[10px]" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="valid_until"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Valid Until</QuotationFormLabel>
+                                                    <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-10 rounded-md border-border/60" />
+                                                    <FormMessage className="text-[10px]" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-6 pt-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/20">
+                                        <Info className="h-4 w-4 text-primary" />
+                                        <h3 className="text-sm font-bold uppercase tracking-wider">Customer Information</h3>
+                                    </div>
+
                                     <FormField
                                         control={form.control}
-                                        name="related_to"
+                                        name="customer_name"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <QuotationFormLabel required>
-                                                    Related
-                                                </QuotationFormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger className="h-10 text-sm font-medium border-border/60">
-                                                            <SelectValue placeholder="Lead" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="Lead">Lead</SelectItem>
-                                                        <SelectItem value="Customer">Customer</SelectItem>
-                                                        <SelectItem value="Contact">Contact</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
+                                                <QuotationFormLabel required>Customer Name</QuotationFormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Enter customer or company name" className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                </FormControl>
                                                 <FormMessage className="text-[10px]" />
                                             </FormItem>
                                         )}
                                     />
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="customer_email"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Email</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="email@example.com" className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage className="text-[10px]" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="customer_phone"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Phone</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="+1..." className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage className="text-[10px]" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="customer_gst"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>GST Number</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Optional" className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage className="text-[10px]" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="customer_pan"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>PAN Number</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Optional" className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage className="text-[10px]" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
                                     <FormField
                                         control={form.control}
-                                        name="lead_id"
+                                        name="customer_address"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <QuotationFormLabel required>
-                                                    Lead
-                                                </QuotationFormLabel>
+                                                <QuotationFormLabel>Full Address</QuotationFormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="Select Lead..." className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    <Textarea placeholder="Company billing address..." className="min-h-[80px] text-sm resize-none" {...field} />
                                                 </FormControl>
                                                 <FormMessage className="text-[10px]" />
                                             </FormItem>
                                         )}
                                     />
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="quotation_date"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel required>
-                                                    Date
-                                                </QuotationFormLabel>
-                                                <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-10 rounded-md border-border/60" />
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="valid_until"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Open Till
-                                                </QuotationFormLabel>
-                                                <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-10 rounded-md border-border/60" />
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="currency"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel required>
-                                                    Currency
-                                                </QuotationFormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
+                                
+                                <div className="space-y-6 pt-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/20">
+                                        <Phone className="h-4 w-4 text-primary" />
+                                        <h3 className="text-sm font-bold uppercase tracking-wider">Contact Person</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="contact_person_name"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Contact Name</QuotationFormLabel>
                                                     <FormControl>
-                                                        <SelectTrigger className="h-10 text-sm font-medium border-border/60">
-                                                            <SelectValue placeholder="USD $" />
-                                                        </SelectTrigger>
+                                                        <Input placeholder="Name" className="h-10 text-sm font-medium border-border/60" {...field} />
                                                     </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="USD $">USD $</SelectItem>
-                                                        <SelectItem value="INR ₹">INR ₹</SelectItem>
-                                                        <SelectItem value="EUR €">EUR €</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="discount_type"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Discount Type
-                                                </QuotationFormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="contact_person_designation"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Designation</QuotationFormLabel>
                                                     <FormControl>
-                                                        <SelectTrigger className="h-10 text-sm font-medium border-border/60">
-                                                            <SelectValue placeholder="No discount" />
-                                                        </SelectTrigger>
+                                                        <Input placeholder="e.g. Manager" className="h-10 text-sm font-medium border-border/60" {...field} />
                                                     </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="NONE">No Discount</SelectItem>
-                                                        <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                                                        <SelectItem value="FIXED">Fixed Amount</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="contact_person_email"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Contact Email</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Email" className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="contact_person_phone"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Contact Phone</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Phone" className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
-
-                                <FormField
-                                    control={form.control}
-                                    name="tags"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <QuotationFormLabel>
-                                                Tags
-                                            </QuotationFormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Tag" className="h-10 text-sm font-medium border-border/60 shadow-inner" {...field} value={field.value?.join(', ') || ''} onChange={(e) => field.onChange(e.target.value.split(',').map(t => t.trim()))} />
-                                            </FormControl>
-                                            <FormMessage className="text-[10px]" />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="allow_comments"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card border-border/40">
-                                            <div className="space-y-0.5">
-                                                <FormLabel className="text-[13px] font-bold">Allow Comments</FormLabel>
-                                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Permit customer feedback on quote</p>
-                                            </div>
-                                            <FormControl>
-                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
                             </div>
 
-                            {/* RIGHT COLUMN */}
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="status"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Status
-                                                </QuotationFormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger className="h-10 text-sm font-medium border-border/60 bg-muted/20">
-                                                            <SelectValue placeholder="Draft" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {quotationStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="assigned_to"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Assigned
-                                                </QuotationFormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger className="h-10 text-sm font-medium border-border/60">
-                                                            <SelectValue placeholder="Vito Nikolaus" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="Vito Nikolaus">Vito Nikolaus</SelectItem>
-                                                        <SelectItem value="Basalt Admin">Basalt Admin</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-
-                                <FormField
-                                    control={form.control}
-                                    name="customer_name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <QuotationFormLabel required>
-                                                To
-                                            </QuotationFormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Ferry, Bosco and Langosh" className="h-10 text-sm font-black border-border/60 bg-muted/10 italic" {...field} />
-                                            </FormControl>
-                                            <FormMessage className="text-[10px]" />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="customer_gst"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Customer GST
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="29ABCDE1234F1Z5" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="customer_pan"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Customer PAN
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="ABCDE1234F" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-
-                                <FormField
-                                    control={form.control}
-                                    name="customer_address"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <QuotationFormLabel>
-                                                Address
-                                            </QuotationFormLabel>
-                                            <FormControl>
-                                                <Textarea placeholder="8098 Kuphal Manors" className="min-h-[100px] text-sm italic font-medium border-border/60 resize-none shadow-inner" {...field} />
-                                            </FormControl>
-                                            <FormMessage className="text-[10px]" />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/20">
-                                    <div className="col-span-2">
-                                        <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Contact Person</h4>
+                            {/* RIGHT COLUMN: Financials & Terms */}
+                            <div className="space-y-8">
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/20">
+                                        <DollarSign className="h-4 w-4 text-primary" />
+                                        <h3 className="text-sm font-bold uppercase tracking-wider">Pricing & Summary</h3>
                                     </div>
-                                    <FormField
-                                        control={form.control}
-                                        name="contact_person_name"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Name
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Rahul Sharma" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="contact_person_designation"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Designation
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Manager" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="contact_person_email"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Email
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="rahul@example.com" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="contact_person_phone"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Phone
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="+91 98765 43210" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
+
+                                    <Card className="bg-muted/10 border-border/40 overflow-hidden shadow-none">
+                                        <CardContent className="p-6 space-y-6">
+                                            <FormField
+                                                control={form.control}
+                                                name="subtotal"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <QuotationFormLabel required>Subtotal Amount</QuotationFormLabel>
+                                                        <div className="relative mt-1">
+                                                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                                                            <Input type="number" step="0.01" className="pl-9 h-12 text-lg font-black tracking-tight" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
+                                                        </div>
+                                                        <FormMessage className="text-[10px]" />
+                                                    </FormItem>
+                                                )}
+                                            />
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="discount_type"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <QuotationFormLabel>Discount Type</QuotationFormLabel>
+                                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                                <FormControl>
+                                                                    <SelectTrigger className="h-10 text-sm font-medium border-border/60 bg-background">
+                                                                        <SelectValue placeholder="No discount" />
+                                                                    </SelectTrigger>
+                                                                </FormControl>
+                                                                <SelectContent>
+                                                                    <SelectItem value="NONE">No Discount</SelectItem>
+                                                                    <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+                                                                    <SelectItem value="FIXED">Fixed Amount</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="discount_value"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <QuotationFormLabel>Discount Value</QuotationFormLabel>
+                                                            <FormControl>
+                                                                <Input type="number" step="0.01" placeholder="0.00" className="h-10 text-sm font-medium border-border/60 bg-background" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+
+                                            {/* Calculations Preview */}
+                                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                                <div className="p-3 bg-background rounded border border-border/40 flex flex-col justify-center">
+                                                    <span className="text-[10px] uppercase font-bold text-muted-foreground">Discount Amount</span>
+                                                    <span className="text-sm font-bold">-{totals.discountAmount.toFixed(2)}</span>
+                                                </div>
+                                                <div className="p-3 bg-primary/5 rounded border border-primary/20 flex flex-col justify-center">
+                                                    <span className="text-[10px] uppercase font-bold text-primary">Grand Total</span>
+                                                    <span className="text-lg font-black">{totals.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                                </div>
+                                            </div>
+
+                                            <FormField
+                                                control={form.control}
+                                                name="amount_in_words"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <QuotationFormLabel>Amount in Words</QuotationFormLabel>
+                                                        <FormControl>
+                                                            <Textarea placeholder="e.g. One thousand dollars only" className="min-h-[60px] text-xs resize-none" {...field} />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-[11px] font-black uppercase text-muted-foreground flex items-center gap-2">
+                                                <ShieldCheck className="h-4 w-4" /> Taxes
+                                            </h4>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => appendTax({ key: "", value: 0 })} className="h-7 text-[10px] font-bold uppercase gap-1">
+                                                <Plus className="h-3 w-3" /> Add Tax
+                                            </Button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {taxFields.map((field, index) => (
+                                                <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-2">
+                                                    <Input placeholder="Tax Name (e.g. GST)" className="h-9 text-xs flex-1" {...form.register(`tax_details.${index}.key` as const)} />
+                                                    <Input type="number" placeholder="0.00" className="h-9 text-xs w-[120px]" {...form.register(`tax_details.${index}.value` as const)} onChange={e => form.setValue(`tax_details.${index}.value`, Number(e.target.value))} />
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeTax(index)} className="h-9 w-9 text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 pt-4">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-[11px] font-black uppercase text-muted-foreground flex items-center gap-2">
+                                                <Truck className="h-4 w-4" /> Additional Charges
+                                            </h4>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => appendCharge({ key: "", value: 0 })} className="h-7 text-[10px] font-bold uppercase gap-1">
+                                                <Plus className="h-3 w-3" /> Add Charge
+                                            </Button>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex gap-2 items-start bg-muted/20 p-1 rounded-md">
+                                                <span className="flex-1 px-3 py-2 text-xs font-bold text-muted-foreground uppercase flex items-center">Standard Delivery</span>
+                                                <Input type="number" placeholder="0.00" className="h-9 text-xs w-[120px] bg-background" {...form.register(`delivery_charges` as const)} onChange={e => form.setValue(`delivery_charges`, Number(e.target.value))} />
+                                                <div className="w-9" />
+                                            </div>
+                                            {chargeFields.map((field, index) => (
+                                                <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-2">
+                                                    <Input placeholder="Description" className="h-9 text-xs flex-1" {...form.register(`additional_charges.${index}.key` as const)} />
+                                                    <Input type="number" placeholder="0.00" className="h-9 text-xs w-[120px]" {...form.register(`additional_charges.${index}.value` as const)} onChange={e => form.setValue(`additional_charges.${index}.value`, Number(e.target.value))} />
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeCharge(index)} className="h-9 w-9 text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="city"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    City
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Port Francesstad" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="state"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    State
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Oregon" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
+                                <div className="space-y-6 pt-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/20">
+                                        <Truck className="h-4 w-4 text-primary" />
+                                        <h3 className="text-sm font-bold uppercase tracking-wider">Terms & Logistics</h3>
+                                    </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="country"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Country
-                                                </QuotationFormLabel>
-                                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            <FormField
+                                                control={form.control}
+                                                name="payment_terms"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <QuotationFormLabel>Payment Terms</QuotationFormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="h-10 text-sm font-medium border-border/60">
+                                                                    <SelectValue placeholder="Select terms" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {paymentTermsOptions.map(o => <SelectItem key={o} value={o}>{o.replace(/_/g, ' ')}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="payment_terms_custom"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <QuotationFormLabel>Custom Payment Info</QuotationFormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="Additional payment details..." className="h-10 text-sm border-border/60" {...field} />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <FormField
+                                                control={form.control}
+                                                name="delivery_terms"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <QuotationFormLabel>Delivery Terms</QuotationFormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="h-10 text-sm font-medium border-border/60">
+                                                                    <SelectValue placeholder="Select terms" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {deliveryTermsOptions.map(o => <SelectItem key={o} value={o}>{o.replace(/_/g, ' ')}</SelectItem>)}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="delivery_terms_custom"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <QuotationFormLabel>Custom Delivery Info</QuotationFormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="Additional delivery details..." className="h-10 text-sm border-border/60" {...field} />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <FormField
+                                            control={form.control}
+                                            name="expected_delivery_date"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Expected Delivery</QuotationFormLabel>
+                                                    <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-10 rounded-md border-border/60" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="delivery_address"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <QuotationFormLabel>Delivery Address</QuotationFormLabel>
                                                     <FormControl>
-                                                        <SelectTrigger className="h-10 text-sm font-medium border-border/60">
-                                                            <SelectValue placeholder="United Kingdom GB" />
-                                                        </SelectTrigger>
+                                                        <Input placeholder="Same as customer address?" className="h-10 text-sm border-border/60" {...field} />
                                                     </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="United Kingdom GB">United Kingdom GB</SelectItem>
-                                                        <SelectItem value="United States US">United States US</SelectItem>
-                                                        <SelectItem value="India IN">India IN</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="zip_code"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel>
-                                                    Zip Code
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="97751" className="h-10 text-sm font-medium border-border/60" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="customer_email"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <QuotationFormLabel required>
-                                                    Email
-                                                </QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="kadin.waelchi@example.net" className="h-10 text-sm font-medium border-border/60 italic" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
+                                <div className="space-y-6 pt-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/20">
+                                        <ShieldCheck className="h-4 w-4 text-primary" />
+                                        <h3 className="text-sm font-bold uppercase tracking-wider">Internal & Approval</h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                        <FormField
+                                            control={form.control}
+                                            name="requires_approval"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-card border-border/40">
+                                                    <div className="space-y-0.5">
+                                                        <FormLabel className="text-[13px] font-bold">Require Approval</FormLabel>
+                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Manager must review</p>
+                                                    </div>
+                                                    <FormControl>
+                                                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        {watchAll.requires_approval && (
+                                            <FormField
+                                                control={form.control}
+                                                name="approval_remarks"
+                                                render={({ field }) => (
+                                                    <FormItem className="animate-in fade-in zoom-in-95 duration-200">
+                                                        <QuotationFormLabel>Approval Remarks</QuotationFormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="Notes for approver..." className="h-10 text-sm border-border/60" {...field} />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
                                         )}
-                                    />
+                                    </div>
+
                                     <FormField
                                         control={form.control}
-                                        name="customer_phone"
+                                        name="notes"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <QuotationFormLabel>
-                                                    Phone
-                                                </QuotationFormLabel>
+                                                <QuotationFormLabel>Internal Notes</QuotationFormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="+1.458.602.5470" className="h-10 text-sm font-medium border-border/60" {...field} />
+                                                    <Textarea placeholder="Private notes for team..." className="min-h-[80px] text-sm resize-none" {...field} />
                                                 </FormControl>
-                                                <FormMessage className="text-[10px]" />
                                             </FormItem>
                                         )}
                                     />

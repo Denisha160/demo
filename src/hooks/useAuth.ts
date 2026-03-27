@@ -28,7 +28,7 @@ export const ADMIN_PERMISSIONS = [
   "product-brand.read",
   "product-fragrance.read",
   "inventory-batch.read",
-  "inventory-serial.read"
+  "inventory-serial.read",
 ];
 
 const AUTH_TOKEN_KEY = "auth_token";

@@ -148,7 +148,15 @@ function DashboardRedirect() {
   return <Navigate to={`/${companyId}/dashboard`} replace />;
 }
 
-function PermissionRoute({ permission, children, fallback = "/no-access" }: { permission: string | string[], children: React.ReactNode, fallback?: string }) {
+function PermissionRoute({
+  permission,
+  children,
+  fallback = "/no-access",
+}: {
+  permission: string | string[];
+  children: React.ReactNode;
+  fallback?: string;
+}) {
   const { hasPermission, isLoading } = useHasPermission();
   const user = getStoredUser();
 
@@ -170,7 +178,13 @@ function PermissionRoute({ permission, children, fallback = "/no-access" }: { pe
   return <>{children}</>;
 }
 
-function RootOnlyRoute({ children, fallback = "/no-access" }: { children: React.ReactNode, fallback?: string }) {
+function RootOnlyRoute({
+  children,
+  fallback = "/no-access",
+}: {
+  children: React.ReactNode;
+  fallback?: string;
+}) {
   const user = getStoredUser();
   if (!user) return <Navigate to="/login" replace />;
   if (user.is_root_user) return <>{children}</>;
@@ -254,10 +268,38 @@ const App = () => (
           />
           <Route path="brands" element={<BrandsPage />} />
           <Route path="fragrances" element={<FragrancesPage />} />
-          <Route path="users" element={<PermissionRoute permission="user.read" fallback="/admin"><Users /></PermissionRoute>} />
-          <Route path="users/:id" element={<PermissionRoute permission="user.read" fallback="/admin"><UserDetail /></PermissionRoute>} />
-          <Route path="roles" element={<PermissionRoute permission="role.read" fallback="/admin"><Roles /></PermissionRoute>} />
-          <Route path="roles/:id" element={<PermissionRoute permission="role.read" fallback="/admin"><RoleDetail /></PermissionRoute>} />
+          <Route
+            path="users"
+            element={
+              <PermissionRoute permission="user.read" fallback="/admin">
+                <Users />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="users/:id"
+            element={
+              <PermissionRoute permission="user.read" fallback="/admin">
+                <UserDetail />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="roles"
+            element={
+              <PermissionRoute permission="role.read" fallback="/admin">
+                <Roles />
+              </PermissionRoute>
+            }
+          />
+          <Route
+            path="roles/:id"
+            element={
+              <PermissionRoute permission="role.read" fallback="/admin">
+                <RoleDetail />
+              </PermissionRoute>
+            }
+          />
           <Route path="companies" element={<CompaniesPage />} />
           <Route path="companies/:id" element={<CompanyDetailPage />} />
           <Route path="batches" element={<BatchesPage />} />

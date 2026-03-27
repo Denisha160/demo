@@ -17,7 +17,16 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import confetti from "canvas-confetti";
-import { Plus, Search, Filter, List, Kanban, X, FileDown, FileUp } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Filter,
+  List,
+  Kanban,
+  X,
+  FileDown,
+  FileUp,
+} from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

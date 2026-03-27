@@ -10,7 +10,10 @@ import {
 import { Role } from "@/types/Role";
 import { toast } from "react-toastify";
 
-export const useRoles = (queryParams: Record<string, unknown> = {}, options: { enabled?: boolean } = {}) => {
+export const useRoles = (
+  queryParams: Record<string, unknown> = {},
+  options: { enabled?: boolean } = {},
+) => {
   return useQuery({
     queryKey: ["roles", queryParams],
     queryFn: async () => {

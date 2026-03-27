@@ -57,7 +57,10 @@ const Users = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { hasPermission } = useHasPermission();
 
-  const { data: rolesData } = useRoles({}, { enabled: hasPermission("role.read") });
+  const { data: rolesData } = useRoles(
+    {},
+    { enabled: hasPermission("role.read") },
+  );
   const roleOptions = (rolesData?.items || []).map(
     (r: { id: string; name: string }) => ({ value: r.id, label: r.name }),
   );
@@ -393,7 +396,9 @@ const Users = () => {
             setSortDirection(direction);
             setPage(1);
           }}
-          onRowClick={(item) => hasPermission("user.update") && navigate(`${item.id}`)}
+          onRowClick={(item) =>
+            hasPermission("user.update") && navigate(`${item.id}`)
+          }
         />
       </div>
 

@@ -190,7 +190,7 @@ const LeadTable = ({
                   className={cn(
                     "text-[10px] font-extrabold uppercase tracking-wide",
                     PRIORITIES.find((p) => p.value === item.priority)?.color ||
-                    "text-muted-foreground",
+                      "text-muted-foreground",
                   )}
                 >
                   {item.priority || "NORMAL"}

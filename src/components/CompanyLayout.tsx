@@ -30,7 +30,12 @@ import {
   Users,
 } from "lucide-react";
 
-import { useLogout, useCurrentUser, useHasPermission, ADMIN_PERMISSIONS } from "@/hooks/useAuth";
+import {
+  useLogout,
+  useCurrentUser,
+  useHasPermission,
+  ADMIN_PERMISSIONS,
+} from "@/hooks/useAuth";
 import { createPortal } from "react-dom";
 import { getCompanyTheme } from "@/data/companyData";
 import { useCompanies } from "@/hooks/useCompanies";

@@ -100,10 +100,10 @@ const ImportPage = () => {
   };
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
+    <div className="flex h-screen w-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border bg-card px-6 py-4 shadow-sm">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between border-b border-border px-2 py-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
@@ -135,11 +135,11 @@ const ImportPage = () => {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-        <div className="mx-auto max-w-6xl space-y-8">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+        <div className="mx-auto space-y-2">
           {/* Instructions Section */}
           <section className="animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="rounded-xl border border-blue-500/10 bg-blue-500/5 p-6 backdrop-blur-sm">
+            <div className="rounded-xl border border-blue-500/10 bg-blue-500/5 p-4 backdrop-blur-sm">
               <div className="mb-4 flex items-center gap-2 text-blue-600">
                 <Info className="h-5 w-5" />
                 <h2 className="font-bold">Import Instructions</h2>
@@ -208,7 +208,7 @@ const ImportPage = () => {
           </section>
 
           {/* Upload Form */}
-          <section className="grid gap-6 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <section className="grid gap-2 md:grid-cols-2 animate-in fade-in slide-in-from-bottom-6 duration-700">
             <div className="space-y-4 rounded-xl border border-border/60 bg-card p-6 shadow-sm">
               <div className="flex items-center gap-2 text-primary">
                 <FileUp className="h-5 w-5" />
@@ -274,7 +274,7 @@ const ImportPage = () => {
           </section>
 
           {/* Action Footer */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-border">
+          <div className="flex items-center justify-end gap-3 pt-2 border-t border-border">
             <Button
               variant="outline"
               size="lg"

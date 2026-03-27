@@ -19,7 +19,7 @@ export const HierarchyGridView = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 py-2 animate-in fade-in duration-500">
       {currentChildren.map(node => (
-        <div 
+        <div
           key={node.id}
           className="group relative flex flex-col bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
           onClick={() => onNavigate(node.id)}
@@ -31,17 +31,6 @@ export const HierarchyGridView = ({
             <Badge variant="outline" className="rounded-full px-2 py-0 text-[10px] uppercase font-bold bg-primary/5 text-primary border-primary/10">{node.role}</Badge>
             <div className="space-y-1">
               <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">{node.name}</h3>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1 italic"><Info className="h-3 w-3" />{node.relation}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <div className="bg-muted/30 rounded-lg p-2 border border-border/50">
-                <p className="text-[9px] text-muted-foreground uppercase font-semibold">Reports To</p>
-                <p className="text-sm font-bold text-foreground truncate">{node.parentId ? nodes[node.parentId].name.split(" ")[0] : "None"}</p>
-              </div>
-              <div className="bg-primary/5 rounded-lg p-2 border border-primary/10">
-                <p className="text-[9px] text-primary/70 uppercase font-semibold">Team Size</p>
-                <p className="text-sm font-bold text-primary">{node.children.length} People</p>
-              </div>
             </div>
           </div>
           <div className="px-5 py-3 bg-muted/20 border-t border-border flex items-center justify-between">
@@ -55,8 +44,8 @@ export const HierarchyGridView = ({
           </div>
         </div>
       ))}
-      <button 
-        onClick={onAdd} 
+      <button
+        onClick={onAdd}
         className="flex flex-col items-center justify-center gap-4 py-8 rounded-xl border-2 border-dashed border-border/60 bg-muted/5 transition-all hover:bg-primary/5 group min-h-[200px]"
       >
         <div className="h-12 w-12 bg-primary/5 rounded-full flex items-center justify-center transition-transform group-hover:scale-105 border border-primary/10">

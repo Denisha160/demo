@@ -64,7 +64,6 @@ import RemindersPage from "./pages/companys/leads/reminders/RemindersPage";
 import FollowUpsPage from "./pages/companys/leads/followups/FollowUps";
 import SalesPage from "./pages/companys/sales/SalesPage";
 import SalesMemberDetailPage from "./pages/companys/sales/SalesMemberDetailPage";
-import HierarchyPage from "./pages/admin/hierarchy/hierarchyPage";
 
 const queryClient = new QueryClient();
 
@@ -311,7 +310,6 @@ const App = () => (
           <Route path="inventory/:type/:id" element={<InventoryDetailPage />} />
           <Route path="accounts" element={<AccountPage />} />
           <Route path="accounts/:id" element={<AccountViewPage />} />
-          <Route path="hierarchy" element={<HierarchyPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

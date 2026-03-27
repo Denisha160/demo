@@ -1,5 +1,6 @@
-import React from "react";
-import { User, Mail, Briefcase, ChevronRight, ChevronDown } from "lucide-react";
+import React, { useMemo } from "react";
+import { User, Mail, Briefcase, Loader2, AlertCircle } from "lucide-react";
+import { useAllHierarchy } from "@/hooks/useHierarchy";
 
 interface TreeNode {
     id: string;
@@ -10,86 +11,17 @@ interface TreeNode {
     employeeCode?: string;
 }
 
-const dummyTreeData: TreeNode = {
-    id: "1",
-    name: "John Doe",
-    role: "MD / CEO",
-    email: "ceo@company.com",
-    employeeCode: "CEO001",
-    children: [
-        {
-            id: "2",
-            name: "Sarah Smith",
-            role: "Director - Operations",
-            email: "ops.director@company.com",
-            employeeCode: "DIR001",
-            children: [
-                {
-                    id: "4",
-                    name: "Michael Chen",
-                    role: "GM - Manufacturing",
-                    email: "gm.mfg@company.com",
-                    employeeCode: "GM001",
-                    children: [
-                        {
-                            id: "8",
-                            name: "Robert Fox",
-                            role: "Chief Plant Manager",
-                            email: "plant.mgr@company.com",
-                            employeeCode: "CPM001",
-                            children: []
-                        }
-                    ]
-                },
-                {
-                    id: "5",
-                    name: "Emily White",
-                    role: "GM - Quality",
-                    email: "gm.quality@company.com",
-                    employeeCode: "GM002",
-                    children: []
-                }
-            ]
-        },
-        {
-            id: "3",
-            name: "David Wilson",
-            role: "Director - Marketing",
-            email: "mkt.director@company.com",
-            employeeCode: "DIR002",
-            children: [
-                {
-                    id: "6",
-                    name: "Jessica Brown",
-                    role: "GM - Sales",
-                    email: "gm.sales@company.com",
-                    employeeCode: "GM003",
-                    children: []
-                },
-                {
-                    id: "7",
-                    name: "Kevin Lee",
-                    role: "GM - CRM",
-                    email: "gm.crm@company.com",
-                    employeeCode: "GM004",
-                    children: []
-                }
-            ]
-        }
-    ]
-};
-
 const TreeCard = ({ node }: { node: TreeNode }) => {
     return (
         <div className="relative flex flex-col items-center group">
             {/* The Node Card */}
-            <div className="z-10 border border-border rounded-lg p-3 w-[220px] transition-all">
+            <div className="z-10 border border-primary/20 bg-background rounded-lg p-3 w-[220px] transition-all hover:border-primary shadow-sm hover:shadow-md">
                 <div className="flex flex-col gap-1 text-center">
-                    <p className="text-[10px] uppercase tracking-widest font-black text-primary/70">{node.role}</p>
+                    <p className="text-[10px] uppercase tracking-widest font-black text-primary/70 truncate">{node.role}</p>
                     <h4 className="text-xs font-black text-foreground uppercase tracking-tight truncate">{node.name}</h4>
-                    <div className="flex items-center justify-center gap-1.5 mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                        <Mail className="h-2.5 w-2.5" />
-                        <span className="text-[9px] font-medium">{node.email}</span>
+                    <div className="flex items-center justify-center gap-1.5 mt-1 opacity-60 group-hover:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">
+                        <Mail className="h-2.5 w-2.5 shrink-0" />
+                        <span className="text-[9px] font-medium truncate">{node.email || "---"}</span>
                     </div>
                 </div>
 
@@ -102,18 +34,85 @@ const TreeCard = ({ node }: { node: TreeNode }) => {
 
             {/* Vertical Line to Children */}
             {node.children.length > 0 && (
-                <div className="w-px h-8 bg-border mt-0" />
+                <div className="w-px h-8 bg-primary/20 mt-0" />
             )}
         </div>
     );
 };
 
 const UserHierarchyTree = () => {
+    const { data: allItems, isLoading, isError } = useAllHierarchy();
+
+    const treeData = useMemo(() => {
+        const items = allItems as any[];
+        if (!items || items.length === 0) return null;
+
+        const nodeMap: Record<string, TreeNode> = {};
+        
+        // Group by user_id
+        items.forEach((item: any) => {
+            const userId = item.user_id || item.parent_id; // For root rows, sometimes user_id is null
+            if (!userId) return;
+
+            nodeMap[userId] = {
+                id: userId,
+                name: item.user_name || item.parent_name || "Unknown",
+                role: item.relationship_type || "Member",
+                email: item.user_email || item.parent_email || "",
+                employeeCode: item.user_employee_code || item.parent_employee_code || "",
+                children: []
+            };
+        });
+
+        const roots: TreeNode[] = [];
+        const userIdsUsedAsChildren = new Set<string>();
+
+        items.forEach((item: any) => {
+            const childId = item.user_id;
+            const parentId = item.parent_id;
+
+            if (childId && parentId && nodeMap[parentId] && nodeMap[childId]) {
+                if (childId !== parentId) {
+                    nodeMap[parentId].children.push(nodeMap[childId]);
+                    userIdsUsedAsChildren.add(childId);
+                }
+            }
+        });
+
+        // Any node that wasn't someone's child is a root
+        Object.keys(nodeMap).forEach(userId => {
+            if (!userIdsUsedAsChildren.has(userId)) {
+                roots.push(nodeMap[userId]);
+            }
+        });
+
+        return roots;
+    }, [allItems]);
+
+    if (isLoading) {
+        return (
+            <div className="w-full h-[calc(100vh-250px)] flex flex-col items-center justify-center gap-3 animate-pulse">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Building Organization Map...</p>
+            </div>
+        );
+    }
+
+    if (isError || !treeData || treeData.length === 0) {
+        return (
+            <div className="w-full h-[calc(100vh-250px)] flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <AlertCircle className="h-8 w-8 opacity-20" />
+                <p className="text-xs font-medium uppercase tracking-widest">No hierarchy data available</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="w-full h-[calc(100vh-200px)] overflow-auto rounded-sm p-10 select-none">
+        <div className="w-full h-[calc(100vh-220px)] overflow-auto rounded-sm p-10 select-none custom-scrollbar bg-muted/5 border border-border/40">
             <div className="min-w-max flex flex-col items-center gap-8">
-                {/* Recursive Tree Rendering */}
-                <TreeNodeComponent node={dummyTreeData} isRoot />
+                {treeData.map(root => (
+                    <TreeNodeComponent key={root.id} node={root} isRoot />
+                ))}
             </div>
 
             <style dangerouslySetInnerHTML={{
@@ -125,14 +124,14 @@ const UserHierarchyTree = () => {
                     left: 50%;
                     width: 1px;
                     height: 16px;
-                    background: hsl(var(--border));
+                    background: hsl(var(--primary) / 0.2);
                 }
                 .tree-branch::before {
                     content: '';
                     position: absolute;
                     top: 0;
                     height: 1px;
-                    background: hsl(var(--border));
+                    background: hsl(var(--primary) / 0.2);
                     width: 50%;
                 }
                 .tree-branch:first-child::before {
@@ -162,7 +161,7 @@ const TreeNodeComponent = ({ node, isRoot = false }: { node: TreeNode; isRoot?: 
 
             {node.children.length > 0 && (
                 <div className="relative flex gap-6 mt-0 pt-4 tree-children">
-                    {node.children.map((child, idx) => (
+                    {node.children.map((child) => (
                         <div key={child.id} className="relative flex flex-col items-center tree-branch pt-4">
                             <TreeNodeComponent node={child} />
                         </div>

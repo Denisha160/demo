@@ -2,11 +2,25 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import {
   listHierarchy,
+  getAllHierarchy,
   createHierarchy,
   updateHierarchy,
   deleteHierarchy,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
+
+export function useAllHierarchy<T = any>(
+  params?: Record<string, unknown>,
+  options?: any,
+) {
+  return useQuery({
+    queryKey: [...queryKeys.hierarchy.all, "all", params],
+    queryFn: () => getAllHierarchy(params),
+    staleTime: 5 * 60 * 1000,
+    select: (data: any): T[] => normalizeList(data),
+    ...options,
+  });
+}
 
 const normalizeList = <T>(response: any): T[] => {
   if (Array.isArray(response?.data?.items)) return response.data.items;
@@ -26,7 +40,7 @@ export function useHierarchySearch(
     refetchOnWindowFocus: false,
     select: (data: any) => ({
       items: normalizeList(data),
-      total: data?.data?.pagination?.total || data?.pagination?.total || 0,
+      total: data?.data?.pagination?.total || data?.pagination?.total || data?.data?.total || data?.total || 0,
     }),
     ...options,
   });

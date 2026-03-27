@@ -92,35 +92,26 @@ const HierarchyPage = () => {
             },
         };
 
-        const rawData =
-            (hierarchyResponse as any)?.data ||
-            (hierarchyResponse as any)?.items ||
-            [];
+        const rawData = (hierarchyResponse as any)?.items || [];
         const items = Array.isArray(rawData) ? rawData : [];
 
-        // First pass: create nodes keyed by their hierarchy row ID
+        // First pass: create nodes keyed by their hierarchy ID
         items.forEach((item: any) => {
             const nodeId = String(item.id);
-
-            // If user_id is null, this row represents a "parent-only" / root entry
-            // Display the parent_name as the node's name.
-            // Otherwise display user_name.
-            const displayName = item.user_id
-                ? (item.user_name || item.user_email || "Unknown User")
-                : (item.parent_name || item.parent_email || "Unknown Manager");
+            const displayName = item.user_name || item.name || item.user_email || "Unknown Member";
 
             n[nodeId] = {
                 id: nodeId,
                 name: displayName,
                 role: item.relationship_type || "Member",
                 relation: item.relationship_type || "",
-                parentId: null, // set in second pass
+                parentId: "root", // Default to root
                 children: [],
                 userId: item.user_id || item.parent_id,
                 createdAt: item.created_at,
-                email: item.user_id ? (item.user_email || null) : (item.parent_email || null),
-                employeeCode: item.user_id ? (item.user_employee_code || null) : (item.parent_employee_code || null),
-                imageUrl: item.user_id ? (item.user_image_url || null) : (item.parent_image_url || null),
+                email: item.user_email || null,
+                employeeCode: item.user_employee_code || null,
+                imageUrl: item.user_image_url || null,
                 parentName: item.parent_name || null,
                 parentEmail: item.parent_email || null,
                 parentEmployeeCode: item.parent_employee_code || null,
@@ -132,8 +123,7 @@ const HierarchyPage = () => {
         const userIdToNodeId = new Map<string, string>();
         items.forEach((item: any) => {
             const nodeId = String(item.id);
-            // For parent-only rows (user_id null), the "represented user" is parent_id
-            const representedUserId = item.user_id || item.parent_id;
+            const representedUserId = item.user_id;
             if (representedUserId) {
                 userIdToNodeId.set(representedUserId, nodeId);
             }
@@ -142,30 +132,37 @@ const HierarchyPage = () => {
         // Second pass: link parent → child
         items.forEach((item: any) => {
             const nodeId = String(item.id);
+            const parentId = item.parent_id;
 
-            if (!item.user_id) {
-                // Parent-only row: attach to root
-                n[nodeId].parentId = "root";
-                if (!n["root"].children.includes(nodeId)) {
-                    n["root"].children.push(nodeId);
-                }
-            } else {
-                // Find the node that "represents" our parent_id
-                const parentNodeId = userIdToNodeId.get(item.parent_id);
+            if (parentId) {
+                const parentNodeId = userIdToNodeId.get(parentId);
+                // If a matching parent node exists and it's NOT the same as the current node
                 if (parentNodeId && parentNodeId !== nodeId) {
                     n[nodeId].parentId = parentNodeId;
                     if (!n[parentNodeId].children.includes(nodeId)) {
                         n[parentNodeId].children.push(nodeId);
                     }
                 } else {
-                    // Orphan or top-level: attach to root
-                    n[nodeId].parentId = "root";
+                    // Start of a branch or orphan: attach to root
                     if (!n["root"].children.includes(nodeId)) {
                         n["root"].children.push(nodeId);
                     }
                 }
+            } else {
+                // No parent_id at all: definitely root
+                if (!n["root"].children.includes(nodeId)) {
+                    n["root"].children.push(nodeId);
+                }
             }
         });
+        if (items.length > 0 && n["root"].children.length === 0) {
+            items.forEach((item: any) => {
+                const nodeId = String(item.id);
+                if (!n["root"].children.includes(nodeId)) {
+                    n["root"].children.push(nodeId);
+                }
+            });
+        }
 
         return n;
     }, [hierarchyResponse]);

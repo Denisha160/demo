@@ -87,19 +87,19 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
 
     const columns: Column<any>[] = [
         {
-            key: "name",
-            header: "Member Name",
+            key: "user_name",
+            header: "Team Member",
             sortable: true,
             render: (item) => (
-                <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 shrink-0">
-                        <User className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 shrink-0">
+                        <User className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="truncate">
-                        <p className="font-bold text-xs text-foreground truncate">
+                    <div className="truncate max-w-[180px]">
+                        <p className="font-bold text-[13px] text-foreground uppercase tracking-tight truncate leading-none">
                             {item.user_name || item.name || "Unknown User"}
                         </p>
-                        <p className="text-[10px] text-muted-foreground font-mono truncate">
+                        <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70">
                             {item.user_employee_code || item.employee_code || "---"}
                         </p>
                     </div>
@@ -107,36 +107,37 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
             )
         },
         {
-            key: "email",
-            header: "Email",
+            key: "user_email",
+            header: "Email Address",
             render: (item) => (
-                <div className="flex items-center gap-1.5 min-w-[150px]">
-                    <Mail className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-[11px] text-muted-foreground truncate">
+                <div className="flex items-center gap-2 group max-w-[200px]">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground/60 transition-colors group-hover:text-primary" />
+                    <span className="text-[11px] text-muted-foreground font-medium truncate">
                         {item.user_email || item.email || "---"}
                     </span>
                 </div>
             )
         },
         {
-            key: "role",
+            key: "relationship_type",
             header: "Relationship",
             render: (item) => (
-                <div className="flex items-center gap-1.5">
-                    <Users className="h-3 w-3 text-primary/60" />
-                    <span className="text-[11px] font-semibold text-primary italic">
-                        {item.relationship_type || item.role || "Connected"}
+                <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 rounded-sm bg-primary/5 border border-primary/10 text-[10px] font-black uppercase tracking-widest text-primary italic">
+                        {item.relationship_type || item.role || "REPORTING OFFICER"}
                     </span>
                 </div>
             )
         },
         {
-            key: "joined",
-            header: "Joined Date",
+            key: "created_at",
+            header: "Assigned Date",
             render: (item) => (
-                <span className="text-[11px] text-muted-foreground font-medium">
-                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : "---"}
-                </span>
+                <div className="flex flex-col">
+                    <span className="text-[11px] text-muted-foreground font-bold">
+                        {item.created_at ? new Date(item.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : "---"}
+                    </span>
+                </div>
             )
         },
         {
@@ -144,11 +145,11 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
             header: "Actions",
             className: "text-right",
             render: (item) => (
-                <div className="flex bg-transparent items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary hover:bg-primary/10 rounded-sm" onClick={() => handleEdit(item)}>
+                <div className="flex bg-transparent items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary hover:bg-primary/5 rounded-sm border border-transparent hover:border-border/40 transition-all" onClick={() => handleEdit(item)}>
                         <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive hover:bg-destructive/10 rounded-sm text-destructive" onClick={() => setMemberToDelete(item)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive hover:bg-destructive/5 rounded-sm border border-transparent hover:border-destructive/20 text-destructive transition-all" onClick={() => setMemberToDelete(item)}>
                         <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                 </div>

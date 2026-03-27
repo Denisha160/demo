@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Combobox } from "@/components/ui/combobox";
 import { IndianRupee } from "lucide-react";
 
 export type SelectOption = { label: string; value: string };
@@ -22,10 +23,10 @@ export const EditableDetailItem = ({
   error,
 }: {
   label: string;
-  value: string | number | undefined;
+  value: string | number | undefined | null;
   isEditing: boolean;
   onChange: (val: string) => void;
-  type?: "text" | "number" | "date" | "select" | "textarea";
+  type?: "text" | "number" | "date" | "select" | "textarea" | "combobox";
   options?: SelectOption[];
   prefix?: string;
   error?: string;
@@ -33,6 +34,9 @@ export const EditableDetailItem = ({
   const displayValue = () => {
     if (!value) return "—";
     if (type === "select" && options.length > 0) {
+      return options.find((o) => o.value === value)?.label || value;
+    }
+    if (type === "combobox" && options.length > 0) {
       return options.find((o) => o.value === value)?.label || value;
     }
     return prefix ? `${prefix} ${value}` : value;
@@ -49,7 +53,7 @@ export const EditableDetailItem = ({
         <div className="space-y-1">
           {type === "textarea" ? (
             <textarea
-              value={value || ""}
+              value={(value as string) || ""}
               onChange={(e) => onChange(e.target.value)}
               className={`w-full min-h-[80px] px-3 py-2 text-sm border bg-background rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${error ? "border-destructive" : "border-input"}`}
             />
@@ -61,7 +65,7 @@ export const EditableDetailItem = ({
               />
             </div>
           ) : type === "select" ? (
-            <Select value={value || ""} onValueChange={onChange}>
+            <Select value={(value as string) || ""} onValueChange={onChange}>
               <SelectTrigger
                 className={`h-8 text-xs rounded-sm ${error ? "border-destructive border" : ""}`}
               >
@@ -75,6 +79,15 @@ export const EditableDetailItem = ({
                 ))}
               </SelectContent>
             </Select>
+          ) : type === "combobox" ? (
+            <Combobox
+              options={options}
+              value={(value as string) || ""}
+              onValueChange={onChange}
+              placeholder={`Select ${label}`}
+              className={error ? "border-destructive border h-8" : "h-8"}
+              clearable
+            />
           ) : (
             <div className="relative">
               {isMoneyInput ? (

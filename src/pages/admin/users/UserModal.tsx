@@ -13,7 +13,8 @@ import {
   ApiErrorResponse,
   getLocalDateString,
 } from "@/types/user";
-import { useCreateUser } from "@/hooks/useUsers";
+import { useCreateUser, useUsers } from "@/hooks/useUsers";
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 
 interface UserModalProps {
   open: boolean;
@@ -78,12 +79,23 @@ const userSchema = z.object({
     .min(6, "Password must be at least 6 characters")
     .optional(),
   is_active: z.boolean().optional(),
+  parent_id: z.string().uuid().optional().nullable().or(z.literal("")),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
 
 const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
   const { mutate: createUser, isPending: isCreating } = useCreateUser();
+  const { data: usersData } = useUsers(
+    { combobox: true },
+    { enabled: open },
+  );
+
+  const userOptions: ComboboxOption[] =
+    usersData?.items?.map((u: User) => ({
+      value: u.id,
+      label: `${u.name} ${u.employee_code ? `(${u.employee_code})` : ""} ${u.is_root_user ? "[ROOT]" : ""}`,
+    })) || [];
 
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -104,6 +116,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     department: user?.department || "",
     is_active: user?.is_active ?? true,
     basic_salary: user?.basic_salary || 0,
+    parent_id: user?.parent_id || "",
   });
 
   const validateForm = () => {
@@ -210,6 +223,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
       phone_number: "",
       employee_code: "",
       date_of_joining: getLocalDateString(new Date()),
+      parent_id: "",
     });
     setConfirmPassword("");
     setShowPassword(false);
@@ -309,7 +323,22 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label className="text-sm">Reporting To (Parent User)</Label>
+              <Combobox
+                options={userOptions}
+                value={formData.parent_id || ""}
+                onValueChange={(val) => handleChange("parent_id", val)}
+                placeholder="Select parent user..."
+                className="h-8 text-sm"
+                disabled={isPending}
+                clearable
+              />
+              {errors.parent_id && (
+                <p className="text-xs text-destructive mt-1">{errors.parent_id}</p>
+              )}
+            </div>
             <div className="space-y-1">
               <Label htmlFor="employee_code" className="text-sm">
                 Employee Code <span className="text-destructive">*</span>

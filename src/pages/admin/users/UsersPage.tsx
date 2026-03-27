@@ -13,7 +13,7 @@ import {
 import { Combobox } from "@/components/ui/combobox";
 import { Plus, Search, Network, Table2 } from "lucide-react";
 import UserModal from "./UserModal";
-import UserHierarchyTree from "./components/teamMember/UserHierarchyTree";
+import SystemHierarchyView from "./components/SystemHierarchyView";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useDeleteUser, useUpdateUser } from "@/hooks/useUsers";
 import { useHasPermission } from "@/hooks/useAuth";
@@ -351,26 +351,6 @@ const Users = () => {
             />
           </div>
 
-          {/* View Switcher */}
-          <div className="flex bg-muted p-1 rounded-sm gap-1 ml-auto sm:ml-0">
-            <Button
-              variant={view === "table" ? "secondary" : "ghost"}
-              size="icon"
-              className={`h-6 w-9 rounded-sm ${view === "table" ? "shadow-sm" : ""}`}
-              onClick={() => setView("table")}
-            >
-              <Table2 className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant={view === "tree" ? "secondary" : "ghost"}
-              size="icon"
-              className={`h-6 w-9 rounded-sm ${view === "tree" ? "shadow-sm" : ""}`}
-              onClick={() => setView("tree")}
-            >
-              <Network className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-
           {hasFilters && (
             <div className="animate-in fade-in slide-in-from-left-2 duration-300">
               <Button
@@ -385,16 +365,36 @@ const Users = () => {
           )}
         </div>
         {hasPermission("user.create") && (
-          <Button
-            size="sm"
-            className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
-            onClick={() => {
-              setSelectedUser(null);
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" /> Add User
-          </Button>
+          <div className="flex items-center gap-2 flex-1 sm:flex-none">
+            <div className="flex items-center border border-border rounded-sm p-0.5 bg-muted/30">
+              <Button
+                variant={view === "table" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 px-2 text-[10px] uppercase font-bold tracking-wider gap-1.5 rounded-xs"
+                onClick={() => setView("table")}
+              >
+                <Table2 className="h-3.5 w-3.5" /> Table
+              </Button>
+              <Button
+                variant={view === "tree" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 px-2 text-[10px] uppercase font-bold tracking-wider gap-1.5 rounded-xs"
+                onClick={() => setView("tree")}
+              >
+                <Network className="h-3.5 w-3.5" /> Tree
+              </Button>
+            </div>
+            <Button
+              size="sm"
+              className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
+              onClick={() => {
+                setSelectedUser(null);
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add User
+            </Button>
+          </div>
         )}
       </div>
 
@@ -426,8 +426,19 @@ const Users = () => {
           />
         </div>
       ) : (
-        <UserHierarchyTree />
+        <div className="p-4 bg-muted/10 border border-border/60 rounded-sm shadow-sm min-h-[500px]">
+          <SystemHierarchyView 
+            is_active={
+                filterStatus === "All"
+                  ? undefined
+                  : filterStatus === "Active"
+                    ? true
+                    : false
+            } 
+          />
+        </div>
       )}
+
 
       <UserModal
         open={modalOpen}

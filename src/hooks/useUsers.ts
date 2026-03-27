@@ -3,6 +3,8 @@ import { toast } from "react-toastify";
 import {
   listUsers,
   getUserDetails,
+  getUserHierarchy,
+  getSystemHierarchy,
   createUser,
   updateUser,
   listUserSessions,
@@ -38,6 +40,27 @@ export const useUser = (id: string, enabled: boolean = true) => {
       return response;
     },
     enabled: enabled && !!id,
+  });
+};
+
+export const useUserHierarchy = (id: string, enabled: boolean = true) => {
+  return useQuery({
+    queryKey: queryKeys.users.hierarchy(id),
+    queryFn: async () => {
+      const response = await getUserHierarchy(id);
+      return response.data;
+    },
+    enabled: enabled && !!id,
+  });
+};
+
+export const useSystemHierarchy = (params?: { is_active?: boolean }) => {
+  return useQuery({
+    queryKey: queryKeys.users.systemHierarchy(params as Record<string, unknown>),
+    queryFn: async () => {
+      const response = await getSystemHierarchy(params);
+      return response.data;
+    },
   });
 };
 

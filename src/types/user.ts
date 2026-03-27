@@ -22,6 +22,7 @@ export interface User {
   gst_number?: string | null;
   address?: string | null;
   image_url?: string | null;
+  parent_id?: string | null;
   role?: string;
   department_id?: string;
   created_at: string;
@@ -51,6 +52,7 @@ export interface UserCreatePayload {
   gst_number?: string | null;
   address?: string | null;
   image_url?: string | null;
+  parent_id?: string | null;
 }
 
 export type UserUpdatePayload = Partial<UserCreatePayload> & { id: string };

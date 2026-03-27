@@ -4,7 +4,7 @@ import StatusBadge from "@/components/StatusBadge";
 import {
   Camera,
   Briefcase,
-  User,
+  User as UserIcon,
   CreditCard,
   Loader2,
   Monitor,
@@ -28,7 +28,10 @@ import {
   UserUpdatePayload,
   ApiErrorResponse,
   getLocalDateString,
+  User,
 } from "@/types/user";
+import { useUsers } from "@/hooks/useUsers";
+import { ComboboxOption } from "@/components/ui/combobox";
 
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -119,6 +122,17 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [apiError, setApiError] = useState<string | null>(null);
     const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
+    const { data: allUsers } = useUsers(
+      { combobox: true },
+      { enabled: true },
+    );
+
+    const parentOptions: ComboboxOption[] = ((allUsers as any)?.items || [])
+      .filter((u: User) => u.id !== userData.id) // Cannot be own parent
+      .map((u: User) => ({
+        label: `${u.name} ${u.employee_code ? `(${u.employee_code})` : ""}`,
+        value: u.id,
+      }));
 
     useEffect(() => {
       onSavingChange?.(isUpdating);
@@ -235,6 +249,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
           gst_number: userData.gst_number,
           address: userData.address,
           image_url: userData.image_url,
+          parent_id: userData.parent_id,
         };
         if (password) {
           payload.password = password;
@@ -455,6 +470,15 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               type="select"
               options={workShiftOptions}
             />
+            <EditableDetailItem
+              label="Reporting To (Parent User)"
+              value={userData.parent_id}
+              error={errors.parent_id}
+              isEditing={true}
+              onChange={(val) => handleChange("parent_id", val)}
+              type="combobox"
+              options={parentOptions}
+            />
           </div>
         </div>
 
@@ -503,7 +527,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
 
         <div className="pt-6 border-t border-border/50">
           <div className="flex items-center gap-2 mb-6">
-            <User className="h-4 w-4 text-primary" />
+            <UserIcon className="h-4 w-4 text-primary" />
             <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">
               Personal Details
             </h3>

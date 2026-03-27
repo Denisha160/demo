@@ -111,6 +111,16 @@ export const listUserSessions = (id, params) => {
   return axios({ method: "GET", url, params });
 };
 
+export const getUserHierarchy = (id) => {
+  const url = `users/${id}/hierarchy`;
+  return axios({ method: "GET", url });
+};
+
+export const getSystemHierarchy = (params) => {
+  const url = `users/hierarchy`;
+  return axios({ method: "GET", url, params });
+};
+
 // end region
 
 // region Companies

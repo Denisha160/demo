@@ -18,6 +18,7 @@ import Dashboard from "@/pages/companys/dashboard/DashboardPage";
 import Contacts from "@/pages/contacts/ContactsPage";
 import Leads from "./pages/companys/leads/LeadsPage";
 import LeadDetailsPage from "./pages/companys/leads/details/LeadDetailsPage";
+import ImportPage from "./pages/companys/leads/importFile/ImportPage";
 import Salesmen from "@/pages/companys/salesmen/SalesmenPage";
 import SalesmanDetail from "@/pages/companys/salesmen/SalesmanDetailPage";
 import Tasks from "@/pages/admin/tasks/TasksPage";
@@ -303,6 +304,7 @@ const App = () => (
           <Route path="kits/edit/:id" element={<KitFormPage />} />
           <Route path="leads" element={<Leads />} />
           <Route path="leads/:id" element={<LeadDetailsPage />} />
+          <Route path="leads/import" element={<ImportPage />} />
           <Route path="salesmen" element={<Salesmen />} />
           <Route path="salesmen/:id" element={<SalesmanDetail />} />
           <Route path="suppliers" element={<Suppliers />} />

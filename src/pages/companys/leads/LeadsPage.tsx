@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { DropResult } from "@hello-pangea/dnd";
 import {
@@ -17,7 +17,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import confetti from "canvas-confetti";
-import { Plus, Search, Filter, List, Kanban, X, FileDown } from "lucide-react";
+import { Plus, Search, Filter, List, Kanban, X, FileDown, FileUp } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,6 +165,8 @@ const applyServerValidationErrors = (
 
 const LeadsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { companyId } = useParams();
 
   const searchTerm = searchParams.get("search") || "";
   const setSearchTerm = useCallback(
@@ -923,6 +925,16 @@ const LeadsPage = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-2 border-border/60 bg-background hover:bg-accent/50"
+                onClick={() => navigate(`/${companyId}/leads/import`)}
+              >
+                <FileUp className="h-4 w-4" />
+                <span className="text-xs font-semibold">Import Lead</span>
+              </Button>
+
               {viewMode === "table" && selectedLeads.length > 0 && (
                 <Button
                   variant="outline"

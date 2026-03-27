@@ -21,19 +21,26 @@ import { cn } from "@/lib/utils";
 
 export interface HierarchyNode {
   id: string;
-  name: string;
-  role: string;
+  name: string;          // displayed name (user_name for child, parent_name for root nodes)
+  role: string;          // relationship_type
   relation: string;
   parentId: string | null;
   children: string[];
-  userId: string;
+  userId: string | null;
   createdAt: string;
+  email: string | null;
+  employeeCode: string | null;
+  imageUrl: string | null;
+  parentName: string | null;
+  parentEmail: string | null;
+  parentEmployeeCode: string | null;
+  hasChildren: boolean;
 }
 
 interface HierarchyTableViewProps {
   currentChildren: HierarchyNode[];
   nodes: Record<string, HierarchyNode>;
-  userOptions: any[];
+  userOptions: { value: string; label: string; role: string }[];
   inlineAddingToId: string | null;
   openAccordionIds: string[];
   setOpenAccordionIds: (ids: string[]) => void;
@@ -137,7 +144,23 @@ const NestedHierarchyRow = ({
   setNewNodeRelation,
   onDelete,
   onUpdate,
-}: any) => {
+}: {
+  node: HierarchyNode;
+  nodes: Record<string, HierarchyNode>;
+  userOptions: { value: string; label: string; role: string }[];
+  inlineAddingToId: string | null;
+  openAccordionIds: string[];
+  setOpenAccordionIds: (ids: string[]) => void;
+  onInlineAdd: (id: string) => void;
+  onCancelInline: () => void;
+  handleCreateNode: (parentId?: string) => void;
+  selectedUserId: string;
+  setSelectedUserId: (v: string) => void;
+  newNodeRelation: string;
+  setNewNodeRelation: (v: string) => void;
+  onDelete: (id: string) => void;
+  onUpdate: (id: string, name: string, role: string, relation: string, userId: string) => void;
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editUserId, setEditUserId] = useState(node.userId);
   const [editRelation, setEditRelation] = useState(node.relation);
@@ -154,7 +177,7 @@ const NestedHierarchyRow = ({
   };
 
   const handleSaveEdit = () => {
-    const selectedUser = userOptions.find((u: any) => u.value === editUserId);
+    const selectedUser = userOptions.find((u) => u.value === editUserId);
     if (!selectedUser) return;
     onUpdate(
       node.id,
@@ -194,13 +217,20 @@ const NestedHierarchyRow = ({
             <div className="h-9 w-9 bg-primary/10 rounded-sm flex items-center justify-center border border-primary/20 shrink-0">
               <User className="h-5 w-5 text-primary" />
             </div>
-            <div className="truncate">
+                            <div className="truncate">
               <p className="text-sm font-bold text-foreground leading-none truncate">
                 {node.name}
               </p>
-              <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-widest mt-1 truncate">
-                {node.role}
-              </p>
+              {node.employeeCode && (
+                <p className="text-[10px] text-muted-foreground font-mono tracking-widest mt-0.5 truncate">
+                  {node.employeeCode}
+                </p>
+              )}
+              {node.email && (
+                <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                  {node.email}
+                </p>
+              )}
             </div>
           </div>
         </div>

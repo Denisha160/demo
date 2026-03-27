@@ -24,6 +24,13 @@ interface LeadTableProps {
   onSelectionChange?: (
     selectedItems: (Deal & { stage: string; stageVariant: string })[],
   ) => void;
+  // Pagination Props
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  isLoading?: boolean;
 }
 
 const PRIORITIES = [
@@ -34,11 +41,14 @@ const PRIORITIES = [
 
 const LeadTable = ({
   displayedColumns,
-  onLoadMore,
-  hasMore,
-  isLoadingMore,
   enableSelection,
   onSelectionChange,
+  total = 0,
+  page = 1,
+  pageSize = 20,
+  onPageChange,
+  onPageSizeChange,
+  isLoading = false,
 }: LeadTableProps) => {
   const navigate = useNavigate();
   const updateLeadMutation = useUpdateLead();
@@ -246,10 +256,16 @@ const LeadTable = ({
         <DataTable
           data={flatDeals}
           columns={tableColumns}
-          pageSize={Math.max(flatDeals.length, 1)}
+          pageSize={pageSize}
           onRowClick={(item) => navigate(item.id)}
           enableSelection={enableSelection}
           onSelectionChange={(items) => onSelectionChange?.(items as any)}
+          serverSide={true}
+          serverTotal={total}
+          serverPage={page}
+          onServerPageChange={onPageChange}
+          onServerPageSizeChange={onPageSizeChange}
+          isLoading={isLoading}
         />
       </div>
       {updateLeadMutation.isPending && (

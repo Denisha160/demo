@@ -303,6 +303,8 @@ const LeadsPage = () => {
   const bulkUpdateLeadsMutation = useBulkUpdateLeads();
   const [isAssigning, setIsAssigning] = useState(false);
   const [tableResetKey, setTableResetKey] = useState(0);
+  const [tableLimit, setTableLimit] = useState(20);
+  const [tablePage, setTablePage] = useState(1);
 
   const hasFilters = useMemo(() => {
     return Boolean(
@@ -365,7 +367,7 @@ const LeadsPage = () => {
   );
 
   const { data: initialTableLeads, isLoading: isTableLoading } = useLeads<any>(
-    { ...filters, limit: 20, offset: 0 },
+    { ...filters, limit: tableLimit, offset: (tablePage - 1) * tableLimit },
     (res) => res?.data,
     { enabled: viewMode === "table" },
   );
@@ -403,7 +405,7 @@ const LeadsPage = () => {
       setTableData({
         items: (initialTableLeads as any).items,
         total: (initialTableLeads as any).pagination.total,
-        offset: 0,
+        offset: (initialTableLeads as any).pagination.offset,
       });
     }
   }, [initialTableLeads]);
@@ -539,32 +541,13 @@ const LeadsPage = () => {
     }
   };
 
-  const [isTableLoadingMore, setIsTableLoadingMore] = useState(false);
+  const handlePageChange = (page: number) => {
+    setTablePage(page);
+  };
 
-  const handleLoadMoreTable = async () => {
-    if (tableData.items.length >= tableData.total) return;
-
-    setIsTableLoadingMore(true);
-    try {
-      const nextOffset = tableData.offset + 20;
-      const response = await listLeads({
-        ...filters,
-        limit: 20,
-        offset: nextOffset,
-      });
-
-      const newItems = (response as any)?.data?.items || [];
-      setTableData((prev) => ({
-        ...prev,
-        items: [...prev.items, ...newItems],
-        offset: nextOffset,
-      }));
-    } catch (error) {
-      console.error("Failed to load more leads:", error);
-      toast.error("Failed to load more leads.");
-    } finally {
-      setIsTableLoadingMore(false);
-    }
+  const handlePageSizeChange = (size: number) => {
+    setTableLimit(size);
+    setTablePage(1); // Reset to first page on size change
   };
 
   const onDragEnd = (result: DropResult) => {
@@ -987,9 +970,12 @@ const LeadsPage = () => {
             <LeadTable
               key={tableResetKey}
               displayedColumns={tableColumns}
-              onLoadMore={handleLoadMoreTable}
-              hasMore={tableData.items.length < tableData.total}
-              isLoadingMore={isTableLoadingMore}
+              total={tableData.total}
+              page={tablePage}
+              pageSize={tableLimit}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              isLoading={isTableLoading}
               enableSelection={true}
               onSelectionChange={setSelectedLeads}
             />

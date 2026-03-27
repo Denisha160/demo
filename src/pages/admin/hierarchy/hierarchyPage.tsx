@@ -80,8 +80,15 @@ const HierarchyPage = () => {
                 relation: "Top Level",
                 parentId: null,
                 children: [],
-                userId: "root-sys",
+                userId: null,
                 createdAt: new Date().toISOString(),
+                email: null,
+                employeeCode: null,
+                imageUrl: null,
+                parentName: null,
+                parentEmail: null,
+                parentEmployeeCode: null,
+                hasChildren: false,
             },
         };
 
@@ -91,54 +98,71 @@ const HierarchyPage = () => {
             [];
         const items = Array.isArray(rawData) ? rawData : [];
 
-        // First pass: create nodes
+        // First pass: create nodes keyed by their hierarchy row ID
         items.forEach((item: any) => {
             const nodeId = String(item.id);
-            // If user_id is null, it means the parent_id is the user this node represents (typical for root)
-            // If user_id is provided, use it.
-            const effectiveUserId = item.user_id || item.parent_id;
-            
+
+            // If user_id is null, this row represents a "parent-only" / root entry
+            // Display the parent_name as the node's name.
+            // Otherwise display user_name.
+            const displayName = item.user_id
+                ? (item.user_name || item.user_email || "Unknown User")
+                : (item.parent_name || item.parent_email || "Unknown Manager");
+
             n[nodeId] = {
                 id: nodeId,
-                name:
-                    item.name ||
-                    item.user?.name ||
-                    item.email ||
-                    item.relationship_type ||
-                    "Member",
-                role:
-                    item.role ||
-                    item.user?.role?.name ||
-                    item.relationship_type ||
-                    "Member",
+                name: displayName,
+                role: item.relationship_type || "Member",
                 relation: item.relationship_type || "",
-                parentId: null, // Will be set in second pass
+                parentId: null, // set in second pass
                 children: [],
-                userId: effectiveUserId,
+                userId: item.user_id || item.parent_id,
                 createdAt: item.created_at,
+                email: item.user_id ? (item.user_email || null) : (item.parent_email || null),
+                employeeCode: item.user_id ? (item.user_employee_code || null) : (item.parent_employee_code || null),
+                imageUrl: item.user_id ? (item.user_image_url || null) : (item.parent_image_url || null),
+                parentName: item.parent_name || null,
+                parentEmail: item.parent_email || null,
+                parentEmployeeCode: item.parent_employee_code || null,
+                hasChildren: !!item.has_children,
             };
         });
 
-        // Second pass: setup children and handle root nodes
+        // Build a map: user_id -> nodeId for fast parent lookup
+        const userIdToNodeId = new Map<string, string>();
         items.forEach((item: any) => {
             const nodeId = String(item.id);
-            
-            // If user_id is null, this is a top-level hierarchy record (even if it has a parent_id, 
-            // the parent_id is just identifying the user it represents).
-            if (item.user_id === null) {
+            // For parent-only rows (user_id null), the "represented user" is parent_id
+            const representedUserId = item.user_id || item.parent_id;
+            if (representedUserId) {
+                userIdToNodeId.set(representedUserId, nodeId);
+            }
+        });
+
+        // Second pass: link parent → child
+        items.forEach((item: any) => {
+            const nodeId = String(item.id);
+
+            if (!item.user_id) {
+                // Parent-only row: attach to root
                 n[nodeId].parentId = "root";
-                n["root"].children.push(nodeId);
-            } else {
-                // We search for a node whose userId matches our parent_id
-                const parentNode = Object.values(n).find(node => node.userId === item.parent_id && node.id !== nodeId);
-                
-                if (!parentNode) {
-                    // Orphaned or actual top-level
-                    n[nodeId].parentId = "root";
+                if (!n["root"].children.includes(nodeId)) {
                     n["root"].children.push(nodeId);
+                }
+            } else {
+                // Find the node that "represents" our parent_id
+                const parentNodeId = userIdToNodeId.get(item.parent_id);
+                if (parentNodeId && parentNodeId !== nodeId) {
+                    n[nodeId].parentId = parentNodeId;
+                    if (!n[parentNodeId].children.includes(nodeId)) {
+                        n[parentNodeId].children.push(nodeId);
+                    }
                 } else {
-                    n[nodeId].parentId = parentNode.id;
-                    parentNode.children.push(nodeId);
+                    // Orphan or top-level: attach to root
+                    n[nodeId].parentId = "root";
+                    if (!n["root"].children.includes(nodeId)) {
+                        n["root"].children.push(nodeId);
+                    }
                 }
             }
         });

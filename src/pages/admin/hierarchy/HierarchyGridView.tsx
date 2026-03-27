@@ -4,8 +4,8 @@ import {
   ChevronRight,
   Edit2,
   Trash2,
-  Info,
   Plus,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,18 +35,46 @@ export const HierarchyGridView = ({
           <div className="absolute top-0 right-0 p-3 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
             <Users className="h-16 w-16 text-primary" />
           </div>
-          <div className="p-5 flex-1 space-y-4">
+          <div className="p-5 flex-1 space-y-3">
             <Badge
               variant="outline"
               className="rounded-full px-2 py-0 text-[10px] uppercase font-bold bg-primary/5 text-primary border-primary/10"
             >
-              {node.role}
+              {node.role || "Member"}
             </Badge>
             <div className="space-y-1">
-              <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                {node.name}
-              </h3>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 shrink-0">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <div className="truncate">
+                  <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                    {node.name}
+                  </h3>
+                  {node.employeeCode && (
+                    <p className="text-[10px] text-muted-foreground font-mono tracking-wide truncate">
+                      {node.employeeCode}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {node.email && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <p className="text-[10px] text-muted-foreground truncate">{node.email}</p>
+                </div>
+              )}
             </div>
+
+            {/* Parent context */}
+            {node.parentName && (
+              <div className="flex items-center gap-1.5 pt-1 border-t border-border/40">
+                <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0 rotate-180" />
+                <p className="text-[10px] text-muted-foreground truncate">
+                  Reports to: <span className="font-semibold text-foreground">{node.parentName}</span>
+                </p>
+              </div>
+            )}
           </div>
           <div className="px-5 py-3 bg-muted/20 border-t border-border flex items-center justify-between">
             <Button

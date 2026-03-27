@@ -336,6 +336,11 @@ export const exportLeads = (params) => {
   return axios({ method: "GET", url, params, responseType: "blob" });
 };
 
+export const downloadDemoCSV = () => {
+  const url = `leads/democsv`;
+  return axios({ method: "GET", url, responseType: "blob" });
+};
+
 // end region
 
 // region Lead Follow Ups

@@ -429,7 +429,7 @@ export default function VerifyLeadModal({
               name="annual_turnover"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold flex gap-1">
+                  <FormLabel className="text-xs font-bold">
                     Annual Turnover <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>

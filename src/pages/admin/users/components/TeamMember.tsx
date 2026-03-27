@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, User, Info, Trash2, Edit2, Mail, Users } from "lucide-react";
+import { Plus, Search, User, Info, Trash2, Edit2, Mail, Users, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,14 +9,27 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import DataTable, { Column } from "@/components/DataTable";
 import { useUsers } from "@/hooks/useUsers";
-import { useCreateHierarchy } from "@/hooks/useHierarchy";
+import { useCreateHierarchy, useUpdateHierarchy, useDeleteHierarchy } from "@/hooks/useHierarchy";
 
 const TeamMember = ({ user_id }: { user_id: string }) => {
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [editingMember, setEditingMember] = useState<any | null>(null);
+    const [memberToDelete, setMemberToDelete] = useState<any | null>(null);
+
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedUserId, setSelectedUserId] = useState("");
     const [relation, setRelation] = useState("");
@@ -30,31 +43,87 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
     })) : [];
 
     const createMutation = useCreateHierarchy();
+    const updateMutation = useUpdateHierarchy();
+    const deleteMutation = useDeleteHierarchy();
 
-    // Dummy data for now
+    // Dummy data for now - enhanced with user_id for editing simulation
     const dummyData = [
-        { 
-            id: "1", 
-            name: "Jigar Kalariya", 
-            email: "jigar@yopmail.com", 
-            role: "Sales Executive", 
+        {
+            id: "1",
+            name: "Jigar Kalariya",
+            email: "jigar@yopmail.com",
+            role: "Sales Executive",
             joined: "2024-03-20",
-            employee_code: "EMP001"
+            employee_code: "EMP001",
+            user_id: "8f09462f-e93e-45cd-8eef-7a6d0bc88fb5"
         },
-        { 
-            id: "2", 
-            name: "Denisha V", 
-            email: "denisha@yopmail.com", 
-            role: "Marketing Lead", 
+        {
+            id: "2",
+            name: "Denisha V",
+            email: "denisha@yopmail.com",
+            role: "Marketing Lead",
             joined: "2024-03-22",
-            employee_code: "EMP002"
+            employee_code: "EMP002",
+            user_id: "d9b167be-299a-4ee8-ada6-aa0fdeaf7ab5"
         },
     ];
 
+    const handleOpenAdd = () => {
+        setEditingMember(null);
+        setSelectedUserId("");
+        setRelation("");
+        setIsFormModalOpen(true);
+    };
+
+    const handleEdit = (item: any) => {
+        setEditingMember(item);
+        setSelectedUserId(item.user_id);
+        setRelation(item.role);
+        setIsFormModalOpen(true);
+    };
+
+    const handleSaveMember = () => {
+        if (!selectedUserId) return;
+
+        if (editingMember) {
+            updateMutation.mutate({
+                id: editingMember.id,
+                user_id: selectedUserId,
+                relationship_type: relation || "Connected Member"
+            }, {
+                onSuccess: () => {
+                    setIsFormModalOpen(false);
+                    setEditingMember(null);
+                }
+            });
+        } else {
+            createMutation.mutate({
+                parent_id: user_id,
+                user_id: selectedUserId,
+                relationship_type: relation || "Connected Member"
+            }, {
+                onSuccess: () => {
+                    setIsFormModalOpen(false);
+                    setSelectedUserId("");
+                    setRelation("");
+                }
+            });
+        }
+    };
+
+    const handleDelete = () => {
+        if (!memberToDelete) return;
+        deleteMutation.mutate(memberToDelete.id, {
+            onSuccess: () => {
+                setMemberToDelete(null);
+            }
+        });
+    };
+
     const columns: Column<any>[] = [
-        { 
-            key: "name", 
-            header: "Member Name", 
+        {
+            key: "name",
+            header: "Member Name",
             sortable: true,
             render: (item) => (
                 <div className="flex items-center gap-2">
@@ -68,8 +137,8 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
                 </div>
             )
         },
-        { 
-            key: "email", 
+        {
+            key: "email",
             header: "Email",
             render: (item) => (
                 <div className="flex items-center gap-1.5 min-w-[150px]">
@@ -78,8 +147,8 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
                 </div>
             )
         },
-        { 
-            key: "role", 
+        {
+            key: "role",
             header: "Relationship",
             render: (item) => (
                 <div className="flex items-center gap-1.5">
@@ -88,8 +157,8 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
                 </div>
             )
         },
-        { 
-            key: "joined", 
+        {
+            key: "joined",
             header: "Joined Date",
             render: (item) => (
                 <span className="text-[11px] text-muted-foreground font-medium">{item.joined}</span>
@@ -100,32 +169,17 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
             header: "Actions",
             className: "text-right",
             render: (item) => (
-                <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted" title="Edit Relation">
-                        <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="flex bg-transparent items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary hover:bg-primary/10 rounded-sm" onClick={() => handleEdit(item)}>
+                        <Edit2 className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive" title="Remove Member">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive hover:bg-destructive/10 rounded-sm text-destructive" onClick={() => setMemberToDelete(item)}>
                         <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                 </div>
             )
         }
     ];
-
-    const handleAddMember = () => {
-        if (!selectedUserId) return;
-        createMutation.mutate({
-            parent_id: user_id,
-            user_id: selectedUserId,
-            relationship_type: relation || "Connected Member"
-        }, {
-            onSuccess: () => {
-                setIsAddModalOpen(false);
-                setSelectedUserId("");
-                setRelation("");
-            }
-        });
-    };
 
     return (
         <div className="space-y-4 animate-in fade-in duration-500 py-2">
@@ -140,34 +194,35 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <Button size="sm" className="h-9 gap-2 font-bold px-4 rounded-md shadow-sm" onClick={() => setIsAddModalOpen(true)}>
+                <Button size="sm" className="h-9 gap-2 font-bold px-4 rounded-md shadow-sm" onClick={handleOpenAdd}>
                     <Plus className="h-4 w-4" />
                     Add Team Member
                 </Button>
             </div>
 
             {/* Table Area */}
-            <div className="rounded-lg border border-border/40 overflow-hidden shadow-sm">
-                <DataTable 
-                    data={dummyData.filter(d => 
-                        d.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            <div className="bg-card rounded-lg border border-border/40 overflow-hidden shadow-sm">
+                <DataTable
+                    data={dummyData.filter(d =>
+                        d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         d.email.toLowerCase().includes(searchTerm.toLowerCase())
-                    )} 
-                    columns={columns} 
+                    )}
+                    columns={columns}
                     pageSize={5}
                 />
             </div>
 
-            {/* Modal for adding member */}
-            <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+            {/* Form Modal for Add/Edit */}
+            <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>
                 <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden rounded-xl border-border shadow-2xl">
                     <div className="bg-primary/5 px-6 py-5 border-b border-primary/10">
                         <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2.5 text-primary font-black text-lg">
-                                <Plus className="h-5 w-5 stroke-[3px]" /> ADD TEAM MEMBER
+                            <DialogTitle className="flex items-center gap-2.5 text-primary font-black text-lg uppercase tracking-tight">
+                                {editingMember ? <Edit2 className="h-5 w-5 stroke-[3px]" /> : <Plus className="h-5 w-5 stroke-[3px]" />}
+                                {editingMember ? "EDIT TEAM MEMBER" : "ADD TEAM MEMBER"}
                             </DialogTitle>
-                            <DialogDescription className="text-[11px] font-medium text-muted-foreground/80 mt-1 uppercase tracking-wider">
-                                Assign a user to report to this manager
+                            <DialogDescription className="text-[11px] font-bold text-muted-foreground/80 mt-1 uppercase tracking-[0.1em]">
+                                {editingMember ? `RE-ASSIGN OR RENAME RELATIONSHIP FOR ${editingMember.name}` : "ASSIGN A NEW USER TO REPORT TO THIS MANAGER"}
                             </DialogDescription>
                         </DialogHeader>
                     </div>
@@ -181,7 +236,7 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
                                 value={selectedUserId}
                                 onValueChange={setSelectedUserId}
                                 placeholder="Search by name or email..."
-                                className="h-10 w-full"
+                                className="h-10 w-full shadow-sm"
                             />
                         </div>
                         <div className="grid gap-2.5">
@@ -192,30 +247,60 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
                                 placeholder="e.g. Sales Executive, Lead Developer..."
                                 value={relation}
                                 onChange={(e) => setRelation(e.target.value)}
-                                className="h-10 text-sm focus-visible:ring-primary/20"
+                                className="h-10 text-sm focus-visible:ring-primary/20 bg-muted/5"
                             />
                         </div>
                     </div>
                     <div className="px-6 py-4 bg-muted/30 border-t border-border flex items-center justify-end gap-3">
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             className="font-bold text-[11px] uppercase tracking-widest h-9 px-5 hover:bg-muted"
-                            onClick={() => setIsAddModalOpen(false)}
+                            onClick={() => setIsFormModalOpen(false)}
                         >
                             Cancel
                         </Button>
-                        <Button 
-                            size="sm" 
+                        <Button
+                            size="sm"
                             className="font-black text-[11px] uppercase tracking-widest h-9 px-6 rounded-md shadow-md gap-2"
-                            onClick={handleAddMember} 
-                            disabled={createMutation.isPending}
+                            onClick={handleSaveMember}
+                            disabled={createMutation.isPending || updateMutation.isPending}
                         >
-                            {createMutation.isPending ? "Adding..." : "Add Member"}
+                            {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : (editingMember ? "Update Member" : "Add Member")}
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Alert */}
+            <AlertDialog open={!!memberToDelete} onOpenChange={(open) => !open && setMemberToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+
+                        <AlertDialogTitle>
+                            Remove Team Member?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to remove <span className="font-bold text-foreground">"{memberToDelete?.name}"</span> from this team? This relationship will be permanently deleted.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deleteMutation.isPending}>
+                            Keep Member
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={deleteMutation.isPending}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleDelete();
+                            }}
+                        >
+                            {deleteMutation.isPending ? "Removing..." : "Yes, Remove"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

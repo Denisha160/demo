@@ -12,6 +12,7 @@ import PermissionsTab from "./components/PermissionsTab";
 import SessionsTab from "./components/SessionsTab";
 import { SelectOption } from "./components/EditableDetailItem";
 import { UserDetailData } from "@/types/user";
+import TeamMember from "./components/TeamMember";
 
 const UserDetailPage = () => {
   const { id } = useParams();
@@ -237,6 +238,12 @@ const UserDetailPage = () => {
             >
               Sessions
             </TabsTrigger>
+            <TabsTrigger
+              value="teamMember"
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0"
+            >
+              Team Members
+            </TabsTrigger>
           </TabsList>
 
           {activeTab === "overview" && (
@@ -347,6 +354,13 @@ const UserDetailPage = () => {
           className="space-y-4 animate-in fade-in-50 duration-300"
         >
           <SessionsTab user_id={userData.id!} />
+        </TabsContent>
+
+        <TabsContent
+          value="teamMember"
+          className="space-y-4 animate-in fade-in-50 duration-300"
+        >
+          <TeamMember user_id={userData.id!} />
         </TabsContent>
       </Tabs>
     </div>

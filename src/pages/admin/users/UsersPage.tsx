@@ -11,8 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Network, Table2 } from "lucide-react";
 import UserModal from "./UserModal";
+import UserHierarchyTree from "./components/UserHierarchyTree";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useDeleteUser, useUpdateUser } from "@/hooks/useUsers";
 import { useHasPermission } from "@/hooks/useAuth";
@@ -64,6 +65,8 @@ const Users = () => {
   const roleOptions = (rolesData?.items || []).map(
     (r: { id: string; name: string }) => ({ value: r.id, label: r.name }),
   );
+
+  const [view, setView] = useState<"table" | "tree">("table");
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
@@ -348,6 +351,26 @@ const Users = () => {
             />
           </div>
 
+          {/* View Switcher */}
+          <div className="flex bg-muted p-1 rounded-sm gap-1 ml-auto sm:ml-0">
+            <Button
+              variant={view === "table" ? "secondary" : "ghost"}
+              size="icon"
+              className={`h-6 w-9 rounded-sm ${view === "table" ? "shadow-sm" : ""}`}
+              onClick={() => setView("table")}
+            >
+              <Table2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant={view === "tree" ? "secondary" : "ghost"}
+              size="icon"
+              className={`h-6 w-9 rounded-sm ${view === "tree" ? "shadow-sm" : ""}`}
+              onClick={() => setView("tree")}
+            >
+              <Network className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
           {hasFilters && (
             <div className="animate-in fade-in slide-in-from-left-2 duration-300">
               <Button
@@ -375,32 +398,36 @@ const Users = () => {
         )}
       </div>
 
-      <div className="border border-border/60 rounded-sm shadow-sm">
-        <DataTable
-          data={users}
-          columns={columns}
-          isLoading={isLoading}
-          pageSize={limit}
-          serverSide={true}
-          serverTotal={totalItems}
-          serverPage={page}
-          serverSortKey={sortKey || undefined}
-          serverSortDirection={sortDirection}
-          onServerPageChange={setPage}
-          onServerPageSizeChange={(newSize) => {
-            setLimit(newSize);
-            setPage(1);
-          }}
-          onServerSortChange={(key, direction) => {
-            setSortKey(key);
-            setSortDirection(direction);
-            setPage(1);
-          }}
-          onRowClick={(item) =>
-            hasPermission("user.update") && navigate(`${item.id}`)
-          }
-        />
-      </div>
+      {view === "table" ? (
+        <div className="border border-border/60 rounded-sm shadow-sm">
+          <DataTable
+            data={users}
+            columns={columns}
+            isLoading={isLoading}
+            pageSize={limit}
+            serverSide={true}
+            serverTotal={totalItems}
+            serverPage={page}
+            serverSortKey={sortKey || undefined}
+            serverSortDirection={sortDirection}
+            onServerPageChange={setPage}
+            onServerPageSizeChange={(newSize) => {
+              setLimit(newSize);
+              setPage(1);
+            }}
+            onServerSortChange={(key, direction) => {
+              setSortKey(key);
+              setSortDirection(direction);
+              setPage(1);
+            }}
+            onRowClick={(item) =>
+              hasPermission("user.update") && navigate(`${item.id}`)
+            }
+          />
+        </div>
+      ) : (
+        <UserHierarchyTree />
+      )}
 
       <UserModal
         open={modalOpen}

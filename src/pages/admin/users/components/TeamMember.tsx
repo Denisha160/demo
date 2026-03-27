@@ -70,6 +70,7 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
         if (editingMember) {
             updateMutation.mutate({
                 id: editingMember.id,
+                parent_id: user_id,
                 user_id: selectedUserId,
                 relationship_type: relation || "Connected Member"
             }, {

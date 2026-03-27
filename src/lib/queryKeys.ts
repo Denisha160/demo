@@ -132,7 +132,7 @@ export const queryKeys = {
   },
   hierarchy: {
     all: ["hierarchy"] as const,
-    list: (filters?: Record<string, unknown>) =>
+    list: (filters?: string | Record<string, unknown>) =>
       [...queryKeys.hierarchy.all, "list", filters] as const,
     detail: (id: string) => [...queryKeys.hierarchy.all, "detail", id] as const,
   },

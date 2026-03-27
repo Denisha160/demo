@@ -16,7 +16,7 @@ const normalizeList = <T>(response: any): T[] => {
 };
 
 export function useHierarchySearch(
-  params?: Record<string, unknown>,
+  params?: string | Record<string, unknown>,
   options?: any,
 ) {
   return useQuery({

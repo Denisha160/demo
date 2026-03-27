@@ -23,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import DataTable, { Column } from "@/components/DataTable";
 import { useUsers } from "@/hooks/useUsers";
-import { useCreateHierarchy, useUpdateHierarchy, useDeleteHierarchy } from "@/hooks/useHierarchy";
+import { useHierarchySearch, useCreateHierarchy, useUpdateHierarchy, useDeleteHierarchy } from "@/hooks/useHierarchy";
 
 const TeamMember = ({ user_id }: { user_id: string }) => {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -33,6 +33,10 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedUserId, setSelectedUserId] = useState("");
     const [relation, setRelation] = useState("");
+
+    // API Hooks
+    const { data: hierarchyResponse, isLoading: listLoading } = useHierarchySearch(user_id);
+    const subMembers = (hierarchyResponse as any)?.items || [];
 
     const { data: usersResponse } = useUsers({ limit: 100 });
     const users = (usersResponse as any)?.items || (usersResponse as any)?.data || [];
@@ -46,28 +50,6 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
     const updateMutation = useUpdateHierarchy();
     const deleteMutation = useDeleteHierarchy();
 
-    // Dummy data for now - enhanced with user_id for editing simulation
-    const dummyData = [
-        {
-            id: "1",
-            name: "Jigar Kalariya",
-            email: "jigar@yopmail.com",
-            role: "Sales Executive",
-            joined: "2024-03-20",
-            employee_code: "EMP001",
-            user_id: "8f09462f-e93e-45cd-8eef-7a6d0bc88fb5"
-        },
-        {
-            id: "2",
-            name: "Denisha V",
-            email: "denisha@yopmail.com",
-            role: "Marketing Lead",
-            joined: "2024-03-22",
-            employee_code: "EMP002",
-            user_id: "d9b167be-299a-4ee8-ada6-aa0fdeaf7ab5"
-        },
-    ];
-
     const handleOpenAdd = () => {
         setEditingMember(null);
         setSelectedUserId("");
@@ -78,7 +60,7 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
     const handleEdit = (item: any) => {
         setEditingMember(item);
         setSelectedUserId(item.user_id);
-        setRelation(item.role);
+        setRelation(item.relationship_type);
         setIsFormModalOpen(true);
     };
 
@@ -131,8 +113,12 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
                         <User className="h-4 w-4 text-primary" />
                     </div>
                     <div className="truncate">
-                        <p className="font-bold text-xs text-foreground truncate">{item.name}</p>
-                        <p className="text-[10px] text-muted-foreground font-mono truncate">{item.employee_code}</p>
+                        <p className="font-bold text-xs text-foreground truncate">
+                            {item.user_name || item.name || "Unknown User"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground font-mono truncate">
+                            {item.user_employee_code || item.employee_code || "---"}
+                        </p>
                     </div>
                 </div>
             )
@@ -143,7 +129,9 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
             render: (item) => (
                 <div className="flex items-center gap-1.5 min-w-[150px]">
                     <Mail className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-[11px] text-muted-foreground truncate">{item.email}</span>
+                    <span className="text-[11px] text-muted-foreground truncate">
+                        {item.user_email || item.email || "---"}
+                    </span>
                 </div>
             )
         },
@@ -153,7 +141,9 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
             render: (item) => (
                 <div className="flex items-center gap-1.5">
                     <Users className="h-3 w-3 text-primary/60" />
-                    <span className="text-[11px] font-semibold text-primary italic">{item.role}</span>
+                    <span className="text-[11px] font-semibold text-primary italic">
+                        {item.relationship_type || item.role || "Connected"}
+                    </span>
                 </div>
             )
         },
@@ -161,7 +151,9 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
             key: "joined",
             header: "Joined Date",
             render: (item) => (
-                <span className="text-[11px] text-muted-foreground font-medium">{item.joined}</span>
+                <span className="text-[11px] text-muted-foreground font-medium">
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : "---"}
+                </span>
             )
         },
         {
@@ -203,12 +195,13 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
             {/* Table Area */}
             <div className="bg-card rounded-lg border border-border/40 overflow-hidden shadow-sm">
                 <DataTable
-                    data={dummyData.filter(d =>
-                        d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        d.email.toLowerCase().includes(searchTerm.toLowerCase())
+                    data={subMembers.filter((d: any) =>
+                        (d.user_name || d.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (d.user_email || d.email || "").toLowerCase().includes(searchTerm.toLowerCase())
                     )}
                     columns={columns}
-                    pageSize={5}
+                    pageSize={10}
+                    isLoading={listLoading}
                 />
             </div>
 

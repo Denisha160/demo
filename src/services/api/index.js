@@ -740,8 +740,12 @@ export const listCity = (params) => {
 // region Hierarchy
 // ===================== Hierarchy =====================
 export const listHierarchy = (params) => {
-  const url = `hierarchy`;
-  return axios({ method: "GET", url, params });
+  const url = typeof params === "string" ? `hierarchy/${params}` : `hierarchy`;
+  return axios({
+    method: "GET",
+    url,
+    params: typeof params === "object" ? params : undefined,
+  });
 };
 
 export const createHierarchy = (data) => {

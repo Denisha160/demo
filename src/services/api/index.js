@@ -748,6 +748,11 @@ export const listHierarchy = (params) => {
   });
 };
 
+export const getAllHierarchy = (params) => {
+  const url = `hierarchy/all`;
+  return axios({ method: "GET", url, params });
+};
+
 export const createHierarchy = (data) => {
   const url = `hierarchy`;
   return axios({ method: "POST", url, data });

@@ -82,7 +82,7 @@ const navItems: NavItemEntry[] = [
         path: "source",
         permission: "lead-source.read",
       },
-      { label: "Quotations", icon: FileText, path: "quotations" },
+      // { label: "Quotations", icon: FileText, path: "quotations" },
       {
         label: "Visits",
         icon: MapPin,

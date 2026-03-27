@@ -92,13 +92,13 @@ interface ProfileTabProps {
 const leadSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email").or(z.literal("")),
-  phone: z
-    .string()
-    .min(1, "Phone is required")
-    .regex(/^\d+$/, "Only numbers allowed")
-    .min(10, "Must be at least 10 digits"),
-  alternate_phone: z
-    .string()
+  phone: z.union([z.string(), z.number()])
+    .transform((val) => String(val))
+    .refine((val) => val.length > 0, "Phone is required")
+    .refine((val) => /^\d+$/.test(val), "Only numbers allowed")
+    .refine((val) => val.length >= 10, "Must be at least 10 digits"),
+  alternate_phone: z.union([z.string(), z.number()])
+    .transform((val) => (val ? String(val) : ""))
     .optional()
     .refine(
       (val) => !val || /^[0-9]{10}$/.test(val),
@@ -144,10 +144,10 @@ const leadSchema = z.object({
     .optional(),
   address_line1: z.string().optional(),
   address_line2: z.string().optional(),
-  expected_revenue: z
-    .string()
+  expected_revenue: z.union([z.string(), z.number()])
+    .transform((val) => (val !== undefined && val !== null ? String(val) : ""))
     .optional()
-    .refine((val) => !val || /^[0-9]+$/.test(val), "Must be a number")
+    .refine((val) => !val || /^[0-9.]+$/.test(val), "Must be a number")
     .or(z.literal("")),
 });
 
@@ -311,7 +311,7 @@ const ProfileTab = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full animate-fade-in rounded-2xl border border-border/50 bg-card p-4 shadow-sm"
+        className="w-full animate-fade-in rounded-sm border border-border/50 bg-card p-4 shadow-sm"
       >
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -812,6 +812,7 @@ const ProfileTab = ({
                     <FormControl>
                       <Input
                         disabled={!isEditing || isSaving}
+                        type="number"
                         className="h-9 text-sm"
                         placeholder="Enter Expected Revenue"
                         {...field}

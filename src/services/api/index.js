@@ -341,6 +341,11 @@ export const bulkUpdateLeads = (data) => {
   return axios({ method: "PATCH", url, data });
 };
 
+export const importLeads = (data) => {
+  const url = `leads/import`;
+  return axios({ method: "POST", url, data });
+};
+
 export const exportLeads = (params) => {
   const url = `leads/export`;
   return axios({ method: "GET", url, params, responseType: "blob" });

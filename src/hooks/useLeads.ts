@@ -9,6 +9,7 @@ import {
   bulkUpdateLeads,
   exportLeads,
   downloadDemoCSV,
+  importLeads,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -172,6 +173,21 @@ export function useExportLeads() {
     },
     onError: (error: any) => {
       toast.error(error?.message || "Failed to export leads.");
+    },
+  });
+}
+
+export function useImportLeads() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { items: any[] }) => importLeads(data),
+    onSuccess: (response: any) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+      toast.success(response?.data?.message || "Leads imported successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to import leads.");
     },
   });
 }

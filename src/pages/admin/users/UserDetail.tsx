@@ -12,7 +12,7 @@ import PermissionsTab from "./components/PermissionsTab";
 import SessionsTab from "./components/SessionsTab";
 import { SelectOption } from "./components/EditableDetailItem";
 import { UserDetailData } from "@/types/user";
-import TeamMember from "./components/TeamMember";
+import TeamMember from "./components/teamMember/TeamMember";
 
 const UserDetailPage = () => {
   const { id } = useParams();

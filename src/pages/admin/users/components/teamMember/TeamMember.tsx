@@ -3,13 +3,6 @@ import { Plus, Search, User, Info, Trash2, Edit2, Mail, Users, AlertTriangle } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog";
-import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -19,9 +12,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
-import { Combobox } from "@/components/ui/combobox";
 import DataTable, { Column } from "@/components/DataTable";
+import TeamMemberFormModal, { MemberFormData } from "./TeamMemberFormModal";
 import { useUsers } from "@/hooks/useUsers";
 import { useHierarchySearch, useCreateHierarchy, useUpdateHierarchy, useDeleteHierarchy } from "@/hooks/useHierarchy";
 
@@ -31,8 +23,6 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
     const [memberToDelete, setMemberToDelete] = useState<any | null>(null);
 
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedUserId, setSelectedUserId] = useState("");
-    const [relation, setRelation] = useState("");
 
     // API Hooks
     const { data: hierarchyResponse, isLoading: listLoading } = useHierarchySearch(user_id);
@@ -52,27 +42,21 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
 
     const handleOpenAdd = () => {
         setEditingMember(null);
-        setSelectedUserId("");
-        setRelation("");
         setIsFormModalOpen(true);
     };
 
     const handleEdit = (item: any) => {
         setEditingMember(item);
-        setSelectedUserId(item.user_id);
-        setRelation(item.relationship_type);
         setIsFormModalOpen(true);
     };
 
-    const handleSaveMember = () => {
-        if (!selectedUserId) return;
-
+    const handleSaveMember = (data: MemberFormData) => {
         if (editingMember) {
             updateMutation.mutate({
                 id: editingMember.id,
                 parent_id: user_id,
-                user_id: selectedUserId,
-                relationship_type: relation || "Connected Member"
+                user_id: data.user_id,
+                relationship_type: data.relationship_type
             }, {
                 onSuccess: () => {
                     setIsFormModalOpen(false);
@@ -82,13 +66,11 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
         } else {
             createMutation.mutate({
                 parent_id: user_id,
-                user_id: selectedUserId,
-                relationship_type: relation || "Connected Member"
+                user_id: data.user_id,
+                relationship_type: data.relationship_type
             }, {
                 onSuccess: () => {
                     setIsFormModalOpen(false);
-                    setSelectedUserId("");
-                    setRelation("");
                 }
             });
         }
@@ -206,79 +188,28 @@ const TeamMember = ({ user_id }: { user_id: string }) => {
                 />
             </div>
 
-            {/* Form Modal for Add/Edit */}
-            <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>
-                <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden rounded-xl border-border shadow-2xl">
-                    <div className="bg-primary/5 px-6 py-5 border-b border-primary/10">
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2.5 text-primary font-black text-lg uppercase tracking-tight">
-                                {editingMember ? <Edit2 className="h-5 w-5 stroke-[3px]" /> : <Plus className="h-5 w-5 stroke-[3px]" />}
-                                {editingMember ? "EDIT TEAM MEMBER" : "ADD TEAM MEMBER"}
-                            </DialogTitle>
-                            <DialogDescription className="text-[11px] font-bold text-muted-foreground/80 mt-1 uppercase tracking-[0.1em]">
-                                {editingMember ? `RE-ASSIGN OR RENAME RELATIONSHIP FOR ${editingMember.name}` : "ASSIGN A NEW USER TO REPORT TO THIS MANAGER"}
-                            </DialogDescription>
-                        </DialogHeader>
-                    </div>
-                    <div className="grid gap-6 p-6">
-                        <div className="grid gap-2.5">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground flex items-center gap-2">
-                                <User className="h-3.5 w-3.5" /> Select Employee
-                            </Label>
-                            <Combobox
-                                options={userOptions}
-                                value={selectedUserId}
-                                onValueChange={setSelectedUserId}
-                                placeholder="Search by name or email..."
-                                className="h-10 w-full shadow-sm"
-                            />
-                        </div>
-                        <div className="grid gap-2.5">
-                            <Label className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground flex items-center gap-2">
-                                <Info className="h-3.5 w-3.5" /> Relationship Type
-                            </Label>
-                            <Input
-                                placeholder="e.g. Sales Executive, Lead Developer..."
-                                value={relation}
-                                onChange={(e) => setRelation(e.target.value)}
-                                className="h-10 text-sm focus-visible:ring-primary/20 bg-muted/5"
-                            />
-                        </div>
-                    </div>
-                    <div className="px-6 py-4 bg-muted/30 border-t border-border flex items-center justify-end gap-3">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="font-bold text-[11px] uppercase tracking-widest h-9 px-5 hover:bg-muted"
-                            onClick={() => setIsFormModalOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            size="sm"
-                            className="font-black text-[11px] uppercase tracking-widest h-9 px-6 rounded-md shadow-md gap-2"
-                            onClick={handleSaveMember}
-                            disabled={createMutation.isPending || updateMutation.isPending}
-                        >
-                            {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : (editingMember ? "Update Member" : "Add Member")}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            {/* Form Modal for Add/Edit using the refined Modal-based component */}
+            <TeamMemberFormModal
+                open={isFormModalOpen}
+                onClose={() => setIsFormModalOpen(false)}
+                editingMember={editingMember}
+                onSave={handleSaveMember}
+                isSubmitting={createMutation.isPending || updateMutation.isPending}
+                userOptions={userOptions}
+            />
 
             {/* Delete Confirmation Alert */}
             <AlertDialog open={!!memberToDelete} onOpenChange={(open) => !open && setMemberToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-
                         <AlertDialogTitle>
                             Remove Team Member?
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to remove <span className="font-bold text-foreground">"{memberToDelete?.name}"</span> from this team? This relationship will be permanently deleted.
+                            Are you sure you want to remove <span className="font-bold text-foreground">"{memberToDelete?.user_name || memberToDelete?.name}"</span> from this team? This relationship will be permanently deleted.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className="mt-4">
                         <AlertDialogCancel disabled={deleteMutation.isPending}>
                             Keep Member
                         </AlertDialogCancel>

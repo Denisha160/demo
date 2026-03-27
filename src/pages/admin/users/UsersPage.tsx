@@ -13,7 +13,7 @@ import {
 import { Combobox } from "@/components/ui/combobox";
 import { Plus, Search, Network, Table2 } from "lucide-react";
 import UserModal from "./UserModal";
-import UserHierarchyTree from "./components/UserHierarchyTree";
+import UserHierarchyTree from "./components/teamMember/UserHierarchyTree";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useDeleteUser, useUpdateUser } from "@/hooks/useUsers";
 import { useHasPermission } from "@/hooks/useAuth";
@@ -206,9 +206,9 @@ const Users = () => {
           <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
             {item.name
               ? item.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
               : "?"}
           </div>
           <div className="min-w-0">

@@ -7,7 +7,8 @@ import {
     ArrowRight,
     Info,
     LayoutGrid,
-    List
+    List,
+    Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,66 +30,18 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Combobox } from "@/components/ui/combobox";
 import { useUsers } from "@/hooks/useUsers";
+import { 
+    useHierarchySearch, 
+    useCreateHierarchy, 
+    useUpdateHierarchy, 
+    useDeleteHierarchy 
+} from "@/hooks/useHierarchy";
 
 // Imported Components
 import { HierarchyNode, HierarchyTableView } from "./HierarchyTableView";
 import { HierarchyGridView } from "./HierarchyGridView";
 
-const DUMMY_DATA: Record<string, HierarchyNode> = {
-    root: {
-        id: "root",
-        name: "ORGANIZATION ROOT",
-        role: "Admin",
-        relation: "Top Level",
-        parentId: null,
-        children: ["node-1"],
-        userId: "root-sys",
-        createdAt: new Date().toISOString()
-    },
-    "node-1": {
-        id: "node-1",
-        name: "ARMONIA SKY OWNER",
-        role: "Managing Director",
-        relation: "Reports to Board",
-        parentId: "root",
-        children: ["node-1-1", "node-1-2"],
-        userId: "u-1",
-        createdAt: new Date().toISOString()
-    },
-    "node-1-1": {
-        id: "node-1-1",
-        name: "John Doe",
-        role: "Project Manager",
-        relation: "Direct Report",
-        parentId: "node-1",
-        children: ["node-1-1-1"],
-        userId: "u-2",
-        createdAt: new Date().toISOString()
-    },
-    "node-1-2": {
-        id: "node-1-2",
-        name: "Jane Smith",
-        role: "Sales Lead",
-        relation: "Direct Report",
-        parentId: "node-1",
-        children: [],
-        userId: "u-3",
-        createdAt: new Date().toISOString()
-    },
-    "node-1-1-1": {
-        id: "node-1-1-1",
-        name: "Marketing Specialist",
-        role: "Executive",
-        relation: "Reporting to John",
-        parentId: "node-1-1",
-        children: [],
-        userId: "u-4",
-        createdAt: new Date().toISOString()
-    }
-};
-
 const HierarchyPage = () => {
-    const [nodes, setNodes] = useState<Record<string, HierarchyNode>>(DUMMY_DATA);
     const [currentId, setCurrentId] = useState<string>("root");
     const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
     const [searchTerm, setSearchTerm] = useState("");
@@ -107,12 +60,68 @@ const HierarchyPage = () => {
         role: user.role?.name || "Member"
     }));
 
-    const currentNode = nodes[currentId];
+    // API Hooks
+    const { data: hierarchyResponse, isLoading: idLoading } = useHierarchySearch({ limit: 1000 });
+    const createMutation = useCreateHierarchy();
+    const updateMutation = useUpdateHierarchy();
+    const deleteMutation = useDeleteHierarchy();
+
+    const nodes = useMemo(() => {
+        const n: Record<string, HierarchyNode> = {
+            root: {
+                id: "root",
+                name: "ORGANIZATION ROOT",
+                role: "System Root",
+                relation: "Top Level",
+                parentId: null,
+                children: [],
+                userId: "root-sys",
+                createdAt: new Date().toISOString()
+            }
+        };
+
+        const rawData = (hierarchyResponse as any)?.data || (hierarchyResponse as any)?.items || [];
+        const items = Array.isArray(rawData) ? rawData : [];
+
+        // First pass: create nodes
+        items.forEach((item: any) => {
+            const nodeId = String(item.id);
+            n[nodeId] = {
+                id: nodeId,
+                name: item.name || item.user?.name || item.email || item.relationship_type || "Member",
+                role: item.role || item.user?.role?.name || item.relationship_type || "Member",
+                relation: item.relationship_type || "",
+                parentId: item.parent_id === null ? "root" : String(item.parent_id),
+                children: [],
+                userId: item.user_id,
+                createdAt: item.created_at
+            };
+        });
+
+        // Second pass: setup children and handle orphaned nodes
+        items.forEach((item: any) => {
+            const nodeId = String(item.id);
+            const rawParentId = item.parent_id === null ? "root" : String(item.parent_id);
+            
+            // If the parent doesn't exist in our list, attach to virtual root
+            if (!n[rawParentId]) {
+                n[nodeId].parentId = "root";
+                n["root"].children.push(nodeId);
+            } else {
+                n[rawParentId].children.push(nodeId);
+            }
+        });
+
+        return n;
+    }, [hierarchyResponse]);
+
+    const currentNode = nodes[currentId] || nodes["root"];
 
     const currentChildren = useMemo(() => {
+        if (!currentNode) return [];
         return currentNode.children
             .map(id => nodes[id])
-            .filter(node => node.name.toLowerCase().includes(searchTerm.toLowerCase()));
+            .filter(node => node && node.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [currentNode, nodes, searchTerm]);
 
     const path = useMemo(() => {
@@ -131,64 +140,56 @@ const HierarchyPage = () => {
         setInlineAddingToId(null);
     };
 
-    const handleCreateNode = (parentId?: string) => {
+    const handleCreateNode = async (parentId?: string) => {
         const targetParentId = parentId || currentId;
         const selectedUser = userOptions.find(u => u.value === selectedUserId);
         if (!selectedUser) return;
 
-        const newId = `node-${Date.now()}`;
-        const newNode: HierarchyNode = {
-            id: newId,
-            name: selectedUser.label,
-            role: selectedUser.role,
-            relation: newNodeRelation || "Connected Member",
-            parentId: targetParentId,
-            children: [],
-            userId: selectedUserId,
-            createdAt: new Date().toISOString()
-        };
+        const resp = hierarchyResponse as any;
+        const isFirstTime = (resp?.data?.length === 0) || (resp?.items?.length === 0) || (!resp?.data && !resp?.items);
 
-        setNodes(prev => ({
-            ...prev,
-            [newId]: newNode,
-            [targetParentId]: {
-                ...prev[targetParentId],
-                children: [newId, ...prev[targetParentId].children]
+        const payload = isFirstTime 
+            ? {
+                parent_id: selectedUserId,
+                user_id: null,
+                relationship_type: newNodeRelation || "Root Relation"
             }
-        }));
+            : {
+                parent_id: targetParentId === "root" ? null : targetParentId,
+                user_id: selectedUserId,
+                relationship_type: newNodeRelation || "Connected Member"
+            };
 
-        setIsAddModalOpen(false);
-        setInlineAddingToId(null);
-        setSelectedUserId("");
-        setNewNodeRelation("");
-    };
-
-    const handleDeleteNode = (id: string) => {
-        setNodes(prev => {
-            const next = { ...prev };
-            const node = next[id];
-            if (!node) return prev;
-            if (node.parentId && next[node.parentId]) {
-                next[node.parentId] = {
-                    ...next[node.parentId],
-                    children: next[node.parentId].children.filter(cid => cid !== id)
-                };
+        createMutation.mutate(payload, {
+            onSuccess: () => {
+                setIsAddModalOpen(false);
+                setInlineAddingToId(null);
+                setSelectedUserId("");
+                setNewNodeRelation("");
             }
-            delete next[id];
-            return next;
         });
     };
 
+    const handleDeleteNode = (id: string) => {
+        deleteMutation.mutate(id);
+    };
+
     const handleUpdateNode = (id: string, name: string, role: string, relation: string, userId: string) => {
-        setNodes(prev => ({
-            ...prev,
-            [id]: { ...prev[id], name, role, relation, userId }
-        }));
+        updateMutation.mutate({
+            id,
+            user_id: userId,
+            relationship_type: relation
+        });
     };
 
     return (
         <div className="w-full mx-auto space-y-4 animate-in fade-in duration-500 pb-10">
             {/* ── Header Area ── */}
+            {idLoading && (
+                <div className="flex items-center justify-center p-10">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+            )}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-4">
                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto text-sm">
                     <div className="relative flex-1 sm:flex-initial">

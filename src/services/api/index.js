@@ -732,3 +732,25 @@ export const listCity = (params) => {
   return axios({ method: "GET", url, params });
 };
 // end region
+// region Hierarchy
+// ===================== Hierarchy =====================
+export const listHierarchy = (params) => {
+  const url = `hierarchy`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createHierarchy = (data) => {
+  const url = `hierarchy`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateHierarchy = ({ id, ...data }) => {
+  const url = `hierarchy/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteHierarchy = (id) => {
+  const url = `hierarchy/${id}`;
+  return axios({ method: "DELETE", url });
+};
+// end region

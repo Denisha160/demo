@@ -38,18 +38,18 @@ const QuotationPage = () => {
         <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in  ">
             {/* Navigation & Header */}
             <div className="sticky top-0 z-30 border-b border-border mb-6">
-                <div className=" py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className=" py-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => navigate(-1)}
-                            className="h-9 w-9 rounded-full hover:bg-muted"
+                            className="h-8 w-8 rounded-sm"
                         >
-                            <ArrowLeft className="h-5 w-5" />
+                            <ArrowLeft className="h-4 w-4" />
                         </Button>
                         <div>
-                            <h1 className="text-xl font-bold tracking-tight">
+                            <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
                                 {quotationId ? "Edit Quotation" : "Create New Quotation"}
                             </h1>
                             <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
@@ -63,7 +63,6 @@ const QuotationPage = () => {
                             variant="outline"
                             size="sm"
                             onClick={handleCancel}
-                            className="h-10 font-bold px-5"
                             disabled={isSubmitting}
                         >
                             Cancel
@@ -72,7 +71,6 @@ const QuotationPage = () => {
                             form="quotation-form"
                             type="submit"
                             size="sm"
-                            className="h-10 font-bold px-6 shadow-md shadow-primary/20"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? (

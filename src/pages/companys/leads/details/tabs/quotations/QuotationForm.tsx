@@ -273,33 +273,12 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
 
     return (
         <div className="flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Header Section */}
-            <div className="flex items-center justify-between sticky top-0 z-20">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={onCancel} className="h-9 w-9 rounded-full hover:bg-muted">
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
 
-                </div>
-                <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" onClick={onCancel} className="h-9 font-bold px-5" disabled={isSubmitting}>
-                        Cancel
-                    </Button>
-                    <Button size="sm" onClick={form.handleSubmit(onSubmit)} className="h-9 font-bold px-6 shadow-md shadow-primary/20" disabled={isSubmitting}>
-                        {isSubmitting ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Save className="mr-2 h-4 w-4" />
-                        )}
-                        {quotationData ? 'Update Quotation' : 'Save Quotation'}
-                    </Button>
-                </div>
-            </div>
 
             {/* Scrollable Form Content */}
             <div className="flex-1 ">
                 <Form {...form}>
-                    <form className="max-w-6xl mx-auto">
+                    <form id="quotation-form" onSubmit={form.handleSubmit(onSubmit)} className="max-w-full mx-auto">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pb-20">
 
                             {/* LEFT COLUMN: Essential Details & Customer */}
@@ -309,7 +288,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FileText className="h-4 w-4 text-primary" />
                                         <h3 className="text-sm font-bold uppercase tracking-wider">Quotation Basics</h3>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <FormField
                                             control={form.control}
@@ -464,7 +443,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         )}
                                     />
                                 </div>
-                                
+
                                 <div className="space-y-6 pt-4">
                                     <div className="flex items-center gap-2 pb-2 border-b border-border/20">
                                         <Phone className="h-4 w-4 text-primary" />

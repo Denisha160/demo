@@ -64,6 +64,7 @@ import RemindersPage from "./pages/companys/leads/reminders/RemindersPage";
 import FollowUpsPage from "./pages/companys/leads/followups/FollowUps";
 import SalesPage from "./pages/companys/sales/SalesPage";
 import SalesMemberDetailPage from "./pages/companys/sales/SalesMemberDetailPage";
+import QuotationPage from "./pages/companys/leads/details/tabs/quotations/QuotationPage";
 
 const queryClient = new QueryClient();
 
@@ -344,6 +345,8 @@ const App = () => (
           <Route path="kits/edit/:id" element={<KitFormPage />} />
           <Route path="leads" element={<Leads />} />
           <Route path="leads/:id" element={<LeadDetailsPage />} />
+          <Route path="leads/:id/quotations/new" element={<QuotationPage />} />
+          <Route path="leads/:id/quotations/:quotationId/edit" element={<QuotationPage />} />
           <Route path="leads/import" element={<ImportPage />} />
           <Route path="salesmen" element={<Salesmen />} />
           <Route path="salesmen/:id" element={<SalesmanDetail />} />

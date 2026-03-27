@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
@@ -129,10 +130,8 @@ const calculateGrandTotal = (quotation: QuotationFormData) => {
 const QuotationsTab = () => {
   const [quotations, setQuotations] = useState<Quotation[]>(initialQuotations);
   const [search, setSearch] = useState("");
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(
-    null,
-  );
+  const { companyId, id } = useParams();
+  const navigate = useNavigate();
   const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(
     null,
   );
@@ -147,13 +146,11 @@ const QuotationsTab = () => {
   });
 
   const handleCreate = () => {
-    setEditingQuotation(null);
-    setIsFormOpen(true);
+    navigate(`/${companyId}/leads/${id}/quotations/new`);
   };
 
   const handleEdit = (quotation: Quotation) => {
-    setEditingQuotation(quotation);
-    setIsFormOpen(true);
+    navigate(`/${companyId}/leads/${id}/quotations/${quotation.id}/edit`);
   };
 
   const handleDelete = (id: string) => {
@@ -162,29 +159,8 @@ const QuotationsTab = () => {
   };
 
   const handleSaveQuotation = (formData: QuotationFormData) => {
-    if (editingQuotation) {
-      setQuotations((prev) =>
-        prev.map((quotation) =>
-          quotation.id === editingQuotation.id
-            ? {
-                ...quotation,
-                ...formData,
-                id: quotation.id,
-                created_at: quotation.created_at
-              } as Quotation
-            : quotation,
-        ),
-      );
-    } else {
-      const newQuotation: Quotation = {
-        ...formData,
-        id: Math.random().toString(36).slice(2, 11),
-        created_at: new Date().toISOString(),
-      } as Quotation;
-      setQuotations((prev) => [newQuotation, ...prev]);
-    }
-
-    setIsFormOpen(false);
+    // This is now handled in the standalone page, but keeping the logic for reference if needed
+    // or just remove it if it's no longer called here.
   };
 
   const getStatusVariant = (status: Quotation["status"]) => {
@@ -288,15 +264,7 @@ const QuotationsTab = () => {
     },
   ];
 
-  if (isFormOpen) {
-    return (
-      <QuotationForm
-        quotationData={editingQuotation}
-        onSave={handleSaveQuotation}
-        onCancel={() => setIsFormOpen(false)}
-      />
-    );
-  }
+  // Form state check removed since it's a standalone page
 
   return (
     <div className="w-full animate-fade-in rounded-lg border border-border/50 bg-card p-4 shadow-sm">

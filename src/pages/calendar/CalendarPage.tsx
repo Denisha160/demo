@@ -15,30 +15,67 @@ const eventsByDate: Record<string, Event[]> = {
     { id: "e1", title: "Team Standup", time: "9:00 AM", type: "meeting" },
   ],
   "2026-02-10": [
-    { id: "e2", title: "Call with Acme Corp", time: "10:30 AM", type: "call", contact: "John Smith" },
+    {
+      id: "e2",
+      title: "Call with Acme Corp",
+      time: "10:30 AM",
+      type: "call",
+      contact: "John Smith",
+    },
     { id: "e3", title: "Proposal deadline", time: "5:00 PM", type: "deadline" },
   ],
   "2026-02-11": [
-    { id: "e4", title: "Demo for CloudBase", time: "2:00 PM", type: "meeting", contact: "Alex Kim" },
+    {
+      id: "e4",
+      title: "Demo for CloudBase",
+      time: "2:00 PM",
+      type: "meeting",
+      contact: "Alex Kim",
+    },
   ],
   "2026-02-12": [
-    { id: "e5", title: "Follow up TechStart", time: "11:00 AM", type: "followup", contact: "Sarah Lee" },
+    {
+      id: "e5",
+      title: "Follow up TechStart",
+      time: "11:00 AM",
+      type: "followup",
+      contact: "Sarah Lee",
+    },
     { id: "e6", title: "Sales review", time: "3:00 PM", type: "meeting" },
   ],
   "2026-02-13": [
-    { id: "e7", title: "Client lunch", time: "12:30 PM", type: "meeting", contact: "Mike Chen" },
+    {
+      id: "e7",
+      title: "Client lunch",
+      time: "12:30 PM",
+      type: "meeting",
+      contact: "Mike Chen",
+    },
     { id: "e8", title: "Q1 planning", time: "4:00 PM", type: "meeting" },
     { id: "e9", title: "Invoice due", time: "6:00 PM", type: "deadline" },
   ],
   "2026-02-16": [
-    { id: "e10", title: "Board presentation", time: "10:00 AM", type: "meeting" },
+    {
+      id: "e10",
+      title: "Board presentation",
+      time: "10:00 AM",
+      type: "meeting",
+    },
   ],
   "2026-02-18": [
-    { id: "e11", title: "New hire onboarding", time: "9:00 AM", type: "meeting" },
+    {
+      id: "e11",
+      title: "New hire onboarding",
+      time: "9:00 AM",
+      type: "meeting",
+    },
   ],
 };
 
-const typeVariant: Record<string, "info" | "warning" | "success" | "destructive"> = {
+const typeVariant: Record<
+  string,
+  "info" | "warning" | "success" | "destructive"
+> = {
   meeting: "info",
   call: "success",
   followup: "warning",
@@ -69,10 +106,15 @@ const CalendarPage = () => {
     return `${year}-${m}-${d}`;
   };
 
-  const monthName = currentDate.toLocaleString("default", { month: "long", year: "numeric" });
+  const monthName = currentDate.toLocaleString("default", {
+    month: "long",
+    year: "numeric",
+  });
 
   const [selectedDay, setSelectedDay] = useState<number | null>(13);
-  const selectedEvents = selectedDay ? eventsByDate[getDateKey(selectedDay)] || [] : [];
+  const selectedEvents = selectedDay
+    ? eventsByDate[getDateKey(selectedDay)] || []
+    : [];
 
   return (
     <div className="space-y-2 animate-fade-in">
@@ -80,10 +122,16 @@ const CalendarPage = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-foreground">{monthName}</h2>
         <div className="flex items-center gap-1">
-          <button onClick={prevMonth} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={prevMonth}
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+          >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button onClick={nextMonth} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={nextMonth}
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+          >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -94,12 +142,20 @@ const CalendarPage = () => {
         <div className="lg:col-span-2 shadow-card border border-border bg-card rounded-sm p-2">
           <div className="grid grid-cols-7 gap-px">
             {daysOfWeek.map((d) => (
-              <div key={d} className="text-center text-sm text-muted-foreground font-medium py-1">{d}</div>
+              <div
+                key={d}
+                className="text-center text-sm text-muted-foreground font-medium py-1"
+              >
+                {d}
+              </div>
             ))}
             {days.map((day, i) => {
               const dateKey = day ? getDateKey(day) : "";
               const events = day ? eventsByDate[dateKey] || [] : [];
-              const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+              const isToday =
+                day === today.getDate() &&
+                month === today.getMonth() &&
+                year === today.getFullYear();
               const isSelected = day === selectedDay;
               return (
                 <button
@@ -114,13 +170,24 @@ const CalendarPage = () => {
                 >
                   {day && (
                     <>
-                      <span className={`text-sm font-medium ${isToday ? "text-primary-foreground" : "text-foreground"}`}>{day}</span>
+                      <span
+                        className={`text-sm font-medium ${isToday ? "text-primary-foreground" : "text-foreground"}`}
+                      >
+                        {day}
+                      </span>
                       {events.length > 0 && (
                         <div className="flex gap-0.5 mt-0.5">
                           {events.slice(0, 2).map((e) => (
-                            <span key={e.id} className="h-1 w-1 rounded-full bg-primary" />
+                            <span
+                              key={e.id}
+                              className="h-1 w-1 rounded-full bg-primary"
+                            />
                           ))}
-                          {events.length > 2 && <span className="text-[9px] text-muted-foreground">+{events.length - 2}</span>}
+                          {events.length > 2 && (
+                            <span className="text-[9px] text-muted-foreground">
+                              +{events.length - 2}
+                            </span>
+                          )}
                         </div>
                       )}
                     </>
@@ -141,14 +208,28 @@ const CalendarPage = () => {
           ) : (
             <div className="space-y-1.5">
               {selectedEvents.map((ev) => (
-                <div key={ev.id} className="p-2 border border-border rounded-sm hover:bg-accent/50 transition-colors">
+                <div
+                  key={ev.id}
+                  className="p-2 border border-border rounded-sm hover:bg-accent/50 transition-colors"
+                >
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-foreground">{ev.title}</p>
-                    <StatusBadge status={ev.type} variant={typeVariant[ev.type]} />
+                    <p className="text-sm font-medium text-foreground">
+                      {ev.title}
+                    </p>
+                    <StatusBadge
+                      status={ev.type}
+                      variant={typeVariant[ev.type]}
+                    />
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-sm text-muted-foreground">{ev.time}</span>
-                    {ev.contact && <span className="text-sm text-muted-foreground">• {ev.contact}</span>}
+                    <span className="text-sm text-muted-foreground">
+                      {ev.time}
+                    </span>
+                    {ev.contact && (
+                      <span className="text-sm text-muted-foreground">
+                        • {ev.contact}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

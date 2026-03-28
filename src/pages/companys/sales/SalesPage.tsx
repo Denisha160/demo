@@ -46,9 +46,6 @@ const SalesPage = () => {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-sm bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-xs uppercase">
-            {getInitials(item.name || "UN")}
-          </div>
           <div className="flex flex-col min-w-0">
             <span className="font-semibold text-foreground truncate">
               {item.name}

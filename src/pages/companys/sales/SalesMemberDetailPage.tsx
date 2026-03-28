@@ -4,14 +4,17 @@ import {
   MapPin,
   Clock,
   ClipboardList,
-  User,
+  PersonStanding,
   Phone,
   Mail,
   Briefcase,
   AlertCircle,
   Activity,
 } from "lucide-react";
-import { useUser } from "@/hooks/useUsers";
+import { useUser, useUserHierarchy } from "@/hooks/useUsers";
+import { useState, useMemo, useEffect } from "react";
+import { Combobox } from "@/components/ui/combobox";
+import { User } from "@/types/user";
 import UserVisitsTab from "./tabs/UserVisitsTab";
 import UserFollowUpsTab from "./tabs/UserFollowUpsTab";
 import UserTasksTab from "./tabs/UserTasksTab";
@@ -42,17 +45,58 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "activity", label: "Log", icon: Activity },
 ];
 
+interface HierarchyNode {
+  id: string;
+  name: string;
+  children?: HierarchyNode[];
+}
+
+const flattenHierarchy = (
+  node: HierarchyNode,
+  result: { value: string; label: string }[] = [],
+) => {
+  if (!node) return result;
+  result.push({ value: node.id, label: node.name });
+  if (node.children && Array.isArray(node.children)) {
+    node.children.forEach((child: HierarchyNode) =>
+      flattenHierarchy(child, result),
+    );
+  }
+  return result;
+};
+
 const SalesMemberDetailPage = () => {
   const { companyId, userId, tab } = useParams();
   const navigate = useNavigate();
   const activeTabClass = tab || "visits";
 
   const { data: userData, isLoading: userLoading } = useUser(userId || "");
-  const user: any =
+  const { data: hierarchyData, isLoading: hierarchyLoading } = useUserHierarchy(
+    userId || "",
+  );
+
+  const [selectedUserId, setSelectedUserId] = useState<string>(userId || "");
+
+  useEffect(() => {
+    if (userId) {
+      setSelectedUserId(userId);
+    }
+  }, [userId]);
+
+  const user =
     (userData as any)?.data?.user ||
     (userData as any)?.user ||
     (userData as any)?.data ||
-    userData;
+    (userData as User);
+
+  const hierarchyOptions = useMemo(() => {
+    if (!hierarchyData) return [];
+    return flattenHierarchy(hierarchyData);
+  }, [hierarchyData]);
+
+  const selectedUserName = useMemo(() => {
+    return hierarchyOptions.find((opt) => opt.value === selectedUserId)?.label;
+  }, [hierarchyOptions, selectedUserId]);
 
   const colorIdx = (user?.name || "").charCodeAt(0) % GRADIENTS.length;
 
@@ -83,19 +127,41 @@ const SalesMemberDetailPage = () => {
 
   return (
     <div className="w-full space-y-4 animate-fade-in pb-8">
-      <div className="flex items-center gap-2 shrink-0">
-        <button
-          onClick={() => navigate(`/${companyId}/sales`)}
-          className="p-1.5 hover:bg-muted rounded-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div>
-          <h1 className="text-lg font-bold text-foreground">Member Activity</h1>
-          <p className="text-xs text-muted-foreground">
-            Overall activity layout across all assigned leads for {user.name}
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate(`/${companyId}/sales`)}
+            className="p-1.5 hover:bg-muted rounded-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">
+              Member Activity
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Overall activity layout for{" "}
+              <span className="font-medium text-foreground">
+                {selectedUserName || user.name}
+              </span>
+            </p>
+          </div>
         </div>
+
+        {hierarchyOptions.length > 1 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              Viewing:
+            </span>
+            <Combobox
+              options={hierarchyOptions}
+              value={selectedUserId}
+              onValueChange={setSelectedUserId}
+              placeholder="Select user..."
+              className="w-[200px]"
+            />
+          </div>
+        )}
       </div>
 
       <div className="bg-card border border-border rounded-sm p-3 shadow-sm">
@@ -139,7 +205,7 @@ const SalesMemberDetailPage = () => {
               )}
               {user.employee_code && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4 shrink-0 text-primary/60" />
+                  <PersonStanding className="h-4 w-4 shrink-0 text-primary/60" />
                   <span>ID: {user.employee_code}</span>
                 </div>
               )}
@@ -174,16 +240,16 @@ const SalesMemberDetailPage = () => {
 
         {/* Tab Content */}
         {activeTabClass === "visits" && (
-          <UserVisitsTab userId={userId as string} />
+          <UserVisitsTab userId={selectedUserId} />
         )}
         {activeTabClass === "followups" && (
-          <UserFollowUpsTab userId={userId as string} />
+          <UserFollowUpsTab userId={selectedUserId} />
         )}
         {activeTabClass === "tasks" && (
-          <UserTasksTab userId={userId as string} />
+          <UserTasksTab userId={selectedUserId} />
         )}
         {activeTabClass === "activity" && (
-          <UserActivitiesTab userId={userId as string} />
+          <UserActivitiesTab userId={selectedUserId} />
         )}
       </div>
     </div>

@@ -48,6 +48,12 @@ const quotationStatuses = [
     "CANCELLED",
 ] as const;
 
+const approvalStatuses = [
+    "PENDING",
+    "APPROVED",
+    "REJECTED",
+] as const;
+
 const discountTypes = ["PERCENTAGE", "FIXED"] as const;
 
 const paymentTermsOptions = [
@@ -104,7 +110,6 @@ export const quotationSchema = z.object({
     quotation_number: z.string().min(1, "Quotation number is required"),
     lead_id: z.string().min(1, "Lead is required"),
     quotation_date: z.string().min(1, "Quotation date is required"),
-    valid_until: optionalText,
     status: z.enum(quotationStatuses),
 
     customer_name: z.string().min(1, "Customer name is required"),
@@ -139,16 +144,14 @@ export const quotationSchema = z.object({
 
     notes: optionalText,
     requires_approval: z.boolean().default(false),
-    approval_status: optionalText,
+    approval_status: z.enum(approvalStatuses).nullable().optional(),
     approval_remarks: optionalText,
-}).refine((data) => {
-    if (data.valid_until && data.quotation_date) {
-        return new Date(data.valid_until) >= new Date(data.quotation_date);
-    }
-    return true;
-}, {
-    message: "Valid until date must be after or equal to quotation date",
-    path: ["valid_until"],
+    approved_by: optionalText,
+    approved_at: optionalText,
+    accepted_at: optionalText,
+    accepted_by: optionalText,
+    rejected_reason: optionalText,
+    cancelled_reason: optionalText,
 });
 
 export type QuotationFormData = z.infer<typeof quotationSchema>;
@@ -158,7 +161,7 @@ export type Quotation = QuotationFormData & {
     created_at: string;
 };
 
-const quotationFormLabelBase = "text-xs font-bold";
+const quotationFormLabelBase = "text-[10px] font-bold uppercase tracking-widest text-muted-foreground";
 
 type QuotationFormLabelProps = ComponentProps<typeof FormLabel> & {
     required?: boolean;
@@ -202,7 +205,6 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         defaultValues: quotationData || {
             quotation_number: createQuotationNumber(),
             quotation_date: formatDate(new Date()),
-            valid_until: "",
             status: "DRAFT",
             lead_id: "",
             subtotal: 0,
@@ -222,6 +224,13 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
             payment_terms_custom: "",
             delivery_terms_custom: "",
             approval_remarks: "",
+            approval_status: null,
+            approved_by: "",
+            approved_at: "",
+            accepted_at: "",
+            accepted_by: "",
+            rejected_reason: "",
+            cancelled_reason: "",
         },
     });
 
@@ -257,16 +266,60 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         };
     }, [watchAll.subtotal, watchAll.discount_type, watchAll.discount_value, watchAll.tax_details, watchAll.additional_charges, watchAll.delivery_charges]);
 
+    const uiStatusLabel = useMemo(() => {
+        const { status, approval_status, requires_approval } = watchAll;
+        if (status === "DRAFT") {
+            if (requires_approval) {
+                if (approval_status === "PENDING") return "Pending Approval";
+                if (approval_status === "REJECTED") return "Approval Rejected";
+                if (approval_status === "APPROVED") return "Approved (Ready to Send)";
+            }
+            return "Draft";
+        }
+        if (status === "SENT") return "Sent";
+        if (status === "VIEWED") return "Viewed";
+        if (status === "ACCEPTED") return "Accepted";
+        if (status === "REJECTED") return "Rejected";
+        if (status === "EXPIRED") return "Expired";
+        if (status === "REVISED") return "Revised";
+        if (status === "CANCELLED") return "Cancelled";
+        return status;
+    }, [watchAll]);
+
+    // Handle initial approval status logic
+    useEffect(() => {
+        const subscription = form.watch((value, { name }) => {
+            if (name === "requires_approval") {
+                if (value.requires_approval) {
+                    if (!value.approval_status) {
+                        form.setValue("approval_status", "PENDING");
+                    }
+                } else {
+                    form.setValue("approval_status", null);
+                }
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [form]);
+
     useEffect(() => {
         form.setValue("total_tax_amount", totals.taxTotal);
         form.setValue("total_additional_charges", totals.chargesTotal);
     }, [totals.taxTotal, totals.chargesTotal, form]);
 
     const onSubmit = (data: QuotationFormData) => {
+        // Business Rule: Block Send
+        if (data.status === "SENT" && data.requires_approval && data.approval_status !== "APPROVED") {
+            form.setError("status", {
+                type: "manual",
+                message: "Cannot send quotation until it is approved by a manager."
+            });
+            return;
+        }
+
         onSave({
             ...data,
             quotation_date: formatDateForAPI(data.quotation_date) || data.quotation_date,
-            valid_until: formatDateForAPI(data.valid_until) || data.valid_until,
             expected_delivery_date: formatDateForAPI(data.expected_delivery_date) || data.expected_delivery_date,
         }, form.setError);
     };
@@ -280,10 +333,10 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <FileText className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-xs font-bold uppercase tracking-wider">Quotation Basics</h3>
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Quotation Basics</h3>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 <FormField
                                     control={form.control}
                                     name="quotation_number"
@@ -291,7 +344,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel required>Quotation #</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="QT-2026-1024" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="QT-2026-1024" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                             <FormMessage className="text-[10px]" />
                                         </FormItem>
@@ -302,10 +355,20 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     name="status"
                                     render={({ field }) => (
                                         <FormItem className="space-y-1">
-                                            <QuotationFormLabel>Status</QuotationFormLabel>
+                                            <div className="flex justify-between items-center">
+                                                <QuotationFormLabel>Status</QuotationFormLabel>
+                                                <Badge variant="outline" className={cn(
+                                                    "text-[9px] h-4 px-1.5 uppercase font-black",
+                                                    uiStatusLabel.includes("Rejected") || uiStatusLabel === "Cancelled" ? "border-destructive text-destructive" :
+                                                    uiStatusLabel.includes("Approved") || uiStatusLabel === "Accepted" ? "border-primary text-primary" :
+                                                    uiStatusLabel === "Sent" ? "border-blue-500 text-blue-500" : ""
+                                                )}>
+                                                    {uiStatusLabel}
+                                                </Badge>
+                                            </div>
                                             <Select onValueChange={field.onChange} value={field.value}>
                                                 <FormControl>
-                                                    <SelectTrigger className="h-9 text-sm font-medium border-border/60">
+                                                    <SelectTrigger className="h-8 text-xs font-medium border-border/60 rounded-sm">
                                                         <SelectValue placeholder="Select status" />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -319,25 +382,14 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 <FormField
                                     control={form.control}
                                     name="quotation_date"
                                     render={({ field }) => (
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel required>Date</QuotationFormLabel>
-                                            <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-9 rounded-md border-border/60" />
-                                            <FormMessage className="text-[10px]" />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="valid_until"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <QuotationFormLabel>Valid Until</QuotationFormLabel>
-                                            <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-9 rounded-md border-border/60" />
+                                            <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-8 rounded-sm text-xs border-border/60" />
                                             <FormMessage className="text-[10px]" />
                                         </FormItem>
                                     )}
@@ -348,7 +400,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         <div className="space-y-4 pt-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <Info className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-xs font-bold uppercase tracking-wider">Customer Information</h3>
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Customer Information</h3>
                             </div>
 
                             <FormField
@@ -358,14 +410,14 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     <FormItem className="space-y-1">
                                         <QuotationFormLabel required>Customer Name</QuotationFormLabel>
                                         <FormControl>
-                                            <Input placeholder="Enter customer name" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                            <Input placeholder="Enter customer name" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
                                 )}
                             />
 
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 <FormField
                                     control={form.control}
                                     name="customer_email"
@@ -373,7 +425,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>Email</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="email@example.com" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="email@example.com" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                             <FormMessage className="text-[10px]" />
                                         </FormItem>
@@ -386,7 +438,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>Phone</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="+1..." className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="+1..." className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                             <FormMessage className="text-[10px]" />
                                         </FormItem>
@@ -394,7 +446,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 <FormField
                                     control={form.control}
                                     name="customer_gst"
@@ -402,7 +454,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>GST Number</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="Optional" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="Optional" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                             <FormMessage className="text-[10px]" />
                                         </FormItem>
@@ -415,7 +467,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>PAN Number</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="Optional" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="Optional" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                             <FormMessage className="text-[10px]" />
                                         </FormItem>
@@ -430,20 +482,52 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     <FormItem className="space-y-1">
                                         <QuotationFormLabel>Full Address</QuotationFormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="Company billing address..." className="min-h-[60px] text-sm resize-none" {...field} />
+                                            <Textarea placeholder="Company billing address..." className="min-h-[60px] text-xs resize-none rounded-sm border-border/60" {...field} />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>
                                 )}
                             />
+
+                            {watchAll.status === "REJECTED" && (
+                                <FormField
+                                    control={form.control}
+                                    name="rejected_reason"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1 animate-in slide-in-from-top-2">
+                                            <QuotationFormLabel required>Customer Rejection Reason</QuotationFormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="Why was this rejected by the customer?" className="min-h-[60px] text-xs border-destructive/30 rounded-sm" {...field} />
+                                            </FormControl>
+                                            <FormMessage className="text-[10px]" />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
+
+                            {watchAll.status === "CANCELLED" && (
+                                <FormField
+                                    control={form.control}
+                                    name="cancelled_reason"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1 animate-in slide-in-from-top-2">
+                                            <QuotationFormLabel required>Cancellation Reason</QuotationFormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="Reason for cancellation..." className="min-h-[60px] text-xs border-orange-300 rounded-sm" {...field} />
+                                            </FormControl>
+                                            <FormMessage className="text-[10px]" />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
                         </div>
 
                         <div className="space-y-4 pt-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <Phone className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-xs font-bold uppercase tracking-wider">Contact Person</h3>
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Contact Person</h3>
                             </div>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 <FormField
                                     control={form.control}
                                     name="contact_person_name"
@@ -451,7 +535,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>Contact Name</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="Name" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="Name" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -463,13 +547,13 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>Designation</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="Designation" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="Designation" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            <div className="grid grid-cols-2 gap-2">
                                 <FormField
                                     control={form.control}
                                     name="contact_person_email"
@@ -477,7 +561,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>Contact Email</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="Email" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="Email" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -489,7 +573,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>Contact Phone</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="Phone" className="h-9 text-sm font-medium border-border/60" {...field} />
+                                                <Input placeholder="Phone" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -503,7 +587,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <DollarSign className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-xs font-bold uppercase tracking-wider">Pricing & Summary</h3>
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Pricing & Summary</h3>
                             </div>
 
                             <Card className="bg-muted/10 border-border/40 overflow-hidden shadow-none">
@@ -516,14 +600,14 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                 <QuotationFormLabel required>Subtotal Amount</QuotationFormLabel>
                                                 <div className="relative">
                                                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                                                    <Input type="number" step="0.01" className="pl-9 h-11 text-lg font-black tracking-tight" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
+                                                    <Input type="number" step="0.01" className="pl-9 h-10 text-lg font-black tracking-tight rounded-sm" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
                                                 </div>
                                                 <FormMessage className="text-[10px]" />
                                             </FormItem>
                                         )}
                                     />
 
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                                    <div className="grid grid-cols-2 gap-2">
                                         <FormField
                                             control={form.control}
                                             name="discount_type"
@@ -532,7 +616,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                     <QuotationFormLabel>Discount Type</QuotationFormLabel>
                                                     <Select onValueChange={field.onChange} value={field.value}>
                                                         <FormControl>
-                                                            <SelectTrigger className="h-9 text-sm font-medium border-border/60 bg-background">
+                                                            <SelectTrigger className="h-8 text-xs font-medium border-border/60 bg-background rounded-sm">
                                                                 <SelectValue placeholder="No discount" />
                                                             </SelectTrigger>
                                                         </FormControl>
@@ -552,7 +636,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                 <FormItem className="space-y-1">
                                                     <QuotationFormLabel>Discount Value</QuotationFormLabel>
                                                     <FormControl>
-                                                        <Input type="number" step="0.01" placeholder="0.00" className="h-9 text-sm font-medium border-border/60 bg-background" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
+                                                        <Input type="number" step="0.01" placeholder="0.00" className="h-8 text-xs font-medium border-border/60 bg-background rounded-sm" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
                                                     </FormControl>
                                                 </FormItem>
                                             )}
@@ -598,8 +682,8 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                 <div className="space-y-2">
                                     {taxFields.map((field, index) => (
                                         <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
-                                            <Input placeholder="Tax Name" className="h-8 text-xs flex-1" {...form.register(`tax_details.${index}.key` as const)} />
-                                            <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px]" {...form.register(`tax_details.${index}.value` as const)} onChange={e => form.setValue(`tax_details.${index}.value`, Number(e.target.value))} />
+                                            <Input placeholder="Tax Name" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`tax_details.${index}.key` as const)} />
+                                            <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`tax_details.${index}.value` as const)} onChange={e => form.setValue(`tax_details.${index}.value`, Number(e.target.value))} />
                                             <Button type="button" variant="ghost" size="icon" onClick={() => removeTax(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
                                         </div>
                                     ))}
@@ -623,8 +707,8 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     </div>
                                     {chargeFields.map((field, index) => (
                                         <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
-                                            <Input placeholder="Description" className="h-8 text-xs flex-1" {...form.register(`additional_charges.${index}.key` as const)} />
-                                            <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px]" {...form.register(`additional_charges.${index}.value` as const)} onChange={e => form.setValue(`additional_charges.${index}.value`, Number(e.target.value))} />
+                                            <Input placeholder="Description" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`additional_charges.${index}.key` as const)} />
+                                            <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`additional_charges.${index}.value` as const)} onChange={e => form.setValue(`additional_charges.${index}.value`, Number(e.target.value))} />
                                             <Button type="button" variant="ghost" size="icon" onClick={() => removeCharge(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
                                         </div>
                                     ))}
@@ -635,10 +719,10 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         <div className="space-y-4 pt-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <Truck className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-xs font-bold uppercase tracking-wider">Terms & Logistics</h3>
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Terms & Logistics</h3>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-3">
                                     <FormField
                                         control={form.control}
@@ -648,7 +732,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                 <QuotationFormLabel>Payment Terms</QuotationFormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl>
-                                                        <SelectTrigger className="h-9 text-sm font-medium border-border/60">
+                                                        <SelectTrigger className="h-8 text-xs font-medium border-border/60 rounded-sm">
                                                             <SelectValue placeholder="Select terms" />
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -666,7 +750,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                             <FormItem className="space-y-1">
                                                 <QuotationFormLabel>Custom Payment Info</QuotationFormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="Additional details..." className="h-9 text-sm border-border/60" {...field} />
+                                                    <Input placeholder="Additional details..." className="h-8 text-xs border-border/60 rounded-sm" {...field} />
                                                 </FormControl>
                                             </FormItem>
                                         )}
@@ -681,7 +765,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                 <QuotationFormLabel>Delivery Terms</QuotationFormLabel>
                                                 <Select onValueChange={field.onChange} value={field.value}>
                                                     <FormControl>
-                                                        <SelectTrigger className="h-9 text-sm font-medium border-border/60">
+                                                        <SelectTrigger className="h-8 text-xs font-medium border-border/60 rounded-sm">
                                                             <SelectValue placeholder="Select terms" />
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -699,7 +783,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                             <FormItem className="space-y-1">
                                                 <QuotationFormLabel>Custom Delivery Info</QuotationFormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="Additional details..." className="h-9 text-sm border-border/60" {...field} />
+                                                    <Input placeholder="Additional details..." className="h-8 text-xs border-border/60 rounded-sm" {...field} />
                                                 </FormControl>
                                             </FormItem>
                                         )}
@@ -707,14 +791,14 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-2">
                                 <FormField
                                     control={form.control}
                                     name="expected_delivery_date"
                                     render={({ field }) => (
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>Expected Delivery</QuotationFormLabel>
-                                            <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-9 rounded-md border-border/60" />
+                                            <DatePicker value={field.value} onChange={(v) => field.onChange(v || '')} className="h-8 rounded-sm text-xs border-border/60" />
                                         </FormItem>
                                     )}
                                 />
@@ -725,7 +809,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                         <FormItem className="space-y-1">
                                             <QuotationFormLabel>Delivery Address</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="Same as customer?" className="h-9 text-sm border-border/60" {...field} />
+                                                <Input placeholder="Same as customer?" className="h-8 text-xs border-border/60 rounded-sm" {...field} />
                                             </FormControl>
                                         </FormItem>
                                     )}
@@ -736,10 +820,10 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         <div className="space-y-4 pt-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-xs font-bold uppercase tracking-wider">Internal & Approval</h3>
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Internal & Approval</h3>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                            <div className="grid grid-cols-2 gap-2 items-start">
                                 <FormField
                                     control={form.control}
                                     name="requires_approval"
@@ -756,20 +840,65 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     )}
                                 />
                                 {watchAll.requires_approval && (
-                                    <FormField
-                                        control={form.control}
-                                        name="approval_remarks"
-                                        render={({ field }) => (
-                                            <FormItem className="animate-in fade-in zoom-in-95 duration-200 space-y-1">
-                                                <QuotationFormLabel>Approval Remarks</QuotationFormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="Notes for approver..." className="h-9 text-sm border-border/60" {...field} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
+                                    <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                                        <FormField
+                                            control={form.control}
+                                            name="approval_status"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <QuotationFormLabel>Approval Status</QuotationFormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value || "PENDING"}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-8 text-[11px] font-bold border-border/60 rounded-sm">
+                                                                <SelectValue placeholder="Status" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {approvalStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="approval_remarks"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <QuotationFormLabel>Approval Remarks</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Notes for/from approver..." className="h-8 text-xs border-border/60 rounded-sm" {...field} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 )}
                             </div>
+
+                            {(watchAll.status === "ACCEPTED" || watchAll.approval_status === "APPROVED") && (
+                                <div className="grid grid-cols-2 gap-2 p-2 rounded-sm border border-primary/20 bg-primary/5 animate-in slide-in-from-bottom-2">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase text-primary/70">
+                                            {watchAll.status === "ACCEPTED" ? "Accepted By" : "Approved By"}
+                                        </p>
+                                        <p className="text-sm font-bold truncate">
+                                            {watchAll.status === "ACCEPTED" ? (watchAll.accepted_by || "System") : (watchAll.approved_by || "Pending")}
+                                        </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase text-primary/70">
+                                            {watchAll.status === "ACCEPTED" ? "Accepted At" : "Approved At"}
+                                        </p>
+                                        <p className="text-sm font-bold">
+                                            {watchAll.status === "ACCEPTED" 
+                                                ? (watchAll.accepted_at ? formatDate(new Date(watchAll.accepted_at)) : "-") 
+                                                : (watchAll.approved_at ? formatDate(new Date(watchAll.approved_at)) : "-")
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             <FormField
                                 control={form.control}
@@ -778,7 +907,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     <FormItem className="space-y-1">
                                         <QuotationFormLabel>Internal Notes</QuotationFormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="Private notes for team..." className="min-h-[60px] text-sm resize-none" {...field} />
+                                            <Textarea placeholder="Private notes for team..." className="min-h-[60px] text-xs resize-none rounded-sm border-border/60" {...field} />
                                         </FormControl>
                                     </FormItem>
                                 )}

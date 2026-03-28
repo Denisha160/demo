@@ -8,6 +8,10 @@ import { useAllVisits } from "@/hooks/useLeadVisits";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
 import { useLeads } from "@/hooks/useLeads";
+import { useCurrentUser } from "@/hooks/useAuth";
+import { useUsers } from "@/hooks/useUsers";
+import { Button } from "@/components/ui/button";
+import { XCircle } from "lucide-react";
 
 const STATUS_OPTIONS = [
   { value: "COMPLETED", label: "Completed" },
@@ -58,6 +62,7 @@ const VisitsPage = () => {
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = parseInt(searchParams.get("limit") || "15", 10);
 
+  const assignedTo = searchParams.get("assigned_to") || "";
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || "",
   );
@@ -87,18 +92,41 @@ const VisitsPage = () => {
 
   const setStatus = (v: string) => updateParam("status", v);
   const setLeadId = (v: string) => updateParam("lead_id", v);
+  const setAssignedTo = (v: string) => updateParam("assigned_to", v);
   const setPage = (p: number) => updateParam("page", p);
   const setPageSize = (s: number) => updateParam("limit", s);
 
-  const { data: leadsData = [] } = useLeads({ limit: 100 });
+  const clearFilters = () => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams();
+        const limit = prev.get("limit");
+        if (limit) next.set("limit", limit);
+        next.set("page", "1");
+        return next;
+      },
+      { replace: true },
+    );
+    setSearchTerm("");
+  };
+
+  const { data: usersResponse } = useUsers({ limit: 100 });
+  const users = (usersResponse as any)?.items || (usersResponse as any) || [];
+  const userOptions = users.map((user: any) => ({
+    value: user.id,
+    label: user.name,
+  }));
+  const currentUser = useCurrentUser();
+  const isRoot = !!currentUser?.is_root_user;
+
+  const { data: leadsDataRaw = [] } = useLeads({ limit: 100 });
   const leadOptions = useMemo(() => {
-    return leadsData.map((l: any) => ({
+    const leadsData = (leadsDataRaw as any)?.items || leadsDataRaw || [];
+    return (leadsData as any[]).map((l: any) => ({
       value: l.id,
       label: l.name || l.title || "Unknown Lead",
     }));
-  }, [leadsData]);
-
-  console.log(leadsData);
+  }, [leadsDataRaw]);
 
   const filters = useMemo(() => {
     const f: any = {
@@ -108,8 +136,9 @@ const VisitsPage = () => {
     if (debouncedSearch) f.search = debouncedSearch;
     if (status) f.status = status;
     if (leadId) f.lead_id = leadId;
+    if (assignedTo) f.assigned_to = assignedTo;
     return f;
-  }, [debouncedSearch, status, leadId, page, pageSize]);
+  }, [debouncedSearch, status, leadId, assignedTo, page, pageSize]);
 
   const { data: visits = [], isLoading } = useAllVisits(filters);
 
@@ -224,6 +253,15 @@ const VisitsPage = () => {
         </div>
       ),
     },
+    {
+      key: "created_by_name",
+      header: "Created By",
+      render: (item) => (
+        <span className="text-sm font-medium text-foreground">
+          {item.created_by_name || "-"}
+        </span>
+      ),
+    },
   ];
 
   const navigate = useNavigate();
@@ -260,6 +298,28 @@ const VisitsPage = () => {
               clearable
             />
           </div>
+          {isRoot && (
+            <div className="w-[180px]">
+              <Combobox
+                options={userOptions}
+                value={assignedTo}
+                onValueChange={setAssignedTo}
+                placeholder="All Users"
+                clearable
+              />
+            </div>
+          )}
+          {(searchTerm || status || leadId || assignedTo) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="h-9 gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <XCircle className="h-4 w-4" />
+              Clear all
+            </Button>
+          )}
         </div>
       </div>
 

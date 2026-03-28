@@ -27,9 +27,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useUsers } from "@/hooks/useUsers";
-
-const getTodayDate = () => new Date().toISOString().split("T")[0];
-const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
+import { formatDate } from "@/utils/date";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(255, "Title is too long"),
@@ -50,34 +48,34 @@ export interface Task extends TaskFormData {
   assigned_to_name?: string;
 }
 
+interface TasksTabProps {
+  leadId: string;
+  defaultAssignedTo?: { id: string; name: string };
+}
+
 interface TaskModalProps {
   open: boolean;
   onClose: () => void;
   taskData?: Task | null;
+  defaultAssignedTo?: { id: string; name: string };
   onSave: (data: TaskFormData, setError: UseFormSetError<TaskFormData>) => void;
   isSubmitting?: boolean;
 }
 
 const getDateOnly = (value?: string | null) => {
-  if (!value) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "";
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return formatDate(value);
 };
 
 const TaskModal = ({
   open,
   onClose,
   taskData,
+  defaultAssignedTo,
   onSave,
   isSubmitting,
 }: TaskModalProps) => {
   const { data: usersResponse } = useUsers({ limit: 100 });
-  const users = usersResponse?.items || usersResponse || [];
+  const users = (usersResponse as any)?.items || usersResponse || [];
   const userOptions = users.map((user: { id: string; name: string }) => ({
     value: user.id,
     label: user.name,
@@ -116,14 +114,14 @@ const TaskModal = ({
           description: "",
           status: "",
           priority: "",
-          assigned_to: "",
+          assigned_to: defaultAssignedTo?.id || "",
           due_date: "",
           set_reminder: false,
           reminder_time: "",
         });
       }
     }
-  }, [open, taskData, form]);
+  }, [open, taskData, form, defaultAssignedTo]);
 
   const onSubmit = (data: TaskFormData) => {
     onSave(data, form.setError);
@@ -224,7 +222,9 @@ const TaskModal = ({
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold">Status<span className="text-destructive">*</span></FormLabel>
+                  <FormLabel className="text-xs font-bold">
+                    Status<span className="text-destructive">*</span>
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
@@ -253,7 +253,9 @@ const TaskModal = ({
               name="priority"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold">Priority<span className="text-destructive">*</span></FormLabel>
+                  <FormLabel className="text-xs font-bold">
+                    Priority<span className="text-destructive">*</span>
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}

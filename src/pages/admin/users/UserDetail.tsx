@@ -10,6 +10,7 @@ import LeadsTab from "./components/LeadsTab";
 import AnalyticsTab from "./components/AnalyticsTab";
 import PermissionsTab from "./components/PermissionsTab";
 import SessionsTab from "./components/SessionsTab";
+import HierarchyTab from "./components/HierarchyTab";
 import { SelectOption } from "./components/EditableDetailItem";
 import { UserDetailData } from "@/types/user";
 
@@ -54,6 +55,7 @@ const UserDetailPage = () => {
     address: "",
     image_url: "",
     role: "User",
+    parent_id: "",
 
     // Mock Performance Metrics
     revenue: "₹1,42,500",
@@ -117,6 +119,7 @@ const UserDetailPage = () => {
           gst_number: apiUser.gst_number || "",
           address: apiUser.address || "",
           role: apiUser.role || "User",
+          parent_id: apiUser.parent_id || "",
         };
 
         // Prevent infinite render loop by only updating state if data changed
@@ -237,6 +240,12 @@ const UserDetailPage = () => {
             >
               Sessions
             </TabsTrigger>
+            <TabsTrigger
+              value="hierarchy"
+              className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-11 px-1 font-bold text-[10px] uppercase tracking-[0.15em] transition-all shrink-0"
+            >
+              Hierarchy
+            </TabsTrigger>
           </TabsList>
 
           {activeTab === "overview" && (
@@ -277,6 +286,7 @@ const UserDetailPage = () => {
                       gst_number: fetchedUser.gst_number || "",
                       address: fetchedUser.address || "",
                       role: fetchedUser.role || "User",
+                      parent_id: fetchedUser.parent_id || "",
                     }));
                   }
                   overviewRef.current?.reset();
@@ -347,6 +357,13 @@ const UserDetailPage = () => {
           className="space-y-4 animate-in fade-in-50 duration-300"
         >
           <SessionsTab user_id={userData.id!} />
+        </TabsContent>
+
+        <TabsContent
+          value="hierarchy"
+          className="space-y-4 animate-in fade-in-50 duration-300"
+        >
+          <HierarchyTab user_id={userData.id!} />
         </TabsContent>
       </Tabs>
     </div>

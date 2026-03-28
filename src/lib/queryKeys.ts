@@ -35,6 +35,10 @@ export const queryKeys = {
     list: (filters?: Record<string, unknown>) =>
       [...queryKeys.users.all, "list", filters] as const,
     detail: (id: string) => [...queryKeys.users.all, "detail", id] as const,
+    hierarchy: (id: string) =>
+      [...queryKeys.users.detail(id), "hierarchy"] as const,
+    systemHierarchy: (params?: Record<string, unknown>) =>
+      [...queryKeys.users.all, "system-hierarchy", params] as const,
     sessions: (id: string, params?: Record<string, unknown>) =>
       [...queryKeys.users.detail(id), "sessions", params] as const,
   },
@@ -129,5 +133,11 @@ export const queryKeys = {
     all: ["allTasks"] as const,
     list: (filters?: Record<string, unknown>) =>
       [...queryKeys.allTasks.all, "list", filters] as const,
+  },
+  hierarchy: {
+    all: ["hierarchy"] as const,
+    list: (filters?: string | Record<string, unknown>) =>
+      [...queryKeys.hierarchy.all, "list", filters] as const,
+    detail: (id: string) => [...queryKeys.hierarchy.all, "detail", id] as const,
   },
 } as const;

@@ -3,9 +3,9 @@ import axios from "./httpRequest";
 // Analytics
 // ===================== Analytics =====================
 
-export const getDashboardStats = () => {
+export const getDashboardStats = (params) => {
   const url = `analytics/dashboard-stats`;
-  return axios({ method: "GET", url });
+  return axios({ method: "GET", url, params });
 };
 
 // end region
@@ -108,6 +108,16 @@ export const updateUserPermissions = (id, data) => {
 
 export const listUserSessions = (id, params) => {
   const url = `users/${id}/sessions`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getUserHierarchy = (id) => {
+  const url = `users/${id}/hierarchy`;
+  return axios({ method: "GET", url });
+};
+
+export const getSystemHierarchy = (params) => {
+  const url = `users/hierarchy`;
   return axios({ method: "GET", url, params });
 };
 
@@ -329,6 +339,21 @@ export const convertLead = (leadId) => {
 export const bulkUpdateLeads = (data) => {
   const url = `leads/bulkupdate`;
   return axios({ method: "PATCH", url, data });
+};
+
+export const importLeads = (data) => {
+  const url = `leads/import`;
+  return axios({ method: "POST", url, data });
+};
+
+export const exportLeads = (params) => {
+  const url = `leads/export`;
+  return axios({ method: "GET", url, params, responseType: "blob" });
+};
+
+export const downloadDemoCSV = () => {
+  const url = `leads/democsv`;
+  return axios({ method: "GET", url, responseType: "blob" });
 };
 
 // end region
@@ -674,7 +699,7 @@ export const updateLeadStatusOrder = (data) => {
 };
 // end region
 
-// region Lead source 
+// region Lead source
 // ===================== Lead Source =====================
 export const listSource = (params) => {
   const url = `leads/lead-source`;
@@ -725,5 +750,36 @@ export const listCityStateCountry = (params) => {
 export const listCity = (params) => {
   const url = `city-state-country/city`;
   return axios({ method: "GET", url, params });
+};
+// end region
+// region Hierarchy
+// ===================== Hierarchy =====================
+export const listHierarchy = (params) => {
+  const url = typeof params === "string" ? `hierarchy/${params}` : `hierarchy`;
+  return axios({
+    method: "GET",
+    url,
+    params: typeof params === "object" ? params : undefined,
+  });
+};
+
+export const getAllHierarchy = (params) => {
+  const url = `hierarchy/all`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createHierarchy = (data) => {
+  const url = `hierarchy`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateHierarchy = ({ id, ...data }) => {
+  const url = `hierarchy/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteHierarchy = (id) => {
+  const url = `hierarchy/${id}`;
+  return axios({ method: "DELETE", url });
 };
 // end region

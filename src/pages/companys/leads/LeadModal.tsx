@@ -34,31 +34,51 @@ import { useDebounce } from "@/hooks/useDebounce";
 const InterestedCategorySelect = ({
   value = [],
   onValueChange,
+  disabled,
+  open,
 }: {
   value?: any[];
   onValueChange: (val: any[]) => void;
+  disabled?: boolean;
+  open?: boolean;
 }) => {
-  const { data: categories = [], isLoading } = useCategoriesCombobox();
-  const suggestions = categories
-    .filter((cat: any) => !!cat.parent_name)
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
+  const { data: categories = [] } = useCategoriesCombobox(
+    { search: debouncedSearch },
+    { enabled: open },
+  );
+  const suggestions = (categories as any[])
+    .filter((cat: any) => !cat.parent_name)
     .map((cat: any) => ({
       id: String(cat.id),
       name: cat.name,
     }));
 
-  const displayValue = (Array.isArray(value) ? value : []).map((val: any) => {
-    const id = typeof val === "string" ? val : val?.id || val?.name;
-    const suggestion = suggestions.find((s) => s.id === id);
-    return (
-      suggestion || (typeof val === "string" ? { id: val, name: val } : val)
-    );
-  });
+  const displayValue = (Array.isArray(value) ? value : [])
+    .map((val: any) => {
+      if (typeof val === "string") return { id: val, name: val };
+      const id = val?.id || String(val);
+      const categoryMatch = (categories as any[]).find(
+        (c) => String(c.id) === id,
+      );
+      return categoryMatch
+        ? { id, name: categoryMatch.name }
+        : val?.name
+          ? { id, name: val.name }
+          : null;
+    })
+    .filter((v: any): v is { id: string; name: string } => !!v);
 
   return (
     <TagSelector
       suggestions={suggestions}
       value={displayValue}
       onChange={onValueChange}
+      onSearchChange={setSearch}
+      searchValue={search}
+      disabled={disabled}
       creatable={false}
     />
   );
@@ -118,6 +138,11 @@ const formSchema = z.object({
   tags: z
     .array(z.object({ id: z.string().optional(), name: z.string() }))
     .optional(),
+  expected_revenue: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^[0-9]+$/.test(val), "Must be a number")
+    .or(z.literal("")),
 });
 
 export type LeadFormData = z.infer<typeof formSchema>;
@@ -178,8 +203,14 @@ const LeadModal = ({
     name: tag.name,
   }));
 
-  const { data: statusResponse } = useLeadStatuses({ limit: 100 }, { enabled: open });
-  const { data: sourceResponse } = useLeadSources({ limit: 100 }, { enabled: open });
+  const { data: statusResponse } = useLeadStatuses(
+    { limit: 100 },
+    { enabled: open },
+  );
+  const { data: sourceResponse } = useLeadSources(
+    { limit: 100 },
+    { enabled: open },
+  );
   const { data: usersResponse } = useUsers({ limit: 100 }, { enabled: open });
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(
     null,
@@ -196,21 +227,32 @@ const LeadModal = ({
   const debouncedStateSearch = useDebounce(stateSearch, 500);
   const debouncedCitySearch = useDebounce(citySearch, 500);
 
-  const { data: countriesData } = useCountries({
-    search: debouncedCountrySearch,
-    combobox: true,
-    limit: 100,
-  }, { enabled: open });
-  const { data: statesData } = useStates(selectedCountryId || undefined, {
-    search: debouncedStateSearch,
-    combobox: true,
-    limit: 100,
-  }, { enabled: open && !!selectedCountryId });
-  const { data: citiesData } = useCities(selectedStateId || undefined, {
-    search: debouncedCitySearch,
-    combobox: true,
-    limit: 100,
-  }, { enabled: open && !!selectedStateId });
+  const { data: countriesData } = useCountries(
+    {
+      search: debouncedCountrySearch,
+      combobox: true,
+      limit: 100,
+    },
+    { enabled: open },
+  );
+  const { data: statesData } = useStates(
+    selectedCountryId || undefined,
+    {
+      search: debouncedStateSearch,
+      combobox: true,
+      limit: 100,
+    },
+    { enabled: open && !!selectedCountryId },
+  );
+  const { data: citiesData } = useCities(
+    selectedStateId || undefined,
+    {
+      search: debouncedCitySearch,
+      combobox: true,
+      limit: 100,
+    },
+    { enabled: open && !!selectedStateId },
+  );
 
   const countryOptions =
     (countriesData as any)?.items?.map((item: any) => ({
@@ -274,6 +316,7 @@ const LeadModal = ({
       assigned_to: "",
       interested_category_id: [],
       tags: [],
+      expected_revenue: "",
     });
     setSelectedCountryId(null);
     setSelectedStateId(null);
@@ -286,9 +329,7 @@ const LeadModal = ({
     const payload = {
       ...data,
       interested_category_id: data.interested_category_id?.length
-        ? data.interested_category_id.map((c: any) =>
-          c.id ? String(c.id) : c.name,
-        )
+        ? data.interested_category_id.map((c: any) => c.name)
         : [],
       tags: data.tags?.length
         ? data.tags.map((t: any) => (t.id ? String(t.id) : t.name))
@@ -774,6 +815,7 @@ const LeadModal = ({
                     <InterestedCategorySelect
                       value={field.value as any}
                       onValueChange={field.onChange}
+                      open={open}
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
@@ -834,6 +876,32 @@ const LeadModal = ({
                       placeholder="Enter Address Line 2"
                       className="h-9 text-xs border-border/60"
                       {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="expected_revenue"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-bold text-foreground flex items-center gap-1">
+                    Expected Revenue
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter Expected Revenue"
+                      className="h-9 text-xs border-border/60"
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d+$/.test(value)) {
+                          field.onChange(value);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />

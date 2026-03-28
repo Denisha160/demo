@@ -1,13 +1,15 @@
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import QuotationModal, {
+import { formatDate } from "@/utils/date";
+import QuotationForm, {
   Quotation,
   QuotationFormData,
-} from "./QuotationsModal";
+} from "./QuotationForm";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +25,7 @@ const initialQuotations: Quotation[] = [
   {
     id: "1",
     quotation_number: "QT-2026-1024",
+    lead_id: "Bell Borer III - kadin.waelchi@example.net",
     quotation_date: "2026-03-20",
     valid_until: "2026-03-31",
     status: "DRAFT",
@@ -32,11 +35,6 @@ const initialQuotations: Quotation[] = [
     customer_address: "Bangalore, Karnataka",
     customer_gst: "29ABCDE1234F1Z5",
     customer_pan: "ABCDE1234F",
-    contact_person_id: "",
-    contact_person_name: "Rahul Sharma",
-    contact_person_email: "rahul@acme.com",
-    contact_person_phone: "9876501234",
-    contact_person_designation: "Procurement Manager",
     subtotal: 12000,
     discount_type: "PERCENTAGE",
     discount_value: 10,
@@ -46,30 +44,30 @@ const initialQuotations: Quotation[] = [
     ],
     total_tax_amount: 2160,
     additional_charges: [{ key: "Packing", value: 250 }],
-    total_additional_charges: 750,
-    amount_in_words: "Thirteen thousand seven hundred ten only",
-    payment_terms: "NET_30",
-    payment_terms_custom: "",
+    total_additional_charges: 250,
     delivery_terms: "PAID_DELIVERY",
-    delivery_terms_custom: "",
     delivery_charges: 500,
     delivery_address: "Peenya Industrial Area, Bangalore",
     expected_delivery_date: "2026-03-28",
     notes: "Please confirm before dispatch.",
-    accepted_at: "",
-    accepted_by: "",
-    rejected_reason: "",
-    cancelled_reason: "",
     requires_approval: true,
     approval_status: "PENDING",
-    approved_by: "",
-    approved_at: "",
-    approval_remarks: "",
     created_at: new Date().toISOString(),
+    amount_in_words: "Twelve thousand plus taxes",
+    payment_terms: "NET_30",
+    approval_remarks: "",
+    contact_person_id: "",
+    contact_person_name: "",
+    contact_person_email: "",
+    contact_person_phone: "",
+    contact_person_designation: "",
+    payment_terms_custom: "",
+    delivery_terms_custom: "",
   },
   {
     id: "2",
     quotation_number: "QT-2026-2048",
+    lead_id: "Basalt Retail - ops@basaltretail.com",
     quotation_date: "2026-03-18",
     valid_until: "2026-03-25",
     status: "SENT",
@@ -79,11 +77,6 @@ const initialQuotations: Quotation[] = [
     customer_address: "Chennai, Tamil Nadu",
     customer_gst: "",
     customer_pan: "",
-    contact_person_id: "",
-    contact_person_name: "Priya Nair",
-    contact_person_email: "priya@basaltretail.com",
-    contact_person_phone: "9988776644",
-    contact_person_designation: "Operations Lead",
     subtotal: 8500,
     discount_type: "FIXED",
     discount_value: 500,
@@ -91,25 +84,24 @@ const initialQuotations: Quotation[] = [
     total_tax_amount: 1440,
     additional_charges: [],
     total_additional_charges: 0,
-    amount_in_words: "Nine thousand four hundred forty only",
-    payment_terms: "ADVANCE",
-    payment_terms_custom: "100% advance",
     delivery_terms: "FREE_DELIVERY",
-    delivery_terms_custom: "",
     delivery_charges: 0,
     delivery_address: "Guindy, Chennai",
     expected_delivery_date: "2026-03-22",
     notes: "",
-    accepted_at: "",
-    accepted_by: "",
-    rejected_reason: "",
-    cancelled_reason: "",
     requires_approval: false,
     approval_status: "",
-    approved_by: "",
-    approved_at: "",
-    approval_remarks: "",
     created_at: new Date().toISOString(),
+    amount_in_words: "Eight thousand only",
+    payment_terms: "ADVANCE",
+    approval_remarks: "",
+    contact_person_id: "",
+    contact_person_name: "",
+    contact_person_email: "",
+    contact_person_phone: "",
+    contact_person_designation: "",
+    payment_terms_custom: "",
+    delivery_terms_custom: "",
   },
 ];
 
@@ -129,21 +121,17 @@ const calculateGrandTotal = (quotation: QuotationFormData) => {
         ? discountValue
         : 0;
 
-  return (
-    subtotal -
-    discountAmount +
-    (quotation.total_tax_amount || 0) +
-    (quotation.total_additional_charges || 0)
-  );
+  const taxAmount = (quotation.tax_details || []).reduce((sum, t) => sum + (Number(t.value) || 0), 0);
+  const addCharges = (quotation.additional_charges || []).reduce((sum, c) => sum + (Number(c.value) || 0), 0) + (Number(quotation.delivery_charges) || 0);
+
+  return subtotal - discountAmount + taxAmount + addCharges;
 };
 
 const QuotationsTab = () => {
   const [quotations, setQuotations] = useState<Quotation[]>(initialQuotations);
   const [search, setSearch] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(
-    null,
-  );
+  const { companyId, id } = useParams();
+  const navigate = useNavigate();
   const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(
     null,
   );
@@ -158,13 +146,11 @@ const QuotationsTab = () => {
   });
 
   const handleCreate = () => {
-    setEditingQuotation(null);
-    setIsModalOpen(true);
+    navigate(`/${companyId}/leads/${id}/quotations/new`);
   };
 
   const handleEdit = (quotation: Quotation) => {
-    setEditingQuotation(quotation);
-    setIsModalOpen(true);
+    navigate(`/${companyId}/leads/${id}/quotations/${quotation.id}/edit`);
   };
 
   const handleDelete = (id: string) => {
@@ -173,27 +159,8 @@ const QuotationsTab = () => {
   };
 
   const handleSaveQuotation = (formData: QuotationFormData) => {
-    if (editingQuotation) {
-      setQuotations((prev) =>
-        prev.map((quotation) =>
-          quotation.id === editingQuotation.id
-            ? {
-              ...quotation,
-              ...formData,
-            }
-            : quotation,
-        ),
-      );
-    } else {
-      const newQuotation: Quotation = {
-        ...formData,
-        id: Math.random().toString(36).slice(2, 11),
-        created_at: new Date().toISOString(),
-      };
-      setQuotations((prev) => [newQuotation, ...prev]);
-    }
-
-    setIsModalOpen(false);
+    // This is now handled in the standalone page, but keeping the logic for reference if needed
+    // or just remove it if it's no longer called here.
   };
 
   const getStatusVariant = (status: Quotation["status"]) => {
@@ -231,13 +198,15 @@ const QuotationsTab = () => {
     {
       key: "quotation_date",
       header: "Date",
-      render: (item) => <span className="text-sm">{item.quotation_date}</span>,
+      render: (item) => (
+        <span className="text-sm">{formatDate(item.quotation_date)}</span>
+      ),
     },
     {
       key: "valid_until",
       header: "Valid Until",
       render: (item) => (
-        <span className="text-sm">{item.valid_until || "-"}</span>
+        <span className="text-sm">{formatDate(item.valid_until)}</span>
       ),
     },
     {
@@ -295,6 +264,8 @@ const QuotationsTab = () => {
     },
   ];
 
+  // Form state check removed since it's a standalone page
+
   return (
     <div className="w-full animate-fade-in rounded-lg border border-border/50 bg-card p-4 shadow-sm">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -315,15 +286,6 @@ const QuotationsTab = () => {
       </div>
 
       <DataTable columns={columns} data={filteredQuotations} pageSize={10} />
-
-      {isModalOpen && (
-        <QuotationModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          quotationData={editingQuotation}
-          onSave={handleSaveQuotation}
-        />
-      )}
 
       <AlertDialog
         open={!!quotationToDelete}

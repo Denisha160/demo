@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { formatDate, formatDateForAPI, parseFormattedDate } from "@/utils/date";
 
 const quotationStatuses = [
   "DRAFT",
@@ -159,11 +160,13 @@ const quotationSchema = z
     approval_remarks: optionalText,
   })
   .superRefine((data, ctx) => {
-    if (
-      data.valid_until &&
-      data.quotation_date &&
-      data.valid_until < data.quotation_date
-    ) {
+    const validUntilDate = parseFormattedDate(data.valid_until);
+    const quotationDate = parseFormattedDate(data.quotation_date);
+    const expectedDeliveryDate = parseFormattedDate(
+      data.expected_delivery_date,
+    );
+
+    if (validUntilDate && quotationDate && validUntilDate < quotationDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["valid_until"],
@@ -172,9 +175,9 @@ const quotationSchema = z
     }
 
     if (
-      data.expected_delivery_date &&
-      data.quotation_date &&
-      data.expected_delivery_date < data.quotation_date
+      expectedDeliveryDate &&
+      quotationDate &&
+      expectedDeliveryDate < quotationDate
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -230,7 +233,7 @@ const createQuotationNumber = () => {
 
 const defaultValues: QuotationFormData = {
   quotation_number: "",
-  quotation_date: new Date().toISOString().split("T")[0],
+  quotation_date: formatDate(new Date()),
   valid_until: "",
   status: "DRAFT",
   customer_name: "",
@@ -415,6 +418,12 @@ const QuotationModal = ({
     onSave(
       {
         ...data,
+        quotation_date:
+          formatDateForAPI(data.quotation_date) || data.quotation_date,
+        valid_until: formatDateForAPI(data.valid_until) || data.valid_until,
+        expected_delivery_date:
+          formatDateForAPI(data.expected_delivery_date) ||
+          data.expected_delivery_date,
         total_tax_amount: Number(totalTaxAmount.toFixed(2)),
         total_additional_charges: Number(totalAdditionalCharges.toFixed(2)),
       },

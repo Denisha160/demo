@@ -5,14 +5,30 @@ import {
   Droppable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { GripVertical, CheckCircle, ShieldCheck } from "lucide-react";
+import {
+  GripVertical,
+  CheckCircle,
+  ShieldCheck,
+  HelpCircle,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/StatusBadge";
 import { PipelineColumn } from "../../../types/leads";
+import { getDaysSince } from "@/utils/date";
+import { Clock } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface LeadPipelineProps {
-  displayedColumns: (PipelineColumn & { total: number })[];
+  displayedColumns: (PipelineColumn & {
+    total: number;
+    total_expected_revenue: number;
+  })[];
   onDragEnd: (result: DropResult) => void;
   onLoadMore?: (statusId: string) => void;
   isUpdatingOrder?: boolean;
@@ -57,10 +73,11 @@ const LeadPipeline = ({
                       ref={columnProvided.innerRef}
                       {...columnProvided.draggableProps}
                       style={columnProvided.draggableProps.style}
-                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${columnSnapshot.isDragging
-                        ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
-                        : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
-                        }`}
+                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${
+                        columnSnapshot.isDragging
+                          ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
+                          : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
+                      }`}
                     >
                       {/* Top side hover highlight */}
                       <div
@@ -68,24 +85,25 @@ const LeadPipeline = ({
                         style={
                           col.color
                             ? {
-                              background: `linear-gradient(to right, transparent, ${col.color}, transparent)`,
-                            }
+                                background: `linear-gradient(to right, transparent, ${col.color}, transparent)`,
+                              }
                             : {
-                              background: `linear-gradient(to right, transparent, hsl(var(--primary)/0.6), transparent)`,
-                            }
+                                background: `linear-gradient(to right, transparent, hsl(var(--primary)/0.6), transparent)`,
+                              }
                         }
                       />
 
                       <div
                         {...columnProvided.dragHandleProps}
-                        className={`flex cursor-grab items-center justify-between border-b px-4 py-3.5 backdrop-blur-xl transition-colors duration-200 active:cursor-grabbing ${!col.color ? "border-border/20 bg-background/90" : ""
-                          }`}
+                        className={`flex cursor-grab items-center justify-between border-b px-4 py-3.5 backdrop-blur-xl transition-colors duration-200 active:cursor-grabbing ${
+                          !col.color ? "border-border/20 bg-background/90" : ""
+                        }`}
                         style={
                           col.color
                             ? {
-                              background: `linear-gradient(to bottom, ${col.color}25, ${col.color}05)`,
-                              borderColor: `${col.color}30`,
-                            }
+                                background: `linear-gradient(to bottom, ${col.color}25, ${col.color}05)`,
+                                borderColor: `${col.color}30`,
+                              }
                             : undefined
                         }
                       >
@@ -97,25 +115,34 @@ const LeadPipeline = ({
                               <GripVertical className="h-4 w-4" />
                             </div>
                           )}
-                          <div className="flex items-center gap-2">
-                            <StatusBadge
-                              status={col.title}
-                              variant={col.variant}
-                              color={col.color}
-                            />
-                          </div>
+
+                          <StatusBadge
+                            status={col.title}
+                            variant={col.variant}
+                            color={col.color}
+                          />
+                        </div>
+
+                        {/* RIGHT SIDE */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-muted-foreground/60">
+                            Vol:
+                          </span>
+                          <span className="text-[12px] font-bold text-primary">
+                            ₹{col.total_expected_revenue.toLocaleString()}
+                          </span>
                         </div>
                       </div>
-
                       <Droppable droppableId={col.id} type="DEAL">
                         {(dealProvided, dealSnapshot) => (
                           <div
                             ref={dealProvided.innerRef}
                             {...dealProvided.droppableProps}
-                            className={`flex min-h-0 flex-1 flex-col transition-colors ${dealSnapshot.isDraggingOver
-                              ? "bg-primary/5"
-                              : "bg-transparent"
-                              }`}
+                            className={`flex min-h-0 flex-1 flex-col transition-colors ${
+                              dealSnapshot.isDraggingOver
+                                ? "bg-primary/5"
+                                : "bg-transparent"
+                            }`}
                           >
                             <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-thin">
                               <div className="space-y-3">
@@ -133,10 +160,11 @@ const LeadPipeline = ({
                                         style={
                                           dealDragProvided.draggableProps.style
                                         }
-                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${dealDragSnapshot.isDragging
-                                          ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
-                                          : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
-                                          }`}
+                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${
+                                          dealDragSnapshot.isDragging
+                                            ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
+                                            : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
+                                        }`}
                                       >
                                         <div
                                           onClick={() => navigate(deal.id)}
@@ -144,39 +172,89 @@ const LeadPipeline = ({
                                         >
                                           <div className="min-w-0 flex-1">
                                             <div className="flex items-start justify-between gap-2">
-                                              <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary flex items-center gap-1.5">
-                                                <span className="truncate max-w-[140px] block">
-                                                  {deal.title}
+                                              <TooltipProvider>
+                                                <Tooltip>
+                                                  <TooltipTrigger asChild>
+                                                    <div className="flex items-center gap-1 group/title cursor-help">
+                                                      <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-foreground transition-colors group-hover:text-primary flex items-center gap-1.5">
+                                                        <span className="truncate max-w-[140px] block">
+                                                          {deal.title}
+                                                        </span>
+                                                        {deal.isVerified && (
+                                                          <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
+                                                        )}
+                                                        {deal.isCustomer && (
+                                                          <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
+                                                        )}
+                                                      </p>
+                                                    </div>
+                                                  </TooltipTrigger>
+                                                  <TooltipContent
+                                                    side="bottom"
+                                                    className="max-w-[250px] bg-popover text-popover-foreground shadow-lg border border-border"
+                                                  >
+                                                    <p className="text-xs font-semibold">
+                                                      {deal.title}
+                                                    </p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              </TooltipProvider>
+                                              <div className="flex gap-1 mt-0.5">
+                                                <span className="flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                                                  {getDaysSince(deal.raw_date)}{" "}
+                                                  D
                                                 </span>
-                                                {deal.isVerified && (
-                                                  <span title="Verified">
-                                                    <ShieldCheck className="h-4 w-4 shrink-0 text-green-500" />
-                                                  </span>
-                                                )}
-                                                {deal.isCustomer && (
-                                                  <span title="Customer">
-                                                    <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
-                                                  </span>
-                                                )}
-                                              </p>
-                                              <span className="whitespace-nowrap rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground/80">
-                                                {deal.date}
-                                              </span>
+                                                <span className="whitespace-nowrap rounded bg-secondary/60 px-1.5 py-0.5 text-[9px] font-medium tabular-nums text-muted-foreground/80">
+                                                  {deal.date}
+                                                </span>
+                                              </div>
                                             </div>
 
-                                            <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                                              {deal.company}
-                                            </p>
-                                            {deal.phone && deal.phone !== "-" && (
-                                              <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
-                                                {deal.phone}
-                                              </p>
-                                            )}
+                                            <div className="flex justify-between items-center">
+                                              <div>
+                                                <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                                                  {deal.company}
+                                                </p>
+                                                {deal.phone &&
+                                                  deal.phone !== "-" && (
+                                                    <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
+                                                      {deal.phone}
+                                                    </p>
+                                                  )}
+                                              </div>
+                                              {deal.expected_revenue && (
+                                                <span className="text-[16px] font-bold text-green-600">
+                                                  ₹
+                                                  {Number(
+                                                    deal.expected_revenue,
+                                                  ).toLocaleString()}
+                                                </span>
+                                              )}
+                                            </div>
 
-                                            <div className="flex items-center justify-between border-t border-border/10 pt-3">
-                                              <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
-                                                {deal.priority}
-                                              </span>
+                                            {deal.interested_categories &&
+                                              deal.interested_categories
+                                                .length > 0 && (
+                                                <div className="mt-2 flex flex-wrap gap-1">
+                                                  {deal.interested_categories.map(
+                                                    (cat, idx) => (
+                                                      <span
+                                                        key={`${cat.id}-${idx}`}
+                                                        className="inline-flex items-center rounded-sm bg-blue-50 px-1.5 py-0.5 text-[9px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10"
+                                                      >
+                                                        {cat.name}
+                                                      </span>
+                                                    ),
+                                                  )}
+                                                </div>
+                                              )}
+
+                                            <div className="mt-3 flex items-center justify-between border-t border-border/10 pt-3">
+                                              <div className="flex flex-col gap-1 items-start">
+                                                <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
+                                                  {deal.priority}
+                                                </span>
+                                              </div>
                                               <div className="flex items-center gap-1.5 overflow-hidden rounded-full bg-secondary/30 px-1.5 py-0.5">
                                                 <div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/20 text-[9px] font-bold text-primary">
                                                   {deal.contact.charAt(0)}
@@ -204,11 +282,11 @@ const LeadPipeline = ({
                                   size="sm"
                                   className="h-9 w-full"
                                   disabled={isLoadingMore === col.id}
-                                  onClick={() =>
-                                    onLoadMore?.(col.id)
-                                  }
+                                  onClick={() => onLoadMore?.(col.id)}
                                 >
-                                  {isLoadingMore === col.id ? "Loading..." : "Load More"}
+                                  {isLoadingMore === col.id
+                                    ? "Loading..."
+                                    : "Load More"}
                                 </Button>
                               ) : (
                                 <div className="text-center text-xs text-muted-foreground">

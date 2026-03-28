@@ -83,6 +83,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     letter-spacing: -0.01em;
+    overflow-y: hidden !important
   }
 
   /* Improved input styles */
@@ -174,6 +175,20 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  .scrollbar-premium::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+  .scrollbar-premium::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-premium::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+  .scrollbar-premium:hover::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/40;
   }
 
   /* New utility classes for inputs */

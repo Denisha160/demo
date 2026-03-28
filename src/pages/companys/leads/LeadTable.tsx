@@ -21,7 +21,16 @@ interface LeadTableProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   enableSelection?: boolean;
-  onSelectionChange?: (selectedItems: (Deal & { stage: string; stageVariant: string })[]) => void;
+  onSelectionChange?: (
+    selectedItems: (Deal & { stage: string; stageVariant: string })[],
+  ) => void;
+  // Pagination Props
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  isLoading?: boolean;
 }
 
 const PRIORITIES = [
@@ -32,11 +41,14 @@ const PRIORITIES = [
 
 const LeadTable = ({
   displayedColumns,
-  onLoadMore,
-  hasMore,
-  isLoadingMore,
   enableSelection,
   onSelectionChange,
+  total = 0,
+  page = 1,
+  pageSize = 20,
+  onPageChange,
+  onPageSizeChange,
+  isLoading = false,
 }: LeadTableProps) => {
   const navigate = useNavigate();
   const updateLeadMutation = useUpdateLead();
@@ -244,28 +256,17 @@ const LeadTable = ({
         <DataTable
           data={flatDeals}
           columns={tableColumns}
-          pageSize={Math.max(flatDeals.length, 1)}
+          pageSize={pageSize}
           onRowClick={(item) => navigate(item.id)}
           enableSelection={enableSelection}
           onSelectionChange={(items) => onSelectionChange?.(items as any)}
+          serverSide={true}
+          serverTotal={total}
+          serverPage={page}
+          onServerPageChange={onPageChange}
+          onServerPageSizeChange={onPageSizeChange}
+          isLoading={isLoading}
         />
-      </div>
-      <div className="flex items-center justify-center p-4 bg-background/50 border-t border-border/40">
-        {hasMore ? (
-          <Button
-            onClick={onLoadMore}
-            disabled={isLoadingMore}
-            variant="outline"
-            size="sm"
-            className="px-8 font-semibold shadow-sm hover:shadow-md transition-all h-9"
-          >
-            {isLoadingMore ? "Loading..." : "Load More"}
-          </Button>
-        ) : (
-          <div className="text-xs font-medium text-muted-foreground bg-muted/30 px-4 py-2 rounded-full border border-border/40">
-            All leads loaded
-          </div>
-        )}
       </div>
       {updateLeadMutation.isPending && (
         <div className="fixed bottom-4 right-4 animate-pulse bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs shadow-lg">

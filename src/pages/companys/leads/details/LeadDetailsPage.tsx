@@ -75,6 +75,7 @@ export interface LeadProfileFormValues {
   address_line2: string;
   tags: { id?: string; name: string }[];
   interested_category_id: { id?: string; name: string }[];
+  expected_revenue: string;
 }
 
 interface LeadDetailsData {
@@ -110,6 +111,7 @@ interface LeadDetailsData {
   address?: string;
   address_line1?: string;
   address_line2?: string;
+  expected_revenue?: string;
   tags?: any[] | string;
   attachments?: any[];
   is_verified?: boolean;
@@ -127,16 +129,56 @@ const TABS = [
     permission: "lead-verification.update",
     showIf: (lead: any) => !!lead?.is_verified,
   },
-  { id: "contacts", label: "Contacts", icon: Users, permission: "lead-contact.read" },
-  { id: "follow-up", label: "Follow Up", icon: Clock, permission: "lead-followup.read" },
-  { id: "visits", label: "Visits", icon: MapPin, permission: "lead-visit.read" },
-  { id: "tasks", label: "Tasks", icon: ClipboardList, permission: "lead-task.read" },
+  {
+    id: "contacts",
+    label: "Contacts",
+    icon: Users,
+    permission: "lead-contact.read",
+  },
+  {
+    id: "follow-up",
+    label: "Follow Up",
+    icon: Clock,
+    permission: "lead-followup.read",
+  },
+  {
+    id: "visits",
+    label: "Visits",
+    icon: MapPin,
+    permission: "lead-visit.read",
+  },
+  {
+    id: "tasks",
+    label: "Tasks",
+    icon: ClipboardList,
+    permission: "lead-task.read",
+  },
   { id: "call-logs", label: "Call Logs", icon: PhoneCall }, // no specific backend perm yet
-  { id: "products", label: "Interested Products", icon: Package, permission: "lead-interested-product.read" },
-  { id: "attachments", label: "Attachment", icon: Paperclip, permission: "lead-attachment.read" },
-  { id: "activity", label: "Activity", icon: Activity, permission: "lead-activity.read" },
-  // { id: "quotations", label: "Quotations", icon: FileText },
-  { id: "reminders", label: "Reminder", icon: Bell, permission: "lead-reminder.read" },
+  {
+    id: "products",
+    label: "Interested Products",
+    icon: Package,
+    permission: "lead-interested-product.read",
+  },
+  {
+    id: "attachments",
+    label: "Attachment",
+    icon: Paperclip,
+    permission: "lead-attachment.read",
+  },
+  {
+    id: "activity",
+    label: "Activity",
+    icon: Activity,
+    permission: "lead-activity.read",
+  },
+  { id: "quotations", label: "Quotations", icon: FileText },
+  {
+    id: "reminders",
+    label: "Reminder",
+    icon: Bell,
+    permission: "lead-reminder.read",
+  },
 ];
 
 const mapLeadToProfile = (
@@ -177,6 +219,7 @@ const mapLeadToProfile = (
         : { id: String(id?.id), name: id?.name || id?.id },
     )
     : [],
+  expected_revenue: lead?.expected_revenue || "",
 });
 
 const LeadDetailsPage = () => {
@@ -244,6 +287,8 @@ const LeadDetailsPage = () => {
       payload.address_line1 = profile.address_line1;
     if (profile.address_line2 !== leadProfile.address_line2)
       payload.address_line2 = profile.address_line2;
+    if (profile.expected_revenue !== leadProfile.expected_revenue)
+      payload.expected_revenue = profile.expected_revenue;
 
     const compareTags = (a: any[], b: any[]) =>
       JSON.stringify(a.map((x) => x.id || x.name).sort()) ===
@@ -260,7 +305,7 @@ const LeadDetailsPage = () => {
       )
     ) {
       payload.interested_category_id = profile.interested_category_id.map(
-        (t) => (t.id ? String(t.id) : t.name),
+        (t) => t.name,
       );
     }
 
@@ -289,11 +334,27 @@ const LeadDetailsPage = () => {
       case "contacts":
         return <ContactsTab />;
       case "follow-up":
-        return id ? <FollowUpTab leadId={id} /> : null;
+        return id ? (
+          <FollowUpTab
+            leadId={id}
+            defaultAssignedTo={{
+              id: leadProfile.assigned_to,
+              name: (lead as any)?.assigned_to_name || leadProfile.assigned_to,
+            }}
+          />
+        ) : null;
       case "visits":
         return id ? <VisitsTab leadId={id} /> : null;
       case "tasks":
-        return id ? <TasksTab leadId={id} /> : null;
+        return id ? (
+          <TasksTab
+            leadId={id}
+            defaultAssignedTo={{
+              id: leadProfile.assigned_to,
+              name: (lead as any)?.assigned_to_name || leadProfile.assigned_to,
+            }}
+          />
+        ) : null;
       case "call-logs":
         return <CallLogsTab />;
       case "products":
@@ -410,8 +471,8 @@ const LeadDetailsPage = () => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-medium rounded-md transition-all duration-200 ${isActive
-                  ? "bg-primary/5 text-primary"
-                  : "text-foreground/80 hover:bg-muted/50 hover:text-foreground"
+                    ? "bg-primary/5 text-primary"
+                    : "text-foreground/80 hover:bg-muted/50 hover:text-foreground"
                   }`}
               >
                 <Icon

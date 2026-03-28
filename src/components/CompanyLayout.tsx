@@ -28,9 +28,15 @@ import {
   MapPin,
   UserCheck,
   Users,
+  FileText,
 } from "lucide-react";
 
-import { useLogout, useCurrentUser, useHasPermission } from "@/hooks/useAuth";
+import {
+  useLogout,
+  useCurrentUser,
+  useHasPermission,
+  ADMIN_PERMISSIONS,
+} from "@/hooks/useAuth";
 import { createPortal } from "react-dom";
 import { getCompanyTheme } from "@/data/companyData";
 import { useCompanies } from "@/hooks/useCompanies";
@@ -52,19 +58,55 @@ interface NavItemEntry {
 
 const navItems: NavItemEntry[] = [
   { label: "Dashboard", icon: LayoutDashboard, path: "dashboard" },
-  { label: "Sales Team", icon: Users, path: "sales", permission: "user.read", isRootOnly: true },
+  {
+    label: "Sales Team",
+    icon: Users,
+    path: "sales",
+    permission: "user.read",
+    isRootOnly: true,
+  },
   {
     label: "CRM",
     icon: Blocks,
     children: [
       { label: "Leads", icon: Box, path: "leads", permission: "lead.read" },
-      { label: "Status", icon: List, path: "status", permission: "lead-status.read" },
-      { label: "Sources", icon: Package, path: "source", permission: "lead-source.read" },
+      {
+        label: "Status",
+        icon: List,
+        path: "status",
+        permission: "lead-status.read",
+      },
+      {
+        label: "Sources",
+        icon: Package,
+        path: "source",
+        permission: "lead-source.read",
+      },
       // { label: "Quotations", icon: FileText, path: "quotations" },
-      { label: "Visits", icon: MapPin, path: "visits", permission: "lead-visit.read" },
-      { label: "Reminders", icon: Bell, path: "reminders", permission: "lead-reminder.read" },
-      { label: "Follow-ups", icon: Clock, path: "followups", permission: "lead-followup.read" },
-      { label: "Tasks", icon: ClipboardList, path: "tasks", permission: "lead-task.read" },
+      {
+        label: "Visits",
+        icon: MapPin,
+        path: "visits",
+        permission: "lead-visit.read",
+      },
+      {
+        label: "Reminders",
+        icon: Bell,
+        path: "reminders",
+        permission: "lead-reminder.read",
+      },
+      {
+        label: "Follow-ups",
+        icon: Clock,
+        path: "followups",
+        permission: "lead-followup.read",
+      },
+      {
+        label: "Tasks",
+        icon: ClipboardList,
+        path: "tasks",
+        permission: "lead-task.read",
+      },
     ],
   },
   // { label: "Salesmen", icon: UserCheck, path: "salesmen"},
@@ -222,6 +264,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const user = useCurrentUser();
   const { hasPermission } = useHasPermission();
+  const hasAdminPerm = hasPermission(ADMIN_PERMISSIONS);
   const { data: companiesData, isLoading: isLoadingCompanies } = useCompanies();
   const companies = useMemo(
     () => companiesData?.items || [],
@@ -494,7 +537,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             })}
         </nav>
 
-        {user?.is_root_user && (
+        {Boolean(user?.is_root_user || hasAdminPerm) && (
           <div className="p-2 border-t border-border">
             <Link
               to="/admin/companies"

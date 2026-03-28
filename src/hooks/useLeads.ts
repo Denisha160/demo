@@ -7,15 +7,39 @@ import {
   updateLead,
   updateLeadStatus,
   bulkUpdateLeads,
+  exportLeads,
+  downloadDemoCSV,
+  importLeads,
 } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
+
+export function useDownloadDemoCSV() {
+  return useMutation({
+    mutationFn: () => downloadDemoCSV(),
+    onSuccess: (data: any) => {
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `sample_leads_import.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Sample CSV downloaded successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to download sample CSV.");
+    },
+  });
+}
 
 export function useBulkUpdateLeads() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { lead_ids: string[]; updates: Record<string, unknown> }) =>
-      bulkUpdateLeads(data),
+    mutationFn: (data: {
+      lead_ids: string[];
+      updates: Record<string, unknown>;
+    }) => bulkUpdateLeads(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     },
@@ -24,7 +48,6 @@ export function useBulkUpdateLeads() {
     },
   });
 }
-
 
 const normalizeList = <T>(response: any): T[] => {
   if (Array.isArray(response?.data?.lead)) return response.data.lead;
@@ -132,6 +155,39 @@ export function useUpdateLeadStatus() {
       if (error?.code !== "validation_error") {
         toast.error(error?.message || "Failed to update lead.");
       }
+    },
+  });
+}
+export function useExportLeads() {
+  return useMutation({
+    mutationFn: (params: Record<string, unknown>) => exportLeads(params),
+    onSuccess: (data: any) => {
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `leads_export_${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Leads exported successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to export leads.");
+    },
+  });
+}
+
+export function useImportLeads() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { items: any[] }) => importLeads(data),
+    onSuccess: (response: any) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+      toast.success(response?.data?.message || "Leads imported successfully.");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to import leads.");
     },
   });
 }

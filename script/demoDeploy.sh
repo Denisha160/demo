@@ -16,7 +16,7 @@ npm run build
 # 4. Remove existing assets folder on the server
 ssh -p 65002 u371241921@147.93.101.85 "rm -rf /home/u371241921/domains/topgrowth.in/public_html/basaltdev/assets"
 
-# 5. Upload contents of 'dist' directly into 'Business management (bm)' directory
+# 5. Upload contents of 'dist' directly into 'Business management (basalt)' directory
 # remove logo.jpeg from dist folder
 rm dist/logo.jpeg
 scp -P 65002 -r dist/* u371241921@147.93.101.85:/home/u371241921/domains/topgrowth.in/public_html/basaltdev

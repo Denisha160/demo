@@ -18,6 +18,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Combobox } from "@/components/ui/combobox";
 import { Textarea } from "@/components/ui/textarea";
 import { useUsers } from "@/hooks/useUsers";
+import { formatDate } from "@/utils/date";
 
 const followUpSchema = z.object({
   status: z.string().min(1, "Status is required"),
@@ -43,6 +44,7 @@ interface FollowUpModalProps {
   open: boolean;
   onClose: () => void;
   followUpData?: FollowUp | null;
+  defaultAssignedTo?: { id: string; name: string };
   isEditing?: boolean;
   onSave: (
     data: FollowUpFormData,
@@ -51,30 +53,23 @@ interface FollowUpModalProps {
   isSubmitting?: boolean;
 }
 
-const getTodayDate = () => new Date().toISOString().split("T")[0];
-const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
+const getCurrentTime = () => new Date().toTimeString();
 
 const getDateOnly = (value?: string | null) => {
-  if (!value) return getTodayDate();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return getTodayDate();
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return formatDate(value);
 };
 
 const FollowUpModal = ({
   open,
   onClose,
   followUpData,
+  defaultAssignedTo,
   isEditing = false,
   onSave,
   isSubmitting = false,
 }: FollowUpModalProps) => {
   const { data: usersResponse } = useUsers({ limit: 100 });
-  const users = usersResponse?.items || usersResponse || [];
+  const users = (usersResponse as any)?.items || usersResponse || [];
   const userOptions = users.map((user: any) => ({
     value: user.id,
     label: user.name,
@@ -124,12 +119,12 @@ const FollowUpModal = ({
       follow_up_method: "",
       purpose: "",
       remarks: "",
-      assigned_to: "",
+      assigned_to: defaultAssignedTo?.id || "",
       scheduled_at: "",
       set_reminder: false,
       reminder_time: "",
     });
-  }, [open, isEditing, followUpData, reset]);
+  }, [open, isEditing, followUpData, reset, defaultAssignedTo]);
 
   const handleFormSubmit = (data: FollowUpFormData) => {
     onSave(data, setError);
@@ -205,10 +200,8 @@ const FollowUpModal = ({
                 <SelectValue placeholder="Select method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Call">Call</SelectItem>
-                <SelectItem value="Email">Email</SelectItem>
-                <SelectItem value="WhatsApp">WhatsApp</SelectItem>
-                <SelectItem value="Meeting">Meeting</SelectItem>
+                <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="offline">Offline</SelectItem>
               </SelectContent>
             </Select>
             {errors.follow_up_method && (

@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { DatePicker } from "@/components/ui/date-picker";
+import { formatDate } from "@/utils/date";
 const toDateAndTime = (remindAt?: string) => {
   if (!remindAt) {
     return {
@@ -33,14 +34,11 @@ const toDateAndTime = (remindAt?: string) => {
     };
   }
 
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
   const hours = String(parsed.getHours()).padStart(2, "0");
   const minutes = String(parsed.getMinutes()).padStart(2, "0");
 
   return {
-    remind_date: `${year}-${month}-${day}`,
+    remind_date: formatDate(remindAt),
     remind_time: `${hours}:${minutes}`,
   };
 };
@@ -73,8 +71,8 @@ interface ReminderModalProps {
   isSubmitting?: boolean;
 }
 
-const getTodayDate = () => new Date().toISOString().split("T")[0];
-const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
+const getTodayDate = () => formatDate(new Date());
+const getCurrentTime = () => new Date().toTimeString();
 
 const ReminderModal = ({
   open,

@@ -14,10 +14,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatDate, formatDateForAPI, formatDateTime } from "@/utils/date";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
+import { X } from "lucide-react";
 import VisitsModal, { Visit, VisitFormData } from "./VisitsModal";
 import {
   useCreateLeadVisit,
@@ -26,7 +34,6 @@ import {
   useUpdateLeadVisit,
 } from "@/hooks/useLeadVisits";
 import { useLeadContacts, useCreateLeadContact } from "@/hooks/useLeadContacts";
-import { useCreateLeadReminder } from "@/hooks/useLeadReminders";
 
 const applyServerValidationErrors = (
   error: any,
@@ -51,39 +58,6 @@ const toNullableNumber = (value?: string) => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
-const formatDateTime = (value?: string) => {
-  if (!value) return "-";
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(parsed);
-};
-
-const getStatusVariant = (status: string) => {
-  switch (status) {
-    case "COMPLETED":
-      return "success";
-    case "SCHEDULED":
-    case "RESCHEDULED":
-      return "info";
-    case "CANCELLED":
-    case "MISSED":
-      return "destructive";
-    case "CHECKED_IN":
-    case "IN_PROGRESS":
-      return "warning";
-    default:
-      return "default";
-  }
-};
-
 interface VisitsTabProps {
   leadId: string;
 }
@@ -103,6 +77,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
   const [visitToDelete, setVisitToDelete] = useState<Visit | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setSearchParams(
@@ -121,8 +96,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: visits = [], isLoading } = useLeadVisits(leadId, {
-    startDate: dateRange?.from?.toISOString(),
-    endDate: dateRange?.to?.toISOString(),
+    startDate: formatDateForAPI(dateRange?.from),
+    endDate: formatDateForAPI(dateRange?.to),
     limit,
     offset: (page - 1) * limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
@@ -130,7 +105,6 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   const createVisitMutation = useCreateLeadVisit(leadId);
   const updateVisitMutation = useUpdateLeadVisit(leadId);
   const deleteVisitMutation = useDeleteLeadVisit(leadId);
-  const createReminderMutation = useCreateLeadReminder(leadId);
 
   const { data: contactData } = useLeadContacts(leadId);
   const contacts = contactData?.contacts || [];
@@ -159,27 +133,26 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       return;
     }
 
-    const {
-      visit_image_file,
-      visit_image_name,
-      ...remainingFormData
-    } = formData;
+    const { visit_image_file, visit_image_name, ...remainingFormData } =
+      formData;
 
     const payload: any = {
       title: remainingFormData.title,
       description: remainingFormData.description,
       visit_type: remainingFormData.visit_type,
-      status: remainingFormData.status,
-      scheduled_time: toIsoDateTime(remainingFormData.scheduled_time),
       location_address: remainingFormData.location_address,
       location_latitude: toNullableNumber(remainingFormData.location_latitude),
-      location_longitude: toNullableNumber(remainingFormData.location_longitude),
+      location_longitude: toNullableNumber(
+        remainingFormData.location_longitude,
+      ),
       customer_rating: toNullableNumber(remainingFormData.customer_rating),
       contact_person_name: remainingFormData.contact_person_name,
       contact_person_designation: remainingFormData.contact_person_designation,
       contact_person_phone: remainingFormData.contact_person_phone,
       outcome_summary: remainingFormData.outcome_summary,
       next_steps: remainingFormData.next_steps,
+      status: formData.status || "COMPLETED", // Default status as requested
+      scheduled_time: formatDateForAPI(formData.scheduled_time),
     };
 
     // Auto-create contact if it is new
@@ -214,26 +187,11 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       dataToSubmit = formDataObj;
     }
 
-    const handleReminderCreation = () => {
-      if (
-        (formData.status === "SCHEDULED" || formData.status === "RESCHEDULED") &&
-        formData.scheduled_time
-      ) {
-        createReminderMutation.mutate({
-          title: `Reminder: Visit: ${formData.title}`,
-          description:
-            formData.description || `Reminder for visit: ${formData.title}`,
-          remind_at: formData.scheduled_time.split("T")[0],
-        });
-      }
-    };
-
     if (editingVisit) {
       updateVisitMutation.mutate(
         { visitId: editingVisit.id, data: dataToSubmit },
         {
           onSuccess: () => {
-            handleReminderCreation();
             setIsModalOpen(false);
             setEditingVisit(null);
           },
@@ -245,30 +203,14 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
 
     createVisitMutation.mutate(dataToSubmit, {
       onSuccess: () => {
-        handleReminderCreation();
         setIsModalOpen(false);
+        setEditingVisit(null);
       },
       onError: (error) => applyServerValidationErrors(error, setError),
     });
   };
 
   const columns: Column<Visit>[] = [
-    {
-      key: "scheduled_time",
-      header: "Visit Date",
-      render: (item) => (
-        <div className="flex items-start gap-2">
-          <div className="rounded-full bg-primary/10 p-1.5 text-primary">
-            <CalendarDays className="h-3.5 w-3.5" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-foreground">
-              {formatDateTime(item.scheduled_time)}
-            </span>
-          </div>
-        </div>
-      ),
-    },
     {
       key: "title",
       header: "Visit Details",
@@ -278,7 +220,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             <img
               src={item.image_url}
               alt={item.visit_image_name || item.title}
-              className="h-12 w-12 rounded-md border border-border/60 object-cover"
+              className="h-12 w-12 cursor-pointer rounded-md border border-border/60 object-cover transition-transform hover:scale-105 active:scale-95"
+              onClick={() => setSelectedImageUrl(item.image_url || null)}
             />
           ) : null}
           <div className="flex flex-col">
@@ -293,19 +236,19 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       ),
     },
     {
-      key: "status",
-      header: "Status",
+      key: "scheduled_time",
+      header: "Scheduled",
       render: (item) => (
-        <div className="space-y-1">
-          <StatusBadge
-            status={item.status.replace(/_/g, " ")}
-            variant={getStatusVariant(item.status)}
-          />
-          <div className="text-[11px] capitalize text-muted-foreground">
-            {item.visit_type.replace("_", " ")}
-          </div>
+        <div className="flex items-center gap-2 text-xs text-foreground">
+          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+          {formatDateTime(item.scheduled_time)}
         </div>
       ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (item) => <StatusBadge status={item.status || "COMPLETED"} />,
     },
     {
       key: "contact_person_name",
@@ -329,13 +272,28 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
       header: "Location",
       render: (item) => (
         <div className="flex max-w-xs items-start gap-2">
-          <MapPin className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
+          {item.location_latitude && item.location_longitude ? (
+            <div className="flex flex-col items-center gap-1">
+              <button
+                title="Open in Google Maps"
+                className="rounded-full p-1 transition-colors hover:bg-primary/10 hover:text-primary"
+                onClick={() => {
+                  const url = `https://www.google.com/maps?q=${item.location_latitude},${item.location_longitude}`;
+                  window.open(url, "_blank");
+                }}
+              >
+                <MapPin className="h-3.5 w-3.5 text-primary" />
+              </button>
+              <span className="rounded-full bg-green-500/10 px-1.5 py-0.5 text-[9px] font-bold text-green-600 dark:bg-green-500/20 dark:text-green-400">
+                LIVE
+              </span>
+            </div>
+          ) : (
+            <MapPin className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
+          )}
           <div className="flex flex-col">
-            <span className="line-clamp-2 text-xs text-foreground">
+            <span className="line-clamp-2 text-sm text-foreground">
               {item.location_address}
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              Rating: {item.customer_rating || "-"}
             </span>
           </div>
         </div>
@@ -462,6 +420,34 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={!!selectedImageUrl}
+        onOpenChange={(open) => !open && setSelectedImageUrl(null)}
+      >
+        <DialogContent className="max-w-3xl border-none bg-transparent p-0 shadow-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Image Preview</DialogTitle>
+          </DialogHeader>
+          <div className="relative flex h-full w-full items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-50 h-8 w-8 rounded-full bg-background/50 text-foreground hover:bg-background/80"
+              onClick={() => setSelectedImageUrl(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            {selectedImageUrl && (
+              <img
+                src={selectedImageUrl}
+                alt="Enlarged visit view"
+                className="max-h-[85vh] w-auto rounded-lg object-contain shadow-2xl"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

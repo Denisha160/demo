@@ -519,7 +519,7 @@ const KitsPage = () => {
             )}
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-2xl bg-muted/5">
+          <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-sm bg-muted/5">
             <div className="h-16 w-16 bg-primary/5 rounded-full flex items-center justify-center mb-4">
               <Package className="h-8 w-8 text-primary/40" />
             </div>

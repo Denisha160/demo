@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { DropResult } from "@hello-pangea/dnd";
 import {
@@ -9,7 +9,24 @@ import {
   isWithinInterval,
   format,
 } from "date-fns";
-import { Plus, Search, Filter, List, Kanban, X } from "lucide-react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import confetti from "canvas-confetti";
+import {
+  Plus,
+  Search,
+  Filter,
+  List,
+  Kanban,
+  X,
+  FileDown,
+  FileUp,
+} from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,20 +39,46 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { formatDate, formatDateForAPI } from "@/utils/date";
 import { Combobox } from "@/components/ui/combobox";
+import { useCategoriesCombobox } from "@/hooks/useProductCategories";
 import LeadModal, { LeadFormData } from "./LeadModal";
 import LeadPipeline from "./LeadPipeline";
 import LeadTable from "./LeadTable";
 import { Deal, PipelineColumn } from "../../../types/leads";
-import { useCreateLead, useLeads, useUpdateLeadStatus, useBulkUpdateLeads } from "@/hooks/useLeads";
+import {
+  useCreateLead,
+  useLeads,
+  useUpdateLeadStatus,
+  useBulkUpdateLeads,
+  useExportLeads,
+} from "@/hooks/useLeads";
 import {
   useLeadStatuses,
   useUpdateLeadStatusOrder,
 } from "@/hooks/useLeadStatus";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { LeadStatus } from "@/types/leadStatus";
 import { listLeads } from "@/services/api";
 import BatchAssignModal from "./BatchAssignModal";
+import { useCurrentUser } from "@/hooks/useAuth";
+import { useUsers } from "@/hooks/useUsers";
 
 const VARIANTS: PipelineColumn["variant"][] = [
   "default",
@@ -77,6 +120,7 @@ const getColumnIdFromLead = (lead: any, statuses: LeadStatus[]) => {
 
 const mapLeadToDeal = (
   lead: any,
+  categories: any[] = [],
 ): Deal & { isVerified?: boolean; isCustomer?: boolean } => ({
   id: String(lead?.id || ""),
   title: lead?.name || lead?.title || "Untitled Lead",
@@ -87,10 +131,7 @@ const mapLeadToDeal = (
       ? String(lead.budget)
       : "-",
   contact: lead?.contact || lead?.email || lead?.phone || "-",
-  date: (lead?.created_at || lead?.date || new Date().toISOString()).slice(
-    0,
-    10,
-  ),
+  date: formatDate(lead?.created_at || lead?.date),
   priority: lead?.priority || "NORMAL",
   quotationStatus: lead?.quotationStatus || lead?.quotation_status,
   isVerified: !!lead?.is_verified,
@@ -99,7 +140,25 @@ const mapLeadToDeal = (
   status_name: lead?.status_name,
   status_color: lead?.status_color,
   tags: lead?.tags,
+  interested_categories: Array.isArray(lead?.interested_category_id)
+    ? lead.interested_category_id
+        .map((cat: any) => {
+          if (typeof cat === "string") return { id: cat, name: cat };
+          const id = String(cat?.id || "");
+          const categoryMatch = (categories as any[]).find(
+            (c) => String(c.id) === id,
+          );
+          return categoryMatch
+            ? { id, name: categoryMatch.name }
+            : cat?.name
+              ? { id, name: cat.name }
+              : null;
+        })
+        .filter((c: any): c is { id: string; name: string } => !!c)
+    : [],
   phone: lead?.phone || lead?.mobile || "-",
+  raw_date: lead?.created_at || lead?.date,
+  expected_revenue: lead?.expected_revenue,
 });
 
 const applyServerValidationErrors = (
@@ -115,15 +174,23 @@ const applyServerValidationErrors = (
 
 const LeadsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { companyId } = useParams();
 
   const searchTerm = searchParams.get("search") || "";
-  const setSearchTerm = useCallback((val: string) => {
-    setSearchParams((prev) => {
-      if (val) prev.set("search", val);
-      else prev.delete("search");
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const setSearchTerm = useCallback(
+    (val: string) => {
+      setSearchParams(
+        (prev) => {
+          if (val) prev.set("search", val);
+          else prev.delete("search");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const dateRange = useMemo<DateRange | undefined>(() => {
     const from = searchParams.get("from");
@@ -134,46 +201,97 @@ const LeadsPage = () => {
     };
   }, [searchParams]);
 
-  const setDateRange = useCallback((range: DateRange | undefined) => {
-    setSearchParams((prev) => {
-      if (range?.from) prev.set("from", format(range.from, "yyyy-MM-dd"));
-      else prev.delete("from");
-      if (range?.to) prev.set("to", format(range.to, "yyyy-MM-dd"));
-      else prev.delete("to");
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const setDateRange = useCallback(
+    (range: DateRange | undefined) => {
+      setSearchParams(
+        (prev) => {
+          if (range?.from) prev.set("from", format(range.from, "yyyy-MM-dd"));
+          else prev.delete("from");
+          if (range?.to) prev.set("to", format(range.to, "yyyy-MM-dd"));
+          else prev.delete("to");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
-  const viewMode = (searchParams.get("view") as "pipeline" | "table") || "pipeline";
-  const setViewMode = useCallback((mode: "pipeline" | "table") => {
-    setSearchParams((prev) => {
-      prev.set("view", mode);
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const viewMode =
+    (searchParams.get("view") as "pipeline" | "table") || "pipeline";
+  const setViewMode = useCallback(
+    (mode: "pipeline" | "table") => {
+      setSelectedLeads([]);
+      setSearchParams(
+        (prev) => {
+          prev.set("view", mode);
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const visibleStageIds = useMemo(() => {
     const stages = searchParams.get("stages");
     return stages ? stages.split(",") : [];
   }, [searchParams]);
 
-  const setVisibleStageIds = useCallback((ids: string[] | ((prev: string[]) => string[])) => {
-    setSearchParams((prev) => {
-      const nextIds = typeof ids === "function" ? ids(visibleStageIds) : ids;
-      if (nextIds.length) prev.set("stages", nextIds.join(","));
-      else prev.delete("stages");
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams, visibleStageIds]);
- 
+  const setVisibleStageIds = useCallback(
+    (ids: string[] | ((prev: string[]) => string[])) => {
+      setSearchParams(
+        (prev) => {
+          const nextIds =
+            typeof ids === "function" ? ids(visibleStageIds) : ids;
+          if (nextIds.length) prev.set("stages", nextIds.join(","));
+          else prev.delete("stages");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams, visibleStageIds],
+  );
+
   const priority = searchParams.get("priority") || "";
-  const setPriority = useCallback((val: string) => {
-    setSearchParams((prev) => {
-      if (val && val !== "ALL") prev.set("priority", val);
-      else prev.delete("priority");
-      return prev;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const setPriority = useCallback(
+    (val: string) => {
+      setSearchParams(
+        (prev) => {
+          if (val && val !== "ALL") prev.set("priority", val);
+          else prev.delete("priority");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const currentUser = useCurrentUser();
+  const assignedTo = searchParams.get("assigned_to") || "";
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const exportLeadsMutation = useExportLeads();
+  const setAssignedTo = useCallback(
+    (val: string) => {
+      setSearchParams(
+        (prev) => {
+          if (val && val !== "all") prev.set("assigned_to", val);
+          else prev.delete("assigned_to");
+          return prev;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const { data: usersResponse } = useUsers(
+    { limit: 100 },
+    { enabled: !!currentUser?.is_root_user },
+  );
+  const usersList = (usersResponse as any)?.items || [];
 
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isBatchAssignOpen, setIsBatchAssignOpen] = useState(false);
@@ -185,40 +303,56 @@ const LeadsPage = () => {
   const bulkUpdateLeadsMutation = useBulkUpdateLeads();
   const [isAssigning, setIsAssigning] = useState(false);
   const [tableResetKey, setTableResetKey] = useState(0);
+  const [tableLimit, setTableLimit] = useState(20);
+  const [tablePage, setTablePage] = useState(1);
 
   const hasFilters = useMemo(() => {
-    return Boolean(searchTerm || dateRange?.from || dateRange?.to || priority);
-  }, [searchTerm, dateRange, priority]);
+    return Boolean(
+      searchTerm || dateRange?.from || dateRange?.to || priority || assignedTo,
+    );
+  }, [searchTerm, dateRange, priority, assignedTo]);
 
   const handleClearFilters = () => {
-    setSearchParams((prev) => {
-      prev.delete("search");
-      prev.delete("from");
-      prev.delete("to");
-      prev.delete("priority");
-      return prev;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        prev.delete("search");
+        prev.delete("from");
+        prev.delete("to");
+        prev.delete("priority");
+        prev.delete("assigned_to");
+        return prev;
+      },
+      { replace: true },
+    );
   };
 
   const filters = useMemo(() => {
     const f: any = {};
     if (searchTerm) f.search = searchTerm;
-    if (dateRange?.from) f.start_date = format(dateRange.from, "yyyy-MM-dd");
+    if (dateRange?.from) {
+      f.start_date = formatDateForAPI(dateRange.from);
+    }
     if (dateRange?.to) {
-      f.end_date = format(dateRange.to, "yyyy-MM-dd");
-    } else if (dateRange?.from) {
-      f.end_date = format(dateRange.from, "yyyy-MM-dd");
+      f.end_date = formatDateForAPI(dateRange.to);
     }
     if (priority && priority !== "ALL") f.priority = priority;
+    if (currentUser?.is_root_user && assignedTo && assignedTo !== "all") {
+      f.assigned_to = assignedTo;
+    }
     return f;
-  }, [searchTerm, dateRange, priority]);
+  }, [searchTerm, dateRange, priority, assignedTo, currentUser]);
 
-  const [paginationData, setPaginationData] = useState<Record<string, {
-    items: any[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>>({});
+  const [paginationData, setPaginationData] = useState<
+    Record<
+      string,
+      {
+        items: any[];
+        total: number;
+        offset: number;
+        limit: number;
+      }
+    >
+  >({});
 
   const [tableData, setTableData] = useState<{
     items: any[];
@@ -233,17 +367,23 @@ const LeadsPage = () => {
   );
 
   const { data: initialTableLeads, isLoading: isTableLoading } = useLeads<any>(
-    { ...filters, limit: 20, offset: 0 },
+    { ...filters, limit: tableLimit, offset: (tablePage - 1) * tableLimit },
     (res) => res?.data,
     { enabled: viewMode === "table" },
   );
 
   const isLoading = viewMode === "pipeline" ? isGroupLoading : isTableLoading;
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
+  const { data: categories = [] } = useCategoriesCombobox(undefined, {
+    enabled: isLeadModalOpen,
+  });
   const createLeadMutation = useCreateLead();
   const updateLeadMutation = useUpdateLeadStatus();
   const updateStatusOrderMutation = useUpdateLeadStatusOrder();
-  const leadStatuses = useMemo(() => (statusResponse as any)?.items || [], [statusResponse]);
+  const leadStatuses = useMemo(
+    () => (statusResponse as any)?.items || [],
+    [statusResponse],
+  );
 
   useEffect(() => {
     if (initialGroups) {
@@ -265,7 +405,7 @@ const LeadsPage = () => {
       setTableData({
         items: (initialTableLeads as any).items,
         total: (initialTableLeads as any).pagination.total,
-        offset: 0,
+        offset: (initialTableLeads as any).pagination.offset,
       });
     }
   }, [initialTableLeads]);
@@ -284,9 +424,9 @@ const LeadsPage = () => {
     setColumnOrder((prev) =>
       prev.length
         ? [
-          ...prev.filter((id) => sortedIds.includes(id)),
-          ...sortedIds.filter((id) => !prev.includes(id)),
-        ]
+            ...prev.filter((id) => sortedIds.includes(id)),
+            ...sortedIds.filter((id) => !prev.includes(id)),
+          ]
         : sortedIds,
     );
     if (!searchParams.has("stages")) {
@@ -302,8 +442,8 @@ const LeadsPage = () => {
         deal.company.toLowerCase().includes(searchTerm.toLowerCase());
 
       let matchesDate = true;
-      if (dateRange?.from) {
-        const dealDate = parseISO(deal.date);
+      if (dateRange?.from && deal.raw_date) {
+        const dealDate = new Date(deal.raw_date);
         const fromDate = startOfDay(dateRange.from);
         const toDate = dateRange.to
           ? endOfDay(dateRange.to)
@@ -333,25 +473,42 @@ const LeadsPage = () => {
         const statusIndex = sortedStatuses.findIndex(
           (status) => status.id === columnId,
         );
-        const status = sortedStatuses.find((item) => item.id === columnId);
+        const status = sortedStatuses.find((status) => status.id === columnId);
         if (!status) return null;
 
         const paginated = paginationData[columnId];
         const statusItems = paginated?.items || [];
+        const deals = statusItems
+          .map((item) => mapLeadToDeal(item, categories as any[]))
+          .filter(isDealVisible);
+
+        const totalRevenue = deals.reduce(
+          (sum, d) => sum + (Number(d.expected_revenue) || 0),
+          0,
+        );
 
         return {
           id: status.id,
           title: status.name,
           variant: VARIANTS[statusIndex % VARIANTS.length] || "default",
           color: status.color,
-          deals: statusItems.map(mapLeadToDeal).filter(isDealVisible),
+          deals,
           total: paginated?.total || 0,
-        } satisfies PipelineColumn & { total: number };
+          total_expected_revenue: totalRevenue,
+        } satisfies PipelineColumn & {
+          total: number;
+          total_expected_revenue: number;
+        };
       })
-      .filter(Boolean) as (PipelineColumn & { total: number })[];
-  }, [columnOrder, isDealVisible, leadStatuses, paginationData]);
+      .filter(Boolean) as (PipelineColumn & {
+      total: number;
+      total_expected_revenue: number;
+    })[];
+  }, [columnOrder, isDealVisible, leadStatuses, paginationData, categories]);
 
-  const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(null);
+  const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(
+    null,
+  );
 
   const handleLoadMore = async (statusId: string) => {
     const current = paginationData[statusId];
@@ -384,32 +541,13 @@ const LeadsPage = () => {
     }
   };
 
-  const [isTableLoadingMore, setIsTableLoadingMore] = useState(false);
+  const handlePageChange = (page: number) => {
+    setTablePage(page);
+  };
 
-  const handleLoadMoreTable = async () => {
-    if (tableData.items.length >= tableData.total) return;
-
-    setIsTableLoadingMore(true);
-    try {
-      const nextOffset = tableData.offset + 20;
-      const response = await listLeads({
-        ...filters,
-        limit: 20,
-        offset: nextOffset,
-      });
-
-      const newItems = (response as any)?.data?.items || [];
-      setTableData((prev) => ({
-        ...prev,
-        items: [...prev.items, ...newItems],
-        offset: nextOffset,
-      }));
-    } catch (error) {
-      console.error("Failed to load more leads:", error);
-      toast.error("Failed to load more leads.");
-    } finally {
-      setIsTableLoadingMore(false);
-    }
+  const handlePageSizeChange = (size: number) => {
+    setTableLimit(size);
+    setTablePage(1); // Reset to first page on size change
   };
 
   const onDragEnd = (result: DropResult) => {
@@ -511,6 +649,43 @@ const LeadsPage = () => {
     // Fire API call only for inter-column moves, since intra-column reordering
     // might not be natively supported by the backend without a specific index/order field.
     if (source.droppableId !== destination.droppableId) {
+      const destStatus = leadStatuses.find(
+        (s: any) => s.id === destination.droppableId,
+      );
+      if (destStatus?.name?.toLowerCase().includes("won")) {
+        const duration = 5 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = {
+          startVelocity: 30,
+          spread: 360,
+          ticks: 60,
+          zIndex: 9999,
+        };
+
+        const randomInRange = (min: number, max: number) =>
+          Math.random() * (max - min) + min;
+
+        const interval = window.setInterval(() => {
+          const timeLeft = animationEnd - Date.now();
+
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
+
+          const particleCount = 50 * (timeLeft / duration);
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+          });
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+          });
+        }, 250);
+      }
+
       updateLeadMutation.mutate(
         {
           leadId: movedDeal.id,
@@ -577,144 +752,208 @@ const LeadsPage = () => {
         id: "all",
         title: "All Leads",
         variant: "default" as const,
-        deals: tableData.items.map(mapLeadToDeal),
+        deals: tableData.items.map((item) =>
+          mapLeadToDeal(item, categories as any[]),
+        ),
       },
     ];
-  }, [tableData.items]);
+  }, [tableData.items, categories]);
 
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
-      <div className="flex flex-col gap-2 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:pb-2">
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-          <div className="relative w-full sm:flex-initial">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
-            <Input
-              placeholder="Search leads..."
-              className="h-9 w-full rounded-sm border-border/60 bg-background pl-9 text-sm focus-visible:ring-1 focus-visible:ring-primary/20 sm:min-w-30"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="flex w-full flex-col gap-2 md:w-auto sm:flex-row sm:items-center sm:gap-2">
-            <div className="flex w-full items-center gap-2 sm:w-auto">
-              <div className="flex-1 sm:flex-none">
-                <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-              </div>
- 
-              <div className="w-[140px]">
-                <Combobox
-                  options={PRIORITY_OPTIONS}
-                  value={priority || "ALL"}
-                  onValueChange={setPriority}
-                  placeholder="Priority"
-                  className="h-9"
+      <div className="border-b border-border">
+        <div className="overflow-x-auto 2xl:overflow-x-visible scrollbar-premium py-2">
+          <div className="flex items-center justify-between gap-2 min-w-max px-2 2xl:min-w-0 2xl:w-full">
+            <div className="flex items-center gap-2">
+              {/* Search */}
+              <div className="relative w-64 2xl:w-72">
+                <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
+                <Input
+                  placeholder="Search leads..."
+                  className="h-9 w-full rounded-sm border-border/60 bg-background pl-9 text-sm focus-visible:ring-1 focus-visible:ring-primary/20"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
- 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9 shrink-0 border-border/60 bg-background hover:bg-accent/50"
-                  >
-                    <Filter className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="text-xs font-semibold">
-                    Filter Stages
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {columns.map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      checked={visibleStageIds.includes(column.id)}
-                      onCheckedChange={() => toggleStageVisibility(column.id)}
-                      onSelect={(e) => e.preventDefault()}
-                      className="text-sm"
-                    >
-                      {column.title}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
 
-              {hasFilters && (
-                <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+              {/* Filters Group */}
+              <div className="flex items-center gap-2">
+                <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+
+                <div className="w-[140px]">
+                  <Combobox
+                    options={PRIORITY_OPTIONS}
+                    value={priority || "ALL"}
+                    onValueChange={setPriority}
+                    placeholder="Priority"
+                    className="h-9"
+                  />
+                </div>
+
+                {currentUser?.is_root_user && (
+                  <div className="w-[180px]">
+                    <Select
+                      value={assignedTo || "all"}
+                      onValueChange={setAssignedTo}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Assigned To" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Users</SelectItem>
+                        {usersList.map((u: { id: string; name: string }) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0 border-border/60 bg-background hover:bg-accent/50"
+                    >
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="text-xs font-semibold">
+                      Filter Stages
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {columns.map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        checked={visibleStageIds.includes(column.id)}
+                        onCheckedChange={() => toggleStageVisibility(column.id)}
+                        onSelect={(e) => e.preventDefault()}
+                        className="text-sm"
+                      >
+                        {column.title}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-2 border-border/60 bg-background hover:bg-accent/50"
+                  onClick={() => setIsExportDialogOpen(true)}
+                >
+                  <FileDown className="h-4 w-4" />
+                  <span className="text-xs font-semibold">Export Sheet</span>
+                </Button>
+
+                {hasFilters && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleClearFilters}
-                    className="h-9 px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                    className="h-9 px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground animate-in fade-in slide-in-from-left-2 duration-300"
                   >
                     <X className="mr-1 h-3.5 w-3.5" />
                     Clear
                   </Button>
+                )}
+              </div>
+
+              <div className="h-6 w-px bg-border/60 mx-1" />
+
+              {/* View Switcher */}
+              <TooltipProvider>
+                <div className="flex items-center gap-1 rounded-sm border border-border/60 bg-muted/20 p-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={
+                          viewMode === "pipeline" ? "secondary" : "ghost"
+                        }
+                        size="sm"
+                        className={cn(
+                          "h-7 px-2.5 rounded-xs text-xs font-semibold transition-all",
+                          viewMode === "pipeline"
+                            ? "bg-background shadow-xs text-primary"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                        onClick={() => setViewMode("pipeline")}
+                      >
+                        <Kanban className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="text-[11px] font-medium">Pipeline View</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={viewMode === "table" ? "secondary" : "ghost"}
+                        size="sm"
+                        className={cn(
+                          "h-7 px-2.5 rounded-xs text-xs font-semibold transition-all",
+                          viewMode === "table"
+                            ? "bg-background shadow-xs text-primary"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                        onClick={() => setViewMode("table")}
+                      >
+                        <List className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="text-[11px] font-medium">Table View</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
-              )}
+              </TooltipProvider>
             </div>
 
-            <div className="flex w-full justify-center gap-1 rounded-sm border border-border/60 bg-muted/20 p-1 sm:w-auto">
+            {/* Actions */}
+            <div className="flex items-center gap-2">
               <Button
-                variant={viewMode === "pipeline" ? "secondary" : "ghost"}
+                variant="outline"
                 size="sm"
-                className={cn(
-                  "h-7 flex-1 rounded-xs px-3 text-xs font-semibold transition-all sm:flex-none",
-                  viewMode === "pipeline"
-                    ? "bg-background shadow-xs text-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                onClick={() => setViewMode("pipeline")}
+                className="h-9 gap-2 border-border/60 bg-background hover:bg-accent/50"
+                onClick={() => navigate(`/${companyId}/leads/import`)}
               >
-                <Kanban className="mr-1.5 h-3.5 w-3.5" />
-                <span>Pipeline</span>
+                <FileUp className="h-4 w-4" />
+                <span className="text-xs font-semibold">Import Lead</span>
               </Button>
+
+              {viewMode === "table" && selectedLeads.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsBatchAssignOpen(true)}
+                  className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-accent animate-in slide-in-from-right-4"
+                  disabled={isAssigning}
+                >
+                  Bulk Operation ({selectedLeads.length})
+                </Button>
+              )}
+
               <Button
-                variant={viewMode === "table" ? "secondary" : "ghost"}
+                onClick={() => {
+                  setCreateLeadStatusId(
+                    columns[0]?.id || createLeadStatusId || null,
+                  );
+                  setIsLeadModalOpen(true);
+                }}
                 size="sm"
-                className={cn(
-                  "h-7 flex-1 rounded-xs px-3 text-xs font-semibold transition-all sm:flex-none",
-                  viewMode === "table"
-                    ? "bg-background shadow-xs text-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                onClick={() => setViewMode("table")}
+                className="h-9 px-6 font-semibold shadow-sm transition-all active:scale-95"
               >
-                <List className="mr-1.5 h-3.5 w-3.5" />
-                <span>Table</span>
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="whitespace-nowrap">Create Lead</span>
               </Button>
             </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {selectedLeads.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsBatchAssignOpen(true)}
-              className="h-9 px-4 font-semibold shadow-sm transition-all hover:bg-primary hover:text-primary-foreground animate-in slide-in-from-right-4"
-              disabled={isAssigning}
-            >
-              Assign To ({selectedLeads.length})
-            </Button>
-          )}
-
-          <Button
-            onClick={() => {
-              setCreateLeadStatusId(
-                columns[0]?.id || createLeadStatusId || null,
-              );
-              setIsLeadModalOpen(true);
-            }}
-            size="sm"
-            className="h-9 w-full px-4 font-semibold shadow-sm transition-all hover:shadow-md active:scale-95 lg:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="whitespace-nowrap">Create Lead</span>
-          </Button>
         </div>
       </div>
 
@@ -731,9 +970,12 @@ const LeadsPage = () => {
             <LeadTable
               key={tableResetKey}
               displayedColumns={tableColumns}
-              onLoadMore={handleLoadMoreTable}
-              hasMore={tableData.items.length < tableData.total}
-              isLoadingMore={isTableLoadingMore}
+              total={tableData.total}
+              page={tablePage}
+              pageSize={tableLimit}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              isLoading={isTableLoading}
               enableSelection={true}
               onSelectionChange={setSelectedLeads}
             />
@@ -760,6 +1002,49 @@ const LeadsPage = () => {
         selectedCount={selectedLeads.length}
         isSubmitting={isAssigning}
       />
+
+      <AlertDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Export Leads to CSV</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to export the filtered leads to a CSV file?
+              This will include all the current applied filters.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={exportLeadsMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                const params = {
+                  search: searchTerm,
+                  status_id: searchParams.get("status_id"),
+                  source_id: searchParams.get("source_id"),
+                  priority: priority,
+                  start_date: formatDateForAPI(dateRange?.from),
+                  end_date: formatDateForAPI(dateRange?.to),
+                  assigned_to: assignedTo,
+                  sort_by: "updated_at",
+                  sort_direction: "desc",
+                };
+                exportLeadsMutation.mutate(params, {
+                  onSuccess: () => setIsExportDialogOpen(false),
+                });
+              }}
+              className="bg-primary hover:bg-primary/90"
+              disabled={exportLeadsMutation.isPending}
+            >
+              {exportLeadsMutation.isPending ? "Exporting..." : "Yes, Export"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -45,19 +45,34 @@ const CATEGORIES: Category[] = [
     label: "Leads",
     icon: <Briefcase className="h-3.5 w-3.5" />,
     moduleKeys: [
-      "lead", "lead-status", "lead-source", "lead-contact",
-      "lead-followup", "lead-task", "lead-visit", "lead-attachment",
-      "lead-reminder", "lead-activity", "lead-tag",
-      "lead-interested-product", "lead-verification",
+      "lead",
+      "lead-status",
+      "lead-source",
+      "lead-contact",
+      "lead-followup",
+      "lead-task",
+      "lead-visit",
+      "lead-attachment",
+      "lead-reminder",
+      "lead-activity",
+      "lead-tag",
+      "lead-interested-product",
+      "lead-verification",
     ],
   },
   {
     label: "Products",
     icon: <Package className="h-3.5 w-3.5" />,
     moduleKeys: [
-      "product", "product-category", "product-brand", "product-fragrance",
-      "product-package", "product-kit", "product-bom",
-      "product-interested", "product-image",
+      "product",
+      "product-category",
+      "product-brand",
+      "product-fragrance",
+      "product-package",
+      "product-kit",
+      "product-bom",
+      "product-interested",
+      "product-image",
     ],
   },
   {
@@ -78,7 +93,7 @@ const CATEGORIES: Category[] = [
 ];
 
 const ALL_KNOWN_KEYS = new Set(
-  CATEGORIES.flatMap((c) => c.moduleKeys).filter((k) => k !== "__other__")
+  CATEGORIES.flatMap((c) => c.moduleKeys).filter((k) => k !== "__other__"),
 );
 
 const RoleDetail = () => {
@@ -137,7 +152,7 @@ const RoleDetail = () => {
       const groups = allGroups.filter((g) =>
         cat.moduleKeys.includes("__other__")
           ? !ALL_KNOWN_KEYS.has(g.moduleKey)
-          : cat.moduleKeys.includes(g.moduleKey)
+          : cat.moduleKeys.includes(g.moduleKey),
       );
       return { ...cat, groups };
     }).filter((s) => s.groups.length > 0);
@@ -177,7 +192,10 @@ const RoleDetail = () => {
     });
   };
 
-  const toggleCategorySelection = (groups: PermissionGroup[], select: boolean) => {
+  const toggleCategorySelection = (
+    groups: PermissionGroup[],
+    select: boolean,
+  ) => {
     const allPerms = groups.flatMap((g) => g.permissions);
     toggleGroupSelection(allPerms, select);
   };
@@ -270,7 +288,9 @@ const RoleDetail = () => {
       {/* Permissions — grouped by category */}
       <div className="space-y-6">
         {sections.map((section) => {
-          const totalInCat = section.groups.flatMap((g) => g.permissions).length;
+          const totalInCat = section.groups.flatMap(
+            (g) => g.permissions,
+          ).length;
           const selectedInCat = section.groups
             .flatMap((g) => g.permissions)
             .filter((p) => p.enabled).length;
@@ -293,7 +313,9 @@ const RoleDetail = () => {
                     variant="ghost"
                     size="sm"
                     className="h-6 text-[10px] px-2 text-muted-foreground"
-                    onClick={() => toggleCategorySelection(section.groups, true)}
+                    onClick={() =>
+                      toggleCategorySelection(section.groups, true)
+                    }
                   >
                     All
                   </Button>
@@ -301,7 +323,9 @@ const RoleDetail = () => {
                     variant="ghost"
                     size="sm"
                     className="h-6 text-[10px] px-2 text-muted-foreground"
-                    onClick={() => toggleCategorySelection(section.groups, false)}
+                    onClick={() =>
+                      toggleCategorySelection(section.groups, false)
+                    }
                   >
                     None
                   </Button>
@@ -322,7 +346,8 @@ const RoleDetail = () => {
                           {group.module}
                         </h3>
                         <span className="text-[10px] text-muted-foreground font-mono">
-                          {group.permissions.filter((p) => p.enabled).length}/{group.permissions.length}
+                          {group.permissions.filter((p) => p.enabled).length}/
+                          {group.permissions.length}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -330,7 +355,9 @@ const RoleDetail = () => {
                           variant="ghost"
                           size="sm"
                           className="h-6 text-[10px] px-2"
-                          onClick={() => toggleGroupSelection(group.permissions, true)}
+                          onClick={() =>
+                            toggleGroupSelection(group.permissions, true)
+                          }
                         >
                           All
                         </Button>
@@ -338,7 +365,9 @@ const RoleDetail = () => {
                           variant="ghost"
                           size="sm"
                           className="h-6 text-[10px] px-2"
-                          onClick={() => toggleGroupSelection(group.permissions, false)}
+                          onClick={() =>
+                            toggleGroupSelection(group.permissions, false)
+                          }
                         >
                           None
                         </Button>
@@ -365,7 +394,9 @@ const RoleDetail = () => {
                           </div>
                           <Checkbox
                             checked={permission.enabled}
-                            onCheckedChange={() => togglePermission(permission.id)}
+                            onCheckedChange={() =>
+                              togglePermission(permission.id)
+                            }
                             className="rounded-sm border-muted-foreground/30 data-[state=checked]:bg-primary"
                           />
                         </div>

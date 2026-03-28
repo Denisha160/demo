@@ -85,8 +85,7 @@ const CallLogModal = ({
           recording_url: callLogData.recording_url || "",
           subject: callLogData.subject || "",
           remarks: callLogData.remarks || "",
-          created_at:
-            callLogData.created_at || "",
+          created_at: callLogData.created_at || "",
         });
       } else {
         form.reset({

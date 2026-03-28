@@ -39,27 +39,42 @@ const InterestedCategorySelect = ({
   onValueChange: (val: any[]) => void;
   disabled?: boolean;
 }) => {
-  const { data: categories = [] } = useCategoriesCombobox();
-  const suggestions = categories
-    .filter((cat: any) => !!cat.parent_name)
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+
+  const { data: categories = [] } = useCategoriesCombobox({
+    search: debouncedSearch,
+  });
+
+  const suggestions = (categories as any[])
+    .filter((cat: any) => !cat.parent_name)
     .map((cat: any) => ({
       id: String(cat.id),
       name: cat.name,
     }));
 
-  const displayValue = (Array.isArray(value) ? value : []).map((val: any) => {
-    const id = typeof val === "string" ? val : val?.id || val?.name;
-    const suggestion = suggestions.find((s) => s.id === id);
-    return (
-      suggestion || (typeof val === "string" ? { id: val, name: val } : val)
-    );
-  });
+  const displayValue = (Array.isArray(value) ? value : [])
+    .map((val: any) => {
+      if (typeof val === "string") return { id: val, name: val };
+      const id = val?.id || String(val);
+      const categoryMatch = (categories as any[]).find(
+        (c) => String(c.id) === id,
+      );
+      return categoryMatch
+        ? { id, name: categoryMatch.name }
+        : val?.name
+          ? { id, name: val.name }
+          : null;
+    })
+    .filter((v: any): v is { id: string; name: string } => !!v);
 
   return (
     <TagSelector
       suggestions={suggestions}
       value={displayValue}
       onChange={onValueChange}
+      onSearchChange={setSearch}
+      searchValue={search}
       disabled={disabled}
       creatable={false}
     />
@@ -77,13 +92,13 @@ interface ProfileTabProps {
 const leadSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email").or(z.literal("")),
-  phone: z
-    .string()
-    .min(1, "Phone is required")
-    .regex(/^\d+$/, "Only numbers allowed")
-    .min(10, "Must be at least 10 digits"),
-  alternate_phone: z
-    .string()
+  phone: z.union([z.string(), z.number()])
+    .transform((val) => String(val))
+    .refine((val) => val.length > 0, "Phone is required")
+    .refine((val) => /^\d+$/.test(val), "Only numbers allowed")
+    .refine((val) => val.length >= 10, "Must be at least 10 digits"),
+  alternate_phone: z.union([z.string(), z.number()])
+    .transform((val) => (val ? String(val) : ""))
     .optional()
     .refine(
       (val) => !val || /^[0-9]{10}$/.test(val),
@@ -129,6 +144,11 @@ const leadSchema = z.object({
     .optional(),
   address_line1: z.string().optional(),
   address_line2: z.string().optional(),
+  expected_revenue: z.union([z.string(), z.number()])
+    .transform((val) => (val !== undefined && val !== null ? String(val) : ""))
+    .optional()
+    .refine((val) => !val || /^[0-9.]+$/.test(val), "Must be a number")
+    .or(z.literal("")),
 });
 
 const ProfileTab = ({
@@ -151,8 +171,7 @@ const ProfileTab = ({
       value: item.id,
       label: item.name,
     })) || [];
-  const users =
-    (usersResponse as any)?.items || (usersResponse as any) || [];
+  const users = (usersResponse as any)?.items || (usersResponse as any) || [];
   const userOptions = users.map((user: any) => ({
     value: user.id,
     label: user.name,
@@ -251,22 +270,32 @@ const ProfileTab = ({
 
   // Handle initialization of labels for existing data
   useEffect(() => {
-    if (leadProfile.country_id && countryOptions.length > 0 && !selectedCountryName) {
-      const label = countryOptions.find(o => o.value === leadProfile.country_id)?.label;
+    if (
+      leadProfile.country_id &&
+      countryOptions.length > 0 &&
+      !selectedCountryName
+    ) {
+      const label = countryOptions.find(
+        (o) => o.value === leadProfile.country_id,
+      )?.label;
       if (label) setSelectedCountryName(label);
     }
   }, [leadProfile.country_id, countryOptions, selectedCountryName]);
 
   useEffect(() => {
     if (leadProfile.state_id && stateOptions.length > 0 && !selectedStateName) {
-      const label = stateOptions.find(o => o.value === leadProfile.state_id)?.label;
+      const label = stateOptions.find(
+        (o) => o.value === leadProfile.state_id,
+      )?.label;
       if (label) setSelectedStateName(label);
     }
   }, [leadProfile.state_id, stateOptions, selectedStateName]);
 
   useEffect(() => {
     if (leadProfile.city_id && cityOptions.length > 0 && !selectedCityName) {
-      const label = cityOptions.find(o => o.value === leadProfile.city_id)?.label;
+      const label = cityOptions.find(
+        (o) => o.value === leadProfile.city_id,
+      )?.label;
       if (label) setSelectedCityName(label);
     }
   }, [leadProfile.city_id, cityOptions, selectedCityName]);
@@ -282,7 +311,7 @@ const ProfileTab = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full animate-fade-in rounded-2xl border border-border/50 bg-card p-4 shadow-sm"
+        className="w-full animate-fade-in rounded-sm border border-border/50 bg-card p-4 shadow-sm"
       >
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -548,7 +577,9 @@ const ProfileTab = ({
                         onSearchChange={setCountrySearch}
                         selectedLabel={selectedCountryName}
                         onValueChange={(id) => {
-                          const label = countryOptions.find(o => o.value === id)?.label;
+                          const label = countryOptions.find(
+                            (o) => o.value === id,
+                          )?.label;
                           setSelectedCountryName(label || "");
                           field.onChange(id);
                           setSelectedCountryId(id);
@@ -583,7 +614,9 @@ const ProfileTab = ({
                         onSearchChange={setStateSearch}
                         selectedLabel={selectedStateName}
                         onValueChange={(id) => {
-                          const label = stateOptions.find(o => o.value === id)?.label;
+                          const label = stateOptions.find(
+                            (o) => o.value === id,
+                          )?.label;
                           setSelectedStateName(label || "");
                           field.onChange(id);
                           setSelectedStateId(id);
@@ -620,7 +653,9 @@ const ProfileTab = ({
                         onSearchChange={setCitySearch}
                         selectedLabel={selectedCityName}
                         onValueChange={(id) => {
-                          const label = cityOptions.find(o => o.value === id)?.label;
+                          const label = cityOptions.find(
+                            (o) => o.value === id,
+                          )?.label;
                           setSelectedCityName(label || "");
                           field.onChange(id);
                           setSelectedCityId(id);
@@ -759,6 +794,27 @@ const ProfileTab = ({
                         disabled={!isEditing || isSaving}
                         className="h-9 text-sm uppercase"
                         placeholder="Enter PAN Number"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="expected_revenue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold">
+                      Expected Revenue
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        disabled={!isEditing || isSaving}
+                        type="number"
+                        className="h-9 text-sm"
+                        placeholder="Enter Expected Revenue"
                         {...field}
                       />
                     </FormControl>

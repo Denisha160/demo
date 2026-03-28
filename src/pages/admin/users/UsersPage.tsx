@@ -11,10 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Network, Table2 } from "lucide-react";
 import UserModal from "./UserModal";
+import SystemHierarchyView from "./components/SystemHierarchyView";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useDeleteUser, useUpdateUser } from "@/hooks/useUsers";
+import { useHasPermission } from "@/hooks/useAuth";
 import { User, UserUpdatePayload } from "@/types/user";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRoles } from "@/hooks/useRoles";
@@ -22,18 +24,20 @@ import { useRoles } from "@/hooks/useRoles";
 // Helper component for the inline shift selector
 const ShiftSelect = ({ user }: { user: User }) => {
   const { mutate: updateUser, isPending } = useUpdateUser();
+  const { hasPermission } = useHasPermission();
+  const canUpdate = hasPermission("user.update");
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
       <Select
         value={user.work_shift || "morning"}
         onValueChange={(val: "morning" | "evening" | "night" | "rotating") => {
-          if (val !== user.work_shift) {
+          if (val !== user.work_shift && canUpdate) {
             const payload: UserUpdatePayload = { id: user.id, work_shift: val };
             updateUser(payload);
           }
         }}
-        disabled={isPending}
+        disabled={isPending || !canUpdate}
       >
         <SelectTrigger className="w-[110px] h-8 text-xs">
           <SelectValue placeholder="Select shift" />
@@ -52,11 +56,17 @@ const ShiftSelect = ({ user }: { user: User }) => {
 const Users = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { hasPermission } = useHasPermission();
 
-  const { data: rolesData } = useRoles({});
-  const roleOptions = (rolesData?.items || []).map(
-    (r: { id: string; name: string }) => ({ value: r.id, label: r.name })
+  const { data: rolesData } = useRoles(
+    {},
+    { enabled: hasPermission("role.read") },
   );
+  const roleOptions = (rolesData?.items || []).map(
+    (r: { id: string; name: string }) => ({ value: r.id, label: r.name }),
+  );
+
+  const [view, setView] = useState<"table" | "tree">("table");
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
@@ -67,7 +77,7 @@ const Users = () => {
 
   // Single role filter — stored in URL as ?role=
   const [filterRoleId, setFilterRoleId] = useState<string>(
-    searchParams.get("role") || ""
+    searchParams.get("role") || "",
   );
 
   const [page, setPage] = useState(
@@ -84,7 +94,7 @@ const Users = () => {
   );
 
   const hasFilters = Boolean(
-    search || filterStatus !== "All" || sortKey || filterRoleId
+    search || filterStatus !== "All" || sortKey || filterRoleId,
   );
 
   const handleClearFilters = () => {
@@ -154,8 +164,8 @@ const Users = () => {
   });
 
   const { mutate: deleteUser } = useDeleteUser();
-  const users = usersResponse?.items || [];
-  const totalItems = usersResponse?.pagination?.total || 0;
+  const users = (usersResponse as any)?.items || [];
+  const totalItems = (usersResponse as any)?.pagination?.total || 0;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -185,18 +195,20 @@ const Users = () => {
       className: "w-[300px]",
       render: (item) => (
         <div
-          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+          className={`flex items-center gap-3 transition-opacity ${hasPermission("user.update") ? "cursor-pointer hover:opacity-80" : ""}`}
           onClick={(e) => {
-            e.stopPropagation();
-            navigate(`${item.id}`);
+            if (hasPermission("user.update")) {
+              e.stopPropagation();
+              navigate(`${item.id}`);
+            }
           }}
         >
           <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
             {item.name
               ? item.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
               : "?"}
           </div>
           <div className="min-w-0">
@@ -251,7 +263,9 @@ const Users = () => {
       key: "role_assignments" as keyof User,
       header: "Roles",
       className: "hidden lg:table-cell",
-      render: (item: User & { role_assignments?: { company: string; role: string }[] }) => {
+      render: (
+        item: User & { role_assignments?: { company: string; role: string }[] },
+      ) => {
         const assignments = item.role_assignments ?? [];
         if (assignments.length === 0) {
           return <p className="text-xs text-muted-foreground">—</p>;
@@ -260,7 +274,10 @@ const Users = () => {
           <div className="flex flex-col gap-0.5 max-w-[220px]">
             {assignments.map((a, i) => (
               <div key={i} className="flex items-center gap-1 min-w-0">
-                <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px]" title={a.company}>
+                <span
+                  className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[90px]"
+                  title={a.company}
+                >
                   {a.company}
                 </span>
                 <span className="text-[10px] text-muted-foreground">·</span>
@@ -347,42 +364,81 @@ const Users = () => {
             </div>
           )}
         </div>
-        <Button
-          size="sm"
-          className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
-          onClick={() => {
-            setSelectedUser(null);
-            setModalOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" /> Add User
-        </Button>
+        {hasPermission("user.create") && (
+          <div className="flex items-center gap-2 flex-1 sm:flex-none">
+            <div className="flex items-center border border-border rounded-sm p-0.5 bg-muted/30">
+              <Button
+                variant={view === "table" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 px-2 text-[10px] uppercase font-bold tracking-wider gap-1.5 rounded-xs"
+                onClick={() => setView("table")}
+              >
+                <Table2 className="h-3.5 w-3.5" /> Table
+              </Button>
+              <Button
+                variant={view === "tree" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 px-2 text-[10px] uppercase font-bold tracking-wider gap-1.5 rounded-xs"
+                onClick={() => setView("tree")}
+              >
+                <Network className="h-3.5 w-3.5" /> Tree
+              </Button>
+            </div>
+            <Button
+              size="sm"
+              className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
+              onClick={() => {
+                setSelectedUser(null);
+                setModalOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Add User
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="border border-border/60 rounded-sm shadow-sm">
-        <DataTable
-          data={users}
-          columns={columns}
-          isLoading={isLoading}
-          pageSize={limit}
-          serverSide={true}
-          serverTotal={totalItems}
-          serverPage={page}
-          serverSortKey={sortKey || undefined}
-          serverSortDirection={sortDirection}
-          onServerPageChange={setPage}
-          onServerPageSizeChange={(newSize) => {
-            setLimit(newSize);
-            setPage(1);
-          }}
-          onServerSortChange={(key, direction) => {
-            setSortKey(key);
-            setSortDirection(direction);
-            setPage(1);
-          }}
-          onRowClick={(item) => navigate(`${item.id}`)}
-        />
-      </div>
+      {view === "table" ? (
+        <div className="border border-border/60 rounded-sm shadow-sm">
+          <DataTable
+            data={users}
+            columns={columns}
+            isLoading={isLoading}
+            pageSize={limit}
+            serverSide={true}
+            serverTotal={totalItems}
+            serverPage={page}
+            serverSortKey={sortKey || undefined}
+            serverSortDirection={sortDirection}
+            onServerPageChange={setPage}
+            onServerPageSizeChange={(newSize) => {
+              setLimit(newSize);
+              setPage(1);
+            }}
+            onServerSortChange={(key, direction) => {
+              setSortKey(key);
+              setSortDirection(direction);
+              setPage(1);
+            }}
+            onRowClick={(item) =>
+              hasPermission("user.update") && navigate(`${item.id}`)
+            }
+          />
+        </div>
+      ) : (
+        <div className="p-4 bg-muted/10 border border-border/60 rounded-sm shadow-sm min-h-[500px]">
+          <SystemHierarchyView 
+            is_active={
+                filterStatus === "All"
+                  ? undefined
+                  : filterStatus === "Active"
+                    ? true
+                    : false
+            } 
+          />
+        </div>
+      )}
+
 
       <UserModal
         open={modalOpen}

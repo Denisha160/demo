@@ -27,12 +27,7 @@ import { useListCity } from "@/hooks/useCityStateCountry";
 import { useDebounce } from "@/hooks/useDebounce";
 
 const verifyFormSchema = z.object({
-  property_type: z.enum(
-    ["HOTEL", "RESTAURANT", "CHAIN_PROPERTY", "RESORT", "SPA", "OTHER"],
-    {
-      required_error: "Property Type is required",
-    },
-  ),
+  property_type: z.string().min(1, "Property Type is required"),
   property_name: z.string().min(1, "Property Name is required").max(100),
   number_of_properties: z.coerce
     .number()
@@ -41,10 +36,12 @@ const verifyFormSchema = z.object({
   cities_of_operation: z.array(z.string()).default([]),
   total_staff: z.coerce.number().int().min(0).optional(),
   years_of_experience: z.coerce.number().int().min(0).optional(),
-  annual_turnover: z.coerce.number({
-    required_error: "Annual turnover is required",
-    invalid_type_error: "Annual turnover must be a number",
-  }).min(0, "Annual turnover must be a positive number"),
+  annual_turnover: z.coerce
+    .number({
+      required_error: "Annual turnover is required",
+      invalid_type_error: "Annual turnover must be a number",
+    })
+    .min(0, "Annual turnover must be a positive number"),
   has_warehouse: z.boolean().default(false),
   warehouse_location: z.string().max(255).optional().nullable(),
   warehouse_size: z.coerce.number().optional().nullable(),
@@ -63,26 +60,7 @@ const verifyFormSchema = z.object({
       }),
     )
     .default([]),
-  customer_type: z.enum(
-    [
-      "DEALER",
-      "DISTRIBUTOR",
-      "RETAIL",
-      "HOTEL",
-      "RESORT",
-      "CHAIN_HOTEL_RESORT",
-      "SPA_WELLNESS",
-      "CONSULTANT",
-      "SCHOOL",
-      "HOSPITAL",
-      "CORPORATE_OFFICE",
-      "BANK",
-      "BUILDER",
-    ],
-    {
-      required_error: "Customer Type is required",
-    },
-  ),
+  customer_type: z.string().min(1, "Customer Type is required"),
   verification_notes: z.string().optional().nullable(),
 });
 
@@ -112,9 +90,13 @@ export default function VerifyLeadModal({
   });
 
   const cityOptions = useMemo(() => {
-    return (cityResults?.items || []).map((c: any) => ({
-      label: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`.replace(/, , /g, ", ").trim(),
-      value: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`.replace(/, , /g, ", ").trim(),
+    return ((cityResults as any)?.items || []).map((c: any) => ({
+      label: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`
+        .replace(/, , /g, ", ")
+        .trim(),
+      value: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`
+        .replace(/, , /g, ", ")
+        .trim(),
     }));
   }, [cityResults]);
 
@@ -128,12 +110,13 @@ export default function VerifyLeadModal({
       has_showroom: false,
       has_delivery_vehicles: false,
       number_of_vehicles: 0,
-      total_staff: 0,
-      years_of_experience: 0,
-      annual_turnover: 0,
-      number_of_properties: 1,
-      property_type: "OTHER" as const,
-      customer_type: "RETAIL" as const,
+      total_staff: "" as any,
+      years_of_experience: "" as any,
+      annual_turnover: "" as any,
+      number_of_properties: "" as any,
+      property_type: "" as any,
+      property_name: "",
+      customer_type: "" as any,
       cities_of_operation: [],
       vehicle_details: [],
     },
@@ -152,13 +135,13 @@ export default function VerifyLeadModal({
           has_showroom: initialData.has_showroom ?? false,
           has_delivery_vehicles: initialData.has_delivery_vehicles ?? false,
           number_of_vehicles: initialData.number_of_vehicles ?? 0,
-          total_staff: initialData.total_staff ?? 0,
-          years_of_experience: initialData.years_of_experience ?? 0,
-          annual_turnover: initialData.annual_turnover ?? 0,
-          number_of_properties: initialData.number_of_properties ?? 1,
-          property_type: initialData.property_type ?? "OTHER",
+          total_staff: initialData.total_staff ?? "",
+          years_of_experience: initialData.years_of_experience ?? "",
+          annual_turnover: initialData.annual_turnover ?? "",
+          number_of_properties: initialData.number_of_properties ?? "",
+          property_type: initialData.property_type ?? "",
           property_name: initialData.property_name ?? "",
-          customer_type: initialData.customer_type ?? "RETAIL",
+          customer_type: initialData.customer_type ?? "",
           warehouse_location: initialData.warehouse_location ?? "",
           warehouse_size: initialData.warehouse_size ?? null,
           showroom_location: initialData.showroom_location ?? "",
@@ -250,7 +233,9 @@ export default function VerifyLeadModal({
       onClose={onClose}
       headerBg="bg-primary/10"
       description={
-        isEditing ? "Update verification details." : "Create a new verification for this lead."
+        isEditing
+          ? "Update verification details."
+          : "Create a new verification for this lead."
       }
       title={isEditing ? "Edit Verification Details" : "Verify Lead Details"}
       maxWidth="sm:max-w-[800px]"
@@ -331,7 +316,11 @@ export default function VerifyLeadModal({
                     Property Name <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input className="h-9 text-xs" {...field} placeholder="Enter Property name" />
+                    <Input
+                      className="h-9 text-xs"
+                      {...field}
+                      placeholder="Enter Property name"
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -348,7 +337,12 @@ export default function VerifyLeadModal({
                     <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" className="h-9 text-xs" {...field} placeholder="Enter number of properties" />
+                    <Input
+                      type="number"
+                      className="h-9 text-xs"
+                      {...field}
+                      placeholder="Enter number of properties"
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -367,7 +361,9 @@ export default function VerifyLeadModal({
                 searchValue={citySearch}
                 onSearchChange={setCitySearch}
                 className="h-9 text-xs"
-                emptyText={isCitiesLoading ? "Searching..." : "No cities found."}
+                emptyText={
+                  isCitiesLoading ? "Searching..." : "No cities found."
+                }
               />
               <div className="flex flex-wrap gap-1 mt-1">
                 {cities.map((city, idx) => (
@@ -395,7 +391,12 @@ export default function VerifyLeadModal({
                     Total Staff
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" className="h-9 text-xs" {...field} placeholder="Enter total staff" />
+                    <Input
+                      type="number"
+                      className="h-9 text-xs"
+                      {...field}
+                      placeholder="Enter total staff"
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -411,7 +412,12 @@ export default function VerifyLeadModal({
                     Years of Experience
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" className="h-9 text-xs" {...field} placeholder="Enter years of experience" />
+                    <Input
+                      type="number"
+                      className="h-9 text-xs"
+                      {...field}
+                      placeholder="Enter years of experience"
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -423,7 +429,7 @@ export default function VerifyLeadModal({
               name="annual_turnover"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-bold flex gap-1">
+                  <FormLabel className="text-xs font-bold">
                     Annual Turnover <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
@@ -538,7 +544,9 @@ export default function VerifyLeadModal({
                       name="warehouse_location"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-xs font-bold">Warehouse Location</FormLabel>
+                          <FormLabel className="text-xs font-bold">
+                            Warehouse Location
+                          </FormLabel>
                           <FormControl>
                             <Input
                               className="h-8 text-xs"
@@ -555,7 +563,9 @@ export default function VerifyLeadModal({
                       name="warehouse_size"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-xs font-bold">Size (sqft)</FormLabel>
+                          <FormLabel className="text-xs font-bold">
+                            Size (sqft)
+                          </FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -577,7 +587,9 @@ export default function VerifyLeadModal({
                       name="showroom_location"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-xs font-bold">Showroom Location</FormLabel>
+                          <FormLabel className="text-xs font-bold">
+                            Showroom Location
+                          </FormLabel>
                           <FormControl>
                             <Input
                               className="h-8 text-xs"
@@ -594,7 +606,9 @@ export default function VerifyLeadModal({
                       name="showroom_size"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-xs font-bold">Size (sqft)</FormLabel>
+                          <FormLabel className="text-xs font-bold">
+                            Size (sqft)
+                          </FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -615,21 +629,31 @@ export default function VerifyLeadModal({
 
           {form.watch("has_delivery_vehicles") && (
             <div className="mt-2 p-2 rounded-xl border border-border/40 bg-muted/5">
-
               <div className="overflow-x-auto rounded-lg border border-border/20">
                 <table className="w-full text-left text-[11px]">
                   <thead className="bg-background/50 uppercase text-xs font-bold">
                     <tr>
-                      <th className="px-3 py-2 border-r border-border/10">Type</th>
-                      <th className="px-3 py-2 border-r border-border/10">Model</th>
-                      <th className="px-3 py-2 border-r border-border/10">Reg No</th>
-                      <th className="px-3 py-2 border-r border-border/10">Capacity</th>
+                      <th className="px-3 py-2 border-r border-border/10">
+                        Type
+                      </th>
+                      <th className="px-3 py-2 border-r border-border/10">
+                        Model
+                      </th>
+                      <th className="px-3 py-2 border-r border-border/10">
+                        Reg No
+                      </th>
+                      <th className="px-3 py-2 border-r border-border/10">
+                        Capacity
+                      </th>
                       <th className="px-3 py-2 text-center w-10">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/10">
                     {fields.map((field, index) => (
-                      <tr key={field.id} className="bg-background/30 hover:bg-background/50 transition-colors">
+                      <tr
+                        key={field.id}
+                        className="bg-background/30 hover:bg-background/50 transition-colors"
+                      >
                         <td className="p-1 border-r border-border/10">
                           <FormField
                             control={form.control}
@@ -667,7 +691,9 @@ export default function VerifyLeadModal({
                         <td className="p-1 border-r border-border/10">
                           <FormField
                             control={form.control}
-                            name={`vehicle_details.${index}.registration` as const}
+                            name={
+                              `vehicle_details.${index}.registration` as const
+                            }
                             render={({ field }) => (
                               <FormItem className="space-y-0">
                                 <FormControl>

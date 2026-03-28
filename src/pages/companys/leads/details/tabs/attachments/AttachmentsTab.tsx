@@ -46,10 +46,10 @@ const mapAttachment = (attachment: any): Attachment => ({
   fileSize: formatFileSize(
     Number(
       attachment?.file_size_bytes ||
-      attachment?.fileSize ||
-      attachment?.file_size ||
-      attachment?.size ||
-      0,
+        attachment?.fileSize ||
+        attachment?.file_size ||
+        attachment?.size ||
+        0,
     ),
   ),
   url:
@@ -71,7 +71,10 @@ interface AttachmentsTabProps {
   initialAttachments?: any[];
 }
 
-const AttachmentsTab = ({ leadId, initialAttachments = [] }: AttachmentsTabProps) => {
+const AttachmentsTab = ({
+  leadId,
+  initialAttachments = [],
+}: AttachmentsTabProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);

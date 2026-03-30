@@ -10,6 +10,7 @@ import {
   CheckCircle,
   ShieldCheck,
   HelpCircle,
+  Phone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+const sanitizePhone = (value: string) =>
+  value.replace(/[^+\d]/g, "").replace(/^\+$/, "");
 
 interface LeadPipelineProps {
   displayedColumns: (PipelineColumn & {
@@ -73,11 +77,10 @@ const LeadPipeline = ({
                       ref={columnProvided.innerRef}
                       {...columnProvided.draggableProps}
                       style={columnProvided.draggableProps.style}
-                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${
-                        columnSnapshot.isDragging
-                          ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
-                          : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
-                      }`}
+                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${columnSnapshot.isDragging
+                        ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
+                        : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
+                        }`}
                     >
                       {/* Top side hover highlight */}
                       <div
@@ -85,25 +88,24 @@ const LeadPipeline = ({
                         style={
                           col.color
                             ? {
-                                background: `linear-gradient(to right, transparent, ${col.color}, transparent)`,
-                              }
+                              background: `linear-gradient(to right, transparent, ${col.color}, transparent)`,
+                            }
                             : {
-                                background: `linear-gradient(to right, transparent, hsl(var(--primary)/0.6), transparent)`,
-                              }
+                              background: `linear-gradient(to right, transparent, hsl(var(--primary)/0.6), transparent)`,
+                            }
                         }
                       />
 
                       <div
                         {...columnProvided.dragHandleProps}
-                        className={`flex cursor-grab items-center justify-between border-b px-4 py-3.5 backdrop-blur-xl transition-colors duration-200 active:cursor-grabbing ${
-                          !col.color ? "border-border/20 bg-background/90" : ""
-                        }`}
+                        className={`flex cursor-grab items-center justify-between border-b px-4 py-3.5 backdrop-blur-xl transition-colors duration-200 active:cursor-grabbing ${!col.color ? "border-border/20 bg-background/90" : ""
+                          }`}
                         style={
                           col.color
                             ? {
-                                background: `linear-gradient(to bottom, ${col.color}25, ${col.color}05)`,
-                                borderColor: `${col.color}30`,
-                              }
+                              background: `linear-gradient(to bottom, ${col.color}25, ${col.color}05)`,
+                              borderColor: `${col.color}30`,
+                            }
                             : undefined
                         }
                       >
@@ -138,11 +140,10 @@ const LeadPipeline = ({
                           <div
                             ref={dealProvided.innerRef}
                             {...dealProvided.droppableProps}
-                            className={`flex min-h-0 flex-1 flex-col transition-colors ${
-                              dealSnapshot.isDraggingOver
-                                ? "bg-primary/5"
-                                : "bg-transparent"
-                            }`}
+                            className={`flex min-h-0 flex-1 flex-col transition-colors ${dealSnapshot.isDraggingOver
+                              ? "bg-primary/5"
+                              : "bg-transparent"
+                              }`}
                           >
                             <div className="flex-1 overflow-y-auto px-3 py-3 scrollbar-thin">
                               <div className="space-y-3">
@@ -160,11 +161,10 @@ const LeadPipeline = ({
                                         style={
                                           dealDragProvided.draggableProps.style
                                         }
-                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${
-                                          dealDragSnapshot.isDragging
-                                            ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
-                                            : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
-                                        }`}
+                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${dealDragSnapshot.isDragging
+                                          ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
+                                          : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
+                                          }`}
                                       >
                                         <div
                                           onClick={() => navigate(deal.id)}
@@ -217,9 +217,30 @@ const LeadPipeline = ({
                                                 </p>
                                                 {deal.phone &&
                                                   deal.phone !== "-" && (
-                                                    <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
-                                                      {deal.phone}
-                                                    </p>
+                                                    <div className="mt-1 flex items-center gap-1 text-[10px] font-medium">
+                                                      <a
+                                                        href={`tel:${sanitizePhone(
+                                                          deal.phone,
+                                                        )}`} aria-label={`Call ${deal.phone}`}
+                                                        onClick={(event) => {
+                                                          event.stopPropagation();
+                                                        }}
+                                                      >
+                                                        <Phone className="h-3 w-3" />
+                                                      </a>
+                                                      <a
+                                                        href={`tel:${sanitizePhone(
+                                                          deal.phone,
+                                                        )}`}
+                                                        className="truncate text-[10px] font-medium transition"
+                                                        aria-label={`Call ${deal.phone}`}
+                                                        onClick={(event) => {
+                                                          event.stopPropagation();
+                                                        }}
+                                                      >
+                                                        {deal.phone}
+                                                      </a>
+                                                    </div>
                                                   )}
                                               </div>
                                               {deal.expected_revenue && (

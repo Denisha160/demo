@@ -34,7 +34,8 @@ const ShiftDetailPage = () => {
   }, [debouncedSearch, searchParams, setSearchParams]);
 
   const shiftId = id || "";
-  const { data, isLoading, error } = useShiftDetails(shiftId);
+  const shiftParams = debouncedSearch ? { search: debouncedSearch } : undefined;
+  const { data, isLoading, error } = useShiftDetails(shiftId, shiftParams);
   const shift = data?.shift;
   const users = data?.users || [];
   const userCount = data?.total_users ?? users.length;

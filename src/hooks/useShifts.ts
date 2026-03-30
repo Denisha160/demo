@@ -32,11 +32,11 @@ export const useShifts = (
   });
 };
 
-export const useShiftDetails = (id: string) => {
+export const useShiftDetails = (id: string, params?: Record<string, unknown>) => {
   return useQuery({
-    queryKey: [SHIFTS_QUERY_KEY, id],
+    queryKey: [SHIFTS_QUERY_KEY, id, params],
     queryFn: async () => {
-      const response = await api.getShiftDetails(id);
+      const response = await api.getShiftDetails(id, params);
       return response.data as ShiftDetailResponse;
     },
     enabled: !!id,

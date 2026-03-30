@@ -791,9 +791,9 @@ export const listShifts = (params) => {
   return axios({ method: "GET", url, params });
 };
 
-export const getShiftDetails = (id) => {
+export const getShiftDetails = (id, params) => {
   const url = `shifts/${id}`;
-  return axios({ method: "GET", url });
+  return axios({ method: "GET", url, params });
 };
 
 export const createShift = (data) => {

@@ -21,6 +21,7 @@ export const EditableDetailItem = ({
   options = [],
   prefix,
   error,
+  resolvedLabel,
 }: {
   label: string;
   value: string | number | undefined | null;
@@ -30,14 +31,15 @@ export const EditableDetailItem = ({
   options?: SelectOption[];
   prefix?: string;
   error?: string;
+  resolvedLabel?: string;
 }) => {
   const displayValue = () => {
     if (!value) return "—";
     if (type === "select" && options.length > 0) {
-      return options.find((o) => o.value === value)?.label || value;
+      return options.find((o) => o.value === value)?.label || resolvedLabel || value;
     }
-    if (type === "combobox" && options.length > 0) {
-      return options.find((o) => o.value === value)?.label || value;
+    if (type === "combobox" && (options.length > 0 || resolvedLabel)) {
+      return options.find((o) => o.value === value)?.label || resolvedLabel || value;
     }
     return prefix ? `${prefix} ${value}` : value;
   };
@@ -86,6 +88,7 @@ export const EditableDetailItem = ({
               onValueChange={onChange}
               placeholder={`Select ${label}`}
               className={error ? "border-destructive border h-8" : "h-8"}
+              selectedLabel={resolvedLabel}
               clearable
             />
           ) : (

@@ -9,7 +9,10 @@ export interface User {
   date_of_joining: string;
   department: string;
   region: string;
-  work_shift: "morning" | "evening" | "night" | "rotating";
+  shift_id: string | null;
+  shift_name?: string;
+  shift_start_time?: string;
+  shift_end_time?: string;
   is_root_user: boolean;
   is_active: boolean;
   gender: "male" | "female";
@@ -39,7 +42,7 @@ export interface UserCreatePayload {
   date_of_joining: string;
   department: string;
   region: string;
-  work_shift: "morning" | "evening" | "night" | "rotating";
+  shift_id?: string | null;
   is_root_user?: boolean;
   is_active?: boolean;
   gender: "male" | "female" | "other" | "prefer_not_to_say";
@@ -70,6 +73,15 @@ export interface UserSession {
 
 export interface UserSessionListResponse {
   items: UserSession[];
+  pagination: {
+    total: number;
+    offset: number;
+    limit: number;
+  };
+}
+
+export interface UserListResponse {
+  items: User[];
   pagination: {
     total: number;
     offset: number;

@@ -783,3 +783,33 @@ export const deleteHierarchy = (id) => {
   return axios({ method: "DELETE", url });
 };
 // end region
+// region Shifts
+// ===================== Shifts =====================
+
+export const listShifts = (params) => {
+  const url = `shifts`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getShiftDetails = (id) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "GET", url });
+};
+
+export const createShift = (data) => {
+  const url = `shifts`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateShift = ({ id, ...data }) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteShift = (id) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
+// end region
+

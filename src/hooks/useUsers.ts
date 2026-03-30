@@ -18,15 +18,19 @@ import {
   ApiErrorResponse,
   UserSession,
   UserSessionListResponse,
+  UserListResponse,
 } from "@/types/user";
 import { queryKeys } from "@/lib/queryKeys";
 
-export const useUsers = (params?: Record<string, unknown>, options?: any) => {
+export const useUsers = (
+  params?: Record<string, unknown>,
+  options?: Record<string, any>,
+) => {
   return useQuery({
     queryKey: queryKeys.users.list(params),
     queryFn: async () => {
       const response = await listUsers(params);
-      return response.data;
+      return response.data as UserListResponse;
     },
     ...options,
   });

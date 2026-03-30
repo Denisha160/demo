@@ -21,7 +21,8 @@ import {
   useImperativeHandle,
   useEffect,
 } from "react";
-import { useUpdateUser, useUserSessions } from "@/hooks/useUsers";
+import { useUpdateUser, useUserSessions, useUsers } from "@/hooks/useUsers";
+import { useShifts } from "@/hooks/useShifts";
 import { z } from "zod";
 import {
   UserDetailData,
@@ -30,8 +31,8 @@ import {
   getLocalDateString,
   User,
 } from "@/types/user";
-import { useUsers } from "@/hooks/useUsers";
 import { ComboboxOption } from "@/components/ui/combobox";
+import { Shift } from "@/types/shift";
 
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -43,10 +44,7 @@ const userSchema = z.object({
   date_of_joining: z.string().min(1, "Date of joining is required"),
   department: z.string().optional().nullable(),
   region: z.string().optional().nullable(),
-  work_shift: z
-    .enum(["morning", "evening", "night", "rotating"])
-    .optional()
-    .nullable(),
+  shift_id: z.string().uuid().optional().nullable().or(z.literal("")),
   gender: z
     .enum(["male", "female", "other", "prefer_not_to_say"])
     .optional()
@@ -95,7 +93,6 @@ interface OverviewTabProps {
   setUserData: (data: UserDetailData) => void;
   genderOptions: SelectOption[];
   maritalStatusOptions: SelectOption[];
-  workShiftOptions: SelectOption[];
   onSavingChange?: (isSaving: boolean) => void;
 }
 
@@ -111,7 +108,6 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
       setUserData,
       genderOptions,
       maritalStatusOptions,
-      workShiftOptions,
       onSavingChange,
     },
     ref,
@@ -122,17 +118,29 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [apiError, setApiError] = useState<string | null>(null);
     const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
-    const { data: allUsers } = useUsers(
+    const { data: usersData } = useUsers(
       { combobox: true },
-      { enabled: true },
     );
 
-    const parentOptions: ComboboxOption[] = ((allUsers as any)?.items || [])
+    const parentOptions: ComboboxOption[] = (
+      usersData?.items || []
+    )
       .filter((u: User) => u.id !== userData.id) // Cannot be own parent
       .map((u: User) => ({
         label: `${u.name} ${u.employee_code ? `(${u.employee_code})` : ""}`,
         value: u.id,
       }));
+
+    const { data: shiftsData } = useShifts(
+      { combobox: true },
+      { enabled: true },
+    );
+
+    const shiftOptions: ComboboxOption[] =
+      shiftsData?.shifts?.map((s: Shift) => ({
+        label: s.name,
+        value: s.id,
+      })) || [];
 
     useEffect(() => {
       onSavingChange?.(isUpdating);
@@ -236,7 +244,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
           date_of_joining: userData.date_of_joining,
           department: userData.department,
           region: userData.region,
-          work_shift: userData.work_shift,
+          shift_id: userData.shift_id,
           is_active: userData.is_active,
           is_root_user: userData.is_root_user,
           gender: userData.gender,
@@ -463,12 +471,13 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
 
             <EditableDetailItem
               label="Work Shift"
-              value={userData.work_shift}
-              error={errors.work_shift}
+              value={userData.shift_id}
+              resolvedLabel={userData.shift_name}
+              error={errors.shift_id}
               isEditing={true}
-              onChange={(val) => handleChange("work_shift", val)}
-              type="select"
-              options={workShiftOptions}
+              onChange={(val) => handleChange("shift_id", val)}
+              type="combobox"
+              options={shiftOptions}
             />
             <EditableDetailItem
               label="Reporting To (Parent User)"

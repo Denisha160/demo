@@ -16,8 +16,10 @@ import UserModal from "./UserModal";
 import SystemHierarchyView from "./components/SystemHierarchyView";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useDeleteUser, useUpdateUser } from "@/hooks/useUsers";
+import { useShifts } from "@/hooks/useShifts";
 import { useHasPermission } from "@/hooks/useAuth";
 import { User, UserUpdatePayload } from "@/types/user";
+import { Shift } from "@/types/shift";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRoles } from "@/hooks/useRoles";
 
@@ -27,26 +29,30 @@ const ShiftSelect = ({ user }: { user: User }) => {
   const { hasPermission } = useHasPermission();
   const canUpdate = hasPermission("user.update");
 
+  const { data: shiftsData } = useShifts({ combobox: true });
+  const shifts = shiftsData?.shifts || [];
+
   return (
     <div onClick={(e) => e.stopPropagation()}>
       <Select
-        value={user.work_shift || "morning"}
-        onValueChange={(val: "morning" | "evening" | "night" | "rotating") => {
-          if (val !== user.work_shift && canUpdate) {
-            const payload: UserUpdatePayload = { id: user.id, work_shift: val };
+        value={user.shift_id || ""}
+        onValueChange={(val: string) => {
+          if (val !== user.shift_id && canUpdate) {
+            const payload: UserUpdatePayload = { id: user.id, shift_id: val };
             updateUser(payload);
           }
         }}
         disabled={isPending || !canUpdate}
       >
-        <SelectTrigger className="w-[110px] h-8 text-xs">
+        <SelectTrigger className="w-[140px] h-8 text-xs">
           <SelectValue placeholder="Select shift" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="morning">Morning</SelectItem>
-          <SelectItem value="evening">Evening</SelectItem>
-          <SelectItem value="night">Night</SelectItem>
-          <SelectItem value="rotating">Rotating</SelectItem>
+          {shifts.map((shift: Shift) => (
+            <SelectItem key={shift.id} value={shift.id}>
+              {shift.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
@@ -308,7 +314,7 @@ const Users = () => {
       },
     },
     {
-      key: "work_shift",
+      key: "shift_id" as keyof User,
       header: "Shift",
       render: (item) => <ShiftSelect user={item} />,
     },

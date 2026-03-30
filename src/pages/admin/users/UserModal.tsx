@@ -21,7 +21,9 @@ import {
   getLocalDateString,
 } from "@/types/user";
 import { useCreateUser, useUsers } from "@/hooks/useUsers";
+import { useShifts } from "@/hooks/useShifts";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { Shift } from "@/types/shift";
 
 interface UserModalProps {
   open: boolean;
@@ -41,10 +43,7 @@ const userSchema = z.object({
   date_of_joining: z.string().min(1, "Date of joining is required"),
   department: z.string().optional().nullable(),
   region: z.string().optional().nullable(),
-  work_shift: z
-    .enum(["morning", "evening", "night", "rotating"])
-    .optional()
-    .nullable(),
+  shift_id: z.string().uuid().optional().nullable().or(z.literal("")),
   gender: z
     .enum(["male", "female", "other", "prefer_not_to_say"])
     .optional()
@@ -97,6 +96,16 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     { combobox: true },
     { enabled: open },
   );
+  const { data: shiftsData } = useShifts(
+    { combobox: true },
+    { enabled: open },
+  );
+
+  const shiftOptions: ComboboxOption[] =
+    shiftsData?.shifts?.map((s: Shift) => ({
+      value: s.id,
+      label: `${s.name} (${s.start_time.slice(0, 5)} - ${s.end_time.slice(0, 5)})`,
+    })) || [];
 
   const userOptions: ComboboxOption[] =
     usersData?.items?.map((u: User) => ({
@@ -124,7 +133,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     is_active: user?.is_active ?? true,
     basic_salary: user?.basic_salary || 0,
     parent_id: user?.parent_id || "",
-    work_shift: user?.work_shift,
+    shift_id: user?.shift_id || "",
   });
 
   const validateForm = () => {
@@ -232,7 +241,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
       employee_code: "",
       date_of_joining: getLocalDateString(new Date()),
       parent_id: "",
-      work_shift: undefined,
+      shift_id: "",
     });
     setConfirmPassword("");
     setShowPassword(false);
@@ -397,30 +406,23 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="work_shift" className="text-sm">
+            <Label htmlFor="shift_id" className="text-sm">
               Shift
             </Label>
-            <Select
-              value={formData.work_shift ?? ""}
-              onValueChange={(val) => handleChange("work_shift", val)}
+            <Combobox
+              options={shiftOptions}
+              value={formData.shift_id || ""}
+              onValueChange={(val) => handleChange("shift_id", val)}
+              placeholder="Select shift..."
+              className="h-8 text-sm"
               disabled={isPending}
-            >
-              <SelectTrigger className="h-8 text-sm" id="work_shift">
-                <SelectValue placeholder="Select shift" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="morning">Morning</SelectItem>
-                <SelectItem value="evening">Evening</SelectItem>
-                <SelectItem value="night">Night</SelectItem>
-                <SelectItem value="rotating">Rotating</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.work_shift && (
-              <p className="text-xs text-destructive mt-1">{errors.work_shift}</p>
+              clearable
+            />
+            {errors.shift_id && (
+              <p className="text-xs text-destructive mt-1">{errors.shift_id}</p>
             )}
           </div>
 
-          {/* Password fields for new user */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="password" className="text-sm">

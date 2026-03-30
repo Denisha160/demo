@@ -7,7 +7,9 @@ import {
   Info,
   CheckCircle2,
   AlertCircle,
+  RotateCcw,
 } from "lucide-react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +34,7 @@ interface LeadImportItem {
   website?: string;
   phone: string;
   expected_revenue?: string;
+  priority?: string;
 }
 
 const ImportPage = () => {
@@ -39,6 +42,7 @@ const ImportPage = () => {
   const { companyId } = useParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fallbackStatus, setFallbackStatus] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const downloadDemoMutation = useDownloadDemoCSV();
   const importLeadsMutation = useImportLeads();
@@ -65,6 +69,7 @@ const ImportPage = () => {
     { key: "website", header: "Website" },
     { key: "phone", header: "* Phone" },
     { key: "expected_revenue", header: "Expected Revenue" },
+    { key: "priority", header: "Priority" },
   ];
 
   const sampleData = [
@@ -84,12 +89,20 @@ const ImportPage = () => {
       website: "https://abc-corp.com",
       phone: "9876543210",
       expected_revenue: "50000",
+      priority: "HOT",
     },
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -152,6 +165,7 @@ const ImportPage = () => {
         phone: "phone",
         expected_revenue: "expected_revenue",
         "expected revenue": "expected_revenue",
+        priority: "priority",
       };
 
       for (let i = 1; i < lines.length; i++) {
@@ -303,6 +317,7 @@ const ImportPage = () => {
                     id="csv-file"
                     type="file"
                     accept=".csv"
+                    ref={fileInputRef}
                     className="h-10 cursor-pointer border-dashed border-2 bg-muted/30 pt-2.5 group-hover:border-primary/50 transition-all text-xs rounded-sm"
                     onChange={handleFileChange}
                   />
@@ -335,6 +350,17 @@ const ImportPage = () => {
             >
               Cancel
             </Button>
+            {selectedFile && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-6 gap-2 font-bold text-[10px] uppercase tracking-widest rounded-sm border-destructive/20 text-destructive hover:bg-destructive/5 hover:border-destructive/30 transition-all active:scale-95"
+                onClick={handleReset}
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset
+              </Button>
+            )}
             <Button
               size="sm"
               className="h-9 px-10 font-bold text-[10px] uppercase tracking-widest rounded-sm shadow-md shadow-primary/10 transition-all active:scale-95"

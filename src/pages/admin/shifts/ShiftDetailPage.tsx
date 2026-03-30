@@ -132,22 +132,26 @@ const ShiftDetailPage = () => {
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => navigate("/admin/shifts")}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h2 className="text-2xl font-bold">{shift.name}</h2>
+    <div className="w-full mx-auto space-y-2 animate-fade-in">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-sm border border-border shrink-0"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold leading-none truncate uppercase tracking-widest text-primary">
+              {shift.name}
+            </h2>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 border-b border-border pb-2">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input

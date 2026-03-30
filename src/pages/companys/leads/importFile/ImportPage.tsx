@@ -32,7 +32,6 @@ interface LeadImportItem {
   website?: string;
   phone: string;
   expected_revenue?: string;
-  tags?: string;
 }
 
 const ImportPage = () => {
@@ -66,7 +65,6 @@ const ImportPage = () => {
     { key: "website", header: "Website" },
     { key: "phone", header: "* Phone" },
     { key: "expected_revenue", header: "Expected Revenue" },
-    { key: "tags", header: "Tags" },
   ];
 
   const sampleData = [
@@ -86,7 +84,6 @@ const ImportPage = () => {
       website: "https://abc-corp.com",
       phone: "9876543210",
       expected_revenue: "50000",
-      tags: "High Priority, Q1 Lead",
     },
   ];
 
@@ -136,7 +133,6 @@ const ImportPage = () => {
         phone: "phone",
         expected_revenue: "expected_revenue",
         "expected revenue": "expected_revenue",
-        tags: "tags",
       };
 
       for (let i = 1; i < lines.length; i++) {

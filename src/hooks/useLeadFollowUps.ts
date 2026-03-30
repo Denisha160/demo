@@ -1,3 +1,4 @@
+import type { Query } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import {
@@ -52,6 +53,17 @@ export function useAllFollowUps(params?: Record<string, unknown>) {
   });
 }
 
+const isLeadFollowUpsQuery = (query: Query<unknown, unknown>, leadId?: string) => {
+  const key = query.queryKey;
+  if (!Array.isArray(key)) return false;
+  return (
+    key[0] === "leads" &&
+    key[1] === "detail" &&
+    key[2] === (leadId || "") &&
+    key[3] === "follow-ups"
+  );
+};
+
 export function useCreateLeadFollowUp(leadId?: string) {
   const queryClient = useQueryClient();
 
@@ -60,7 +72,7 @@ export function useCreateLeadFollowUp(leadId?: string) {
       createLeadFollowUp(leadId, payload),
     onSuccess: (response) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.leads.followUps(leadId || ""),
+        predicate: (query) => isLeadFollowUpsQuery(query, leadId),
       });
       toast.success("Follow up created successfully.");
     },
@@ -84,7 +96,7 @@ export function useUpdateLeadFollowUp(leadId?: string) {
       updateLeadFollowUp({ leadId, followupId, ...payload }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.leads.followUps(leadId || ""),
+        predicate: (query) => isLeadFollowUpsQuery(query, leadId),
       });
       toast.success("Follow up updated successfully.");
     },
@@ -105,7 +117,7 @@ export function useDeleteLeadFollowUp(leadId?: string) {
       deleteLeadFollowUp({ leadId, followupId }),
     onSuccess: (response) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.leads.followUps(leadId || ""),
+        predicate: (query) => isLeadFollowUpsQuery(query, leadId),
       });
       toast.success("Follow up deleted successfully.");
     },

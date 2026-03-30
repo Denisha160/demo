@@ -7,24 +7,20 @@ import { Switch } from "@/components/ui/switch";
 import { z } from "zod";
 import { Shift } from "@/types/shift";
 
-const namePattern = /^[A-Za-z0-9 _&-]+$/;
-const timePattern = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
-
 const shiftSchema = z.object({
   name: z
     .string()
     .min(2, "Shift name must be at least 2 characters long")
-    .max(100, "Shift name cannot exceed 100 characters")
-    .refine((value) => namePattern.test(value), {
-      message:
-        "Shift name can only contain letters, numbers, spaces, hyphens, underscores, and ampersands",
-    }),
+    .max(100, "Shift name cannot exceed 100 characters"),
+
   start_time: z
     .string()
-    .regex(timePattern, "Start time must be in HH:mm or HH:mm:ss format"),
+    .min(1, "Start time is required"),
+
   end_time: z
     .string()
-    .regex(timePattern, "End time must be in HH:mm or HH:mm:ss format"),
+    .min(1, "End time is required"),
+
   is_active: z.boolean().optional().default(true),
 });
 
@@ -130,12 +126,15 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
             </Label>
             <Input
               id="start-time"
+              type="time"
+              step="60"
+              min="00:00"
+              max="23:59"
               value={startTime}
               onChange={(e) => {
                 setStartTime(e.target.value);
                 if (errors.start_time) setErrors({ ...errors, start_time: "" });
               }}
-              placeholder="HH:mm"
               className={`h-9 text-sm rounded-sm ${errors.start_time ? "border-destructive" : ""}`}
             />
             {errors.start_time && (
@@ -151,12 +150,15 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
             </Label>
             <Input
               id="end-time"
+              type="time"
+              step="60"
+              min="00:00"
+              max="23:59"
               value={endTime}
               onChange={(e) => {
                 setEndTime(e.target.value);
                 if (errors.end_time) setErrors({ ...errors, end_time: "" });
               }}
-              placeholder="HH:mm"
               className={`h-9 text-sm rounded-sm ${errors.end_time ? "border-destructive" : ""}`}
             />
             {errors.end_time && <p className="text-xs text-destructive">{errors.end_time}</p>}

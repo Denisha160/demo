@@ -19,6 +19,13 @@ import { Input } from "@/components/ui/input";
 import { formatDate, formatDateForAPI } from "@/utils/date";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import TaskModal, { Task, TaskFormData } from "./TaskModal";
 import {
   useCreateLeadTask,
@@ -246,10 +253,31 @@ const TasksTab = ({ leadId, defaultAssignedTo }: TasksTabProps) => {
       key: "status",
       header: "Status",
       render: (item) => (
-        <StatusBadge
-          status={item.status.replace("_", " ").toUpperCase()}
-          variant={getStatusVariant(item.status)}
-        />
+        <Select
+          value={item.status}
+          onValueChange={(val) => {
+            updateTaskMutation.mutate({
+              taskId: item.id,
+              status: val,
+            });
+          }}
+          disabled={updateTaskMutation.isPending}
+        >
+          <SelectTrigger className="h-6 w-fit bg-transparent border-none p-0 focus:ring-0 shadow-none hover:bg-transparent">
+            <StatusBadge
+              status={item.status.replace("_", " ").toUpperCase()}
+              variant={getStatusVariant(item.status)}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+            />
+          </SelectTrigger>
+          <SelectContent align="end" className="min-w-[120px]">
+            <SelectItem value="TODO" className="text-xs">Todo</SelectItem>
+            <SelectItem value="IN_PROGRESS" className="text-xs">In Progress</SelectItem>
+            <SelectItem value="IN_REVIEW" className="text-xs">In Review</SelectItem>
+            <SelectItem value="COMPLETED" className="text-xs">Completed</SelectItem>
+            <SelectItem value="CANCELLED" className="text-xs">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
       ),
     },
     {

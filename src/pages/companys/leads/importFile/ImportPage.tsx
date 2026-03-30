@@ -93,6 +93,25 @@ const ImportPage = () => {
     }
   };
 
+  const parseCSVLine = (line: string) => {
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current.trim().replace(/^"|"$/g, ""));
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim().replace(/^"|"$/g, ""));
+    return result;
+  };
+
   const handleImport = () => {
     if (!selectedFile) {
       toast.error("Please select a CSV file to import.");
@@ -110,7 +129,7 @@ const ImportPage = () => {
         return;
       }
 
-      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+      const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase());
       const items: any[] = [];
 
       // Map headers to field names
@@ -139,8 +158,8 @@ const ImportPage = () => {
         const line = lines[i].trim();
         if (!line) continue;
 
-        // Simple CSV split (doesn't handle commas in quotes, but standard for this use case)
-        const values = line.split(",").map((v) => v.trim());
+        // Robust CSV parsing that handles commas in quotes
+        const values = parseCSVLine(line);
         const item: any = {};
 
         headers.forEach((header, index) => {

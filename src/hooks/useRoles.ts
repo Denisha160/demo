@@ -10,15 +10,22 @@ import {
 import { Role } from "@/types/Role";
 import { toast } from "react-toastify";
 
+interface RoleListResponse {
+  items?: Role[];
+  pagination?: {
+    total?: number;
+  };
+}
+
 export const useRoles = (
   queryParams: Record<string, unknown> = {},
   options: { enabled?: boolean } = {},
 ) => {
-  return useQuery({
+  return useQuery<RoleListResponse>({
     queryKey: ["roles", queryParams],
     queryFn: async () => {
       const response = await listRoles(queryParams);
-      return response.data;
+      return response.data as RoleListResponse;
     },
     ...options,
   });

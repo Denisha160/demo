@@ -124,7 +124,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     is_active: user?.is_active ?? true,
     basic_salary: user?.basic_salary || 0,
     parent_id: user?.parent_id || "",
-    work_shift: user?.work_shift || "",
+    work_shift: user?.work_shift,
   });
 
   const validateForm = () => {
@@ -232,7 +232,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
       employee_code: "",
       date_of_joining: getLocalDateString(new Date()),
       parent_id: "",
-      work_shift: "",
+      work_shift: undefined,
     });
     setConfirmPassword("");
     setShowPassword(false);
@@ -401,12 +401,11 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
               Shift
             </Label>
             <Select
-              id="work_shift"
-              value={formData.work_shift || ""}
+              value={formData.work_shift ?? ""}
               onValueChange={(val) => handleChange("work_shift", val)}
               disabled={isPending}
             >
-              <SelectTrigger className="h-8 text-sm">
+              <SelectTrigger className="h-8 text-sm" id="work_shift">
                 <SelectValue placeholder="Select shift" />
               </SelectTrigger>
               <SelectContent>

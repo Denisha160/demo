@@ -43,6 +43,7 @@ function toDisplay(c: Category): ProductCategory {
     mainCategoryId: c.parent_id ?? undefined,
     parent_id: c.parent_id,
     parent_name: c.parent_name,
+    company_id: c.company_id,
   };
 }
 
@@ -186,6 +187,7 @@ const ProductCategoriesPage = () => {
       name: formData.name.trim(),
       parent_id:
         formData.type === "sub" ? (formData.mainCategoryId ?? null) : null,
+      company_id: formData.company_id || null,
     };
 
     if (formData.id) {

@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 
+import { Company } from "@/types/company";
+import { useCompanies } from "@/hooks/useCompanies";
 import { useCategoriesCombobox } from "@/hooks/useProductCategories";
 import type {
   CategoryType,
@@ -28,6 +30,7 @@ const categorySchema = z
       .max(100, "Category name cannot exceed 100 characters"),
     type: z.enum(["main", "sub"]),
     mainCategoryId: z.string().optional(),
+    company_id: z.string().optional().nullable(),
   })
   .refine(
     (data) => {
@@ -63,6 +66,10 @@ const CategoryModal = ({
   // Fetch all active main categories for the dropdown regardless of parent table pagination
   const { data: mainCategories = [], isLoading: isLoadingCategories } =
     useCategoriesCombobox({ type: "main" });
+
+  const { data: companiesResponse, isLoading: isLoadingCompanies } =
+    useCompanies({ limit: 10 });
+  const companies = companiesResponse?.items || [];
 
   const [errors, setErrors] = useState<{
     name?: string;
@@ -159,6 +166,38 @@ const CategoryModal = ({
             </SelectContent>
           </Select>
         </div>
+        
+        {/* Company picker – only for main categories */}
+        {formData.type === "main" && (
+          <div className="grid gap-2 animate-in fade-in slide-in-from-top-1">
+            <Label className="text-sm">Assigned Company</Label>
+            <Combobox
+              options={
+                companies.length > 0
+                  ? companies.map((comp: Company) => ({
+                      value: comp.id,
+                      label: comp.display_name || comp.legal_name,
+                    }))
+                  : []
+              }
+              value={formData.company_id || ""}
+              onValueChange={(value) => {
+                setFormData({ ...formData, company_id: value });
+              }}
+              placeholder={
+                isLoadingCompanies
+                  ? "Loading companies..."
+                  : companies.length > 0
+                    ? "Select company"
+                    : "No companies available"
+              }
+              searchPlaceholder="Search companies..."
+              disabled={
+                isLoadingCompanies || companies.length === 0 || isPending
+              }
+            />
+          </div>
+        )}
 
         {/* Parent picker – only for sub categories */}
         {formData.type === "sub" && (

@@ -79,9 +79,9 @@ const TreeNodeComponent = ({ node, onClick }: { node: HierarchyNode; onClick: (n
       <TreeCard node={node} onClick={onClick} />
 
       {children.length > 0 && (
-        <div className="relative flex gap-10 mt-0 pt-4 tree-children">
+        <div className="relative flex mt-0  tree-children">
           {children.map((child) => (
-            <div key={child.id} className="relative flex flex-col items-center tree-branch pt-4">
+            <div key={child.id} className="relative flex flex-col items-center tree-branch pt-4 px-2">
               <div className="absolute top-[8px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-black z-10" />
               <TreeNodeComponent node={child} onClick={onClick} />
             </div>
@@ -148,7 +148,7 @@ const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
                   top: 0;
                   height: 2px;
                   background: black;
-                  width: 50%;
+                  width: 100%;
               }
               .tree-branch::after {
                   content: '';
@@ -170,10 +170,6 @@ const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
               }
               .tree-branch:only-child::before {
                   display: none;
-              }
-              .tree-branch:not(:first-child):not(:last-child)::before {
-                  left: 0;
-                  width: 100%;
               }
           `
       }} />

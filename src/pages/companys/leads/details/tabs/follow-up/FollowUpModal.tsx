@@ -27,7 +27,7 @@ const followUpSchema = z.object({
   remarks: z.string().optional().or(z.literal("")),
   assigned_to: z.string().min(1, "Assigned To is required"),
   scheduled_at: z.string().min(1, "Scheduled date is required"),
-  set_reminder: z.boolean().optional().default(false),
+  set_reminder: z.boolean().optional().default(false), // currently not sent
   reminder_time: z.string().optional().or(z.literal("")),
 });
 
@@ -92,8 +92,8 @@ const FollowUpModal = ({
       remarks: "",
       assigned_to: "",
       scheduled_at: "",
-      set_reminder: false,
-      reminder_time: "",
+      // set_reminder: false,
+      // reminder_time: "",
     },
   });
 
@@ -108,8 +108,8 @@ const FollowUpModal = ({
         remarks: followUpData.remarks || "",
         assigned_to: followUpData.assigned_to || "",
         scheduled_at: getDateOnly(followUpData.scheduled_at),
-        set_reminder: false,
-        reminder_time: getCurrentTime(),
+        // set_reminder: false,
+        // reminder_time: getCurrentTime(),
       });
       return;
     }
@@ -270,7 +270,7 @@ const FollowUpModal = ({
             )}
           </div>
 
-          {(status === "SCHEDULED" || status === "RESCHEDULED") && (
+          {/* {(status === "SCHEDULED" || status === "RESCHEDULED") && (
             <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
               <div className="flex flex-row items-center space-x-2 rounded-md border p-3 bg-muted/5">
                 <Checkbox
@@ -307,7 +307,7 @@ const FollowUpModal = ({
                 </div>
               )}
             </div>
-          )}
+          )} */}
         </div>
       </form>
     </Modal>

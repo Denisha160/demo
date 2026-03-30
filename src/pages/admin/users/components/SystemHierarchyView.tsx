@@ -1,6 +1,6 @@
+import React from "react";
+import { Mail, Loader2 } from "lucide-react";
 import { useSystemHierarchy } from "@/hooks/useUsers";
-import { Loader2, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface HierarchyNode {
   id: string;
@@ -10,134 +10,143 @@ interface HierarchyNode {
   image_url?: string;
   is_active: boolean;
   department?: string;
-  level: number;
   children?: HierarchyNode[];
 }
-
-interface RecursiveNodeProps {
-  node: HierarchyNode;
+interface SystemHierarchyViewProps {
+  is_active?: boolean;
 }
 
-const TreeNode = ({ node }: RecursiveNodeProps) => {
-  const navigate = useNavigate();
+const TreeCard = ({ node }: { node: HierarchyNode }) => {
+  const reports = node.children?.length || 0;
+  const roleLabel = node.department || "Team";
 
   return (
-    <div
-      className="flex flex-col items-center justify-center py-3 px-4 rounded-[4px] bg-[#d2dae2] shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1)] hover:shadow-md transition-shadow cursor-pointer min-w-[140px] max-w-[220px]"
-      onClick={() => navigate(`/admin/users/${node.id}`)}
-    >
-      <div className="font-sans font-bold text-[14px] text-[#111] text-center w-full truncate" title={node.name}>
-        {node.name}
+    <div className="relative flex flex-col items-center group">
+      <div className="z-10 border border-border rounded-lg p-3 w-[220px] bg-card/60 shadow-sm transition-all">
+        <div className="flex flex-col gap-1 text-center">
+          <p className="text-[10px] uppercase tracking-widest font-black text-primary/70">
+            {roleLabel}
+          </p>
+          <h4 className="text-xs font-black text-foreground uppercase tracking-tight truncate">
+            {node.name || "Unnamed"}
+          </h4>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {node.employee_code || "—"}
+          </p>
+          <div className="flex items-center justify-center gap-1.5 mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
+            <Mail className="h-3 w-3 text-muted-foreground" />
+            <span className="text-[9px] text-muted-foreground truncate">
+              {node.email || "Email not set"}
+            </span>
+          </div>
+          <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground mt-1">
+            {node.is_active ? "Active" : "Inactive"}
+          </span>
+        </div>
+
+        {reports > 0 && (
+          <div className="mt-3 pt-2 border-t border-dashed border-border flex items-center justify-center gap-1">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+              {reports} {reports === 1 ? "Report" : "Reports"}
+            </span>
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col items-center mt-1 space-y-0.5">
-        {node.department && (
-          <div className="text-[11px] text-[#333] font-medium text-center truncate w-full" title={node.department}>
-            {node.department}
-          </div>
-        )}
-        {node.employee_code && (
-          <div className="text-[10px] text-[#555] font-mono tracking-tight bg-white/40 px-1.5 py-0.5 rounded-sm">
-            {node.employee_code}
-          </div>
-        )}
-        {node.email && (
-          <div className="text-[10px] text-[#666] text-center truncate w-full mt-1" title={node.email}>
-            {node.email}
-          </div>
-        )}
-      </div>
+      {reports > 0 && <div className="w-px h-8 bg-border mt-0" />}
     </div>
   );
 };
 
-const RecursiveNode = ({ node }: RecursiveNodeProps) => {
-  const hasChildren = node.children && node.children.length > 0;
+const TreeNodeComponent = ({ node }: { node: HierarchyNode }) => {
+  const children = node.children || [];
 
   return (
-    <div className="flex flex-col items-center flex-shrink-0">
-      <TreeNode node={node} />
+    <div className="flex flex-col items-center shrink-0">
+      <TreeCard node={node} />
 
-      {hasChildren && (
-        <div className="flex flex-col items-center mt-0 w-full relative">
-          {/* Main vertical line from parent */}
-          <div className="w-[3px] h-6 bg-[#1a1a1a]"></div>
-
-          <div className="flex relative items-start">
-            {/* Horizontal Connection bar spanning from first child center to last child center */}
-            {node.children!.length > 1 && (
-              <div
-                className="absolute top-0 h-[3px] bg-[#1a1a1a]"
-                style={{
-                  left: `calc(50% / ${node.children!.length})`,
-                  right: `calc(50% / ${node.children!.length})`
-                }}
-              />
-            )}
-
-            <div className="flex">
-              {node.children!.map((child, index) => (
-                <div key={child.id} className="relative flex flex-col items-center pt-[0px] px-6">
-
-                  {/* Inner vertical drop down to node */}
-                  <div className="relative flex flex-col items-center">
-                    {/* Vertical dropdown line */}
-                    <div className="w-[3px] h-6 bg-[#1a1a1a]" />
-
-                    {/* Downward Arrow Triangle */}
-                    <div className="absolute bottom-0 translate-y-[90%] left-1/2 -translate-x-1/2 w-0 h-0 
-                                    border-l-[6px] border-l-transparent 
-                                    border-r-[6px] border-r-transparent 
-                                    border-t-[8px] border-t-[#1a1a1a] z-10"
-                    />
-                  </div>
-
-                  {/* Spacer for Arrow */}
-                  <div className="h-4"></div>
-
-                  <RecursiveNode node={child} />
-                </div>
-              ))}
+      {children.length > 0 && (
+        <div className="relative flex gap-6 mt-0 pt-4 tree-children">
+          {children.map((child) => (
+            <div key={child.id} className="relative flex flex-col items-center tree-branch pt-4">
+              <TreeNodeComponent node={child} />
             </div>
-          </div>
+          ))}
         </div>
       )}
     </div>
   );
 };
 
-const SystemHierarchyView = ({ is_active }: { is_active?: boolean }) => {
-  const { data: hierarchyData, isLoading, error } = useSystemHierarchy({ is_active });
-
-  const hierarchy: HierarchyNode[] = Array.isArray(hierarchyData)
-    ? hierarchyData
-    : (hierarchyData as any)?.data || [];
+const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
+  const { data, isLoading, error } = useSystemHierarchy({ is_active });
+  const roots: HierarchyNode[] = React.useMemo(() => {
+    if (!data) return [];
+    return Array.isArray(data) ? data : [data];
+  }, [data]);
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center p-24 space-y-4 bg-white">
-        <Loader2 className="h-10 w-10 animate-spin text-[#111]" />
-        <p className="text-xs font-bold uppercase tracking-widest text-[#111]">
-          Establishing Communication Lines...
-        </p>
+      <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Loading hierarchy</p>
       </div>
     );
   }
 
-  if (error || !hierarchy || hierarchy.length === 0) {
+  if (error || roots.length === 0) {
     return (
-      <div className="p-12 text-center bg-white rounded-lg border border-border/50">
-        <User className="h-12 w-12 text-[#111] mx-auto mb-4 opacity-20" />
-        <p className="text-sm font-medium text-[#111]">Hierarchy mapping unavailable</p>
+      <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground">
+        <p>No hierarchy information available.</p>
+        <p className="text-xs">Try adjusting the filters or refresh the page.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center flex-wrap pt-12 pb-24 overflow-auto min-h-[600px] bg-[#fbfbfb] font-sans">
-      {hierarchy.map((root: HierarchyNode) => (
-        <RecursiveNode key={root.id} node={root} />
-      ))}
+    <div className="w-full h-full overflow-auto rounded-sm p-8 select-none">
+      <div className="min-w-max flex flex-col items-center gap-10">
+        {roots.map((node) => (
+          <TreeNodeComponent key={node.id} node={node} />
+        ))}
+      </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+              .tree-children::before {
+                  content: '';
+                  position: absolute;
+                  top: -16px;
+                  left: 50%;
+                  width: 1px;
+                  height: 18px;
+                  background: hsl(var(--border));
+              }
+              .tree-branch::before {
+                  content: '';
+                  position: absolute;
+                  top: 0;
+                  height: 1px;
+                  background: hsl(var(--border));
+                  width: 50%;
+              }
+              .tree-branch:first-child::before {
+                  left: 50%;
+                  width: 50%;
+              }
+              .tree-branch:last-child::before {
+                  left: 0;
+                  width: 50%;
+              }
+              .tree-branch:only-child::before {
+                  display: none;
+              }
+              .tree-branch:not(:first-child):not(:last-child)::before {
+                  left: 0;
+                  width: 100%;
+              }
+          `
+      }} />
     </div>
   );
 };

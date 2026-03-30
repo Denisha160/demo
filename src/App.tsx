@@ -66,6 +66,7 @@ import SalesPage from "./pages/companys/sales/SalesPage";
 import SalesMemberDetailPage from "./pages/companys/sales/SalesMemberDetailPage";
 import QuotationPage from "./pages/companys/leads/details/tabs/quotations/QuotationPage";
 import ShiftPage from "./pages/admin/shifts/ShiftPage";
+import ShiftDetailPage from "./pages/admin/shifts/ShiftDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -313,6 +314,7 @@ const App = () => (
           <Route path="accounts" element={<AccountPage />} />
           <Route path="accounts/:id" element={<AccountViewPage />} />
           <Route path="shifts" element={<ShiftPage />} />
+          <Route path="shifts/:id" element={<ShiftDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 

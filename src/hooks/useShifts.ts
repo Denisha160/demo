@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import * as api from "@/services/api";
-import { Shift, ShiftListResponse } from "@/types/shift";
+import { Shift, ShiftListResponse, ShiftDetailResponse } from "@/types/shift";
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (typeof error === "object" && error !== null && "message" in error) {
@@ -37,7 +37,7 @@ export const useShiftDetails = (id: string) => {
     queryKey: [SHIFTS_QUERY_KEY, id],
     queryFn: async () => {
       const response = await api.getShiftDetails(id);
-      return response.data as Shift;
+      return response.data as ShiftDetailResponse;
     },
     enabled: !!id,
   });

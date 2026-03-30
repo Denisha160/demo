@@ -97,8 +97,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     { enabled: open },
   );
   const { data: shiftsData } = useShifts(
-    { combobox: true },
-    { enabled: open },
+    { combobox: true }
   );
 
   const shiftOptions: ComboboxOption[] =

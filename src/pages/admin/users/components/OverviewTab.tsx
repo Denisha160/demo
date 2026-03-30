@@ -132,8 +132,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
       }));
 
     const { data: shiftsData } = useShifts(
-      { combobox: true },
-      { enabled: true },
+      { combobox: true }
     );
 
     const shiftOptions: ComboboxOption[] =

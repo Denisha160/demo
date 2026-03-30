@@ -20,7 +20,7 @@ import {
   Blocks,
   Hash,
   Award,
-  Wind,
+  TimerReset,
   Landmark,
   MapPin,
 } from "lucide-react";
@@ -95,9 +95,9 @@ const navItems: NavItemEntry[] = [
     path: "/admin/product-categories",
     permission: "product-category.read",
   },
-  {
+  { 
     label: "Shifts",
-    icon: Tags,
+    icon: TimerReset,
     path: "/admin/shifts",
     permission: "shifts.read",
   },

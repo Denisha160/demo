@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   User,
@@ -117,6 +124,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     is_active: user?.is_active ?? true,
     basic_salary: user?.basic_salary || 0,
     parent_id: user?.parent_id || "",
+    work_shift: user?.work_shift || "",
   });
 
   const validateForm = () => {
@@ -224,6 +232,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
       employee_code: "",
       date_of_joining: getLocalDateString(new Date()),
       parent_id: "",
+      work_shift: "",
     });
     setConfirmPassword("");
     setShowPassword(false);
@@ -385,6 +394,31 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
                 </p>
               )}
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="work_shift" className="text-sm">
+              Shift
+            </Label>
+            <Select
+              id="work_shift"
+              value={formData.work_shift || ""}
+              onValueChange={(val) => handleChange("work_shift", val)}
+              disabled={isPending}
+            >
+              <SelectTrigger className="h-8 text-sm">
+                <SelectValue placeholder="Select shift" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="morning">Morning</SelectItem>
+                <SelectItem value="evening">Evening</SelectItem>
+                <SelectItem value="night">Night</SelectItem>
+                <SelectItem value="rotating">Rotating</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.work_shift && (
+              <p className="text-xs text-destructive mt-1">{errors.work_shift}</p>
+            )}
           </div>
 
           {/* Password fields for new user */}

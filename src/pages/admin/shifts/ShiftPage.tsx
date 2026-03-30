@@ -1,41 +1,64 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import DataTable, { Column } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import StatusBadge from "@/components/StatusBadge";
 import { Plus, Search, Edit, Trash2 } from "lucide-react";
 import ShiftModal from "./ShiftModal";
 import { useShifts, useCreateShift, useUpdateShift, useDeleteShift } from "@/hooks/useShifts";
 import { Shift } from "@/types/shift";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useSearchParams } from "react-router-dom";
 
 const ShiftPage = () => {
-    const { data, isLoading } = useShifts();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  const [search, setSearch] = useState(initialSearch);
+  const debouncedSearch = useDebounce(search, 400);
+
+  useEffect(() => {
+    const currentValue = searchParams.get("search") || "";
+    if (currentValue === debouncedSearch) return;
+    const nextParams = new URLSearchParams(searchParams);
+    if (debouncedSearch) {
+      nextParams.set("search", debouncedSearch);
+    } else {
+      nextParams.delete("search");
+    }
+    setSearchParams(nextParams, { replace: true });
+  }, [debouncedSearch, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    const param = searchParams.get("search") || "";
+    setSearch((current) => (current === param ? current : param));
+  }, [searchParams]);
+
+  const { data, isLoading } = useShifts({
+    search: debouncedSearch || undefined,
+  });
     const createShift = useCreateShift();
     const updateShift = useUpdateShift();
     const deleteShift = useDeleteShift();
 
-    const shifts = useMemo<Shift[]>(() => {
-        return data?.shifts || data?.items || [];
-    }, [data]);
-
-    const [search, setSearch] = useState("");
+  const shifts = useMemo<Shift[]>(() => {
+    return data?.shifts || data?.items || [];
+  }, [data]);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
     const [shiftToDelete, setShiftToDelete] = useState<Shift | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
-    const filteredShifts = useMemo(() => {
-        if (!search.trim()) return shifts;
-        const term = search.trim().toLowerCase();
-        return shifts.filter((shift) =>
-            [shift.name, shift.start_time, shift.end_time]
-                .filter(Boolean)
-                .some((value) => value?.toLowerCase().includes(term)),
-        );
-    }, [search, shifts]);
-
-    const handleSave = async (payload: Partial<Shift>) => {
+  const handleSave = async (payload: Partial<Shift>) => {
         try {
             if (selectedShift) {
                 await updateShift.mutateAsync({ id: selectedShift.id, ...payload });
@@ -143,15 +166,15 @@ const ShiftPage = () => {
         <div className="w-full mx-auto space-y-2 animate-fade-in">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-2">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:flex-initial">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                            placeholder="Search shifts..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="h-8 pl-7 text-sm rounded-sm w-full sm:w-64"
-                        />
-                    </div>
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search shifts..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-8 pl-7 text-sm rounded-sm w-full sm:w-64"
+              />
+            </div>
                 </div>
                 <Button
                     size="sm"
@@ -165,9 +188,9 @@ const ShiftPage = () => {
                 </Button>
             </div>
 
-            <div className="border border-border rounded-sm overflow-hidden bg-card shadow-sm">
-                <DataTable
-                    data={filteredShifts}
+        <div className="border border-border rounded-sm overflow-hidden bg-card shadow-sm">
+          <DataTable
+            data={shifts}
                     columns={columns}
                     isLoading={isLoading}
                     onRowClick={(shift) => {

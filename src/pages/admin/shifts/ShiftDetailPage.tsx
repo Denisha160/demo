@@ -93,15 +93,6 @@ const ShiftDetailPage = () => {
           />
         ),
       },
-      {
-        key: "created_at",
-        header: "Created",
-        render: (user) => (
-          <p className="text-sm text-foreground/80">
-            {new Date(user.created_at).toLocaleString()}
-          </p>
-        ),
-      },
     ],
     [],
   );

@@ -62,8 +62,7 @@ const navItems: NavItemEntry[] = [
     label: "Sales Team",
     icon: Users,
     path: "sales",
-    permission: "user.read",
-    isRootOnly: true,
+    permission: "sales-member.read",
   },
   {
     label: "CRM",
@@ -136,12 +135,12 @@ const navItems: NavItemEntry[] = [
   //       path: "kits",
   //       permission: "product-kit.read",
   //     },
-      {
-        label: "Categories",
-        icon: Tags,
-        path: "product-categories",
-        permission: "product-category.read",
-      },
+  // {
+  //   label: "Categories",
+  //   icon: Tags,
+  //   path: "product-categories",
+  //   permission: "product-category.read",
+  // },
   //     {
   //       label: "Brands",
   //       icon: Award,

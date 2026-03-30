@@ -89,12 +89,12 @@ const navItems: NavItemEntry[] = [
   //       path: "/admin/kits",
   //       permission: "product-kit.read",
   //     },
-  //     {
-  //       label: "Categories",
-  //       icon: Tags,
-  //       path: "/admin/product-categories",
-  //       permission: "product-category.read",
-  //     },
+      {
+        label: "Categories",
+        icon: Tags,
+        path: "/admin/product-categories",
+        permission: "product-category.read",
+      },
   //     {
   //       label: "Brands",
   //       icon: Award,

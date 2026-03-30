@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,18 @@ const Users = () => {
     (r: { id: string; name: string }) => ({ value: r.id, label: r.name }),
   );
 
-  const [view, setView] = useState<"table" | "tree">("table");
+  const viewParam = searchParams.get("view");
+  const [view, setView] = useState<"table" | "tree">(
+    viewParam === "tree" ? "tree" : "table",
+  );
+  const prevViewParam = useRef<string | null>(viewParam);
+
+  useEffect(() => {
+    if (viewParam === prevViewParam.current) return;
+    if (viewParam !== "table" && viewParam !== "tree") return;
+    setView(viewParam as "table" | "tree");
+    prevViewParam.current = viewParam;
+  }, [viewParam]);
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
@@ -133,6 +144,8 @@ const Users = () => {
         if (sortDirection) next.set("sortDirection", sortDirection);
         else next.delete("sortDirection");
 
+        next.set("view", view);
+
         return next;
       },
       { replace: true },
@@ -145,6 +158,7 @@ const Users = () => {
     limit,
     sortKey,
     sortDirection,
+    view,
     setSearchParams,
   ]);
 

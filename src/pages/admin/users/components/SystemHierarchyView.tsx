@@ -10,7 +10,12 @@ interface HierarchyNode {
   image_url?: string;
   is_active: boolean;
   department?: string;
+  level: number;
   children?: HierarchyNode[];
+}
+
+interface RecursiveNodeProps {
+  node: HierarchyNode;
 }
 interface SystemHierarchyViewProps {
   is_active?: boolean;

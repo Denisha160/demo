@@ -25,7 +25,7 @@ const UserDetailPage = () => {
     setSearchParams((prev) => {
       prev.set("tab", tab);
       return prev;
-    });
+    }, { replace: true });
   };
   const [isSavingOverview, setIsSavingOverview] = useState(false);
   const overviewRef = useRef<OverviewTabRef>(null);

@@ -1,6 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import * as api from "@/services/api";
 import { Shift, ShiftListResponse } from "@/types/shift";
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: string }).message;
+    if (message) return message;
+  }
+  return fallback;
+};
 
 export const SHIFTS_QUERY_KEY = "shifts";
 
@@ -31,6 +40,10 @@ export const useCreateShift = () => {
     mutationFn: (data: Partial<Shift>) => api.createShift(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [SHIFTS_QUERY_KEY] });
+      toast.success("Shift created successfully.");
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to create shift."));
     },
   });
 };
@@ -42,6 +55,10 @@ export const useUpdateShift = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [SHIFTS_QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [SHIFTS_QUERY_KEY, variables.id] });
+      toast.success("Shift updated successfully.");
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to update shift."));
     },
   });
 };
@@ -52,6 +69,10 @@ export const useDeleteShift = () => {
     mutationFn: (id: string) => api.deleteShift(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [SHIFTS_QUERY_KEY] });
+      toast.success("Shift deleted successfully.");
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to delete shift."));
     },
   });
 };

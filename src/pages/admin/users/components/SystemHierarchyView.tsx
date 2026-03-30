@@ -1,5 +1,6 @@
 import React from "react";
 import { Mail, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useSystemHierarchy } from "@/hooks/useUsers";
 
 interface HierarchyNode {
@@ -21,12 +22,15 @@ interface SystemHierarchyViewProps {
   is_active?: boolean;
 }
 
-const TreeCard = ({ node }: { node: HierarchyNode }) => {
+const TreeCard = ({ node, onClick }: { node: HierarchyNode; onClick: (node: HierarchyNode) => void }) => {
   const reports = node.children?.length || 0;
   const roleLabel = node.department || "Team";
 
   return (
-    <div className="relative flex flex-col items-center group">
+    <div
+      className="relative flex flex-col items-center group cursor-pointer"
+      onClick={() => onClick(node)}
+    >
       <div className="z-10 border border-border rounded-lg p-3 w-[220px] bg-card/60 shadow-sm transition-all">
         <div className="flex flex-col gap-1 text-center">
           <p className="text-[10px] uppercase tracking-widest font-black text-primary/70">
@@ -63,18 +67,18 @@ const TreeCard = ({ node }: { node: HierarchyNode }) => {
   );
 };
 
-const TreeNodeComponent = ({ node }: { node: HierarchyNode }) => {
+const TreeNodeComponent = ({ node, onClick }: { node: HierarchyNode; onClick: (node: HierarchyNode) => void }) => {
   const children = node.children || [];
 
   return (
     <div className="flex flex-col items-center shrink-0">
-      <TreeCard node={node} />
+      <TreeCard node={node} onClick={onClick} />
 
       {children.length > 0 && (
         <div className="relative flex gap-6 mt-0 pt-4 tree-children">
           {children.map((child) => (
             <div key={child.id} className="relative flex flex-col items-center tree-branch pt-4">
-              <TreeNodeComponent node={child} />
+              <TreeNodeComponent node={child} onClick={onClick} />
             </div>
           ))}
         </div>
@@ -85,6 +89,11 @@ const TreeNodeComponent = ({ node }: { node: HierarchyNode }) => {
 
 const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
   const { data, isLoading, error } = useSystemHierarchy({ is_active });
+  const navigate = useNavigate();
+
+  const handleNodeClick = (node: HierarchyNode) => {
+    navigate(`${node.id}`);
+  };
   const roots: HierarchyNode[] = React.useMemo(() => {
     if (!data) return [];
     return Array.isArray(data) ? data : [data];
@@ -112,7 +121,7 @@ const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
     <div className="w-full h-full overflow-auto rounded-sm p-8 select-none">
       <div className="min-w-max flex flex-col items-center gap-10">
         {roots.map((node) => (
-          <TreeNodeComponent key={node.id} node={node} />
+          <TreeNodeComponent key={node.id} node={node} onClick={handleNodeClick} />
         ))}
       </div>
 

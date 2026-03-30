@@ -24,7 +24,7 @@ interface SystemHierarchyViewProps {
 
 const TreeCard = ({ node, onClick }: { node: HierarchyNode; onClick: (node: HierarchyNode) => void }) => {
   const reports = node.children?.length || 0;
-  const roleLabel = node.department || "Team";
+  const roleLabel = node.department;
 
   return (
     <div
@@ -39,27 +39,17 @@ const TreeCard = ({ node, onClick }: { node: HierarchyNode; onClick: (node: Hier
           <h4 className="text-xs font-black text-foreground uppercase tracking-tight truncate">
             {node.name || "Unnamed"}
           </h4>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          {/* <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
             {node.employee_code || "—"}
-          </p>
+          </p> */}
           <div className="flex items-center justify-center gap-1.5 mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
             <Mail className="h-3 w-3 text-muted-foreground" />
             <span className="text-[9px] text-muted-foreground truncate">
               {node.email || "Email not set"}
             </span>
           </div>
-          <span className="text-[9px] tracking-[0.3em] uppercase text-muted-foreground mt-1">
-            {node.is_active ? "Active" : "Inactive"}
-          </span>
         </div>
 
-        {reports > 0 && (
-          <div className="mt-3 pt-2 border-t border-dashed border-border flex items-center justify-center gap-1">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase">
-              {reports} {reports === 1 ? "Report" : "Reports"}
-            </span>
-          </div>
-        )}
       </div>
 
       {reports > 0 && (

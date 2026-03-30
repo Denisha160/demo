@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import * as api from "@/services/api";
 import { Shift, ShiftListResponse } from "@/types/shift";
@@ -13,13 +18,17 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export const SHIFTS_QUERY_KEY = "shifts";
 
-export const useShifts = (params?: Record<string, unknown>) => {
+export const useShifts = (
+  params?: Record<string, unknown>,
+  options?: UseQueryOptions<ShiftListResponse, unknown>,
+) => {
   return useQuery({
     queryKey: [SHIFTS_QUERY_KEY, params],
     queryFn: async () => {
       const response = await api.listShifts(params);
       return response.data as ShiftListResponse;
     },
+    ...options,
   });
 };
 

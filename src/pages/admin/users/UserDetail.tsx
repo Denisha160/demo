@@ -41,7 +41,10 @@ const UserDetailPage = () => {
     date_of_joining: "",
     department: "",
     region: "",
-    work_shift: "morning",
+    shift_id: "",
+    shift_name: "",
+    shift_start_time: "",
+    shift_end_time: "",
     is_root_user: false,
     is_active: true,
     gender: "male",
@@ -102,7 +105,10 @@ const UserDetailPage = () => {
             : "",
           department: apiUser.department || "",
           region: apiUser.region || "",
-          work_shift: apiUser.work_shift || "morning",
+          shift_id: apiUser.shift_id || "",
+          shift_name: apiUser.shift_name || "",
+          shift_start_time: apiUser.shift_start_time || "",
+          shift_end_time: apiUser.shift_end_time || "",
           is_root_user: apiUser.is_root_user || false,
           is_active: apiUser.is_active ?? true,
           gender: apiUser.gender || "male",
@@ -166,12 +172,6 @@ const UserDetailPage = () => {
   const maritalStatusOptions: SelectOption[] = [
     { label: "Single", value: "single" },
     { label: "Married", value: "married" },
-  ];
-  const workShiftOptions: SelectOption[] = [
-    { label: "Morning", value: "morning" },
-    { label: "Evening", value: "evening" },
-    { label: "Night", value: "night" },
-    { label: "Rotating", value: "rotating" },
   ];
 
   if (isLoading) {
@@ -269,7 +269,6 @@ const UserDetailPage = () => {
                         : "",
                       department: fetchedUser.department || "",
                       region: fetchedUser.region || "",
-                      work_shift: fetchedUser.work_shift || "morning",
                       is_root_user: fetchedUser.is_root_user || false,
                       is_active: fetchedUser.is_active ?? true,
                       gender: fetchedUser.gender || "male",
@@ -321,7 +320,6 @@ const UserDetailPage = () => {
             setUserData={setUserData}
             genderOptions={genderOptions}
             maritalStatusOptions={maritalStatusOptions}
-            workShiftOptions={workShiftOptions}
           />
         </TabsContent>
 

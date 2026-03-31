@@ -7,6 +7,8 @@ import {
   getSystemHierarchy,
   createUser,
   updateUser,
+  uploadUserPhoto,
+  removeUserPhoto,
   listUserSessions,
   deleteUser,
   updateUserPermissions,
@@ -136,6 +138,48 @@ export const useUpdateUser = () => {
       }
 
       toast.error(message);
+    },
+  });
+};
+
+export const useUploadUserPhoto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, formData }: { id: string; formData: FormData }) => {
+      const response = await uploadUserPhoto(id, formData);
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.detail(variables.id),
+      });
+      toast.success("Profile photo updated!");
+    },
+    onError: (error: unknown) => {
+      console.error("Failed to upload photo:", error);
+      toast.error("Failed to upload profile photo.");
+    },
+  });
+};
+
+export const useRemoveUserPhoto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await removeUserPhoto(id);
+      return response;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.detail(id),
+      });
+      toast.success("Profile photo removed!");
+    },
+    onError: (error: unknown) => {
+      console.error("Failed to remove photo:", error);
+      toast.error("Failed to remove profile photo.");
     },
   });
 };

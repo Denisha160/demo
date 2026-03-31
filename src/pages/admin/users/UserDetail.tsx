@@ -68,22 +68,6 @@ const UserDetailPage = () => {
     conversionRate: "18.5%",
     avgProductionTime: "42 Hours",
     fulfillmentRate: "98.2%",
-    sessions: [
-      {
-        id: 1,
-        device: "Chrome / MacOS",
-        ip: "192.168.1.1",
-        lastActive: "Just now",
-        current: true,
-      },
-      {
-        id: 2,
-        device: "Safari / iPhone 15",
-        ip: "172.20.10.4",
-        lastActive: "2 hours ago",
-        current: false,
-      },
-    ],
   });
 
   const { data: fetchedUser, isLoading } = useUser(id as string);
@@ -124,6 +108,7 @@ const UserDetailPage = () => {
           pan_number: apiUser.pan_number || "",
           gst_number: apiUser.gst_number || "",
           address: apiUser.address || "",
+          image_url: apiUser.image_url || "",
           role: apiUser.role || "User",
           parent_id: apiUser.parent_id || "",
         };
@@ -284,6 +269,7 @@ const UserDetailPage = () => {
                       pan_number: fetchedUser.pan_number || "",
                       gst_number: fetchedUser.gst_number || "",
                       address: fetchedUser.address || "",
+                      image_url: fetchedUser.image_url || "",
                       role: fetchedUser.role || "User",
                       parent_id: fetchedUser.parent_id || "",
                     }));

@@ -32,19 +32,34 @@ const TreeCard = ({ node, onClick }: { node: HierarchyNode; onClick: (node: Hier
       onClick={() => onClick(node)}
     >
       <div className="z-10 border border-border rounded-lg p-3 w-[220px] bg-card/60 shadow-sm transition-all">
-        <div className="flex flex-col gap-1 text-center">
-          <p className="text-[10px] uppercase tracking-widest font-black text-primary/70">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 border border-primary/20 overflow-hidden mb-1">
+            {node.image_url ? (
+              <img
+                src={node.image_url}
+                alt={node.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              node.name
+                ? node.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase()
+                : "?"
+            )}
+          </div>
+          <p className="text-[9px] uppercase tracking-widest font-black text-primary/70">
             {roleLabel}
           </p>
-          <h4 className="text-xs font-black text-foreground uppercase tracking-tight truncate">
+          <h4 className="text-xs font-black text-foreground uppercase tracking-tight truncate w-full">
             {node.name || "Unnamed"}
           </h4>
-          {/* <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            {node.employee_code || "—"}
-          </p> */}
-          <div className="flex items-center justify-center gap-1.5 mt-1 opacity-70 group-hover:opacity-100 transition-opacity">
-            <Mail className="h-3 w-3 text-muted-foreground" />
-            <span className="text-[9px] text-muted-foreground truncate">
+          <div className="flex items-center justify-center gap-1.5 mt-0.5 opacity-70 group-hover:opacity-100 transition-opacity">
+            <Mail className="h-2.5 w-2.5 text-muted-foreground" />
+            <span className="text-[8px] text-muted-foreground truncate max-w-[150px]">
               {node.email || "Email not set"}
             </span>
           </div>

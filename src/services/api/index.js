@@ -101,6 +101,21 @@ export const deleteUser = (id) => {
   return axios({ method: "DELETE", url });
 };
 
+export const uploadUserPhoto = (id, formData) => {
+  const url = `users/${id}/image`;
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const removeUserPhoto = (id) => {
+  const url = `users/${id}/image`;
+  return axios({ method: "DELETE", url });
+};
+
 export const updateUserPermissions = (id, data) => {
   const url = `users/${id}/permissions`;
   return axios({ method: "PUT", url, data });
@@ -120,6 +135,8 @@ export const getSystemHierarchy = (params) => {
   const url = `users/hierarchy`;
   return axios({ method: "GET", url, params });
 };
+
+
 
 // end region
 

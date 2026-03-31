@@ -223,13 +223,22 @@ const Users = () => {
             }
           }}
         >
-          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
-            {item.name
-              ? item.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-              : "?"}
+          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20 overflow-hidden">
+            {item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              item.name
+                ? item.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                : "?"
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">

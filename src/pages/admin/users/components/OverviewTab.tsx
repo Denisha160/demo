@@ -23,16 +23,16 @@ import {
   UserDetailData,
   UserUpdatePayload,
   ApiErrorResponse,
-  getLocalDateString,
   User,
 } from "@/types/user";
+import { formatDateForAPI } from "@/utils/date";
 import { ComboboxOption } from "@/components/ui/combobox";
 import { Shift } from "@/types/shift";
 
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  phone_number: z.string().regex(/^[0-9+\-\s]{10,15}$/, "Invalid phone number"),
+  phone_number: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
   employee_code: z
     .string()
     .min(3, "Employee code must be at least 3 characters"),
@@ -112,7 +112,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
     const [confirmPassword, setConfirmPassword] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [apiError, setApiError] = useState<string | null>(null);
-    
+
     // Hooks
     const { mutate: updateUser, isPending: isUpdatingDetails } = useUpdateUser();
     const { mutate: uploadPhoto, isPending: isUploadingPhoto } = useUploadUserPhoto();
@@ -238,17 +238,16 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
           phone_number: userData.phone_number,
           email: userData.email,
           personal_email: userData.personal_email,
-          employee_code: userData.employee_code,
-          date_of_joining: userData.date_of_joining,
+          date_of_joining: formatDateForAPI(userData.date_of_joining, false),
           department: userData.department,
           region: userData.region,
           shift_id: userData.shift_id,
           is_active: userData.is_active,
           is_root_user: userData.is_root_user,
           gender: userData.gender,
-          date_of_birth: userData.date_of_birth,
+          date_of_birth: formatDateForAPI(userData.date_of_birth, false),
           marital_status: userData.marital_status,
-          anniversary_date: userData.anniversary_date,
+          anniversary_date: formatDateForAPI(userData.anniversary_date, false),
           basic_salary: userData.basic_salary,
           opening_balance: userData.opening_balance,
           pan_number: userData.pan_number,
@@ -368,7 +367,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
             <EditableDetailItem label="Employee Code" value={userData.employee_code} error={errors.employee_code} isEditing={true} onChange={(val) => handleChange("employee_code", val)} />
             <EditableDetailItem label="Department" value={userData.department} error={errors.department} isEditing={true} onChange={(val) => handleChange("department", val)} />
             <EditableDetailItem label="Region / Zone" value={userData.region} error={errors.region} isEditing={true} onChange={(val) => handleChange("region", val)} />
-            <EditableDetailItem label="Date of Joining" value={userData.date_of_joining ? getLocalDateString(userData.date_of_joining) : ""} error={errors.date_of_joining} isEditing={true} onChange={(val) => handleChange("date_of_joining", val)} type="date" />
+            <EditableDetailItem label="Date of Joining" value={userData.date_of_joining ? formatDateForAPI(userData.date_of_joining, false) : ""} error={errors.date_of_joining} isEditing={true} onChange={(val) => handleChange("date_of_joining", val)} type="date" />
             <EditableDetailItem label="Work Shift" value={userData.shift_id} resolvedLabel={userData.shift_name} error={errors.shift_id} isEditing={true} onChange={(val) => handleChange("shift_id", val)} type="combobox" options={shiftOptions} />
             <EditableDetailItem label="Reporting To (Parent User)" value={userData.parent_id} error={errors.parent_id} isEditing={true} onChange={(val) => handleChange("parent_id", val)} type="combobox" options={parentOptions} />
           </div>
@@ -394,10 +393,10 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <EditableDetailItem label="Gender" value={userData.gender} error={errors.gender} isEditing={true} onChange={(val) => handleChange("gender", val)} type="select" options={genderOptions} />
-            <EditableDetailItem label="Date of Birth" value={userData.date_of_birth ? getLocalDateString(userData.date_of_birth) : ""} error={errors.date_of_birth} isEditing={true} onChange={(val) => handleChange("date_of_birth", val)} type="date" />
+            <EditableDetailItem label="Date of Birth" value={userData.date_of_birth ? formatDateForAPI(userData.date_of_birth, false) : ""} error={errors.date_of_birth} isEditing={true} onChange={(val) => handleChange("date_of_birth", val)} type="date" />
             <EditableDetailItem label="Marital Status" value={userData.marital_status} error={errors.marital_status} isEditing={true} onChange={(val) => handleChange("marital_status", val)} type="select" options={maritalStatusOptions} />
             {userData.marital_status === "married" && (
-              <EditableDetailItem label="Anniversary Date" value={userData.anniversary_date ? getLocalDateString(userData.anniversary_date) : ""} error={errors.anniversary_date} isEditing={true} onChange={(val) => handleChange("anniversary_date", val)} type="date" />
+              <EditableDetailItem label="Anniversary Date" value={userData.anniversary_date ? formatDateForAPI(userData.anniversary_date, false) : ""} error={errors.anniversary_date} isEditing={true} onChange={(val) => handleChange("anniversary_date", val)} type="date" />
             )}
             <div className="md:col-span-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">

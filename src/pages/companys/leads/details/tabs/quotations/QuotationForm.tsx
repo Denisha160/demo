@@ -240,7 +240,19 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
             contact_person_email: "",
             contact_person_phone: "",
             contact_person_designation: "",
-            items: [],
+            items: [{
+                product_id: "",
+                product_name: "",
+                product_code: "",
+                description: "",
+                long_description: "",
+                quantity: 1,
+                rate: 0,
+                tax_rate: 0,
+                amount: 0,
+                unit: "-",
+                is_optional: false,
+            }],
             amount_in_words: "",
             payment_terms_custom: "",
             delivery_terms_custom: "",
@@ -1120,9 +1132,9 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                     <td className="px-5 py-3">
                                                         <Input
                                                             {...form.register(`items.${index}.product_code` as const)}
-                                                            className="h-8 text-xs font-mono bg-transparent border-transparent group-hover:border-border/40 focus:border-primary/50 focus:bg-background"
+                                                            className="h-8 text-xs font-mono bg-muted/20 border-transparent text-muted-foreground cursor-not-allowed"
                                                             placeholder="Code"
-                                                            readOnly
+                                                            disabled
                                                         />
                                                     </td>
                                                     <td className="px-5 py-3">

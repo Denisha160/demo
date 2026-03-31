@@ -8,10 +8,11 @@ import {
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-    Loader2, Plus, RefreshCw, Trash2, ChevronLeft, Save, FileText, Info, DollarSign, Truck, ShieldCheck, Mail, Phone, ArrowLeft, User
+    Loader2, Plus, RefreshCw, Trash2, ChevronLeft, Save, FileText, Info, DollarSign, Truck, ShieldCheck, Mail, Phone, ArrowLeft, User, Package
 } from "lucide-react";
 import { useLeads } from "@/hooks/useLeads";
 import { useLeadContacts } from "@/hooks/useLeadContacts";
+import { useProductsCombobox } from "@/hooks/useProducts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,20 @@ const keyValueSchema = z.object({
     value: requiredNumber,
 });
 
+const quotationItemSchema = z.object({
+    product_id: z.string().min(1, "Product is required"),
+    product_name: z.string().min(1, "Product name is required"),
+    product_code: optionalText,
+    description: optionalText,
+    long_description: optionalText,
+    quantity: requiredNumber.default(1),
+    rate: requiredNumber,
+    tax_rate: requiredNumber.default(0),
+    amount: requiredNumber,
+    unit: optionalText.default("pcs"),
+    is_optional: z.boolean().default(false),
+});
+
 export const quotationSchema = z.object({
     quotation_number: z.string().min(1, "Quotation number is required"),
     lead_id: z.string().min(1, "Lead is required"),
@@ -127,6 +142,8 @@ export const quotationSchema = z.object({
     contact_person_email: optionalText,
     contact_person_phone: optionalText,
     contact_person_designation: optionalText,
+
+    items: z.array(quotationItemSchema).min(1, "At least one item is required"),
 
     subtotal: requiredNumber,
     discount_type: z.enum(discountTypes).optional().or(z.literal("NONE")),
@@ -223,6 +240,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
             contact_person_email: "",
             contact_person_phone: "",
             contact_person_designation: "",
+            items: [],
             amount_in_words: "",
             payment_terms_custom: "",
             delivery_terms_custom: "",
@@ -239,8 +257,15 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
 
     const [leadSearch, setLeadSearch] = useState("");
     const debouncedLeadSearch = useDebounce(leadSearch, 500);
+    const [fgSearch, setFgSearch] = useState("");
+    const debouncedFgSearch = useDebounce(fgSearch, 300);
 
     const { data: leads = [] } = useLeads({ search: debouncedLeadSearch, limit: 10 });
+    const { data: products = [] } = useProductsCombobox({
+        type: "FINISHED_GOOD",
+        status: "active",
+        search: debouncedFgSearch.trim() || undefined,
+    });
 
     const selectedLeadId = form.watch("lead_id");
     const { data: contactData } = useLeadContacts(selectedLeadId);
@@ -297,10 +322,57 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         name: "additional_charges",
     });
 
+    const { fields: itemFields, append: appendItem, remove: removeItem, update: updateItem } = useFieldArray({
+        control: form.control,
+        name: "items",
+    });
+
     const watchAll = useWatch({ control: form.control });
 
+    const handleSelectProductInline = (index: number, productId: string) => {
+        const product = products.find((p) => p.id === productId);
+        if (!product) return;
+
+        updateItem(index, {
+            product_id: product.id,
+            product_name: product.product_name,
+            product_code: product.code || "",
+            description: product.product_name,
+            long_description: "",
+            quantity: 1,
+            rate: product.selling_price || 0,
+            tax_rate: 0,
+            amount: product.selling_price || 1 * (product.selling_price || 0),
+            unit: product.base_unit || "pcs",
+            is_optional: false,
+        });
+    };
+
+    const addNewRow = () => {
+        appendItem({
+            product_id: "",
+            product_name: "",
+            product_code: "",
+            description: "",
+            long_description: "",
+            quantity: 1,
+            rate: 0,
+            tax_rate: 0,
+            amount: 0,
+            unit: "-",
+            is_optional: false,
+        });
+    };
+
+    const handleItemAmountUpdate = (index: number) => {
+        const item = form.getValues(`items.${index}`);
+        const amount = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
+        form.setValue(`items.${index}.amount`, amount, { shouldDirty: true });
+    };
+
     const totals = useMemo(() => {
-        const sub = Number(watchAll.subtotal) || 0;
+        const itemsList = watchAll.items || [];
+        const sub = itemsList.reduce((sum, item) => sum + (item.is_optional ? 0 : (Number(item.amount) || 0)), 0);
         const discVal = Number(watchAll.discount_value) || 0;
         const discAmount = watchAll.discount_type === "PERCENTAGE"
             ? (sub * discVal) / 100
@@ -315,9 +387,10 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
             taxableAmount: taxable,
             taxTotal,
             chargesTotal,
+            subtotal: sub,
             grandTotal: taxable + taxTotal + chargesTotal
         };
-    }, [watchAll.subtotal, watchAll.discount_type, watchAll.discount_value, watchAll.tax_details, watchAll.additional_charges, watchAll.delivery_charges]);
+    }, [watchAll.items, watchAll.subtotal, watchAll.discount_type, watchAll.discount_value, watchAll.tax_details, watchAll.additional_charges, watchAll.delivery_charges]);
 
     const uiStatusLabel = useMemo(() => {
         const { status, approval_status, requires_approval } = watchAll;
@@ -356,9 +429,10 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
     }, [form]);
 
     useEffect(() => {
+        form.setValue("subtotal", totals.subtotal);
         form.setValue("total_tax_amount", totals.taxTotal);
         form.setValue("total_additional_charges", totals.chargesTotal);
-    }, [totals.taxTotal, totals.chargesTotal, form]);
+    }, [totals.subtotal, totals.taxTotal, totals.chargesTotal, form]);
 
     const onSubmit = (data: QuotationFormData) => {
         // Business Rule: Block Send
@@ -583,8 +657,9 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                 <QuotationFormLabel required>Subtotal Amount</QuotationFormLabel>
                                                 <div className="relative">
                                                     <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                                                    <Input type="number" step="0.01" className="pl-9 h-10 text-lg font-black tracking-tight rounded-sm" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
+                                                    <Input type="number" step="0.01" className="pl-9 h-10 text-lg font-black tracking-tight rounded-sm bg-muted/20 border-border/30" {...field} value={field.value || ""} readOnly />
                                                 </div>
+                                                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase">Autocalculated from items</p>
                                                 <FormMessage className="text-[10px]" />
                                             </FormItem>
                                         )}
@@ -652,10 +727,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     />
                                 </CardContent>
                             </Card>
-
-
                         </div>
-
                     </div>
 
                     {/* RIGHT COLUMN: Customer, Taxes, Terms */}
@@ -1004,6 +1076,141 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
 
 
 
+                    </div>
+                </div>
+
+                {/* BILL ITEMS SECTION - FULL WIDTH */}
+                <div className="mb-10 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <Card className="border-border/40 shadow-sm overflow-hidden">
+                        <div className="bg-muted/10 px-5 py-3 border-b border-border/20 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Package className="h-4 w-4 text-primary" />
+                                <h3 className="text-[11px] font-black text-foreground uppercase tracking-widest">Bill Items</h3>
+                            </div>
+                            <Badge variant="secondary" className="text-[10px] font-bold h-5 px-2 bg-background border-border/40 text-muted-foreground">
+                                {itemFields.length} {itemFields.length === 1 ? "item" : "items"}
+                            </Badge>
+                        </div>
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-muted/30 text-muted-foreground text-[10px] uppercase font-black tracking-wider border-b border-border/20">
+                                        <tr>
+                                            <th className="px-5 py-3 w-[40px] text-center">#</th>
+                                            <th className="px-5 py-3 w-[140px]">Code</th>
+                                            <th className="px-5 py-3 min-w-[200px]">Product</th>
+                                            <th className="px-5 py-3 w-[100px] text-center">Unit</th>
+                                            <th className="px-5 py-3 w-[100px] text-center">Qty</th>
+                                            <th className="px-5 py-3 w-[140px] text-right">Rate</th>
+                                            <th className="px-5 py-3 w-[140px] text-right">Amount</th>
+                                            <th className="px-5 py-3 w-[60px] text-center"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/10">
+                                        {itemFields.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={8} className="py-12 text-center text-muted-foreground/60 italic text-xs">
+                                                    No items added yet. Click "+ Add Product" to start.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            itemFields.map((field, index) => (
+                                                <tr key={field.id} className="group hover:bg-muted/5 transition-colors">
+                                                    <td className="px-5 py-3 text-center text-xs font-bold text-muted-foreground/40">{index + 1}</td>
+                                                    <td className="px-5 py-3">
+                                                        <Input
+                                                            {...form.register(`items.${index}.product_code` as const)}
+                                                            className="h-8 text-xs font-mono bg-transparent border-transparent group-hover:border-border/40 focus:border-primary/50 focus:bg-background"
+                                                            placeholder="Code"
+                                                            readOnly
+                                                        />
+                                                    </td>
+                                                    <td className="px-5 py-3">
+                                                        <div className="flex flex-col gap-1 w-full min-w-[240px]">
+
+                                                            <Combobox
+                                                                options={products.map((p) => ({
+                                                                    label: `${p.product_name} (${p.code})`,
+                                                                    value: p.id,
+                                                                }))}
+                                                                value={form.watch(`items.${index}.product_id`) || ""}
+                                                                onValueChange={(val) => handleSelectProductInline(index, val)}
+                                                                placeholder="Search products..."
+                                                                className="h-9 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40"
+                                                                searchValue={fgSearch}
+                                                                onSearchChange={setFgSearch}
+                                                            />
+
+
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-3 text-center">
+                                                        <Badge variant="outline" className="text-[9px] h-5 px-1.5 uppercase bg-muted/20 border-border/40 text-muted-foreground font-mono">
+                                                            {form.watch(`items.${index}.unit`) || "-"}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-5 py-3">
+                                                        <Input
+                                                            type="number"
+                                                            {...form.register(`items.${index}.quantity` as const)}
+                                                            className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background"
+                                                            onChange={(e) => {
+                                                                form.setValue(`items.${index}.quantity`, Number(e.target.value));
+                                                                handleItemAmountUpdate(index);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td className="px-5 py-3">
+                                                        <div className="relative">
+                                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/40 font-mono text-[10px]">₹</span>
+                                                            <Input
+                                                                type="number"
+                                                                step="0.01"
+                                                                {...form.register(`items.${index}.rate` as const)}
+                                                                className="h-8 text-right text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium"
+                                                                onChange={(e) => {
+                                                                    form.setValue(`items.${index}.rate`, Number(e.target.value));
+                                                                    handleItemAmountUpdate(index);
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-3 text-right">
+                                                        <span className="text-xs font-black font-mono text-primary">
+                                                            ₹{(form.watch(`items.${index}.amount`) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-5 py-3 text-center">
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            onClick={() => removeItem(index)}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full sm:max-w-[300px] h-10 border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 transition-all flex items-center justify-center gap-2 group shadow-sm"
+                            onClick={addNewRow}
+                        >
+                            <Plus className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+                            <span className="text-[11px] font-black uppercase tracking-widest text-primary">Add Product</span>
+                        </Button>
+                        <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest hidden sm:block">Click to add a new item row to the table</p>
                     </div>
                 </div>
             </form>

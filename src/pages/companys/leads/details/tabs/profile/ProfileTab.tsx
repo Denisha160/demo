@@ -197,17 +197,17 @@ const ProfileTab = ({
   const { data: countriesData } = useCountries({
     search: debouncedCountrySearch,
     combobox: true,
-    limit: 250,
+    limit: 20,
   });
   const { data: statesData } = useStates(selectedCountryId || undefined, {
     search: debouncedStateSearch,
     combobox: true,
-    limit: 1000,
+    limit: 20,
   });
   const { data: citiesData } = useCities(selectedStateId || undefined, {
     search: debouncedCitySearch,
     combobox: true,
-    limit: 500,
+    limit: 20,
   });
 
   const countryOptions =

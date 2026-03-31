@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Plus, Trash2, Scan } from "lucide-react";
+import { Package, Plus, Trash2, Scan, AlertCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import { QuotationFormData } from "./QuotationForm";
+import { FormMessage } from "@/components/ui/form";
 
 export const QuotationProductsTable = () => {
-    const { register, control, watch, setValue, getValues } = useFormContext<QuotationFormData>();
+    const { register, control, watch, setValue, getValues, formState: { errors } } = useFormContext<QuotationFormData>();
     const [fgSearch, setFgSearch] = useState("");
     const [scanValue, setScanValue] = useState("");
     const debouncedFgSearch = useDebounce(fgSearch, 300);
@@ -249,6 +250,13 @@ export const QuotationProductsTable = () => {
                     </div>
                 </CardContent>
             </Card>
+
+            {errors.items && (
+                <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-destructive/5 border border-destructive/20 text-destructive animate-in fade-in slide-in-from-top-1 duration-300">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{errors.items.root?.message || errors.items.message}</span>
+                </div>
+            )}
         </div>
     );
 };

@@ -1,6 +1,5 @@
-import { ComponentProps, useEffect, useMemo, useState } from "react";
+import { ComponentProps, useMemo, useState } from "react";
 import {
-    useFieldArray,
     useForm,
     useWatch,
     UseFormSetError,
@@ -8,15 +7,12 @@ import {
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-    Loader2, Plus, RefreshCw, Trash2, ChevronLeft, Save, FileText, Info, DollarSign, Truck, ShieldCheck, Mail, Phone, ArrowLeft, User, Package
+    DollarSign
 } from "lucide-react";
 import { useLeads } from "@/hooks/useLeads";
 import { useLeadContacts } from "@/hooks/useLeadContacts";
-import { useProductsCombobox } from "@/hooks/useProducts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
     Form,
@@ -26,65 +22,10 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatDateForAPI } from "@/utils/date";
-import { numberToWords } from "@/utils/numberToWords";
 import { cn } from "@/lib/utils";
 import { QuotationProductsTable } from "./QuotationProductsTable";
-
-const quotationStatuses = [
-    "DRAFT",
-    "SENT",
-    "VIEWED",
-    "ACCEPTED",
-    "REJECTED",
-    "EXPIRED",
-    "REVISED",
-    "CANCELLED",
-] as const;
-
-const approvalStatuses = [
-    "PENDING",
-    "APPROVED",
-    "REJECTED",
-] as const;
-
-const discountTypes = ["PERCENTAGE", "FIXED"] as const;
-
-const paymentTermsOptions = [
-    "ADVANCE",
-    "COD",
-    "NET_7",
-    "NET_15",
-    "NET_30",
-    "NET_45",
-    "NET_60",
-    "50_ADVANCE_50_DELIVERY",
-    "30_ADVANCE_70_DELIVERY",
-    "LETTER_OF_CREDIT",
-] as const;
-
-const deliveryTermsOptions = [
-    "EX_WORKS",
-    "FOB",
-    "CIF",
-    "CIP",
-    "DAP",
-    "DDP",
-    "FREE_DELIVERY",
-    "PAID_DELIVERY",
-] as const;
 
 const optionalText = z.string().optional().or(z.literal(""));
 
@@ -99,18 +40,6 @@ const requiredNumber = z.preprocess(
     z.number().min(0, "Value must be 0 or more"),
 );
 
-const optionalNumber = z.preprocess((value) => {
-    if (value === "" || value === null || value === undefined) {
-        return undefined;
-    }
-    const parsed = typeof value === "number" ? value : Number(value);
-    return Number.isNaN(parsed) ? undefined : parsed;
-}, z.number().min(0, "Value must be 0 or more").optional());
-
-const keyValueSchema = z.object({
-    key: z.string().min(1, "Key is required"),
-    value: requiredNumber,
-});
 
 const quotationItemSchema = z.object({
     product_id: z.string().min(1, "Product is required"),
@@ -127,53 +56,18 @@ const quotationItemSchema = z.object({
 });
 
 export const quotationSchema = z.object({
-    quotation_number: z.string().min(1, "Quotation number is required"),
     lead_id: z.string().min(1, "Lead is required"),
     quotation_date: z.string().min(1, "Quotation date is required"),
-    status: z.enum(quotationStatuses),
-
-    customer_name: z.string().min(1, "Customer name is required"),
+    customer_name: optionalText,
     customer_email: z.string().email("Invalid email").optional().or(z.literal("")),
     customer_phone: optionalText,
     customer_address: optionalText,
     customer_gst: optionalText,
     customer_pan: optionalText,
-
-    contact_person_id: optionalText,
-    contact_person_name: z.string().min(1, "Contact name is required"),
-    contact_person_email: optionalText,
-    contact_person_phone: optionalText,
-    contact_person_designation: optionalText,
-
     items: z.array(quotationItemSchema).min(1, "At least one item is required"),
-
-    subtotal: requiredNumber,
-    discount_type: z.enum(discountTypes).optional().or(z.literal("NONE")),
-    discount_value: optionalNumber,
-    tax_details: z.array(keyValueSchema),
     total_tax_amount: requiredNumber,
-    additional_charges: z.array(keyValueSchema),
-    total_additional_charges: requiredNumber,
-
     amount_in_words: optionalText,
-    payment_terms: z.enum(paymentTermsOptions).optional(),
-    payment_terms_custom: optionalText,
-    delivery_terms: z.enum(deliveryTermsOptions).optional(),
-    delivery_terms_custom: optionalText,
-    delivery_charges: requiredNumber,
-    delivery_address: optionalText,
-    expected_delivery_date: optionalText,
 
-    notes: optionalText,
-    requires_approval: z.boolean().default(false),
-    approval_status: z.enum(approvalStatuses).nullable().optional(),
-    approval_remarks: optionalText,
-    approved_by: optionalText,
-    approved_at: optionalText,
-    accepted_at: optionalText,
-    accepted_by: optionalText,
-    rejected_reason: optionalText,
-    cancelled_reason: optionalText,
 });
 
 export type QuotationFormData = z.infer<typeof quotationSchema>;
@@ -215,33 +109,16 @@ interface QuotationFormProps {
     isSubmitting?: boolean;
 }
 
-const createQuotationNumber = () => {
-    const year = new Date().getFullYear();
-    const random = Math.floor(1000 + Math.random() * 9000);
-    return `QT-${year}-${random}`;
-};
-
 const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: QuotationFormProps) => {
     const form = useForm<QuotationFormData>({
         resolver: zodResolver(quotationSchema),
         defaultValues: quotationData || {
-            quotation_number: createQuotationNumber(),
             quotation_date: formatDate(new Date()),
-            status: "DRAFT",
             lead_id: "",
-            subtotal: 0,
-            tax_details: [],
-            additional_charges: [],
             total_tax_amount: 0,
-            total_additional_charges: 0,
-            delivery_charges: 0,
-            requires_approval: false,
             customer_gst: "",
             customer_pan: "",
-            contact_person_name: "",
-            contact_person_email: "",
-            contact_person_phone: "",
-            contact_person_designation: "",
+
             items: [{
                 product_id: "",
                 product_name: "",
@@ -256,16 +133,6 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                 is_optional: false,
             }],
             amount_in_words: "",
-            payment_terms_custom: "",
-            delivery_terms_custom: "",
-            approval_remarks: "",
-            approval_status: null,
-            approved_by: "",
-            approved_at: "",
-            accepted_at: "",
-            accepted_by: "",
-            rejected_reason: "",
-            cancelled_reason: "",
         },
     });
 
@@ -284,13 +151,6 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         }));
     }, [leads]);
 
-    const contactOptions = useMemo(() => {
-        return (contactData?.contacts || []).map(c => ({
-            value: c.id,
-            label: c.name || "Unknown Contact"
-        }));
-    }, [contactData]);
-
     const handleLeadChange = (leadId: string) => {
         form.setValue("lead_id", leadId, { shouldValidate: true });
         const lead = (leads as any[]).find(l => l.id === leadId);
@@ -308,110 +168,24 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         }
     };
 
-    const handleContactChange = (contactId: string) => {
-        const contact = (contactData?.contacts || []).find(c => c.id === contactId);
-        if (contact) {
-            form.setValue("contact_person_id", contact.id, { shouldDirty: true });
-            form.setValue("contact_person_name", contact.name || "", { shouldValidate: true });
-            form.setValue("contact_person_designation", contact.designation || "", { shouldDirty: true });
-            form.setValue("contact_person_email", contact.email || "", { shouldDirty: true });
-            form.setValue("contact_person_phone", contact.phone || "", { shouldDirty: true });
-        }
-    };
-
-    const { fields: taxFields, append: appendTax, remove: removeTax } = useFieldArray({
-        control: form.control,
-        name: "tax_details",
-    });
-
-    const { fields: chargeFields, append: appendCharge, remove: removeCharge } = useFieldArray({
-        control: form.control,
-        name: "additional_charges",
-    });
-
-
     const watchAll = useWatch({ control: form.control });
 
     const totals = useMemo(() => {
         const itemsList = watchAll.items || [];
         const sub = itemsList.reduce((sum, item) => sum + (item.is_optional ? 0 : (Number(item.amount) || 0)), 0);
-        const discVal = Number(watchAll.discount_value) || 0;
-        const discAmount = watchAll.discount_type === "PERCENTAGE"
-            ? (sub * discVal) / 100
-            : watchAll.discount_type === "FIXED" ? discVal : 0;
-
-        const taxable = Math.max(sub - discAmount, 0);
-        const taxTotal = (watchAll.tax_details || []).reduce((s, t) => s + (Number(t.value) || 0), 0);
-        const chargesTotal = (watchAll.additional_charges || []).reduce((s, c) => s + (Number(c.value) || 0), 0) + (Number(watchAll.delivery_charges) || 0);
 
         return {
-            discountAmount: discAmount,
-            taxableAmount: taxable,
-            taxTotal,
-            chargesTotal,
             subtotal: sub,
-            grandTotal: taxable + taxTotal + chargesTotal
+            grandTotal: sub
         };
-    }, [watchAll.items, watchAll.subtotal, watchAll.discount_type, watchAll.discount_value, watchAll.tax_details, watchAll.additional_charges, watchAll.delivery_charges]);
+    }, [watchAll.items]);
 
-    const uiStatusLabel = useMemo(() => {
-        const { status, approval_status, requires_approval } = watchAll;
-        if (status === "DRAFT") {
-            if (requires_approval) {
-                if (approval_status === "PENDING") return "Pending Approval";
-                if (approval_status === "REJECTED") return "Approval Rejected";
-                if (approval_status === "APPROVED") return "Approved (Ready to Send)";
-            }
-            return "Draft";
-        }
-        if (status === "SENT") return "Sent";
-        if (status === "VIEWED") return "Viewed";
-        if (status === "ACCEPTED") return "Accepted";
-        if (status === "REJECTED") return "Rejected";
-        if (status === "EXPIRED") return "Expired";
-        if (status === "REVISED") return "Revised";
-        if (status === "CANCELLED") return "Cancelled";
-        return status;
-    }, [watchAll]);
-
-    // Handle initial approval status logic
-    useEffect(() => {
-        const subscription = form.watch((value, { name }) => {
-            if (name === "requires_approval") {
-                if (value.requires_approval) {
-                    if (!value.approval_status) {
-                        form.setValue("approval_status", "PENDING");
-                    }
-                } else {
-                    form.setValue("approval_status", null);
-                }
-            }
-        });
-        return () => subscription.unsubscribe();
-    }, [form]);
-
-    useEffect(() => {
-        form.setValue("subtotal", totals.subtotal);
-        form.setValue("total_tax_amount", totals.taxTotal);
-        form.setValue("total_additional_charges", totals.chargesTotal);
-        const words = numberToWords(totals.grandTotal);
-        form.setValue("amount_in_words", words, { shouldDirty: true });
-    }, [totals.subtotal, totals.taxTotal, totals.chargesTotal, totals.grandTotal, form]);
 
     const onSubmit = (data: QuotationFormData) => {
-        // Business Rule: Block Send
-        if (data.status === "SENT" && data.requires_approval && data.approval_status !== "APPROVED") {
-            form.setError("status", {
-                type: "manual",
-                message: "Cannot send quotation until it is approved by a manager."
-            });
-            return;
-        }
 
         onSave({
             ...data,
             quotation_date: formatDateForAPI(data.quotation_date) || data.quotation_date,
-            expected_delivery_date: formatDateForAPI(data.expected_delivery_date) || data.expected_delivery_date,
         }, form.setError);
     };
 

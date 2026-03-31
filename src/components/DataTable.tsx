@@ -50,6 +50,7 @@ interface DataTableProps<T> {
   onServerPageChange?: (page: number) => void;
   onServerPageSizeChange?: (size: number) => void;
   onServerSortChange?: (key: string, direction: SortDirection) => void;
+  enablePagination?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,6 +72,7 @@ function DataTable<T extends Record<string, any>>({
   onServerPageChange,
   onServerPageSizeChange,
   onServerSortChange,
+  enablePagination = true,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSizeState, setPageSizeState] = useState(pageSize);
@@ -123,8 +125,9 @@ function DataTable<T extends Record<string, any>>({
   const start = serverSide ? 0 : (activePage - 1) * activePageSize;
   const paginatedData = useMemo(() => {
     if (serverSide) return data;
+    if (!enablePagination) return sortedData;
     return sortedData.slice(start, start + activePageSize);
-  }, [sortedData, serverSide, data, start, activePageSize]);
+  }, [sortedData, serverSide, data, start, activePageSize, enablePagination]);
 
   const handleSort = useCallback(
     (key: string) => {
@@ -346,7 +349,7 @@ function DataTable<T extends Record<string, any>>({
         )}
       </div>
 
-      {activeTotal > 0 && (
+      {enablePagination && activeTotal > 0 && (
         <div className="flex flex-col gap-3 border-t border-border/60 bg-muted/10 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2">
             {enableSelection && (

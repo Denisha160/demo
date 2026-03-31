@@ -232,6 +232,7 @@ export const QuotationProductsTable = () => {
                         pageSize={100}
                         idKey="id"
                         isLoading={isLoadingProducts}
+                        enablePagination={false}
                     />
                 </CardContent>
             </Card>

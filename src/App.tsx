@@ -21,7 +21,6 @@ import LeadDetailsPage from "./pages/companys/leads/details/LeadDetailsPage";
 import ImportPage from "./pages/companys/leads/importFile/ImportPage";
 import Salesmen from "@/pages/companys/salesmen/SalesmenPage";
 import SalesmanDetail from "@/pages/companys/salesmen/SalesmanDetailPage";
-import Tasks from "@/pages/admin/tasks/TasksPage";
 import Parties from "@/pages/companys/parties/PartiesPage";
 import CalendarPage from "@/pages/calendar/CalendarPage";
 import InboxPage from "@/pages/admin/inbox/InboxPage";
@@ -251,7 +250,6 @@ const App = () => (
           }
         >
           <Route index element={<AdminIndexRedirect />} />
-          <Route path="tasks" element={<Tasks />} />
           <Route path="inbox" element={<InboxPage />} />
           <Route path="products" element={<Products />} />
           <Route path="products/new" element={<ProductFormPage />} />

@@ -31,8 +31,8 @@ const QuotationPage = () => {
         navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
     };
 
-    // Pre-fill lead_id for new quotations
-    const initialData = quotationId ? undefined : { lead_id: leadId, status: "DRAFT" } as any;
+    // No pre-filling lead_id for new quotations as per request
+    const initialData = quotationId ? undefined : { status: "DRAFT" } as any;
 
     return (
         <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in  ">

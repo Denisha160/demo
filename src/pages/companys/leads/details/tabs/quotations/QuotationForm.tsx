@@ -328,8 +328,9 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         <Form {...form}>
             <form id="quotation-form" onSubmit={form.handleSubmit(onSubmit)} className="max-w-full mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6 pb-6">
-                    {/* LEFT COLUMN: Basics, Customer, Contact */}
+                    {/* LEFT COLUMN: Basics, Contact, Pricing, Internal */}
                     <div className="space-y-6">
+                        {/* Quotation Basics */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <FileText className="h-3.5 w-3.5 text-primary" />
@@ -397,7 +398,282 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                             </div>
                         </div>
 
+                        {/* Contact Person */}
                         <div className="space-y-4 pt-4">
+                            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
+                                <Phone className="h-3.5 w-3.5 text-primary" />
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Contact Person</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <FormField
+                                    control={form.control}
+                                    name="contact_person_name"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <QuotationFormLabel>Contact Name</QuotationFormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Name" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="contact_person_designation"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <QuotationFormLabel>Designation</QuotationFormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Designation" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <FormField
+                                    control={form.control}
+                                    name="contact_person_email"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <QuotationFormLabel>Contact Email</QuotationFormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Email" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="contact_person_phone"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1">
+                                            <QuotationFormLabel>Contact Phone</QuotationFormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Phone" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Pricing & Summary */}
+                        <div className="space-y-4 pt-4">
+                            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
+                                <DollarSign className="h-3.5 w-3.5 text-primary" />
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Pricing & Summary</h3>
+                            </div>
+
+                            <Card className="bg-muted/10 border-border/40 overflow-hidden shadow-none">
+                                <CardContent className="p-4 space-y-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="subtotal"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-1">
+                                                <QuotationFormLabel required>Subtotal Amount</QuotationFormLabel>
+                                                <div className="relative">
+                                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                                                    <Input type="number" step="0.01" className="pl-9 h-10 text-lg font-black tracking-tight rounded-sm" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
+                                                </div>
+                                                <FormMessage className="text-[10px]" />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <FormField
+                                            control={form.control}
+                                            name="discount_type"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <QuotationFormLabel>Discount Type</QuotationFormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-8 text-xs font-medium border-border/60 bg-background rounded-sm">
+                                                                <SelectValue placeholder="No discount" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            <SelectItem value="NONE">No Discount</SelectItem>
+                                                            <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+                                                            <SelectItem value="FIXED">Fixed Amount</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="discount_value"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <QuotationFormLabel>Discount Value</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" step="0.01" placeholder="0.00" className="h-8 text-xs font-medium border-border/60 bg-background rounded-sm" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    {/* Calculations Preview */}
+                                    <div className="grid grid-cols-2 gap-3 pt-1">
+                                        <div className="p-2.5 bg-background rounded border border-border/40 flex flex-col justify-center">
+                                            <span className="text-[9px] uppercase font-bold text-muted-foreground">Discount</span>
+                                            <span className="text-sm font-bold">-{totals.discountAmount.toFixed(2)}</span>
+                                        </div>
+                                        <div className="p-2.5 bg-primary/5 rounded border border-primary/20 flex flex-col justify-center">
+                                            <span className="text-[9px] uppercase font-bold text-primary">Grand Total</span>
+                                            <span className="text-base font-black">{totals.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </div>
+                                    </div>
+
+                                    <FormField
+                                        control={form.control}
+                                        name="amount_in_words"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-1">
+                                                <QuotationFormLabel>Amount in Words</QuotationFormLabel>
+                                                <FormControl>
+                                                    <Textarea placeholder="e.g. One thousand dollars only" className="min-h-[50px] text-xs resize-none" {...field} />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </CardContent>
+                            </Card>
+
+                            <div className="space-y-3 pt-2">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5">
+                                        <Truck className="h-3.5 w-3.5" /> Additional Charges
+                                    </h4>
+                                    <Button type="button" variant="outline" size="sm" onClick={() => appendCharge({ key: "", value: 0 })} className="h-6 text-[9px] font-bold uppercase gap-1">
+                                        <Plus className="h-2.5 w-2.5" /> Add Charge
+                                    </Button>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex gap-2 items-start bg-muted/20 p-1 rounded-md">
+                                        <span className="flex-1 px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase flex items-center">Standard Delivery</span>
+                                        <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] bg-background" {...form.register(`delivery_charges` as const)} onChange={e => form.setValue(`delivery_charges`, Number(e.target.value))} />
+                                        <div className="w-8" />
+                                    </div>
+                                    {chargeFields.map((field, index) => (
+                                        <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
+                                            <Input placeholder="Description" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`additional_charges.${index}.key` as const)} />
+                                            <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`additional_charges.${index}.value` as const)} onChange={e => form.setValue(`additional_charges.${index}.value`, Number(e.target.value))} />
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeCharge(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Internal & Approval */}
+                        <div className="space-y-4 pt-4">
+                            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
+                                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Internal & Approval</h3>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 items-start">
+                                <FormField
+                                    control={form.control}
+                                    name="requires_approval"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card border-border/40 space-y-0">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-xs font-bold">Require Approval</FormLabel>
+                                                <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Manager review</p>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} className="scale-75" />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                {watchAll.requires_approval && (
+                                    <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                                        <FormField
+                                            control={form.control}
+                                            name="approval_status"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <QuotationFormLabel>Approval Status</QuotationFormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value || "PENDING"}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-8 text-[11px] font-bold border-border/60 rounded-sm">
+                                                                <SelectValue placeholder="Status" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {approvalStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="approval_remarks"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <QuotationFormLabel>Approval Remarks</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Notes for/from approver..." className="h-8 text-xs border-border/60 rounded-sm" {...field} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {(watchAll.status === "ACCEPTED" || watchAll.approval_status === "APPROVED") && (
+                                <div className="grid grid-cols-2 gap-2 p-2 rounded-sm border border-primary/20 bg-primary/5 animate-in slide-in-from-bottom-2">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase text-primary/70">
+                                            {watchAll.status === "ACCEPTED" ? "Accepted By" : "Approved By"}
+                                        </p>
+                                        <p className="text-sm font-bold truncate">
+                                            {watchAll.status === "ACCEPTED" ? (watchAll.accepted_by || "System") : (watchAll.approved_by || "Pending")}
+                                        </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase text-primary/70">
+                                            {watchAll.status === "ACCEPTED" ? "Accepted At" : "Approved At"}
+                                        </p>
+                                        <p className="text-sm font-bold">
+                                            {watchAll.status === "ACCEPTED" 
+                                                ? (watchAll.accepted_at ? formatDate(new Date(watchAll.accepted_at)) : "-") 
+                                                : (watchAll.approved_at ? formatDate(new Date(watchAll.approved_at)) : "-")
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <FormField
+                                control={form.control}
+                                name="notes"
+                                render={({ field }) => (
+                                    <FormItem className="space-y-1">
+                                        <QuotationFormLabel>Internal Notes</QuotationFormLabel>
+                                        <FormControl>
+                                            <Textarea placeholder="Private notes for team..." className="min-h-[60px] text-xs resize-none rounded-sm border-border/60" {...field} />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: Customer, Taxes, Terms */}
+                    <div className="space-y-6">
+                        {/* Customer Information */}
+                        <div className="space-y-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <Info className="h-3.5 w-3.5 text-primary" />
                                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Customer Information</h3>
@@ -522,200 +798,28 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                             )}
                         </div>
 
-                        <div className="space-y-4 pt-4">
-                            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
-                                <Phone className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Contact Person</h3>
+                        {/* Taxes */}
+                        <div className="space-y-3 pt-4">
+                            <div className="flex items-center justify-between border-b border-border/20 pb-1.5">
+                                <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5 leading-none">
+                                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Taxes
+                                </h4>
+                                <Button type="button" variant="outline" size="sm" onClick={() => appendTax({ key: "", value: 0 })} className="h-6 text-[9px] font-bold uppercase gap-1">
+                                    <Plus className="h-2.5 w-2.5" /> Add Tax
+                                </Button>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <FormField
-                                    control={form.control}
-                                    name="contact_person_name"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <QuotationFormLabel>Contact Name</QuotationFormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Name" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="contact_person_designation"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <QuotationFormLabel>Designation</QuotationFormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Designation" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <FormField
-                                    control={form.control}
-                                    name="contact_person_email"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <QuotationFormLabel>Contact Email</QuotationFormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Email" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="contact_person_phone"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <QuotationFormLabel>Contact Phone</QuotationFormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Phone" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* RIGHT COLUMN: Pricing, Terms, Internal */}
-                    <div className="space-y-6">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
-                                <DollarSign className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Pricing & Summary</h3>
-                            </div>
-
-                            <Card className="bg-muted/10 border-border/40 overflow-hidden shadow-none">
-                                <CardContent className="p-4 space-y-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="subtotal"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-1">
-                                                <QuotationFormLabel required>Subtotal Amount</QuotationFormLabel>
-                                                <div className="relative">
-                                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                                                    <Input type="number" step="0.01" className="pl-9 h-10 text-lg font-black tracking-tight rounded-sm" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
-                                                </div>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <FormField
-                                            control={form.control}
-                                            name="discount_type"
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-1">
-                                                    <QuotationFormLabel>Discount Type</QuotationFormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger className="h-8 text-xs font-medium border-border/60 bg-background rounded-sm">
-                                                                <SelectValue placeholder="No discount" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="NONE">No Discount</SelectItem>
-                                                            <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                                                            <SelectItem value="FIXED">Fixed Amount</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="discount_value"
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-1">
-                                                    <QuotationFormLabel>Discount Value</QuotationFormLabel>
-                                                    <FormControl>
-                                                        <Input type="number" step="0.01" placeholder="0.00" className="h-8 text-xs font-medium border-border/60 bg-background rounded-sm" {...field} value={field.value || ''} onChange={e => field.onChange(Number(e.target.value))} />
-                                                    </FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
+                            <div className="space-y-2">
+                                {taxFields.map((field, index) => (
+                                    <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
+                                        <Input placeholder="Tax Name" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`tax_details.${index}.key` as const)} />
+                                        <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`tax_details.${index}.value` as const)} onChange={e => form.setValue(`tax_details.${index}.value`, Number(e.target.value))} />
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeTax(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
                                     </div>
-
-                                    {/* Calculations Preview */}
-                                    <div className="grid grid-cols-2 gap-3 pt-1">
-                                        <div className="p-2.5 bg-background rounded border border-border/40 flex flex-col justify-center">
-                                            <span className="text-[9px] uppercase font-bold text-muted-foreground">Discount</span>
-                                            <span className="text-sm font-bold">-{totals.discountAmount.toFixed(2)}</span>
-                                        </div>
-                                        <div className="p-2.5 bg-primary/5 rounded border border-primary/20 flex flex-col justify-center">
-                                            <span className="text-[9px] uppercase font-bold text-primary">Grand Total</span>
-                                            <span className="text-base font-black">{totals.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                        </div>
-                                    </div>
-
-                                    <FormField
-                                        control={form.control}
-                                        name="amount_in_words"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-1">
-                                                <QuotationFormLabel>Amount in Words</QuotationFormLabel>
-                                                <FormControl>
-                                                    <Textarea placeholder="e.g. One thousand dollars only" className="min-h-[50px] text-xs resize-none" {...field} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                </CardContent>
-                            </Card>
-
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5">
-                                        <ShieldCheck className="h-3.5 w-3.5" /> Taxes
-                                    </h4>
-                                    <Button type="button" variant="outline" size="sm" onClick={() => appendTax({ key: "", value: 0 })} className="h-6 text-[9px] font-bold uppercase gap-1">
-                                        <Plus className="h-2.5 w-2.5" /> Add Tax
-                                    </Button>
-                                </div>
-                                <div className="space-y-2">
-                                    {taxFields.map((field, index) => (
-                                        <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
-                                            <Input placeholder="Tax Name" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`tax_details.${index}.key` as const)} />
-                                            <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`tax_details.${index}.value` as const)} onChange={e => form.setValue(`tax_details.${index}.value`, Number(e.target.value))} />
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeTax(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="space-y-3 pt-2">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5">
-                                        <Truck className="h-3.5 w-3.5" /> Additional Charges
-                                    </h4>
-                                    <Button type="button" variant="outline" size="sm" onClick={() => appendCharge({ key: "", value: 0 })} className="h-6 text-[9px] font-bold uppercase gap-1">
-                                        <Plus className="h-2.5 w-2.5" /> Add Charge
-                                    </Button>
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex gap-2 items-start bg-muted/20 p-1 rounded-md">
-                                        <span className="flex-1 px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase flex items-center">Standard Delivery</span>
-                                        <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] bg-background" {...form.register(`delivery_charges` as const)} onChange={e => form.setValue(`delivery_charges`, Number(e.target.value))} />
-                                        <div className="w-8" />
-                                    </div>
-                                    {chargeFields.map((field, index) => (
-                                        <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
-                                            <Input placeholder="Description" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`additional_charges.${index}.key` as const)} />
-                                            <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`additional_charges.${index}.value` as const)} onChange={e => form.setValue(`additional_charges.${index}.value`, Number(e.target.value))} />
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeCharge(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
-                                        </div>
-                                    ))}
-                                </div>
+                                ))}
                             </div>
                         </div>
 
+                        {/* Terms & Logistics */}
                         <div className="space-y-4 pt-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <Truck className="h-3.5 w-3.5 text-primary" />
@@ -815,103 +919,6 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     )}
                                 />
                             </div>
-                        </div>
-
-                        <div className="space-y-4 pt-4">
-                            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
-                                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Internal & Approval</h3>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 items-start">
-                                <FormField
-                                    control={form.control}
-                                    name="requires_approval"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card border-border/40 space-y-0">
-                                            <div className="space-y-0.5">
-                                                <FormLabel className="text-xs font-bold">Require Approval</FormLabel>
-                                                <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Manager review</p>
-                                            </div>
-                                            <FormControl>
-                                                <Switch checked={field.value} onCheckedChange={field.onChange} className="scale-75" />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                {watchAll.requires_approval && (
-                                    <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
-                                        <FormField
-                                            control={form.control}
-                                            name="approval_status"
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-1">
-                                                    <QuotationFormLabel>Approval Status</QuotationFormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value || "PENDING"}>
-                                                        <FormControl>
-                                                            <SelectTrigger className="h-8 text-[11px] font-bold border-border/60 rounded-sm">
-                                                                <SelectValue placeholder="Status" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            {approvalStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="approval_remarks"
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-1">
-                                                    <QuotationFormLabel>Approval Remarks</QuotationFormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="Notes for/from approver..." className="h-8 text-xs border-border/60 rounded-sm" {...field} />
-                                                    </FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            {(watchAll.status === "ACCEPTED" || watchAll.approval_status === "APPROVED") && (
-                                <div className="grid grid-cols-2 gap-2 p-2 rounded-sm border border-primary/20 bg-primary/5 animate-in slide-in-from-bottom-2">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase text-primary/70">
-                                            {watchAll.status === "ACCEPTED" ? "Accepted By" : "Approved By"}
-                                        </p>
-                                        <p className="text-sm font-bold truncate">
-                                            {watchAll.status === "ACCEPTED" ? (watchAll.accepted_by || "System") : (watchAll.approved_by || "Pending")}
-                                        </p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase text-primary/70">
-                                            {watchAll.status === "ACCEPTED" ? "Accepted At" : "Approved At"}
-                                        </p>
-                                        <p className="text-sm font-bold">
-                                            {watchAll.status === "ACCEPTED" 
-                                                ? (watchAll.accepted_at ? formatDate(new Date(watchAll.accepted_at)) : "-") 
-                                                : (watchAll.approved_at ? formatDate(new Date(watchAll.approved_at)) : "-")
-                                            }
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <FormField
-                                control={form.control}
-                                name="notes"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <QuotationFormLabel>Internal Notes</QuotationFormLabel>
-                                        <FormControl>
-                                            <Textarea placeholder="Private notes for team..." className="min-h-[60px] text-xs resize-none rounded-sm border-border/60" {...field} />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
                         </div>
                     </div>
                 </div>

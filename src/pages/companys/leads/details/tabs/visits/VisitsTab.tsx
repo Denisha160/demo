@@ -96,8 +96,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: visits = [], isLoading } = useLeadVisits(leadId, {
-    startDate: formatDateForAPI(dateRange?.from),
-    endDate: formatDateForAPI(dateRange?.to),
+    ...(dateRange?.from ? { startDate: formatDateForAPI(dateRange.from) } : {}),
+    ...(dateRange?.to ? { endDate: formatDateForAPI(dateRange.to) } : {}),
     limit,
     offset: (page - 1) * limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),

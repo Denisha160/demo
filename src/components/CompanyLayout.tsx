@@ -19,7 +19,6 @@ import {
   List,
   Clock,
   Tags,
-  Truck,
   Blocks,
   Package,
   Hash,
@@ -30,7 +29,7 @@ import {
   MapPin,
   UserCheck,
   Users,
-  Landmark,
+  FileText,
 } from "lucide-react";
 
 import {
@@ -110,66 +109,66 @@ const navItems: NavItemEntry[] = [
       },
     ],
   },
-  { label: "Salesmen", icon: UserCheck, path: "salesmen"},
-  { label: "Employees", icon: Users, path: "employees"},
-  { label: "Attendance", icon: Clock, path: "attendance" },
-  { label: "Suppliers", icon: Truck, path: "suppliers" },
-  { label: "Parties", icon: Users, path: "parties" },
-  {
-    label: "Product Setup",
-    icon: Blocks,
-    children: [
-      {
-        label: "Products",
-        icon: Box,
-        path: "products",
-        permission: "product.read",
-      },
-      {
-        label: "Recipes",
-        icon: List,
-        path: "recipes",
-        permission: "product-bom.read",
-      },
-      {
-        label: "Kits",
-        icon: Package,
-        path: "kits",
-        permission: "product-kit.read",
-      },
-  {
-    label: "Categories",
-    icon: Tags,
-    path: "product-categories",
-    permission: "product-category.read",
-  },
-      {
-        label: "Brands",
-        icon: Award,
-        path: "brands",
-        permission: "product-brand.read",
-      },
-      {
-        label: "Fragrances",
-        icon: Wind,
-        path: "fragrances",
-        permission: "product-fragrance.read",
-      },
-    ],
-  },
-  {
-    label: "Batches",
-    icon: Blocks,
-    path: "batches",
-    permission: "inventory-batch.read",
-  },
-  {
-    label: "Serial Numbers",
-    icon: Hash,
-    path: "serials",
-    permission: "inventory-serial.read",
-  },
-  { label: "Accounts", icon: Landmark, path: "accounts" },
+  // { label: "Salesmen", icon: UserCheck, path: "salesmen"},
+  // { label: "Employees", icon: Users, path: "employees"},
+  // { label: "Attendance", icon: Clock, path: "attendance" },
+  // { label: "Suppliers", icon: Truck, path: "suppliers" },
+  // { label: "Parties", icon: Users, path: "parties" },
+  // {
+  //   label: "Product Setup",
+  //   icon: Blocks,
+  //   children: [
+  //     {
+  //       label: "Products",
+  //       icon: Box,
+  //       path: "products",
+  //       permission: "product.read",
+  //     },
+  //     {
+  //       label: "Recipes",
+  //       icon: List,
+  //       path: "recipes",
+  //       permission: "product-bom.read",
+  //     },
+  //     {
+  //       label: "Kits",
+  //       icon: Package,
+  //       path: "kits",
+  //       permission: "product-kit.read",
+  //     },
+  // {
+  //   label: "Categories",
+  //   icon: Tags,
+  //   path: "product-categories",
+  //   permission: "product-category.read",
+  // },
+  //     {
+  //       label: "Brands",
+  //       icon: Award,
+  //       path: "brands",
+  //       permission: "product-brand.read",
+  //     },
+  //     {
+  //       label: "Fragrances",
+  //       icon: Wind,
+  //       path: "fragrances",
+  //       permission: "product-fragrance.read",
+  //     },
+  //   ],
+  // },
+  // {
+  //   label: "Batches",
+  //   icon: Blocks,
+  //   path: "batches",
+  //   permission: "inventory-batch.read",
+  // },
+  // {
+  //   label: "Serial Numbers",
+  //   icon: Hash,
+  //   path: "serials",
+  //   permission: "inventory-serial.read",
+  // },
+  // { label: "Accounts", icon: Landmark, path: "accounts" },
 ];
 
 interface NavGroupProps {

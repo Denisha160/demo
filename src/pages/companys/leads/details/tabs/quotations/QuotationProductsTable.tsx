@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Package, Plus, Trash2 } from "lucide-react";
 import { QuotationFormData } from "./QuotationForm";
 
-export const QuotationItemsTable = () => {
+export const QuotationProductsTable = () => {
     const { register, control, watch, setValue, getValues } = useFormContext<QuotationFormData>();
     const [fgSearch, setFgSearch] = useState("");
     const debouncedFgSearch = useDebounce(fgSearch, 300);

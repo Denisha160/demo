@@ -34,8 +34,8 @@ const verifyFormSchema = z.object({
     .int()
     .min(1, "At least 1 property is required"),
   cities_of_operation: z.array(z.string()).default([]),
-  total_staff: z.coerce.number().int().min(0).optional(),
-  years_of_experience: z.coerce.number().int().min(0).optional(),
+  total_staff: z.coerce.number().int().min(0).optional().nullable(),
+  years_of_experience: z.coerce.number().int().min(0).optional().nullable(),
   annual_turnover: z.coerce
     .number({
       required_error: "Annual turnover is required",
@@ -70,7 +70,13 @@ interface VerifyLeadModalProps {
   open: boolean;
   onClose: () => void;
   leadId: string;
-  initialData?: any;
+  initialData?: VerifyFormData & {
+    warehouse_location?: string | null;
+    warehouse_size?: number | null;
+    showroom_location?: string | null;
+    showroom_size?: number | null;
+    verification_notes?: string | null;
+  };
 }
 
 export default function VerifyLeadModal({
@@ -87,10 +93,11 @@ export default function VerifyLeadModal({
   const { data: cityResults, isLoading: isCitiesLoading } = useListCity({
     search: debouncedCitySearch,
     limit: 10,
+    combobox: true,
   });
 
   const cityOptions = useMemo(() => {
-    return ((cityResults as any)?.items || []).map((c: any) => ({
+    return (cityResults?.items || []).map((c) => ({
       label: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`
         .replace(/, , /g, ", ")
         .trim(),
@@ -135,13 +142,13 @@ export default function VerifyLeadModal({
           has_showroom: initialData.has_showroom ?? false,
           has_delivery_vehicles: initialData.has_delivery_vehicles ?? false,
           number_of_vehicles: initialData.number_of_vehicles ?? 0,
-          total_staff: initialData.total_staff ?? "",
-          years_of_experience: initialData.years_of_experience ?? "",
-          annual_turnover: initialData.annual_turnover ?? "",
-          number_of_properties: initialData.number_of_properties ?? "",
-          property_type: initialData.property_type ?? "",
-          property_name: initialData.property_name ?? "",
-          customer_type: initialData.customer_type ?? "",
+          total_staff: initialData.total_staff ?? undefined,
+          years_of_experience: initialData.years_of_experience ?? undefined,
+          annual_turnover: initialData.annual_turnover ?? 0,
+          number_of_properties: initialData.number_of_properties ?? 1,
+          property_type: initialData.property_type || ("OTHER" as any),
+          property_name: initialData.property_name || "",
+          customer_type: initialData.customer_type || ("DEALER" as any),
           warehouse_location: initialData.warehouse_location ?? "",
           warehouse_size: initialData.warehouse_size ?? null,
           showroom_location: initialData.showroom_location ?? "",

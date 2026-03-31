@@ -37,6 +37,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { BatchCreatePayload, BatchUpdatePayload } from "@/types/batch";
 import { format } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
+import { formatDateForAPI } from "@/utils/date";
 import { useBatchesCombobox } from "@/hooks/useBatch";
 import { useBOMDetails } from "@/hooks/useBom";
 import BatchBomModal from "./components/BatchBomModal";
@@ -174,7 +175,7 @@ const BatchFormPage = () => {
           : format(new Date(), "yyyy-MM-dd"),
         expiry_date: existingBatch.expiry_date
           ? format(new Date(existingBatch.expiry_date), "yyyy-MM-dd")
-          : "",
+          : format(new Date(), "yyyy-MM-dd"),
         location: existingBatch.location || "",
         initial_quantity: Number(existingBatch.initial_quantity),
         status: (existingBatch.status as BatchFormData["status"]) || "active",
@@ -242,8 +243,8 @@ const BatchFormPage = () => {
     const payload: BatchCreatePayload = {
       product_id: formData.product_id,
       batch_number: formData.batch_number,
-      manufacturing_date: formData.manufacturing_date,
-      expiry_date: formData.expiry_date || null,
+      manufacturing_date: formatDateForAPI(formData.manufacturing_date)!,
+      expiry_date: formatDateForAPI(formData.expiry_date) || null,
       location: formData.location || null,
       initial_quantity: formData.initial_quantity,
       status: formData.status,

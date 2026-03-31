@@ -156,23 +156,36 @@ const ProfileTab = ({
   setLeadProfile,
   isSaving = false,
 }: ProfileTabProps) => {
+  const form = useForm<LeadProfileFormValues>({
+    resolver: zodResolver(leadSchema),
+    defaultValues: leadProfile,
+    mode: "onChange",
+  });
+
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const { data: sourceResponse } = useLeadSources({ limit: 100 });
   const { data: usersResponse } = useUsers({ limit: 100 });
   const { data: tagsResponse } = useLeadTags();
 
   const statusOptions =
-    (statusResponse as any)?.items?.map((item: any) => ({
-      value: item.id,
-      label: item.name,
-    })) || [];
+    (statusResponse as { items: { id: string; name: string }[] })?.items?.map(
+      (item) => ({
+        value: item.id,
+        label: item.name,
+      }),
+    ) || [];
   const sourceOptions =
-    (sourceResponse as any)?.items?.map((item: any) => ({
-      value: item.id,
-      label: item.name,
-    })) || [];
-  const users = (usersResponse as any)?.items || (usersResponse as any) || [];
-  const userOptions = users.map((user: any) => ({
+    (sourceResponse as { items: { id: string; name: string }[] })?.items?.map(
+      (item) => ({
+        value: item.id,
+        label: item.name,
+      }),
+    ) || [];
+  const users =
+    (usersResponse as { items: { id: string; name: string }[] })?.items ||
+    (usersResponse as { id: string; name: string }[]) ||
+    [];
+  const userOptions = (users as { id: string; name: string }[]).map((user) => ({
     value: user.id,
     label: user.name,
   }));
@@ -198,50 +211,61 @@ const ProfileTab = ({
     search: debouncedCountrySearch,
     combobox: true,
     limit: 20,
+    include_id: form.getValues("country_id") || undefined,
   });
   const { data: statesData } = useStates(selectedCountryId || undefined, {
     search: debouncedStateSearch,
     combobox: true,
     limit: 20,
+    include_id: form.getValues("state_id") || undefined,
   });
   const { data: citiesData } = useCities(selectedStateId || undefined, {
     search: debouncedCitySearch,
     combobox: true,
     limit: 20,
+    include_id: form.getValues("city_id") || undefined,
   });
 
-  const countryOptions =
-    (countriesData as any)?.items?.map((item: any) => ({
-      value: item.id,
-      label: item.name,
-    })) || [];
-
-  const stateOptions =
-    (statesData as any)?.items?.map((item: any) => ({
-      value: item.id,
-      label: item.name,
-    })) || [];
-
-  const cityOptions =
-    (citiesData as any)?.items?.map((item: any) => ({
-      value: item.id,
-      label: item.name,
-    })) || [];
+  const countryOptions = useMemo(
+    () =>
+      (countriesData as { items: { id: string; name: string }[] })?.items?.map(
+        (item) => ({
+          value: item.id,
+          label: item.name,
+        }),
+      ) || [],
+    [countriesData],
+  );
+  const stateOptions = useMemo(
+    () =>
+      (statesData as { items: { id: string; name: string }[] })?.items?.map(
+        (item) => ({
+          value: item.id,
+          label: item.name,
+        }),
+      ) || [],
+    [statesData],
+  );
+  const cityOptions = useMemo(
+    () =>
+      (citiesData as { items: { id: string; name: string }[] })?.items?.map(
+        (item) => ({
+          value: item.id,
+          label: item.name,
+        }),
+      ) || [],
+    [citiesData],
+  );
 
   const tagSuggestions = useMemo(() => {
     const tags = Array.isArray(tagsResponse)
-      ? tagsResponse
-      : Array.isArray((tagsResponse as any)?.items)
-        ? (tagsResponse as any).items
+      ? (tagsResponse as { id: string; name: string }[])
+      : Array.isArray((tagsResponse as { items: any[] })?.items)
+        ? (tagsResponse as { items: { id: string; name: string }[] }).items
         : [];
-    return tags.map((tag: any) => ({ id: String(tag.id), name: tag.name }));
+    return tags.map((tag) => ({ id: String(tag.id), name: tag.name }));
   }, [tagsResponse]);
 
-  const form = useForm<LeadProfileFormValues>({
-    resolver: zodResolver(leadSchema),
-    defaultValues: leadProfile,
-    mode: "onChange",
-  });
 
   useEffect(() => {
     form.reset(leadProfile);

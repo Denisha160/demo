@@ -124,7 +124,7 @@ const GenerateSerialsPage = () => {
   // Fetch existing serials for the selected batch
   const { data: existingSerialsData, isLoading: isLoadingExisting } =
     useSerials(
-      { batch_id: selectedBatchId, limit: 200 },
+      { batch_id: selectedBatchId, limit: 20 },
       { enabled: !!selectedBatchId },
     );
 

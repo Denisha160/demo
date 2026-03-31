@@ -27,7 +27,7 @@ interface UserModalProps {
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  phone_number: z.string().regex(/^[0-9+\-\s]{10,15}$/, "Invalid phone number"),
+  phone_number: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
   employee_code: z
     .string()
     .min(3, "Employee code must be at least 3 characters"),
@@ -160,7 +160,14 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     }
 
     if (!user) {
-      createUser(formData as UserCreatePayload, {
+      // Ensure all dates are in YYYY-MM-DD format for the API payload
+      const payload: UserCreatePayload = {
+        ...formData,
+        date_of_joining: getLocalDateString(formData.date_of_joining || new Date()),
+        anniversary_date: formData.anniversary_date ? getLocalDateString(formData.anniversary_date) : null,
+      } as UserCreatePayload;
+
+      createUser(payload, {
         onSuccess: (data) => {
           handleClose();
           if (onSave) onSave(data as unknown as User);
@@ -363,19 +370,8 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
                 Date of Joining <span className="text-destructive">*</span>
               </Label>
               <DatePicker
-                value={
-                  formData.date_of_joining
-                    ? getLocalDateString(formData.date_of_joining)
-                    : ""
-                }
-                onChange={(val) =>
-                  handleChange(
-                    "date_of_joining",
-                    val
-                      ? getLocalDateString(val)
-                      : getLocalDateString(new Date()),
-                  )
-                }
+                value={formData.date_of_joining}
+                onChange={(val) => handleChange("date_of_joining", val)}
                 placeholder="dd/MM/yyyy"
                 disabled={isPending}
               />

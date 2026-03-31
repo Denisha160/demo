@@ -62,7 +62,7 @@ export const EditableDetailItem = ({
           ) : type === "date" ? (
             <div className={error ? "[&_button]:border-destructive" : ""}>
               <DatePicker
-                value={value || ""}
+                value={(value as string) || ""}
                 onChange={(v) => onChange(v || "")}
               />
             </div>

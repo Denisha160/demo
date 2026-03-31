@@ -259,8 +259,8 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
         if (password) payload.password = password;
         if (payload.date_of_birth === "") payload.date_of_birth = null;
         if (payload.anniversary_date === "") payload.anniversary_date = null;
-        payload.opening_balance = payload.opening_balance === "" ? 0 : Number(payload.opening_balance);
-        payload.basic_salary = payload.basic_salary === "" ? 0 : Number(payload.basic_salary);
+        payload.opening_balance = String(payload.opening_balance) === "" ? 0 : Number(payload.opening_balance);
+        payload.basic_salary = String(payload.basic_salary) === "" ? 0 : Number(payload.basic_salary);
 
         updateUser(payload, {
           onSuccess: () => {

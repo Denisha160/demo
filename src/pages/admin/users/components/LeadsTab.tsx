@@ -18,6 +18,7 @@ import {
   Tooltip,
 } from "recharts";
 import { UserDetailData } from "@/types/user";
+import { RecentDeal } from "@/types/analytics";
 
 interface LeadsTabProps {
   userData: UserDetailData;
@@ -31,14 +32,13 @@ const formatCurrency = (amount: number) => {
   }).format(amount || 0);
 };
 
-const activityColumns: Column<Record<string, unknown>>[] = [
+const activityColumns: Column<RecentDeal>[] = [
   {
     key: "id",
     header: "ID",
-    render: (v) => (
-      <span className="text-[10px] text-muted-foreground">
-        {(v as Record<string, string>).id?.split("-")[0]?.toUpperCase() ||
-          "N/A"}
+    render: (item: RecentDeal) => (
+      <span className="text-[10px] text-muted-foreground uppercase">
+        {item.id?.split("-")[0] || "N/A"}
       </span>
     ),
   },
@@ -46,13 +46,13 @@ const activityColumns: Column<Record<string, unknown>>[] = [
   {
     key: "stage",
     header: "Stage",
-    render: (q) => (
+    render: (item: RecentDeal) => (
       <StatusBadge
-        status={(q as Record<string, string>).stage as string}
+        status={item.stage}
         variant={
-          q.stage === "Closed Won" ||
-          q.stage === "Converted" ||
-          q.stage === "Delivered"
+          item.stage === "Closed Won" ||
+          item.stage === "Converted" ||
+          item.stage === "Delivered"
             ? "success"
             : "info"
         }
@@ -62,11 +62,9 @@ const activityColumns: Column<Record<string, unknown>>[] = [
   {
     key: "created_at",
     header: "Date",
-    render: (v) => (
+    render: (item: RecentDeal) => (
       <span className="text-xs">
-        {(v as Record<string, string>).created_at
-          ? format(new Date((v as Record<string, string>).created_at), "MMM dd")
-          : "-"}
+        {item.created_at ? format(new Date(item.created_at), "MMM dd") : "-"}
       </span>
     ),
   },

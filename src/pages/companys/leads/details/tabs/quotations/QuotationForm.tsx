@@ -1,4 +1,4 @@
-import { ComponentProps, useEffect, useMemo } from "react";
+import { ComponentProps, useEffect, useMemo, useState } from "react";
 import {
     useFieldArray,
     useForm,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useLeads } from "@/hooks/useLeads";
 import { useLeadContacts } from "@/hooks/useLeadContacts";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -236,7 +237,11 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         },
     });
 
-    const { data: leads = [] } = useLeads({ limit: 10 });
+    const [leadSearch, setLeadSearch] = useState("");
+    const debouncedLeadSearch = useDebounce(leadSearch, 500);
+
+    const { data: leads = [] } = useLeads({ search: debouncedLeadSearch, limit: 10 });
+
     const selectedLeadId = form.watch("lead_id");
     const { data: contactData } = useLeadContacts(selectedLeadId);
 
@@ -672,6 +677,8 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                 placeholder="Select a lead..."
                                                 searchPlaceholder="Search leads..."
                                                 className="h-8 border-border/60 rounded-sm"
+                                                searchValue={leadSearch}
+                                                onSearchChange={setLeadSearch}
                                             />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />

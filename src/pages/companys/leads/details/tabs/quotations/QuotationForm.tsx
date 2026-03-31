@@ -454,11 +454,11 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
     return (
         <Form {...form}>
             <form id="quotation-form" onSubmit={form.handleSubmit(onSubmit)} className="max-w-full mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6 pb-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4 pb-4">
                     {/* LEFT COLUMN: Basics, Contact, Pricing, Internal */}
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                         {/* Quotation Basics */}
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <FileText className="h-3.5 w-3.5 text-primary" />
                                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Quotation Basics</h3>
@@ -526,7 +526,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         </div>
 
                         {/* Contact Person */}
-                        <div className="space-y-4 pt-4">
+                        <div className="space-y-2 pt-2">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <Phone className="h-3.5 w-3.5 text-primary" />
                                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Contact Person</h3>
@@ -595,7 +595,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         </div>
 
                         {/* Taxes */}
-                        <div className="space-y-3 pt-4">
+                        <div className="space-y-2 pt-2">
                             <div className="flex items-center justify-between border-b border-border/20 pb-1.5">
                                 <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5 leading-none">
                                     <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Taxes
@@ -615,7 +615,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                             </div>
                         </div>
 
-                        <div className="space-y-3 pt-2">
+                        <div className="space-y-2 pt-2">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5">
                                     <Truck className="h-3.5 w-3.5" /> Additional Charges
@@ -641,7 +641,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         </div>
 
                         {/* Pricing & Summary */}
-                        <div className="space-y-4 pt-4">
+                        <div className="space-y-2 pt-2">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <DollarSign className="h-3.5 w-3.5 text-primary" />
                                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Pricing & Summary</h3>
@@ -731,9 +731,9 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                     </div>
 
                     {/* RIGHT COLUMN: Customer, Taxes, Terms */}
-                    <div className="space-y-6">
+                    <div className="space-y-3">
                         {/* Customer Information */}
-                        <div className="space-y-4">
+                        <div className="space-y-2">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
                                 <Info className="h-3.5 w-3.5 text-primary" />
                                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Customer Information</h3>
@@ -1080,7 +1080,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                 </div>
 
                 {/* BILL ITEMS SECTION - FULL WIDTH */}
-                <div className="mb-10 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                <div className="mb-3 space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
                     <Card className="border-border/40 shadow-sm overflow-hidden">
                         <div className="bg-muted/10 px-5 py-3 border-b border-border/20 flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -1200,7 +1200,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         </CardContent>
                     </Card>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-center">
                         <Button
                             type="button"
                             variant="outline"
@@ -1210,7 +1210,6 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                             <Plus className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
                             <span className="text-[11px] font-black uppercase tracking-widest text-primary">Add Product</span>
                         </Button>
-                        <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest hidden sm:block">Click to add a new item row to the table</p>
                     </div>
                 </div>
             </form>

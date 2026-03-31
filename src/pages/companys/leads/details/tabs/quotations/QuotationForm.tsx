@@ -14,6 +14,7 @@ import { useLeads } from "@/hooks/useLeads";
 import { useLeadContacts } from "@/hooks/useLeadContacts";
 import { useProductsCombobox } from "@/hooks/useProducts";
 import { useDebounce } from "@/hooks/useDebounce";
+import DataTable, { Column } from "@/components/DataTable";
 import { Combobox } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -273,7 +274,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
     const debouncedFgSearch = useDebounce(fgSearch, 300);
 
     const { data: leads = [] } = useLeads({ search: debouncedLeadSearch, limit: 10 });
-    const { data: products = [] } = useProductsCombobox({
+    const { data: products = [], isLoading: isLoadingProducts } = useProductsCombobox({
         type: "FINISHED_GOOD",
         status: "active",
         search: debouncedFgSearch.trim() || undefined,
@@ -381,6 +382,141 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         const amount = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
         form.setValue(`items.${index}.amount`, amount, { shouldDirty: true });
     };
+
+    const columns = useMemo<Column<any>[]>(() => [
+        {
+            key: "index",
+            header: "#",
+            className: "w-[40px] text-center",
+            render: (_item) => {
+                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
+                return <span className="text-xs font-bold text-muted-foreground/40">{index + 1}</span>;
+            },
+        },
+        {
+            key: "product_code",
+            header: "Code",
+            className: "w-[120px]",
+            render: (_item) => {
+                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
+                return (
+                    <Input
+                        {...form.register(`items.${index}.product_code` as const)}
+                        className="h-8 text-xs font-mono bg-muted/20 border-transparent text-muted-foreground cursor-not-allowed"
+                        placeholder="Code"
+                        disabled
+                    />
+                );
+            },
+        },
+        {
+            key: "product_name",
+            header: "Product",
+            className: "min-w-[280px]",
+            render: (_item) => {
+                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
+                return (
+                    <Combobox
+                        options={products.map((p) => ({
+                            label: `${p.product_name} (${p.code})`,
+                            value: p.id,
+                        }))}
+                        value={form.watch(`items.${index}.product_id`) || ""}
+                        onValueChange={(val) => handleSelectProductInline(index, val)}
+                        placeholder="Search products..."
+                        className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40"
+                        searchValue={fgSearch}
+                        onSearchChange={setFgSearch}
+                    />
+                );
+            },
+        },
+        {
+            key: "unit",
+            header: "Unit",
+            className: "w-[100px] text-center",
+            render: (_item) => {
+                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
+                return (
+                    <Badge variant="outline" className="text-[10px] bg-muted/30 border-transparent px-2 font-medium">
+                        {form.watch(`items.${index}.unit`) || "-"}
+                    </Badge>
+                );
+            },
+        },
+        {
+            key: "quantity",
+            header: "Qty",
+            className: "w-[100px]",
+            render: (_item) => {
+                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
+                return (
+                    <Input
+                        type="number"
+                        {...form.register(`items.${index}.quantity` as const, {
+                            valueAsNumber: true,
+                            onChange: () => handleItemAmountUpdate(index),
+                        })}
+                        className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background"
+                    />
+                );
+            },
+        },
+        {
+            key: "rate",
+            header: "Rate",
+            className: "w-[140px]",
+            render: (_item) => {
+                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
+                return (
+                    <div className="relative group">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">₹</span>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            {...form.register(`items.${index}.rate` as const, {
+                                valueAsNumber: true,
+                                onChange: () => handleItemAmountUpdate(index),
+                            })}
+                            className="h-8 text-right text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium"
+                        />
+                    </div>
+                );
+            },
+        },
+        {
+            key: "amount",
+            header: "Amount",
+            className: "w-[140px] text-right",
+            render: (_item) => {
+                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
+                return (
+                    <div className="text-xs font-black text-foreground pr-2 font-mono">
+                        ₹{(form.watch(`items.${index}.amount`) || 0).toLocaleString()}
+                    </div>
+                );
+            },
+        },
+        {
+            key: "actions",
+            header: "",
+            className: "w-[60px] text-center",
+            render: (_item) => {
+                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
+                return (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={() => removeItem(index)}
+                    >
+                        <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                );
+            },
+        },
+    ], [itemFields, products, fgSearch]);
 
     const totals = useMemo(() => {
         const itemsList = watchAll.items || [];
@@ -1103,112 +1239,14 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                 {itemFields.length} {itemFields.length === 1 ? "item" : "items"}
                             </Badge>
                         </div>
-                        <CardContent className="p-0">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-muted/30 text-muted-foreground text-[10px] uppercase font-black tracking-wider border-b border-border/20">
-                                        <tr>
-                                            <th className="px-5 py-3 w-[40px] text-center">#</th>
-                                            <th className="px-5 py-3 w-[140px]">Code</th>
-                                            <th className="px-5 py-3 min-w-[200px]">Product</th>
-                                            <th className="px-5 py-3 w-[100px] text-center">Unit</th>
-                                            <th className="px-5 py-3 w-[100px] text-center">Qty</th>
-                                            <th className="px-5 py-3 w-[140px] text-right">Rate</th>
-                                            <th className="px-5 py-3 w-[140px] text-right">Amount</th>
-                                            <th className="px-5 py-3 w-[60px] text-center"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/10">
-                                        {itemFields.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={8} className="py-12 text-center text-muted-foreground/60 italic text-xs">
-                                                    No items added yet. Click "+ Add Product" to start.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            itemFields.map((field, index) => (
-                                                <tr key={field.id} className="group hover:bg-muted/5 transition-colors">
-                                                    <td className="px-5 py-3 text-center text-xs font-bold text-muted-foreground/40">{index + 1}</td>
-                                                    <td className="px-5 py-3">
-                                                        <Input
-                                                            {...form.register(`items.${index}.product_code` as const)}
-                                                            className="h-8 text-xs font-mono bg-muted/20 border-transparent text-muted-foreground cursor-not-allowed"
-                                                            placeholder="Code"
-                                                            disabled
-                                                        />
-                                                    </td>
-                                                    <td className="px-5 py-3">
-                                                        <div className="flex flex-col gap-1 w-full min-w-[240px]">
-
-                                                            <Combobox
-                                                                options={products.map((p) => ({
-                                                                    label: `${p.product_name} (${p.code})`,
-                                                                    value: p.id,
-                                                                }))}
-                                                                value={form.watch(`items.${index}.product_id`) || ""}
-                                                                onValueChange={(val) => handleSelectProductInline(index, val)}
-                                                                placeholder="Search products..."
-                                                                className="h-9 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40"
-                                                                searchValue={fgSearch}
-                                                                onSearchChange={setFgSearch}
-                                                            />
-
-
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-5 py-3 text-center">
-                                                        <Badge variant="outline" className="text-[9px] h-5 px-1.5 uppercase bg-muted/20 border-border/40 text-muted-foreground font-mono">
-                                                            {form.watch(`items.${index}.unit`) || "-"}
-                                                        </Badge>
-                                                    </td>
-                                                    <td className="px-5 py-3">
-                                                        <Input
-                                                            type="number"
-                                                            {...form.register(`items.${index}.quantity` as const)}
-                                                            className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background"
-                                                            onChange={(e) => {
-                                                                form.setValue(`items.${index}.quantity`, Number(e.target.value));
-                                                                handleItemAmountUpdate(index);
-                                                            }}
-                                                        />
-                                                    </td>
-                                                    <td className="px-5 py-3">
-                                                        <div className="relative">
-                                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/40 font-mono text-[10px]">₹</span>
-                                                            <Input
-                                                                type="number"
-                                                                step="0.01"
-                                                                {...form.register(`items.${index}.rate` as const)}
-                                                                className="h-8 text-right text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium"
-                                                                onChange={(e) => {
-                                                                    form.setValue(`items.${index}.rate`, Number(e.target.value));
-                                                                    handleItemAmountUpdate(index);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-5 py-3 text-right">
-                                                        <span className="text-xs font-black font-mono text-primary">
-                                                            ₹{(form.watch(`items.${index}.amount`) || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-5 py-3 text-center">
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                            onClick={() => removeItem(index)}
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                        <CardContent className="p-0 border-t border-border/10">
+                            <DataTable
+                                data={itemFields}
+                                columns={columns}
+                                pageSize={100}
+                                idKey="id"
+                                isLoading={isLoadingProducts}
+                            />
                         </CardContent>
                     </Card>
 

@@ -49,10 +49,12 @@ const ImportPage = () => {
 
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const statusOptions =
-    (statusResponse as { items?: { id: string; name: string }[] })?.items?.map((item) => ({
-      value: item.id,
-      label: item.name,
-    })) || [];
+    (statusResponse as { items?: { id: string; name: string }[] })?.items?.map(
+      (item) => ({
+        value: item.id,
+        label: item.name,
+      }),
+    ) || [];
 
   const columns: Column<LeadImportItem>[] = [
     { key: "name", header: "* Name" },
@@ -200,7 +202,7 @@ const ImportPage = () => {
           onSuccess: () => {
             navigate(`/${companyId}/leads`);
           },
-        }
+        },
       );
     };
 
@@ -254,7 +256,9 @@ const ImportPage = () => {
             <div className="rounded-sm border border-blue-500/10 bg-blue-500/5 p-3 backdrop-blur-sm">
               <div className="mb-2 flex items-center gap-2 text-blue-600">
                 <Info className="h-4 w-4" />
-                <h2 className="text-xs font-bold uppercase tracking-wider">Import Instructions</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wider">
+                  Import Instructions
+                </h2>
               </div>
               <ul className="grid gap-2 md:grid-cols-3">
                 <li className="flex gap-2 text-xs leading-tight text-muted-foreground bg-white/40 p-2 rounded-sm border border-white/60">
@@ -262,7 +266,8 @@ const ImportPage = () => {
                     1
                   </span>
                   <p>
-                    Data must match the column headers in the example table. Use <strong>UTF-8</strong> encoding.
+                    Data must match the column headers in the example table. Use{" "}
+                    <strong>UTF-8</strong> encoding.
                   </p>
                 </li>
                 <li className="flex gap-2 text-xs leading-tight text-muted-foreground bg-white/40 p-2 rounded-sm border border-white/60">
@@ -270,7 +275,8 @@ const ImportPage = () => {
                     2
                   </span>
                   <p>
-                    Dates should be formatted as <strong>d-m-yyyy</strong> (e.g., 27-03-2026).
+                    Dates should be formatted as <strong>d-m-yyyy</strong>{" "}
+                    (e.g., 27-03-2026).
                   </p>
                 </li>
                 <li className="flex gap-2 text-xs leading-tight text-muted-foreground bg-white/40 p-2 rounded-sm border border-white/60">
@@ -278,7 +284,9 @@ const ImportPage = () => {
                     3
                   </span>
                   <p>
-                    Leads won't be imported if <strong>email already exists</strong> (based on validation settings).
+                    Leads won't be imported if{" "}
+                    <strong>email already exists</strong> (based on validation
+                    settings).
                   </p>
                 </li>
               </ul>
@@ -302,7 +310,9 @@ const ImportPage = () => {
             <div className="space-y-4 rounded-sm border border-border/60 bg-card p-4 shadow-sm">
               <div className="flex items-center gap-2 text-primary">
                 <FileUp className="h-4 w-4" />
-                <h2 className="text-xs font-bold uppercase tracking-wider">Choose CSV File</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wider">
+                  Choose CSV File
+                </h2>
               </div>
 
               <div className="space-y-2">
@@ -333,7 +343,10 @@ const ImportPage = () => {
                 {selectedFile && (
                   <div className="mt-2 flex items-center gap-2 rounded-sm bg-green-500/10 px-2 py-1.5 text-[10px] font-medium text-green-600 border border-green-500/20">
                     <CheckCircle2 className="h-3 w-3" />
-                    <span className="truncate">Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)</span>
+                    <span className="truncate">
+                      Selected: {selectedFile.name} (
+                      {(selectedFile.size / 1024).toFixed(2)} KB)
+                    </span>
                   </div>
                 )}
               </div>

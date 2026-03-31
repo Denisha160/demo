@@ -166,7 +166,7 @@ const CategoryModal = ({
             </SelectContent>
           </Select>
         </div>
-        
+
         {/* Company picker – only for main categories */}
         {formData.type === "main" && (
           <div className="grid gap-2 animate-in fade-in slide-in-from-top-1">

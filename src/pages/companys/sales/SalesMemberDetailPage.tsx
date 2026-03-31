@@ -245,9 +245,7 @@ const SalesMemberDetailPage = () => {
         {activeTabClass === "followups" && (
           <UserFollowUpsTab userId={selectedUserId} />
         )}
-        {activeTabClass === "tasks" && (
-          <UserTasksTab userId={selectedUserId} />
-        )}
+        {activeTabClass === "tasks" && <UserTasksTab userId={selectedUserId} />}
         {activeTabClass === "activity" && (
           <UserActivitiesTab userId={selectedUserId} />
         )}

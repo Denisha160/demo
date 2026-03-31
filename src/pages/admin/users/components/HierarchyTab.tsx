@@ -26,22 +26,26 @@ const TreeNode = ({ node, level }: TreeNodeProps) => {
 
   return (
     <div className="space-y-2">
-      <div 
+      <div
         className={`flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card hover:bg-accent/50 transition-all group ${level === 0 ? "border-primary/50 bg-primary/5" : ""}`}
         style={{ marginLeft: `${level * 24}px` }}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {hasChildren ? (
-            <button 
+            <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-1 hover:bg-accent rounded-sm transition-colors text-muted-foreground mr-1"
             >
-              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {isOpen ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
             </button>
           ) : (
             <div className="w-6 mr-1" />
           )}
-          
+
           <Avatar className="h-10 w-10 border-2 border-primary/20 shrink-0">
             <AvatarImage src={node.image_url} alt={node.name} />
             <AvatarFallback className="bg-primary/10 text-primary font-bold">
@@ -54,7 +58,10 @@ const TreeNode = ({ node, level }: TreeNodeProps) => {
               <p className="text-sm font-bold truncate text-foreground group-hover:text-primary transition-colors">
                 {node.name}
               </p>
-              <Badge variant={node.is_active ? "default" : "secondary"} className="text-[9px] h-4 px-1 uppercase tracking-tighter">
+              <Badge
+                variant={node.is_active ? "default" : "secondary"}
+                className="text-[9px] h-4 px-1 uppercase tracking-tighter"
+              >
                 {node.is_active ? "Active" : "Inactive"}
               </Badge>
             </div>
@@ -89,65 +96,71 @@ const TreeNode = ({ node, level }: TreeNodeProps) => {
 
 // Adjusted TreeNode to handle absolute level for visualization
 const RecursiveNode = ({ node, level }: TreeNodeProps) => {
-    const [isOpen, setIsOpen] = useState(true);
-    const hasChildren = node.children && node.children.length > 0;
-  
-    return (
-      <div className="space-y-2">
-        <div 
-          className={`flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card/50 hover:bg-accent/50 transition-all group ${level === 0 ? "border-primary/50 bg-primary/10" : ""}`}
-        >
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {hasChildren ? (
-              <button 
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-1 hover:bg-accent rounded-sm transition-colors text-muted-foreground shrink-0"
-              >
-                {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </button>
-            ) : (
-              <div className="w-6 shrink-0" />
-            )}
-            
-            <Avatar className="h-9 w-9 border border-primary/20 shrink-0 shadow-sm">
-              <AvatarImage src={node.image_url} alt={node.name} />
-              <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                {node.name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-  
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-bold truncate text-foreground group-hover:text-primary transition-colors">
-                  {node.name}
-                </p>
-                {!node.is_active && (
-                   <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" title="Inactive" />
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground truncate uppercase tracking-[0.1em]">
-                {node.employee_code} {node.department ? `| ${node.department}` : ""}
+  const [isOpen, setIsOpen] = useState(true);
+  const hasChildren = node.children && node.children.length > 0;
+
+  return (
+    <div className="space-y-2">
+      <div
+        className={`flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card/50 hover:bg-accent/50 transition-all group ${level === 0 ? "border-primary/50 bg-primary/10" : ""}`}
+      >
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {hasChildren ? (
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-1 hover:bg-accent rounded-sm transition-colors text-muted-foreground shrink-0"
+            >
+              {isOpen ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
+          ) : (
+            <div className="w-6 shrink-0" />
+          )}
+
+          <Avatar className="h-9 w-9 border border-primary/20 shrink-0 shadow-sm">
+            <AvatarImage src={node.image_url} alt={node.name} />
+            <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+              {node.name.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-bold truncate text-foreground group-hover:text-primary transition-colors">
+                {node.name}
               </p>
+              {!node.is_active && (
+                <span
+                  className="w-2 h-2 rounded-full bg-destructive animate-pulse"
+                  title="Inactive"
+                />
+              )}
             </div>
-          </div>
-  
-          <div className="hidden md:block text-right shrink-0 pr-2">
-            <p className="text-[10px] text-muted-foreground/60">
-              {node.email}
+            <p className="text-[10px] text-muted-foreground truncate uppercase tracking-[0.1em]">
+              {node.employee_code}{" "}
+              {node.department ? `| ${node.department}` : ""}
             </p>
           </div>
         </div>
-  
-        {hasChildren && isOpen && (
-          <div className="relative ml-4 pl-4 border-l border-border/30 space-y-2 py-1">
-            {node.children!.map((child) => (
-              <RecursiveNode key={child.id} node={child} level={level + 1} />
-            ))}
-          </div>
-        )}
+
+        <div className="hidden md:block text-right shrink-0 pr-2">
+          <p className="text-[10px] text-muted-foreground/60">{node.email}</p>
+        </div>
       </div>
-    );
-  };
+
+      {hasChildren && isOpen && (
+        <div className="relative ml-4 pl-4 border-l border-border/30 space-y-2 py-1">
+          {node.children!.map((child) => (
+            <RecursiveNode key={child.id} node={child} level={level + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const HierarchyTab = ({ user_id }: { user_id: string }) => {
   const { data: hierarchy, isLoading, error } = useUserHierarchy(user_id);
@@ -167,7 +180,9 @@ const HierarchyTab = ({ user_id }: { user_id: string }) => {
     return (
       <div className="p-8 text-center bg-card rounded-lg border border-border/50">
         <User className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
-        <p className="text-sm font-medium text-foreground">Hierarchy information unavailable</p>
+        <p className="text-sm font-medium text-foreground">
+          Hierarchy information unavailable
+        </p>
         <p className="text-xs text-muted-foreground mt-1 text-balance">
           Could not retrieve the reporting structure for this user.
         </p>

@@ -49,7 +49,9 @@ const ShiftPage = () => {
     setSearch(param);
   }, [searchParams]);
 
-  const { data, isLoading } = useShifts({ search: debouncedSearch || undefined });
+  const { data, isLoading } = useShifts({
+    search: debouncedSearch || undefined,
+  });
   const createShift = useCreateShift();
   const updateShift = useUpdateShift();
   const deleteShift = useDeleteShift();
@@ -112,7 +114,9 @@ const ShiftPage = () => {
       key: "start_time",
       header: "Start Time",
       render: (shift) => (
-        <p className="text-sm font-medium text-foreground">{shift.start_time}</p>
+        <p className="text-sm font-medium text-foreground">
+          {shift.start_time}
+        </p>
       ),
     },
     {
@@ -168,7 +172,9 @@ const ShiftPage = () => {
   ];
 
   const rowClick = (shift: Shift) => {
-    const searchQuery = debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : "";
+    const searchQuery = debouncedSearch
+      ? `?search=${encodeURIComponent(debouncedSearch)}`
+      : "";
     navigate(`${shift.id}${searchQuery}`);
   };
 

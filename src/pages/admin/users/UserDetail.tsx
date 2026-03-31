@@ -22,10 +22,13 @@ const UserDetailPage = () => {
   // Tab state from search params
   const activeTab = searchParams.get("tab") || "overview";
   const setActiveTab = (tab: string) => {
-    setSearchParams((prev) => {
-      prev.set("tab", tab);
-      return prev;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        prev.set("tab", tab);
+        return prev;
+      },
+      { replace: true },
+    );
   };
   const [isSavingOverview, setIsSavingOverview] = useState(false);
   const overviewRef = useRef<OverviewTabRef>(null);

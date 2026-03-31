@@ -13,13 +13,9 @@ const shiftSchema = z.object({
     .min(2, "Shift name must be at least 2 characters long")
     .max(100, "Shift name cannot exceed 100 characters"),
 
-  start_time: z
-    .string()
-    .min(1, "Start time is required"),
+  start_time: z.string().min(1, "Start time is required"),
 
-  end_time: z
-    .string()
-    .min(1, "End time is required"),
+  end_time: z.string().min(1, "End time is required"),
 
   is_active: z.boolean().optional().default(true),
 });
@@ -78,7 +74,9 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
       headerBg="bg-primary/10"
       titleClassName="text-primary"
       title={shift ? "Edit Shift" : "Add New Shift"}
-      description={shift ? "Update shift details below" : "Fill in the shift details below"}
+      description={
+        shift ? "Update shift details below" : "Fill in the shift details below"
+      }
       footer={
         <div className="flex gap-2">
           <Button
@@ -89,7 +87,11 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
           >
             Cancel
           </Button>
-          <Button size="sm" className="rounded-sm text-sm h-8" onClick={handleSubmit}>
+          <Button
+            size="sm"
+            className="rounded-sm text-sm h-8"
+            onClick={handleSubmit}
+          >
             {shift ? "Save Changes" : "Create Shift"}
           </Button>
         </div>
@@ -113,7 +115,9 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
             placeholder="e.g. Morning Shift"
             className={`h-9 text-sm rounded-sm ${errors.name ? "border-destructive" : ""}`}
           />
-          {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+          {errors.name && (
+            <p className="text-xs text-destructive">{errors.name}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -161,7 +165,9 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
               }}
               className={`h-9 text-sm rounded-sm ${errors.end_time ? "border-destructive" : ""}`}
             />
-            {errors.end_time && <p className="text-xs text-destructive">{errors.end_time}</p>}
+            {errors.end_time && (
+              <p className="text-xs text-destructive">{errors.end_time}</p>
+            )}
           </div>
         </div>
 
@@ -170,9 +176,14 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               Active
             </p>
-            <p className="text-[11px] text-muted-foreground">Toggle to enable or disable</p>
+            <p className="text-[11px] text-muted-foreground">
+              Toggle to enable or disable
+            </p>
           </div>
-          <Switch checked={isActive} onCheckedChange={(val) => setIsActive(!!val)} />
+          <Switch
+            checked={isActive}
+            onCheckedChange={(val) => setIsActive(!!val)}
+          />
         </div>
       </form>
     </Modal>

@@ -349,7 +349,10 @@ const App = () => (
           <Route path="leads" element={<Leads />} />
           <Route path="leads/:id" element={<LeadDetailsPage />} />
           <Route path="leads/:id/quotations/new" element={<QuotationPage />} />
-          <Route path="leads/:id/quotations/:quotationId/edit" element={<QuotationPage />} />
+          <Route
+            path="leads/:id/quotations/:quotationId/edit"
+            element={<QuotationPage />}
+          />
           <Route path="leads/import" element={<ImportPage />} />
           <Route path="salesmen" element={<Salesmen />} />
           <Route path="salesmen/:id" element={<SalesmanDetail />} />

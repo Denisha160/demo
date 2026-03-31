@@ -22,7 +22,13 @@ interface SystemHierarchyViewProps {
   is_active?: boolean;
 }
 
-const TreeCard = ({ node, onClick }: { node: HierarchyNode; onClick: (node: HierarchyNode) => void }) => {
+const TreeCard = ({
+  node,
+  onClick,
+}: {
+  node: HierarchyNode;
+  onClick: (node: HierarchyNode) => void;
+}) => {
   const reports = node.children?.length || 0;
   const roleLabel = node.department;
 
@@ -40,15 +46,15 @@ const TreeCard = ({ node, onClick }: { node: HierarchyNode; onClick: (node: Hier
                 alt={node.name}
                 className="h-full w-full object-cover"
               />
-            ) : (
+            ) : node.name ? (
               node.name
-                ? node.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-                : "?"
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .substring(0, 2)
+                .toUpperCase()
+            ) : (
+              "?"
             )}
           </div>
           <p className="text-[9px] uppercase tracking-widest font-black text-primary/70">
@@ -64,7 +70,6 @@ const TreeCard = ({ node, onClick }: { node: HierarchyNode; onClick: (node: Hier
             </span>
           </div>
         </div>
-
       </div>
 
       {reports > 0 && (
@@ -76,7 +81,13 @@ const TreeCard = ({ node, onClick }: { node: HierarchyNode; onClick: (node: Hier
   );
 };
 
-const TreeNodeComponent = ({ node, onClick }: { node: HierarchyNode; onClick: (node: HierarchyNode) => void }) => {
+const TreeNodeComponent = ({
+  node,
+  onClick,
+}: {
+  node: HierarchyNode;
+  onClick: (node: HierarchyNode) => void;
+}) => {
   const children = node.children || [];
 
   return (
@@ -86,7 +97,10 @@ const TreeNodeComponent = ({ node, onClick }: { node: HierarchyNode; onClick: (n
       {children.length > 0 && (
         <div className="relative flex mt-0  tree-children">
           {children.map((child) => (
-            <div key={child.id} className="relative flex flex-col items-center tree-branch pt-4 px-2">
+            <div
+              key={child.id}
+              className="relative flex flex-col items-center tree-branch pt-4 px-2"
+            >
               <div className="absolute top-[8px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-black z-10" />
               <TreeNodeComponent node={child} onClick={onClick} />
             </div>
@@ -113,7 +127,9 @@ const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Loading hierarchy</p>
+        <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+          Loading hierarchy
+        </p>
       </div>
     );
   }
@@ -122,7 +138,9 @@ const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground">
         <p>No hierarchy information available.</p>
-        <p className="text-xs">Try adjusting the filters or refresh the page.</p>
+        <p className="text-xs">
+          Try adjusting the filters or refresh the page.
+        </p>
       </div>
     );
   }
@@ -131,12 +149,17 @@ const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
     <div className="w-full h-full overflow-auto rounded-sm p-8 select-none">
       <div className="min-w-max flex flex-col items-center gap-10">
         {roots.map((node) => (
-          <TreeNodeComponent key={node.id} node={node} onClick={handleNodeClick} />
+          <TreeNodeComponent
+            key={node.id}
+            node={node}
+            onClick={handleNodeClick}
+          />
         ))}
       </div>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
               .tree-children::before {
                   content: '';
                   position: absolute;
@@ -176,8 +199,9 @@ const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
               .tree-branch:only-child::before {
                   display: none;
               }
-          `
-      }} />
+          `,
+        }}
+      />
     </div>
   );
 };

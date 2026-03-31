@@ -184,8 +184,8 @@ const Users = () => {
   });
 
   const { mutate: deleteUser } = useDeleteUser();
-  const users = (usersResponse)?.items || [];
-  const totalItems = (usersResponse)?.pagination?.total || 0;
+  const users = usersResponse?.items || [];
+  const totalItems = usersResponse?.pagination?.total || 0;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -230,14 +230,14 @@ const Users = () => {
                 alt={item.name}
                 className="h-full w-full object-cover"
               />
-            ) : (
+            ) : item.name ? (
               item.name
-                ? item.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                : "?"
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .substring(0, 2)
+            ) : (
+              "?"
             )}
           </div>
           <div className="min-w-0">
@@ -456,18 +456,17 @@ const Users = () => {
         </div>
       ) : (
         <div className="p-4 bg-muted/10 border border-border/60 rounded-sm shadow-sm min-h-[500px]">
-          <SystemHierarchyView 
+          <SystemHierarchyView
             is_active={
-                filterStatus === "All"
-                  ? undefined
-                  : filterStatus === "Active"
-                    ? true
-                    : false
-            } 
+              filterStatus === "All"
+                ? undefined
+                : filterStatus === "Active"
+                  ? true
+                  : false
+            }
           />
         </div>
       )}
-
 
       <UserModal
         open={modalOpen}

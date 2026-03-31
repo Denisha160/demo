@@ -16,7 +16,12 @@ import {
   useImperativeHandle,
   useEffect,
 } from "react";
-import { useUpdateUser, useUsers, useUploadUserPhoto, useRemoveUserPhoto } from "@/hooks/useUsers";
+import {
+  useUpdateUser,
+  useUsers,
+  useUploadUserPhoto,
+  useRemoveUserPhoto,
+} from "@/hooks/useUsers";
 import { useShifts } from "@/hooks/useShifts";
 import { z } from "zod";
 import {
@@ -32,7 +37,9 @@ import { Shift } from "@/types/shift";
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  phone_number: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
+  phone_number: z
+    .string()
+    .regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
   employee_code: z
     .string()
     .min(3, "Employee code must be at least 3 characters"),
@@ -114,16 +121,21 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
     const [apiError, setApiError] = useState<string | null>(null);
 
     // Hooks
-    const { mutate: updateUser, isPending: isUpdatingDetails } = useUpdateUser();
-    const { mutate: uploadPhoto, isPending: isUploadingPhoto } = useUploadUserPhoto();
-    const { mutate: removePhoto, isPending: isRemovingPhoto } = useRemoveUserPhoto();
+    const { mutate: updateUser, isPending: isUpdatingDetails } =
+      useUpdateUser();
+    const { mutate: uploadPhoto, isPending: isUploadingPhoto } =
+      useUploadUserPhoto();
+    const { mutate: removePhoto, isPending: isRemovingPhoto } =
+      useRemoveUserPhoto();
     const { data: usersData } = useUsers({ combobox: true });
     const { data: shiftsData } = useShifts({ combobox: true });
 
     const isUpdating = isUpdatingDetails || isUploadingPhoto || isRemovingPhoto;
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(userData.image_url || null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(
+      userData.image_url || null,
+    );
 
     // Sync previewUrl with userData.image_url when it changes from the parent
     useEffect(() => {
@@ -141,14 +153,17 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
         value: u.id,
       }));
 
-    const shiftOptions: ComboboxOption[] = shiftsData?.shifts?.map((s: Shift) => ({
-      label: s.name,
-      value: s.id,
-    })) || [];
+    const shiftOptions: ComboboxOption[] =
+      shiftsData?.shifts?.map((s: Shift) => ({
+        label: s.name,
+        value: s.id,
+      })) || [];
 
     const handleRemovePhoto = (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (window.confirm("Are you sure you want to remove your profile photo?")) {
+      if (
+        window.confirm("Are you sure you want to remove your profile photo?")
+      ) {
         removePhoto(userData.id!, {
           onSuccess: () => {
             setPreviewUrl(null);
@@ -172,7 +187,10 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
       }
     };
 
-    const handleChange = (field: keyof UserDetailData, value: string | boolean | number | null) => {
+    const handleChange = (
+      field: keyof UserDetailData,
+      value: string | boolean | number | null,
+    ) => {
       setUserData({ ...userData, [field]: value });
       if (errors[field]) {
         setErrors((prev) => {
@@ -225,7 +243,10 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
         userSchema.parse({ ...userData, password: password || undefined });
 
         if (password && password !== confirmPassword) {
-          setErrors((prev) => ({ ...prev, confirmPassword: "Passwords do not match!" }));
+          setErrors((prev) => ({
+            ...prev,
+            confirmPassword: "Passwords do not match!",
+          }));
           return;
         }
 
@@ -259,8 +280,14 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
         if (password) payload.password = password;
         if (payload.date_of_birth === "") payload.date_of_birth = null;
         if (payload.anniversary_date === "") payload.anniversary_date = null;
-        payload.opening_balance = String(payload.opening_balance) === "" ? 0 : Number(payload.opening_balance);
-        payload.basic_salary = String(payload.basic_salary) === "" ? 0 : Number(payload.basic_salary);
+        payload.opening_balance =
+          String(payload.opening_balance) === ""
+            ? 0
+            : Number(payload.opening_balance);
+        payload.basic_salary =
+          String(payload.basic_salary) === ""
+            ? 0
+            : Number(payload.basic_salary);
 
         updateUser(payload, {
           onSuccess: () => {
@@ -275,8 +302,14 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
           },
           onError: (error: unknown) => {
             const err = error as ApiErrorResponse;
-            const errorData = (err?.details || err?.response?.data || err || {}) as ApiErrorResponse;
-            if (errorData?.code === "validation_error" && errorData.details?.body) {
+            const errorData = (err?.details ||
+              err?.response?.data ||
+              err ||
+              {}) as ApiErrorResponse;
+            if (
+              errorData?.code === "validation_error" &&
+              errorData.details?.body
+            ) {
               setErrors(errorData.details.body);
             } else if (errorData?.message) {
               setApiError(errorData.message);
@@ -320,13 +353,23 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               onClick={() => fileInputRef.current?.click()}
             >
               {previewUrl ? (
-                <img src={previewUrl} alt="Profile" className="w-full h-full object-cover" />
+                <img
+                  src={previewUrl}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                userData.name?.split(" ").map((n: string) => n[0]).join("").substring(0, 2) || "U"
+                userData.name
+                  ?.split(" ")
+                  .map((n: string) => n[0])
+                  .join("")
+                  .substring(0, 2) || "U"
               )}
               <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera className="w-6 h-6 text-white mb-1" />
-                <span className="text-[10px] text-white font-semibold uppercase tracking-widest">Update</span>
+                <span className="text-[10px] text-white font-semibold uppercase tracking-widest">
+                  Update
+                </span>
               </div>
             </div>
             {previewUrl && (
@@ -339,7 +382,13 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               </button>
             )}
           </div>
-          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <h3 className="text-2xl font-bold text-foreground truncate leading-none">
@@ -349,61 +398,226 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
                 status={userData.is_active ? "Active" : "Inactive"}
                 variant={userData.is_active ? "success" : "destructive"}
               />
-              {userData.is_root_user && <StatusBadge status="Root Admin" variant="info" />}
+              {userData.is_root_user && (
+                <StatusBadge status="Root Admin" variant="info" />
+              )}
             </div>
-            <p className="text-sm text-muted-foreground">Manage user profile, image, and account details below.</p>
+            <p className="text-sm text-muted-foreground">
+              Manage user profile, image, and account details below.
+            </p>
           </div>
         </div>
 
         <div>
           <div className="flex items-center gap-2 mb-6">
             <Briefcase className="h-4 w-4 text-primary" />
-            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Professional Details</h3>
+            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">
+              Professional Details
+            </h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-2">
-            <EditableDetailItem label="Full Name" value={userData.name} error={errors.name} isEditing={true} onChange={(val) => handleChange("name", val)} />
-            <EditableDetailItem label="Email Address" value={userData.email} error={errors.email} isEditing={true} onChange={(val) => handleChange("email", val)} />
-            <EditableDetailItem label="Phone Number" value={userData.phone_number} error={errors.phone_number} isEditing={true} onChange={(val) => handleChange("phone_number", val)} />
-            <EditableDetailItem label="Employee Code" value={userData.employee_code} error={errors.employee_code} isEditing={true} onChange={(val) => handleChange("employee_code", val)} />
-            <EditableDetailItem label="Department" value={userData.department} error={errors.department} isEditing={true} onChange={(val) => handleChange("department", val)} />
-            <EditableDetailItem label="Region / Zone" value={userData.region} error={errors.region} isEditing={true} onChange={(val) => handleChange("region", val)} />
-            <EditableDetailItem label="Date of Joining" value={userData.date_of_joining ? formatDateForAPI(userData.date_of_joining, false) : ""} error={errors.date_of_joining} isEditing={true} onChange={(val) => handleChange("date_of_joining", val)} type="date" />
-            <EditableDetailItem label="Work Shift" value={userData.shift_id} resolvedLabel={userData.shift_name} error={errors.shift_id} isEditing={true} onChange={(val) => handleChange("shift_id", val)} type="combobox" options={shiftOptions} />
-            <EditableDetailItem label="Reporting To (Parent User)" value={userData.parent_id} error={errors.parent_id} isEditing={true} onChange={(val) => handleChange("parent_id", val)} type="combobox" options={parentOptions} />
+            <EditableDetailItem
+              label="Full Name"
+              value={userData.name}
+              error={errors.name}
+              isEditing={true}
+              onChange={(val) => handleChange("name", val)}
+            />
+            <EditableDetailItem
+              label="Email Address"
+              value={userData.email}
+              error={errors.email}
+              isEditing={true}
+              onChange={(val) => handleChange("email", val)}
+            />
+            <EditableDetailItem
+              label="Phone Number"
+              value={userData.phone_number}
+              error={errors.phone_number}
+              isEditing={true}
+              onChange={(val) => handleChange("phone_number", val)}
+            />
+            <EditableDetailItem
+              label="Employee Code"
+              value={userData.employee_code}
+              error={errors.employee_code}
+              isEditing={true}
+              onChange={(val) => handleChange("employee_code", val)}
+            />
+            <EditableDetailItem
+              label="Department"
+              value={userData.department}
+              error={errors.department}
+              isEditing={true}
+              onChange={(val) => handleChange("department", val)}
+            />
+            <EditableDetailItem
+              label="Region / Zone"
+              value={userData.region}
+              error={errors.region}
+              isEditing={true}
+              onChange={(val) => handleChange("region", val)}
+            />
+            <EditableDetailItem
+              label="Date of Joining"
+              value={
+                userData.date_of_joining
+                  ? formatDateForAPI(userData.date_of_joining, false)
+                  : ""
+              }
+              error={errors.date_of_joining}
+              isEditing={true}
+              onChange={(val) => handleChange("date_of_joining", val)}
+              type="date"
+            />
+            <EditableDetailItem
+              label="Work Shift"
+              value={userData.shift_id}
+              resolvedLabel={userData.shift_name}
+              error={errors.shift_id}
+              isEditing={true}
+              onChange={(val) => handleChange("shift_id", val)}
+              type="combobox"
+              options={shiftOptions}
+            />
+            <EditableDetailItem
+              label="Reporting To (Parent User)"
+              value={userData.parent_id}
+              error={errors.parent_id}
+              isEditing={true}
+              onChange={(val) => handleChange("parent_id", val)}
+              type="combobox"
+              options={parentOptions}
+            />
           </div>
         </div>
 
         <div className="pt-6 border-t border-border/50">
           <div className="flex items-center gap-2 mb-6">
             <CreditCard className="h-4 w-4 text-primary" />
-            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Financial & Compliance</h3>
+            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">
+              Financial & Compliance
+            </h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-2">
-            <EditableDetailItem label="Basic Salary" value={userData.basic_salary} error={errors.basic_salary} isEditing={true} onChange={(val) => handleChange("basic_salary", val)} type="number" prefix="₹" />
-            <EditableDetailItem label="Opening Balance" value={userData.opening_balance} error={errors.opening_balance} isEditing={true} onChange={(val) => handleChange("opening_balance", val)} type="number" prefix="₹" />
-            <EditableDetailItem label="PAN Number" value={userData.pan_number} error={errors.pan_number} isEditing={true} onChange={(val) => handleChange("pan_number", val)} />
-            <EditableDetailItem label="GST Number" value={userData.gst_number} error={errors.gst_number} isEditing={true} onChange={(val) => handleChange("gst_number", val)} />
+            <EditableDetailItem
+              label="Basic Salary"
+              value={userData.basic_salary}
+              error={errors.basic_salary}
+              isEditing={true}
+              onChange={(val) => handleChange("basic_salary", val)}
+              type="number"
+              prefix="₹"
+            />
+            <EditableDetailItem
+              label="Opening Balance"
+              value={userData.opening_balance}
+              error={errors.opening_balance}
+              isEditing={true}
+              onChange={(val) => handleChange("opening_balance", val)}
+              type="number"
+              prefix="₹"
+            />
+            <EditableDetailItem
+              label="PAN Number"
+              value={userData.pan_number}
+              error={errors.pan_number}
+              isEditing={true}
+              onChange={(val) => handleChange("pan_number", val)}
+            />
+            <EditableDetailItem
+              label="GST Number"
+              value={userData.gst_number}
+              error={errors.gst_number}
+              isEditing={true}
+              onChange={(val) => handleChange("gst_number", val)}
+            />
           </div>
         </div>
 
         <div className="pt-6 border-t border-border/50">
           <div className="flex items-center gap-2 mb-6">
             <UserIcon className="h-4 w-4 text-primary" />
-            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Personal Details</h3>
+            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">
+              Personal Details
+            </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <EditableDetailItem label="Gender" value={userData.gender} error={errors.gender} isEditing={true} onChange={(val) => handleChange("gender", val)} type="select" options={genderOptions} />
-            <EditableDetailItem label="Date of Birth" value={userData.date_of_birth ? formatDateForAPI(userData.date_of_birth, false) : ""} error={errors.date_of_birth} isEditing={true} onChange={(val) => handleChange("date_of_birth", val)} type="date" />
-            <EditableDetailItem label="Marital Status" value={userData.marital_status} error={errors.marital_status} isEditing={true} onChange={(val) => handleChange("marital_status", val)} type="select" options={maritalStatusOptions} />
+            <EditableDetailItem
+              label="Gender"
+              value={userData.gender}
+              error={errors.gender}
+              isEditing={true}
+              onChange={(val) => handleChange("gender", val)}
+              type="select"
+              options={genderOptions}
+            />
+            <EditableDetailItem
+              label="Date of Birth"
+              value={
+                userData.date_of_birth
+                  ? formatDateForAPI(userData.date_of_birth, false)
+                  : ""
+              }
+              error={errors.date_of_birth}
+              isEditing={true}
+              onChange={(val) => handleChange("date_of_birth", val)}
+              type="date"
+            />
+            <EditableDetailItem
+              label="Marital Status"
+              value={userData.marital_status}
+              error={errors.marital_status}
+              isEditing={true}
+              onChange={(val) => handleChange("marital_status", val)}
+              type="select"
+              options={maritalStatusOptions}
+            />
             {userData.marital_status === "married" && (
-              <EditableDetailItem label="Anniversary Date" value={userData.anniversary_date ? formatDateForAPI(userData.anniversary_date, false) : ""} error={errors.anniversary_date} isEditing={true} onChange={(val) => handleChange("anniversary_date", val)} type="date" />
+              <EditableDetailItem
+                label="Anniversary Date"
+                value={
+                  userData.anniversary_date
+                    ? formatDateForAPI(userData.anniversary_date, false)
+                    : ""
+                }
+                error={errors.anniversary_date}
+                isEditing={true}
+                onChange={(val) => handleChange("anniversary_date", val)}
+                type="date"
+              />
             )}
             <div className="md:col-span-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <EditableDetailItem label="Personal Email" value={userData.personal_email} error={errors.personal_email} isEditing={true} onChange={(val) => handleChange("personal_email", val)} />
-                <EditableDetailItem label="Residence Address" value={userData.address} error={errors.address} isEditing={true} onChange={(val) => handleChange("address", val)} type="textarea" />
-                <EditableDetailItem label="Update Password" value={password} error={errors.password} isEditing={true} onChange={handlePasswordChange} />
-                <EditableDetailItem label="Confirm Password" value={confirmPassword} error={errors.confirmPassword} isEditing={true} onChange={handleConfirmPasswordChange} />
+                <EditableDetailItem
+                  label="Personal Email"
+                  value={userData.personal_email}
+                  error={errors.personal_email}
+                  isEditing={true}
+                  onChange={(val) => handleChange("personal_email", val)}
+                />
+                <EditableDetailItem
+                  label="Residence Address"
+                  value={userData.address}
+                  error={errors.address}
+                  isEditing={true}
+                  onChange={(val) => handleChange("address", val)}
+                  type="textarea"
+                />
+                <EditableDetailItem
+                  label="Update Password"
+                  value={password}
+                  error={errors.password}
+                  isEditing={true}
+                  onChange={handlePasswordChange}
+                />
+                <EditableDetailItem
+                  label="Confirm Password"
+                  value={confirmPassword}
+                  error={errors.confirmPassword}
+                  isEditing={true}
+                  onChange={handleConfirmPasswordChange}
+                />
               </div>
             </div>
           </div>

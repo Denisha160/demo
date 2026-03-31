@@ -92,12 +92,14 @@ interface ProfileTabProps {
 const leadSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email").or(z.literal("")),
-  phone: z.union([z.string(), z.number()])
+  phone: z
+    .union([z.string(), z.number()])
     .transform((val) => String(val))
     .refine((val) => val.length > 0, "Phone is required")
     .refine((val) => /^\d+$/.test(val), "Only numbers allowed")
     .refine((val) => val.length >= 10, "Must be at least 10 digits"),
-  alternate_phone: z.union([z.string(), z.number()])
+  alternate_phone: z
+    .union([z.string(), z.number()])
     .transform((val) => (val ? String(val) : ""))
     .optional()
     .refine(
@@ -144,7 +146,8 @@ const leadSchema = z.object({
     .optional(),
   address_line1: z.string().optional(),
   address_line2: z.string().optional(),
-  expected_revenue: z.union([z.string(), z.number()])
+  expected_revenue: z
+    .union([z.string(), z.number()])
     .transform((val) => (val !== undefined && val !== null ? String(val) : ""))
     .optional()
     .refine((val) => !val || /^[0-9.]+$/.test(val), "Must be a number")
@@ -256,7 +259,6 @@ const ProfileTab = ({
     return tags.map((tag) => ({ id: String(tag.id), name: tag.name }));
   }, [tagsResponse]);
 
-
   useEffect(() => {
     if (!isEditing) {
       form.reset(leadProfile);
@@ -267,15 +269,21 @@ const ProfileTab = ({
   useEffect(() => {
     if (!isEditing && leadProfile) {
       if (leadProfile.country_id && countryOptions.length > 0) {
-        const label = countryOptions.find((o) => o.value === leadProfile.country_id)?.label;
+        const label = countryOptions.find(
+          (o) => o.value === leadProfile.country_id,
+        )?.label;
         if (label) setSelectedCountryName(label);
       }
       if (leadProfile.state_id && stateOptions.length > 0) {
-        const label = stateOptions.find((o) => o.value === leadProfile.state_id)?.label;
+        const label = stateOptions.find(
+          (o) => o.value === leadProfile.state_id,
+        )?.label;
         if (label) setSelectedStateName(label);
       }
       if (leadProfile.city_id && cityOptions.length > 0) {
-        const label = cityOptions.find((o) => o.value === leadProfile.city_id)?.label;
+        const label = cityOptions.find(
+          (o) => o.value === leadProfile.city_id,
+        )?.label;
         if (label) setSelectedCityName(label);
       }
     }
@@ -563,8 +571,8 @@ const ProfileTab = ({
                           )?.label;
                           setSelectedCountryName(label || "");
                           form.setValue("country_id", id, {
-                                shouldDirty: true,
-                                shouldValidate: true,
+                            shouldDirty: true,
+                            shouldValidate: true,
                           });
                           setSelectedStateName("");
                           setSelectedCityName("");
@@ -600,8 +608,8 @@ const ProfileTab = ({
                           )?.label;
                           setSelectedStateName(label || "");
                           form.setValue("state_id", id, {
-                                shouldDirty: true,
-                                shouldValidate: true,
+                            shouldDirty: true,
+                            shouldValidate: true,
                           });
                           setSelectedCityName("");
                           form.setValue("city_id", "");
@@ -640,8 +648,8 @@ const ProfileTab = ({
                           )?.label;
                           setSelectedCityName(label || "");
                           form.setValue("city_id", id, {
-                                shouldDirty: true,
-                                shouldValidate: true,
+                            shouldDirty: true,
+                            shouldValidate: true,
                           });
                           setCitySearch("");
                         }}

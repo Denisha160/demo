@@ -136,8 +136,6 @@ export const getSystemHierarchy = (params) => {
   return axios({ method: "GET", url, params });
 };
 
-
-
 // end region
 
 // region Companies
@@ -829,4 +827,3 @@ export const deleteShift = (id) => {
 };
 
 // end region
-

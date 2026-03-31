@@ -6,12 +6,7 @@ interface TasksTabProps {
 }
 
 const TasksTab = ({ leadId, defaultAssignedTo }: TasksTabProps) => {
-  return (
-    <TasksTable 
-      leadId={leadId} 
-      defaultAssignedTo={defaultAssignedTo} 
-    />
-  );
+  return <TasksTable leadId={leadId} defaultAssignedTo={defaultAssignedTo} />;
 };
 
 export default TasksTab;

@@ -44,7 +44,14 @@ const ShiftDetailPage = () => {
     if (!search.trim()) return users;
     const term = search.trim().toLowerCase();
     return users.filter((user) =>
-      [user.name, user.email, user.phone_number, user.employee_code, user.department, user.region]
+      [
+        user.name,
+        user.email,
+        user.phone_number,
+        user.employee_code,
+        user.department,
+        user.region,
+      ]
         .filter(Boolean)
         .some((value) => value?.toLowerCase().includes(term)),
     );
@@ -57,8 +64,12 @@ const ShiftDetailPage = () => {
         header: "Name",
         render: (user) => (
           <div className="flex flex-col min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
-            <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+            <p className="text-sm font-semibold text-foreground truncate">
+              {user.name}
+            </p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {user.email}
+            </p>
           </div>
         ),
       },
@@ -66,14 +77,18 @@ const ShiftDetailPage = () => {
         key: "employee_code",
         header: "Emp Code",
         render: (user) => (
-          <p className="text-sm text-foreground/80">{user.employee_code || "—"}</p>
+          <p className="text-sm text-foreground/80">
+            {user.employee_code || "—"}
+          </p>
         ),
       },
       {
         key: "phone_number",
         header: "Phone",
         render: (user) => (
-          <p className="text-sm text-foreground/80">{user.phone_number || "—"}</p>
+          <p className="text-sm text-foreground/80">
+            {user.phone_number || "—"}
+          </p>
         ),
       },
       {
@@ -117,7 +132,9 @@ const ShiftDetailPage = () => {
   if (error || !shift) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <p className="text-sm text-muted-foreground">Unable to load shift details.</p>
+        <p className="text-sm text-muted-foreground">
+          Unable to load shift details.
+        </p>
       </div>
     );
   }
@@ -156,13 +173,17 @@ const ShiftDetailPage = () => {
 
       <div className="grid gap-3 md:grid-cols-3">
         <div className="border border-border rounded-sm p-4 bg-card">
-          <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">Duration</p>
+          <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+            Duration
+          </p>
           <p className="text-lg font-semibold text-foreground">
             {shift.start_time} — {shift.end_time}
           </p>
         </div>
         <div className="border border-border rounded-sm p-4 bg-card">
-          <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">Status</p>
+          <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+            Status
+          </p>
           <StatusBadge
             status={shift.is_active ? "Active" : "Inactive"}
             variant={shift.is_active ? "success" : "destructive"}
@@ -170,12 +191,12 @@ const ShiftDetailPage = () => {
           />
         </div>
         <div className="border border-border rounded-sm p-4 bg-card">
-          <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">Assigned users</p>
+          <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+            Assigned users
+          </p>
           <p className="text-2xl font-semibold text-foreground">{userCount}</p>
         </div>
       </div>
-
-
 
       <div className="border border-border rounded-sm overflow-hidden bg-card shadow-sm">
         <DataTable

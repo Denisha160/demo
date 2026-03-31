@@ -1,4 +1,8 @@
-import { keepPreviousData, useQuery, UseQueryOptions } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 import { listCityStateCountry, listCity } from "@/services/api";
 import { queryKeys } from "@/lib/queryKeys";
 

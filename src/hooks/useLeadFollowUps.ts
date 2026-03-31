@@ -53,7 +53,10 @@ export function useAllFollowUps(params?: Record<string, unknown>) {
   });
 }
 
-const isLeadFollowUpsQuery = (query: Query<unknown, unknown>, leadId?: string) => {
+const isLeadFollowUpsQuery = (
+  query: Query<unknown, unknown>,
+  leadId?: string,
+) => {
   const key = query.queryKey;
   if (!Array.isArray(key)) return false;
   return (

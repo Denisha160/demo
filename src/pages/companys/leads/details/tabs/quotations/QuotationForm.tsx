@@ -1,26 +1,20 @@
 import { ComponentProps, useMemo, useState } from "react";
-import {
-    useForm,
-    useWatch,
-    UseFormSetError,
-} from "react-hook-form";
+import { useForm, useWatch, UseFormSetError } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-    DollarSign
-} from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { useLeads } from "@/hooks/useLeads";
 import { useLeadContacts } from "@/hooks/useLeadContacts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatDateForAPI } from "@/utils/date";
@@ -30,299 +24,357 @@ import { QuotationProductsTable } from "./QuotationProductsTable";
 const optionalText = z.string().optional().or(z.literal(""));
 
 const requiredNumber = z.preprocess(
-    (value) => {
-        if (value === "" || value === null || value === undefined) {
-            return 0;
-        }
-        const parsed = typeof value === "number" ? value : Number(value);
-        return Number.isNaN(parsed) ? 0 : parsed;
-    },
-    z.number().min(0, "Value must be 0 or more"),
+  (value) => {
+    if (value === "" || value === null || value === undefined) {
+      return 0;
+    }
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  },
+  z.number().min(0, "Value must be 0 or more"),
 );
 
-
 const quotationItemSchema = z.object({
-    product_id: z.string().min(1, "Product is required"),
-    product_name: z.string().min(1, "Product name is required"),
-    product_code: optionalText,
-    description: optionalText,
-    long_description: optionalText,
-    quantity: requiredNumber.default(1),
-    rate: requiredNumber,
-    tax_rate: requiredNumber.default(0),
-    amount: requiredNumber,
-    unit: optionalText.default("pcs"),
-    is_optional: z.boolean().default(false),
+  product_id: z.string().min(1, "Product is required"),
+  product_name: z.string().min(1, "Product name is required"),
+  product_code: optionalText,
+  description: optionalText,
+  long_description: optionalText,
+  quantity: requiredNumber.default(1),
+  rate: requiredNumber,
+  tax_rate: requiredNumber.default(0),
+  amount: requiredNumber,
+  unit: optionalText.default("pcs"),
+  is_optional: z.boolean().default(false),
 });
 
 export const quotationSchema = z.object({
-    lead_id: z.string().min(1, "Lead is required"),
-    quotation_date: z.string().min(1, "Quotation date is required"),
-    customer_name: optionalText,
-    customer_email: z.string().email("Invalid email").optional().or(z.literal("")),
-    customer_phone: optionalText,
-    customer_address: optionalText,
-    customer_gst: optionalText,
-    customer_pan: optionalText,
-    items: z.array(quotationItemSchema).min(1, "At least one item is required"),
-    total_tax_amount: requiredNumber,
-    amount_in_words: optionalText,
-
+  lead_id: z.string().min(1, "Lead is required"),
+  quotation_date: z.string().min(1, "Quotation date is required"),
+  customer_name: optionalText,
+  customer_email: z
+    .string()
+    .email("Invalid email")
+    .optional()
+    .or(z.literal("")),
+  customer_phone: optionalText,
+  customer_address: optionalText,
+  customer_gst: optionalText,
+  customer_pan: optionalText,
+  items: z.array(quotationItemSchema).min(1, "At least one item is required"),
+  total_tax_amount: requiredNumber,
+  amount_in_words: optionalText,
 });
 
 export type QuotationFormData = z.infer<typeof quotationSchema>;
 
 export type Quotation = QuotationFormData & {
-    id: string;
-    created_at: string;
+  id: string;
+  created_at: string;
 };
 
-const quotationFormLabelBase = "text-[10px] font-bold uppercase tracking-widest text-muted-foreground";
+const quotationFormLabelBase =
+  "text-[10px] font-bold uppercase tracking-widest text-muted-foreground";
 
 type QuotationFormLabelProps = ComponentProps<typeof FormLabel> & {
-    required?: boolean;
+  required?: boolean;
 };
 
 const QuotationFormLabel = ({
-    children,
-    className,
-    required = false,
-    ...props
+  children,
+  className,
+  required = false,
+  ...props
 }: QuotationFormLabelProps) => (
-    <FormLabel
-        className={cn(
-            quotationFormLabelBase,
-            required ? "flex gap-1 items-center" : "",
-            className,
-        )}
-        {...props}
-    >
-        {children}
-        {required && <span className="text-destructive">*</span>}
-    </FormLabel>
+  <FormLabel
+    className={cn(
+      quotationFormLabelBase,
+      required ? "flex gap-1 items-center" : "",
+      className,
+    )}
+    {...props}
+  >
+    {children}
+    {required && <span className="text-destructive">*</span>}
+  </FormLabel>
 );
 
 interface QuotationFormProps {
-    quotationData?: Quotation | null;
-    onSave: (data: QuotationFormData, setError: UseFormSetError<QuotationFormData>) => void;
-    onCancel: () => void;
-    isSubmitting?: boolean;
+  quotationData?: Quotation | null;
+  onSave: (
+    data: QuotationFormData,
+    setError: UseFormSetError<QuotationFormData>,
+  ) => void;
+  onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: QuotationFormProps) => {
-    const form = useForm<QuotationFormData>({
-        resolver: zodResolver(quotationSchema),
-        defaultValues: quotationData || {
-            quotation_date: formatDate(new Date()),
-            lead_id: "",
-            total_tax_amount: 0,
-            customer_gst: "",
-            customer_pan: "",
+const QuotationForm = ({
+  quotationData,
+  onSave,
+  onCancel,
+  isSubmitting,
+}: QuotationFormProps) => {
+  const form = useForm<QuotationFormData>({
+    resolver: zodResolver(quotationSchema),
+    defaultValues: quotationData || {
+      quotation_date: formatDate(new Date()),
+      lead_id: "",
+      total_tax_amount: 0,
+      customer_gst: "",
+      customer_pan: "",
 
-            items: [{
-                product_id: "",
-                product_name: "",
-                product_code: "",
-                description: "",
-                long_description: "",
-                quantity: 1,
-                rate: 0,
-                tax_rate: 0,
-                amount: 0,
-                unit: "-",
-                is_optional: false,
-            }],
-            amount_in_words: "",
+      items: [
+        {
+          product_id: "",
+          product_name: "",
+          product_code: "",
+          description: "",
+          long_description: "",
+          quantity: 1,
+          rate: 0,
+          tax_rate: 0,
+          amount: 0,
+          unit: "-",
+          is_optional: false,
         },
-    });
+      ],
+      amount_in_words: "",
+    },
+  });
 
-    const [leadSearch, setLeadSearch] = useState("");
-    const debouncedLeadSearch = useDebounce(leadSearch, 500);
+  const [leadSearch, setLeadSearch] = useState("");
+  const debouncedLeadSearch = useDebounce(leadSearch, 500);
 
-    const { data: leads = [] } = useLeads({ search: debouncedLeadSearch, limit: 10 });
+  const { data: leads = [] } = useLeads({
+    search: debouncedLeadSearch,
+    limit: 10,
+  });
 
-    const selectedLeadId = form.watch("lead_id");
-    const { data: contactData } = useLeadContacts(selectedLeadId);
+  const selectedLeadId = form.watch("lead_id");
+  const { data: contactData } = useLeadContacts(selectedLeadId);
 
-    const leadOptions = useMemo(() => {
-        return (leads as any[]).map(l => ({
-            value: l.id,
-            label: l.name || l.title || "Unknown Lead"
-        }));
-    }, [leads]);
+  const leadOptions = useMemo(() => {
+    return (leads as any[]).map((l) => ({
+      value: l.id,
+      label: l.name || l.title || "Unknown Lead",
+    }));
+  }, [leads]);
 
-    const handleLeadChange = (leadId: string) => {
-        form.setValue("lead_id", leadId, { shouldValidate: true });
-        const lead = (leads as any[]).find(l => l.id === leadId);
-        if (lead) {
-            form.setValue("customer_name", lead.name || lead.title || "", { shouldDirty: true });
-            form.setValue("customer_email", lead.email || "", { shouldDirty: true });
-            form.setValue("customer_phone", lead.phone || "", { shouldDirty: true });
-            const addressParts = [lead.address, lead.address_line1, lead.address_line2]
-                .filter(Boolean);
-            const fullAddress = addressParts.join(", ");
-            form.setValue("customer_address", fullAddress || "", { shouldDirty: true });
+  const handleLeadChange = (leadId: string) => {
+    form.setValue("lead_id", leadId, { shouldValidate: true });
+    const lead = (leads as any[]).find((l) => l.id === leadId);
+    if (lead) {
+      form.setValue("customer_name", lead.name || lead.title || "", {
+        shouldDirty: true,
+      });
+      form.setValue("customer_email", lead.email || "", { shouldDirty: true });
+      form.setValue("customer_phone", lead.phone || "", { shouldDirty: true });
+      const addressParts = [
+        lead.address,
+        lead.address_line1,
+        lead.address_line2,
+      ].filter(Boolean);
+      const fullAddress = addressParts.join(", ");
+      form.setValue("customer_address", fullAddress || "", {
+        shouldDirty: true,
+      });
 
-            form.setValue("customer_gst", lead.gst_number || "", { shouldDirty: true });
-            form.setValue("customer_pan", lead.pan_number || "", { shouldDirty: true });
-        }
-    };
+      form.setValue("customer_gst", lead.gst_number || "", {
+        shouldDirty: true,
+      });
+      form.setValue("customer_pan", lead.pan_number || "", {
+        shouldDirty: true,
+      });
+    }
+  };
 
-    const watchAll = useWatch({ control: form.control });
+  const watchAll = useWatch({ control: form.control });
 
-    const totals = useMemo(() => {
-        const itemsList = watchAll.items || [];
-        const sub = itemsList.reduce((sum, item) => sum + (item.is_optional ? 0 : (Number(item.amount) || 0)), 0);
-
-        return {
-            subtotal: sub,
-            grandTotal: sub
-        };
-    }, [watchAll.items]);
-
-
-    const onSubmit = (data: QuotationFormData) => {
-
-        onSave({
-            ...data,
-            quotation_date: formatDateForAPI(data.quotation_date) || data.quotation_date,
-        }, form.setError);
-    };
-
-    return (
-        <Form {...form}>
-            <form id="quotation-form" onSubmit={form.handleSubmit(onSubmit)} className="max-w-full mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-
-                <Card className="bg-muted/5 border-border/40 overflow-hidden shadow-none mb-2">
-                    <CardContent className="p-2 space-y-2">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Customer Selection */}
-                            <FormField
-                                control={form.control}
-                                name="lead_id"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <QuotationFormLabel required className="text-[11px]">Customer / Lead</QuotationFormLabel>
-                                        </div>
-                                        <FormControl>
-                                            <Combobox
-                                                options={leadOptions}
-                                                value={field.value}
-                                                onValueChange={handleLeadChange}
-                                                placeholder="Select a customer..."
-                                                searchPlaceholder="Search leads..."
-                                                className="h-10 border-border/60 rounded-md"
-                                                searchValue={leadSearch}
-                                                onSearchChange={setLeadSearch}
-                                            />
-                                        </FormControl>
-                                        <FormMessage className="text-[10px]" />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Date Selection */}
-                            <FormField
-                                control={form.control}
-                                name="quotation_date"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex items-center">
-                                            <QuotationFormLabel required className="text-[11px]">Quotation Date</QuotationFormLabel>
-                                        </div>
-                                        <DatePicker
-                                            value={field.value}
-                                            onChange={(v) => field.onChange(v || '')}
-                                            className="h-10 border-border/60 rounded-md"
-                                        />
-                                        <FormMessage className="text-[10px]" />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-
-                        {/* Customer Details Display */}
-                        {form.watch("lead_id") && (
-                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Email Address</span>
-                                        <span className="text-xs font-semibold text-foreground break-all">{form.watch("customer_email") || "Not provided"}</span>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Contact Number</span>
-                                        <span className="text-xs font-semibold text-foreground">{form.watch("customer_phone") || "Not provided"}</span>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">GST Registration</span>
-                                        <span className="text-xs font-semibold text-foreground uppercase tracking-tight">{form.watch("customer_gst") || "Not available"}</span>
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">PAN Number</span>
-                                        <span className="text-xs font-semibold text-foreground uppercase tracking-tight">{form.watch("customer_pan") || "Not available"}</span>
-                                    </div>
-                                    <div className="flex flex-col gap-1 bg-muted/20 rounded-md">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Billing Address</span>
-                                        <span className="text-xs font-semibold text-foreground uppercase tracking-tight">
-                                            {form.watch("customer_address") || "No billing address on file for this lead."}
-                                        </span>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-
-                {/* BILL ITEMS SECTION - FULL WIDTH */}
-                <QuotationProductsTable />
-
-                {/* Pricing & Summary */}
-                <div className="space-y-2 pt-2">
-                    <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
-                        <DollarSign className="h-3.5 w-3.5 text-primary" />
-                        <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Pricing & Summary</h3>
-                    </div>
-
-                    <Card className="bg-muted/10 border-border/40 overflow-hidden shadow-none">
-                        <CardContent className="p-4 space-y-4">
-
-
-
-                            {/* Calculations Preview */}
-                            <div className="grid grid-cols-2 gap-3 pt-1">
-
-
-                                <div className="p-2.5 bg-primary/5 rounded border border-primary/20 flex flex-col justify-center">
-                                    <span className="text-[9px] uppercase font-bold text-primary">Grand Total</span>
-                                    <span className="text-base font-black">{totals.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-
-                            <FormField
-                                control={form.control}
-                                name="amount_in_words"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <QuotationFormLabel>Amount in Words</QuotationFormLabel>
-                                        <FormControl>
-                                            <div className="min-h-[50px] p-3 text-xs font-bold text-muted-foreground bg-muted/20 border border-border/40 rounded-sm leading-relaxed uppercase tracking-tighter italic">
-                                                {field.value || "Calculating amount..."}
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage className="text-[10px]" />
-                                    </FormItem>
-                                )}
-                            />
-                        </CardContent>
-                    </Card>
-                </div>
-            </form>
-        </Form>
+  const totals = useMemo(() => {
+    const itemsList = watchAll.items || [];
+    const sub = itemsList.reduce(
+      (sum, item) => sum + (item.is_optional ? 0 : Number(item.amount) || 0),
+      0,
     );
+
+    return {
+      subtotal: sub,
+      grandTotal: sub,
+    };
+  }, [watchAll.items]);
+
+  const onSubmit = (data: QuotationFormData) => {
+    onSave(
+      {
+        ...data,
+        quotation_date:
+          formatDateForAPI(data.quotation_date) || data.quotation_date,
+      },
+      form.setError,
+    );
+  };
+
+  return (
+    <Form {...form}>
+      <form
+        id="quotation-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="max-w-full mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
+      >
+        <Card className="bg-muted/5 border-border/40 overflow-hidden shadow-none mb-2">
+          <CardContent className="p-2 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Customer Selection */}
+              <FormField
+                control={form.control}
+                name="lead_id"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <QuotationFormLabel required className="text-[11px]">
+                        Customer / Lead
+                      </QuotationFormLabel>
+                    </div>
+                    <FormControl>
+                      <Combobox
+                        options={leadOptions}
+                        value={field.value}
+                        onValueChange={handleLeadChange}
+                        placeholder="Select a customer..."
+                        searchPlaceholder="Search leads..."
+                        className="h-10 border-border/60 rounded-md"
+                        searchValue={leadSearch}
+                        onSearchChange={setLeadSearch}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Date Selection */}
+              <FormField
+                control={form.control}
+                name="quotation_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center">
+                      <QuotationFormLabel required className="text-[11px]">
+                        Quotation Date
+                      </QuotationFormLabel>
+                    </div>
+                    <DatePicker
+                      value={field.value}
+                      onChange={(v) => field.onChange(v || "")}
+                      className="h-10 border-border/60 rounded-md"
+                    />
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Customer Details Display */}
+            {form.watch("lead_id") && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Email Address
+                    </span>
+                    <span className="text-xs font-semibold text-foreground break-all">
+                      {form.watch("customer_email") || "Not provided"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Contact Number
+                    </span>
+                    <span className="text-xs font-semibold text-foreground">
+                      {form.watch("customer_phone") || "Not provided"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      GST Registration
+                    </span>
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-tight">
+                      {form.watch("customer_gst") || "Not available"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      PAN Number
+                    </span>
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-tight">
+                      {form.watch("customer_pan") || "Not available"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 bg-muted/20 rounded-md">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Billing Address
+                    </span>
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-tight">
+                      {form.watch("customer_address") ||
+                        "No billing address on file for this lead."}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* BILL ITEMS SECTION - FULL WIDTH */}
+        <QuotationProductsTable />
+
+        {/* Pricing & Summary */}
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
+            <DollarSign className="h-3.5 w-3.5 text-primary" />
+            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">
+              Pricing & Summary
+            </h3>
+          </div>
+
+          <Card className="bg-muted/10 border-border/40 overflow-hidden shadow-none">
+            <CardContent className="p-4 space-y-4">
+              {/* Calculations Preview */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className="p-2.5 bg-primary/5 rounded border border-primary/20 flex flex-col justify-center">
+                  <span className="text-[9px] uppercase font-bold text-primary">
+                    Grand Total
+                  </span>
+                  <span className="text-base font-black">
+                    {totals.grandTotal.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              <FormField
+                control={form.control}
+                name="amount_in_words"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <QuotationFormLabel>Amount in Words</QuotationFormLabel>
+                    <FormControl>
+                      <div className="min-h-[50px] p-3 text-xs font-bold text-muted-foreground bg-muted/20 border border-border/40 rounded-sm leading-relaxed uppercase tracking-tighter italic">
+                        {field.value || "Calculating amount..."}
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </form>
+    </Form>
+  );
 };
 
 export default QuotationForm;

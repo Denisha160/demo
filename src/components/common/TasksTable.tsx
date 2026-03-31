@@ -26,7 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import TaskModal, { Task, TaskFormData } from "@/pages/companys/leads/details/tabs/tasks/TaskModal";
+import TaskModal, {
+  Task,
+  TaskFormData,
+} from "@/pages/companys/leads/details/tabs/tasks/TaskModal";
 import {
   useCreateLeadTask,
   useDeleteLeadTask,
@@ -56,7 +59,11 @@ interface TasksTableProps {
   defaultAssignedTo?: { id: string; name: string };
 }
 
-const TasksTable = ({ leadId, hideCreate = false, defaultAssignedTo }: TasksTableProps) => {
+const TasksTable = ({
+  leadId,
+  hideCreate = false,
+  defaultAssignedTo,
+}: TasksTableProps) => {
   const navigate = useNavigate();
   const { companyId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -104,11 +111,11 @@ const TasksTable = ({ leadId, hideCreate = false, defaultAssignedTo }: TasksTabl
         else next.delete("page");
         if (limit !== 10) next.set("limit", limit.toString());
         else next.delete("limit");
-        
+
         // Handle lead_id query param
         if (urlLeadId) next.set("lead_id", urlLeadId);
         else next.delete("lead_id");
-        
+
         return next;
       },
       { replace: true },
@@ -163,7 +170,12 @@ const TasksTable = ({ leadId, hideCreate = false, defaultAssignedTo }: TasksTabl
     const { set_reminder, reminder_time, ...taskData } = formData;
 
     const handleReminderCreation = () => {
-      if (leadId && formData.status === "TODO" && set_reminder && reminder_time) {
+      if (
+        leadId &&
+        formData.status === "TODO" &&
+        set_reminder &&
+        reminder_time
+      ) {
         createReminderMutation.mutate({
           title: `Reminder: ${formData.title}`,
           description:
@@ -314,11 +326,21 @@ const TasksTable = ({ leadId, hideCreate = false, defaultAssignedTo }: TasksTabl
             />
           </SelectTrigger>
           <SelectContent align="end" className="min-w-[120px]">
-            <SelectItem value="TODO" className="text-xs">Todo</SelectItem>
-            <SelectItem value="IN_PROGRESS" className="text-xs">In Progress</SelectItem>
-            <SelectItem value="IN_REVIEW" className="text-xs">In Review</SelectItem>
-            <SelectItem value="COMPLETED" className="text-xs">Completed</SelectItem>
-            <SelectItem value="CANCELLED" className="text-xs">Cancelled</SelectItem>
+            <SelectItem value="TODO" className="text-xs">
+              Todo
+            </SelectItem>
+            <SelectItem value="IN_PROGRESS" className="text-xs">
+              In Progress
+            </SelectItem>
+            <SelectItem value="IN_REVIEW" className="text-xs">
+              In Review
+            </SelectItem>
+            <SelectItem value="COMPLETED" className="text-xs">
+              Completed
+            </SelectItem>
+            <SelectItem value="CANCELLED" className="text-xs">
+              Cancelled
+            </SelectItem>
           </SelectContent>
         </Select>
       ),

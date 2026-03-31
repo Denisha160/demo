@@ -62,7 +62,9 @@ export const useUserHierarchy = (id: string, enabled: boolean = true) => {
 
 export const useSystemHierarchy = (params?: { is_active?: boolean }) => {
   return useQuery({
-    queryKey: queryKeys.users.systemHierarchy(params as Record<string, unknown>),
+    queryKey: queryKeys.users.systemHierarchy(
+      params as Record<string, unknown>,
+    ),
     queryFn: async () => {
       const response = await getSystemHierarchy(params);
       return response.data;
@@ -146,7 +148,13 @@ export const useUploadUserPhoto = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, formData }: { id: string; formData: FormData }) => {
+    mutationFn: async ({
+      id,
+      formData,
+    }: {
+      id: string;
+      formData: FormData;
+    }) => {
       const response = await uploadUserPhoto(id, formData);
       return response;
     },

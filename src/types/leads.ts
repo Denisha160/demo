@@ -30,7 +30,13 @@ export interface PipelineColumn {
 }
 
 export interface LeadVerificationDetail {
-  property_type: "HOTEL" | "RESTAURANT" | "CHAIN_PROPERTY" | "RESORT" | "SPA" | "OTHER";
+  property_type:
+    | "HOTEL"
+    | "RESTAURANT"
+    | "CHAIN_PROPERTY"
+    | "RESORT"
+    | "SPA"
+    | "OTHER";
   property_name: string;
   number_of_properties: number;
   cities_of_operation: string[];

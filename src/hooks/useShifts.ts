@@ -32,7 +32,10 @@ export const useShifts = (
   });
 };
 
-export const useShiftDetails = (id: string, params?: Record<string, unknown>) => {
+export const useShiftDetails = (
+  id: string,
+  params?: Record<string, unknown>,
+) => {
   return useQuery({
     queryKey: [SHIFTS_QUERY_KEY, id, params],
     queryFn: async () => {
@@ -60,10 +63,13 @@ export const useCreateShift = () => {
 export const useUpdateShift = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Shift> & { id: string }) => api.updateShift(data),
+    mutationFn: (data: Partial<Shift> & { id: string }) =>
+      api.updateShift(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [SHIFTS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [SHIFTS_QUERY_KEY, variables.id] });
+      queryClient.invalidateQueries({
+        queryKey: [SHIFTS_QUERY_KEY, variables.id],
+      });
       toast.success("Shift updated successfully.");
     },
     onError: (error: unknown) => {

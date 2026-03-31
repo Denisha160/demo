@@ -175,7 +175,10 @@ const FollowUpTab = ({ leadId, defaultAssignedTo }: FollowUpTabProps) => {
                     handleReminderCreation();
                   },
                   onError: (error) => {
-                    console.error("Failed to create follow-up after reschedule:", error);
+                    console.error(
+                      "Failed to create follow-up after reschedule:",
+                      error,
+                    );
                   },
                 },
               );

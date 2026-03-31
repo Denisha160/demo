@@ -36,10 +36,14 @@ export const EditableDetailItem = ({
   const displayValue = () => {
     if (!value) return "—";
     if (type === "select" && options.length > 0) {
-      return options.find((o) => o.value === value)?.label || resolvedLabel || value;
+      return (
+        options.find((o) => o.value === value)?.label || resolvedLabel || value
+      );
     }
     if (type === "combobox" && (options.length > 0 || resolvedLabel)) {
-      return options.find((o) => o.value === value)?.label || resolvedLabel || value;
+      return (
+        options.find((o) => o.value === value)?.label || resolvedLabel || value
+      );
     }
     return prefix ? `${prefix} ${value}` : value;
   };

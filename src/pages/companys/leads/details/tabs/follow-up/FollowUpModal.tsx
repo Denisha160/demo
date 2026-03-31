@@ -229,8 +229,8 @@ const FollowUpModal = ({
               onValueChange={(value) =>
                 setValue("assigned_to", value, { shouldValidate: true })
               }
+              disabled={true}
               placeholder="Search and select a user..."
-              disabled={isSubmitting}
               className={errors.assigned_to ? "border-destructive" : ""}
             />
             {errors.assigned_to && (

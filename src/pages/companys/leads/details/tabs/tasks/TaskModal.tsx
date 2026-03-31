@@ -295,7 +295,7 @@ const TaskModal = ({
                       value={field.value}
                       onValueChange={field.onChange}
                       placeholder="Search and select a user..."
-                      disabled={isSubmitting}
+                      disabled={true}
                       className={
                         form.formState.errors.assigned_to
                           ? "border-destructive"

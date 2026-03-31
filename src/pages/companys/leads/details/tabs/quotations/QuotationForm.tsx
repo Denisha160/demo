@@ -471,7 +471,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                         {/* Customer Details Display */}
                         {form.watch("lead_id") && (
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4 border-b border-border/10">
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Email Address</span>
                                         <span className="text-xs font-semibold text-foreground break-all">{form.watch("customer_email") || "Not provided"}</span>
@@ -497,43 +497,6 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                 </div>
 
 
-                            </div>
-                        )}
-
-                        {/* Optional Reasons based on Status */}
-                        {(watchAll.status === "REJECTED" || watchAll.status === "CANCELLED") && (
-                            <div className="pt-4 border-t border-border/10">
-                                {watchAll.status === "REJECTED" && (
-                                    <FormField
-                                        control={form.control}
-                                        name="rejected_reason"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-2">
-                                                <QuotationFormLabel required className="text-destructive">Rejection Reason</QuotationFormLabel>
-                                                <FormControl>
-                                                    <Textarea placeholder="Details about customer rejection..." className="min-h-[80px] text-xs border-destructive/20 rounded-md bg-destructive/5 placeholder:text-destructive/40" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                )}
-
-                                {watchAll.status === "CANCELLED" && (
-                                    <FormField
-                                        control={form.control}
-                                        name="cancelled_reason"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-2">
-                                                <QuotationFormLabel required className="text-orange-600">Cancellation Reason</QuotationFormLabel>
-                                                <FormControl>
-                                                    <Textarea placeholder="Why was this quotation cancelled?" className="min-h-[80px] text-xs border-orange-200 rounded-md bg-orange-50/30 placeholder:text-orange-300" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px]" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                )}
                             </div>
                         )}
                     </CardContent>

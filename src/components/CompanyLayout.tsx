@@ -645,7 +645,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-2 space-y-2">
+        <main className="flex-1 overflow-auto p-2 space-y-2 scrollbar-thin">
           <Outlet />
         </main>
       </div>

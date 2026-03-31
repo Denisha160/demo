@@ -191,6 +191,20 @@
     @apply bg-muted-foreground/40;
   }
 
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/40;
+  }
+
   /* New utility classes for inputs */
   .input-error {
     @apply border-destructive ring-destructive/20 focus:ring-destructive;

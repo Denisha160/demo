@@ -1,20 +1,20 @@
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { useProductsCombobox } from "@/hooks/useProducts";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useState, useMemo } from "react";
-import DataTable, { Column } from "@/components/DataTable";
+import { useState, useEffect, useCallback } from "react";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Plus, Trash2 } from "lucide-react";
+import { Package, Plus, Trash2, Scan } from "lucide-react";
 import { toast } from "react-toastify";
 import { QuotationFormData } from "./QuotationForm";
 
 export const QuotationProductsTable = () => {
     const { register, control, watch, setValue, getValues } = useFormContext<QuotationFormData>();
     const [fgSearch, setFgSearch] = useState("");
+    const [scanValue, setScanValue] = useState("");
     const debouncedFgSearch = useDebounce(fgSearch, 300);
 
     const { data: products = [], isLoading: isLoadingProducts } = useProductsCombobox({
@@ -28,41 +28,7 @@ export const QuotationProductsTable = () => {
         name: "items",
     });
 
-    const handleItemAmountUpdate = (index: number) => {
-        const item = getValues(`items.${index}`);
-        const amount = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
-        setValue(`items.${index}.amount`, amount, { shouldDirty: true });
-    };
-
-    const handleSelectProductInline = (index: number, productId: string) => {
-        // Check for duplicates
-        const currentItems = getValues("items") || [];
-        const isDuplicate = currentItems.some((item, i) => i !== index && item.product_id === productId);
-
-        if (isDuplicate) {
-            toast.error("You have already added this product. Duplicate items are not allowed in the same quotation.");
-            return;
-        }
-
-        const product = products.find((p) => p.id === productId);
-        if (!product) return;
-
-        updateItem(index, {
-            product_id: product.id,
-            product_name: product.product_name,
-            product_code: product.code || "",
-            description: product.product_name,
-            long_description: "",
-            quantity: 1,
-            rate: product.selling_price || 0,
-            tax_rate: 0,
-            amount: product.selling_price || 0,
-            unit: product.base_unit || "pcs",
-            is_optional: false,
-        });
-    };
-
-    const addNewRow = () => {
+    const addNewRow = useCallback(() => {
         appendItem({
             product_id: "",
             product_name: "",
@@ -76,178 +42,213 @@ export const QuotationProductsTable = () => {
             unit: "-",
             is_optional: false,
         });
+    }, [appendItem]);
+
+    const handleAddProductClick = () => {
+        const newIndex = itemFields.length;
+        addNewRow();
+
+        setTimeout(() => {
+            const rowWrapper = document.querySelector(`[data-combobox-index="${newIndex}"]`);
+            if (!rowWrapper) return;
+
+            const input = rowWrapper.querySelector('input');
+            const button = rowWrapper.querySelector('button[role="combobox"]');
+
+            if (input) {
+                (input as HTMLElement).focus();
+            } else if (button) {
+                (button as HTMLElement).click();
+            }
+        }, 50);
     };
 
-    const columns = useMemo<Column<any>[]>(() => [
-        {
-            key: "index",
-            header: "#",
-            className: "w-[40px] text-center",
-            render: (_item) => {
-                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
-                return <span className="text-xs font-bold text-muted-foreground/40">{index + 1}</span>;
-            },
-        },
-        {
-            key: "product_code",
-            header: "Code",
-            className: "w-[120px]",
-            render: (_item) => {
-                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
-                return (
-                    <Input
-                        {...register(`items.${index}.product_code` as const)}
-                        className="h-8 text-xs font-mono bg-muted/20 border-transparent text-muted-foreground cursor-not-allowed"
-                        placeholder="Code"
-                        disabled
-                    />
-                );
-            },
-        },
-        {
-            key: "product_name",
-            header: "Product",
-            className: "min-w-[280px]",
-            render: (_item) => {
-                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
-                return (
-                    <Combobox
-                        options={products.map((p) => ({
-                            label: `${p.product_name} (${p.code})`,
-                            value: p.id,
-                        }))}
-                        value={watch(`items.${index}.product_id`) || ""}
-                        onValueChange={(val) => handleSelectProductInline(index, val)}
-                        placeholder="Search products..."
-                        className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40"
-                        searchValue={fgSearch}
-                        onSearchChange={setFgSearch}
-                    />
-                );
-            },
-        },
-        {
-            key: "unit",
-            header: "Unit",
-            className: "w-[100px] text-center",
-            render: (_item) => {
-                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
-                return (
-                    <Badge variant="outline" className="text-[10px] bg-muted/30 border-transparent px-2 font-medium">
-                        {watch(`items.${index}.unit`) || "-"}
-                    </Badge>
-                );
-            },
-        },
-        {
-            key: "quantity",
-            header: "Qty",
-            className: "w-[100px]",
-            render: (_item) => {
-                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
-                return (
-                    <Input
-                        type="number"
-                        {...register(`items.${index}.quantity` as const, {
-                            valueAsNumber: true,
-                            onChange: () => handleItemAmountUpdate(index),
-                        })}
-                        className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background"
-                    />
-                );
-            },
-        },
-        {
-            key: "rate",
-            header: "Rate",
-            className: "w-[140px]",
-            render: (_item) => {
-                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
-                return (
-                    <div className="relative group">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">₹</span>
-                        <Input
-                            type="number"
-                            step="0.01"
-                            {...register(`items.${index}.rate` as const, {
-                                valueAsNumber: true,
-                                onChange: () => handleItemAmountUpdate(index),
-                            })}
-                            className="h-8 text-right text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium"
-                        />
-                    </div>
-                );
-            },
-        },
-        {
-            key: "amount",
-            header: "Amount",
-            className: "w-[140px] text-right",
-            render: (_item) => {
-                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
-                return (
-                    <div className="text-xs font-black text-foreground pr-2 font-mono">
-                        ₹{(watch(`items.${index}.amount`) || 0).toLocaleString()}
-                    </div>
-                );
-            },
-        },
-        {
-            key: "actions",
-            header: "",
-            className: "w-[60px] text-center",
-            render: (_item) => {
-                const index = itemFields.findIndex((f) => f.id === (_item as any).id);
-                return (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        onClick={() => removeItem(index)}
-                    >
-                        <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                );
-            },
-        },
-    ], [itemFields, products, fgSearch, register, watch]);
+    const handleItemAmountUpdate = (index: number) => {
+        const item = getValues(`items.${index}`);
+        const amount = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
+        setValue(`items.${index}.amount`, amount, { shouldDirty: true });
+    };
+
+    const handleSelectProductInline = (index: number, productId: string) => {
+        const currentItems = getValues("items") || [];
+        const isDuplicate = currentItems.some((item, i) => i !== index && item.product_id === productId);
+
+        if (isDuplicate) {
+            toast.error("You have already added this product. Duplicate items are not allowed.");
+            return;
+        }
+
+        const product = products.find((p) => p.id === productId);
+        if (!product) return;
+
+        updateItem(index, {
+            ...currentItems[index],
+            product_id: product.id,
+            product_name: product.product_name,
+            product_code: product.code || "",
+            description: product.product_name,
+            rate: product.selling_price || 0,
+            amount: (currentItems[index].quantity || 1) * (product.selling_price || 0),
+            unit: product.base_unit || "pcs",
+        });
+    };
+
+    const handleScanProduct = () => {
+        if (!scanValue.trim()) return;
+        toast.info(`Searching for product code: ${scanValue}`);
+        setScanValue("");
+    };
 
     return (
-        <div className="mb-3 space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
-            <Card className="border-border/40 shadow-sm overflow-hidden">
-                <div className="bg-muted/10 px-5 py-3 border-b border-border/20 flex items-center justify-between">
+        <div className="mb-3 animate-in fade-in slide-in-from-top-4 duration-700">
+            <Card className="border-border/40 shadow-sm overflow-hidden rounded-md">
+                {/* Header */}
+                <div className="bg-muted/10 px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-primary" />
                         <h3 className="text-[11px] font-black text-foreground uppercase tracking-widest">Bill Items</h3>
                     </div>
-                    <Badge variant="secondary" className="text-[10px] font-bold h-5 px-2 bg-background border-border/40 text-muted-foreground">
-                        {itemFields.length} {itemFields.length === 1 ? "item" : "items"}
-                    </Badge>
+                    {isLoadingProducts && (
+                        <span className="text-[10px] text-muted-foreground animate-pulse font-medium">Loading products...</span>
+                    )}
                 </div>
-                <CardContent className="p-0 border-t border-border/10">
-                    <DataTable
-                        data={itemFields}
-                        columns={columns}
-                        pageSize={100}
-                        idKey="id"
-                        isLoading={isLoadingProducts}
-                        enablePagination={false}
-                    />
+
+                <CardContent className="p-0">
+                    <div className="w-full overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-muted/5 border-b border-border/20 text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
+                                <tr>
+                                    <th className="w-[40px] px-3 py-2 text-center">#</th>
+                                    <th className="min-w-[120px] w-[120px] px-2 py-2">Code</th>
+                                    <th className="min-w-[280px] px-2 py-2">Product</th>
+                                    <th className="w-[100px] px-2 py-2 text-center">Unit</th>
+                                    <th className="w-[100px] px-2 py-2">Qty</th>
+                                    <th className="w-[140px] px-2 py-2">Rate</th>
+                                    <th className="w-[140px] px-2 py-2 text-right">Amount</th>
+                                    <th className="w-[40px] px-2 py-2 text-center"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/10">
+                                {itemFields.map((field, index) => (
+                                    <tr key={field.id} className="hover:bg-muted/5 transition-colors group">
+                                        <td className="px-3 py-1.5 text-center text-xs font-bold text-muted-foreground/40">
+                                            {index + 1}
+                                        </td>
+                                        <td className="px-2 py-1.5">
+                                            <Input
+                                                {...register(`items.${index}.product_code` as const)}
+                                                className="h-8 text-xs font-mono bg-muted/20 border-transparent text-muted-foreground cursor-not-allowed w-full focus-visible:ring-0 shadow-none"
+                                                placeholder="Code"
+                                                disabled
+                                            />
+                                        </td>
+                                        <td className="px-2 py-1.5">
+                                            <div data-combobox-index={index} className="w-full">
+                                                <Combobox
+                                                    options={products.map((p) => ({
+                                                        label: `${p.product_name} (${p.code})`,
+                                                        value: p.id,
+                                                    }))}
+                                                    value={watch(`items.${index}.product_id`) || ""}
+                                                    onValueChange={(val) => handleSelectProductInline(index, val)}
+                                                    placeholder="Search products..."
+                                                    className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
+                                                    searchValue={fgSearch}
+                                                    onSearchChange={setFgSearch}
+                                                />
+                                            </div>
+                                        </td>
+                                        <td className="px-2 py-1.5 text-center">
+                                            <Badge variant="outline" className="text-[10px] bg-muted/30 border-transparent px-2 font-medium">
+                                                {watch(`items.${index}.unit`) || "-"}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-2 py-1.5">
+                                            <Input
+                                                type="number"
+                                                {...register(`items.${index}.quantity` as const, {
+                                                    valueAsNumber: true,
+                                                    onChange: () => handleItemAmountUpdate(index),
+                                                })}
+                                                className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
+                                            />
+                                        </td>
+                                        <td className="px-2 py-1.5">
+                                            <div className="relative">
+                                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">₹</span>
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    {...register(`items.${index}.rate` as const, {
+                                                        valueAsNumber: true,
+                                                        onChange: () => handleItemAmountUpdate(index),
+                                                    })}
+                                                    className="h-8 text-right text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium w-full"
+                                                />
+                                            </div>
+                                        </td>
+                                        <td className="px-2 py-1.5 text-right">
+                                            <div className="text-xs font-black text-foreground pr-2 font-mono">
+                                                ₹{(watch(`items.${index}.amount`) || 0).toLocaleString()}
+                                            </div>
+                                        </td>
+                                        <td className="px-2 py-1.5 text-center">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                disabled={itemFields.length <= 1}
+                                                className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                                                onClick={() => removeItem(index)}
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+
+                            {/* Seamless 50/50 Footer Row directly attached to the table layout */}
+                            <tfoot className="w-full">
+                                <tr className="border-t border-border/20 bg-muted/5">
+                                    <td colSpan={8} className="p-0 border-none">
+                                        <div className="flex items-center w-full h-10 divide-x divide-border/20">
+
+                                            {/* Left side: Add Product Button */}
+                                            <button
+                                                type="button"
+                                                className="flex-1 flex items-center justify-center gap-2 h-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all group focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50"
+                                                onClick={handleAddProductClick}
+                                            >
+                                                <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                                <span className="text-[11px] font-black uppercase tracking-widest">Add Product</span>
+                                            </button>
+
+                                            {/* Right side: Scan Input Only */}
+                                            <div className="flex-1 flex items-center h-full relative group focus-within:bg-background transition-colors">
+                                                <Scan className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                                <input
+                                                    value={scanValue}
+                                                    onChange={(e) => setScanValue(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleScanProduct();
+                                                        }
+                                                    }}
+                                                    placeholder="Scan product barcode..."
+                                                    className="w-full h-full pl-10 pr-4 text-[11px] font-medium tracking-wide bg-transparent border-none outline-none placeholder:text-muted-foreground/50 text-foreground"
+                                                />
+                                            </div>
+
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
-
-            <div className="flex flex-col sm:flex-row items-center">
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full sm:max-w-[300px] h-10 border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 transition-all flex items-center justify-center gap-2 group shadow-sm"
-                    onClick={addNewRow}
-                >
-                    <Plus className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
-                    <span className="text-[11px] font-black uppercase tracking-widest text-primary">Add Product</span>
-                </Button>
-            </div>
         </div>
     );
 };

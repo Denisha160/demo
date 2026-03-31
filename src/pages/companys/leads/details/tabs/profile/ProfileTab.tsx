@@ -185,11 +185,6 @@ const ProfileTab = ({
     label: user.name,
   }));
 
-  const [selectedCountryId, setSelectedCountryId] = useState<string | null>(
-    null,
-  );
-  const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
-  const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
   const [countrySearch, setCountrySearch] = useState("");
   const [stateSearch, setStateSearch] = useState("");
   const [citySearch, setCitySearch] = useState("");
@@ -197,6 +192,10 @@ const ProfileTab = ({
   const [selectedStateName, setSelectedStateName] = useState("");
   const [selectedCityName, setSelectedCityName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
+  const watchedCountryId = form.watch("country_id");
+  const watchedStateId = form.watch("state_id");
+  const watchedCityId = form.watch("city_id");
 
   const debouncedCountrySearch = useDebounce(countrySearch, 500);
   const debouncedStateSearch = useDebounce(stateSearch, 500);
@@ -206,19 +205,19 @@ const ProfileTab = ({
     search: debouncedCountrySearch,
     combobox: true,
     limit: 20,
-    include_id: form.getValues("country_id") || undefined,
+    include_id: watchedCountryId || undefined,
   });
-  const { data: statesData } = useStates(selectedCountryId || undefined, {
+  const { data: statesData } = useStates(watchedCountryId || undefined, {
     search: debouncedStateSearch,
     combobox: true,
     limit: 20,
-    include_id: form.getValues("state_id") || undefined,
+    include_id: watchedStateId || undefined,
   });
-  const { data: citiesData } = useCities(selectedStateId || undefined, {
+  const { data: citiesData } = useCities(watchedStateId || undefined, {
     search: debouncedCitySearch,
     combobox: true,
     limit: 20,
-    include_id: form.getValues("city_id") || undefined,
+    include_id: watchedCityId || undefined,
   });
 
   const countryOptions = useMemo(
@@ -259,61 +258,28 @@ const ProfileTab = ({
 
 
   useEffect(() => {
-    form.reset(leadProfile);
-  }, [form, leadProfile]);
-
-  useEffect(() => {
-    if (
-      leadProfile.country_id &&
-      leadProfile.country_id !== selectedCountryId
-    ) {
-      setSelectedCountryId(leadProfile.country_id);
+    if (!isEditing) {
+      form.reset(leadProfile);
     }
-  }, [leadProfile.country_id, selectedCountryId]);
+  }, [form, leadProfile, isEditing]);
 
+  // Initialize labels for existing data only when lead data loads and we are NOT editing
   useEffect(() => {
-    if (leadProfile.state_id && leadProfile.state_id !== selectedStateId) {
-      setSelectedStateId(leadProfile.state_id);
+    if (!isEditing && leadProfile) {
+      if (leadProfile.country_id && countryOptions.length > 0) {
+        const label = countryOptions.find((o) => o.value === leadProfile.country_id)?.label;
+        if (label) setSelectedCountryName(label);
+      }
+      if (leadProfile.state_id && stateOptions.length > 0) {
+        const label = stateOptions.find((o) => o.value === leadProfile.state_id)?.label;
+        if (label) setSelectedStateName(label);
+      }
+      if (leadProfile.city_id && cityOptions.length > 0) {
+        const label = cityOptions.find((o) => o.value === leadProfile.city_id)?.label;
+        if (label) setSelectedCityName(label);
+      }
     }
-  }, [leadProfile.state_id, selectedStateId]);
-
-  useEffect(() => {
-    if (leadProfile.city_id && leadProfile.city_id !== selectedCityId) {
-      setSelectedCityId(leadProfile.city_id);
-    }
-  }, [leadProfile.city_id, selectedCityId]);
-
-  // Handle initialization of labels for existing data
-  useEffect(() => {
-    if (
-      leadProfile.country_id &&
-      countryOptions.length > 0 &&
-      !selectedCountryName
-    ) {
-      const label = countryOptions.find(
-        (o) => o.value === leadProfile.country_id,
-      )?.label;
-      if (label) setSelectedCountryName(label);
-    }
-  }, [leadProfile.country_id, countryOptions, selectedCountryName]);
-
-  useEffect(() => {
-    if (leadProfile.state_id && stateOptions.length > 0 && !selectedStateName) {
-      const label = stateOptions.find(
-        (o) => o.value === leadProfile.state_id,
-      )?.label;
-      if (label) setSelectedStateName(label);
-    }
-  }, [leadProfile.state_id, stateOptions, selectedStateName]);
-
-  useEffect(() => {
-    if (leadProfile.city_id && cityOptions.length > 0 && !selectedCityName) {
-      const label = cityOptions.find(
-        (o) => o.value === leadProfile.city_id,
-      )?.label;
-      if (label) setSelectedCityName(label);
-    }
-  }, [leadProfile.city_id, cityOptions, selectedCityName]);
+  }, [leadProfile, countryOptions, stateOptions, cityOptions, isEditing]);
 
   const onSubmit = (data: LeadProfileFormValues) => {
     setLeadProfile(data);
@@ -596,12 +562,12 @@ const ProfileTab = ({
                             (o) => o.value === id,
                           )?.label;
                           setSelectedCountryName(label || "");
-                          field.onChange(id);
-                          setSelectedCountryId(id);
+                          form.setValue("country_id", id, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                          });
                           setSelectedStateName("");
                           setSelectedCityName("");
-                          setSelectedStateId(null);
-                          setSelectedCityId(null);
                           form.setValue("state_id", "");
                           form.setValue("city_id", "");
                         }}
@@ -633,20 +599,21 @@ const ProfileTab = ({
                             (o) => o.value === id,
                           )?.label;
                           setSelectedStateName(label || "");
-                          field.onChange(id);
-                          setSelectedStateId(id);
+                          form.setValue("state_id", id, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                          });
                           setSelectedCityName("");
-                          setSelectedCityId(null);
                           form.setValue("city_id", "");
                           setCitySearch("");
                         }}
                         placeholder={
-                          selectedCountryId
+                          watchedCountryId
                             ? "Select State"
                             : "Select Country first"
                         }
                         className="h-9 w-full"
-                        disabled={!isEditing || isSaving || !selectedCountryId}
+                        disabled={!isEditing || isSaving || !watchedCountryId}
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
@@ -672,15 +639,17 @@ const ProfileTab = ({
                             (o) => o.value === id,
                           )?.label;
                           setSelectedCityName(label || "");
-                          field.onChange(id);
-                          setSelectedCityId(id);
+                          form.setValue("city_id", id, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                          });
                           setCitySearch("");
                         }}
                         placeholder={
-                          selectedStateId ? "Select City" : "Select State first"
+                          watchedStateId ? "Select City" : "Select State first"
                         }
                         className="h-9 w-full"
-                        disabled={!isEditing || isSaving || !selectedStateId}
+                        disabled={!isEditing || isSaving || !watchedStateId}
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />

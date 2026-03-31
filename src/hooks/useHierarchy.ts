@@ -40,7 +40,12 @@ export function useHierarchySearch(
     refetchOnWindowFocus: false,
     select: (data: any) => ({
       items: normalizeList(data),
-      total: data?.data?.pagination?.total || data?.pagination?.total || data?.data?.total || data?.total || 0,
+      total:
+        data?.data?.pagination?.total ||
+        data?.pagination?.total ||
+        data?.data?.total ||
+        data?.total ||
+        0,
     }),
     ...options,
   });

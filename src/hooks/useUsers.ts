@@ -56,7 +56,9 @@ export const useUserHierarchy = (id: string, enabled: boolean = true) => {
 
 export const useSystemHierarchy = (params?: { is_active?: boolean }) => {
   return useQuery({
-    queryKey: queryKeys.users.systemHierarchy(params as Record<string, unknown>),
+    queryKey: queryKeys.users.systemHierarchy(
+      params as Record<string, unknown>,
+    ),
     queryFn: async () => {
       const response = await getSystemHierarchy(params);
       return response.data;

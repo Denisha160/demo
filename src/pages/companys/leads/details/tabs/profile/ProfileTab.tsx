@@ -92,12 +92,14 @@ interface ProfileTabProps {
 const leadSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email").or(z.literal("")),
-  phone: z.union([z.string(), z.number()])
+  phone: z
+    .union([z.string(), z.number()])
     .transform((val) => String(val))
     .refine((val) => val.length > 0, "Phone is required")
     .refine((val) => /^\d+$/.test(val), "Only numbers allowed")
     .refine((val) => val.length >= 10, "Must be at least 10 digits"),
-  alternate_phone: z.union([z.string(), z.number()])
+  alternate_phone: z
+    .union([z.string(), z.number()])
     .transform((val) => (val ? String(val) : ""))
     .optional()
     .refine(
@@ -144,7 +146,8 @@ const leadSchema = z.object({
     .optional(),
   address_line1: z.string().optional(),
   address_line2: z.string().optional(),
-  expected_revenue: z.union([z.string(), z.number()])
+  expected_revenue: z
+    .union([z.string(), z.number()])
     .transform((val) => (val !== undefined && val !== null ? String(val) : ""))
     .optional()
     .refine((val) => !val || /^[0-9.]+$/.test(val), "Must be a number")

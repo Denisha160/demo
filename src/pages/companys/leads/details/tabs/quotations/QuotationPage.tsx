@@ -37,9 +37,9 @@ const QuotationPage = () => {
     return (
         <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in  ">
             {/* Navigation & Header */}
-            <div className="sticky top-0 z-30 border-b border-border mb-6">
-                <div className=" py-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
+            <div className="sticky top-0 z-30 border-b border-border mb-4">
+                <div className=" pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
                         <Button
                             variant="ghost"
                             size="icon"
@@ -49,12 +49,9 @@ const QuotationPage = () => {
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                         <div>
-                            <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+                            <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center">
                                 {quotationId ? "Edit Quotation" : "Create New Quotation"}
                             </h1>
-                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-                                Lead Details / {quotationId ? "Edit" : "New"} Quotation
-                            </p>
                         </div>
                     </div>
 

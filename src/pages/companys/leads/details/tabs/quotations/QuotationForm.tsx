@@ -39,6 +39,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatDateForAPI } from "@/utils/date";
+import { numberToWords } from "@/utils/numberToWords";
 import { cn } from "@/lib/utils";
 import { QuotationProductsTable } from "./QuotationProductsTable";
 
@@ -393,7 +394,9 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
         form.setValue("subtotal", totals.subtotal);
         form.setValue("total_tax_amount", totals.taxTotal);
         form.setValue("total_additional_charges", totals.chargesTotal);
-    }, [totals.subtotal, totals.taxTotal, totals.chargesTotal, form]);
+        const words = numberToWords(totals.grandTotal);
+        form.setValue("amount_in_words", words, { shouldDirty: true });
+    }, [totals.subtotal, totals.taxTotal, totals.chargesTotal, totals.grandTotal, form]);
 
     const onSubmit = (data: QuotationFormData) => {
         // Business Rule: Block Send
@@ -569,8 +572,11 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     <FormItem className="space-y-1">
                                         <QuotationFormLabel>Amount in Words</QuotationFormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="e.g. One thousand dollars only" className="min-h-[50px] text-xs resize-none" {...field} />
+                                            <div className="min-h-[50px] p-3 text-xs font-bold text-muted-foreground bg-muted/20 border border-border/40 rounded-sm leading-relaxed uppercase tracking-tighter italic">
+                                                {field.value || "Calculating amount..."}
+                                            </div>
                                         </FormControl>
+                                        <FormMessage className="text-[10px]" />
                                     </FormItem>
                                 )}
                             />

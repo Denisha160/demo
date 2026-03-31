@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Package, Plus, Trash2 } from "lucide-react";
+import { toast } from "react-toastify";
 import { QuotationFormData } from "./QuotationForm";
 
 export const QuotationProductsTable = () => {
@@ -34,6 +35,15 @@ export const QuotationProductsTable = () => {
     };
 
     const handleSelectProductInline = (index: number, productId: string) => {
+        // Check for duplicates
+        const currentItems = getValues("items") || [];
+        const isDuplicate = currentItems.some((item, i) => i !== index && item.product_id === productId);
+
+        if (isDuplicate) {
+            toast.error("You have already added this product. Duplicate items are not allowed in the same quotation.");
+            return;
+        }
+
         const product = products.find((p) => p.id === productId);
         if (!product) return;
 

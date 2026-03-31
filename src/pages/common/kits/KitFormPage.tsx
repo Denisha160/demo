@@ -276,7 +276,7 @@ const KitFormPage = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary flex items-center gap-2">
+            <h2 className="text-sm font-bold leading-none truncate uppercase tracking-widest text-primary flex items-center gap-2">
               <Box className="w-4 h-4" />
               {isEditing ? "Edit Kit" : "Create New Kit"}
             </h2>
@@ -452,7 +452,7 @@ const KitFormPage = () => {
 
             <div className="flex-1 overflow-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/30 text-[10px] uppercase tracking-wider font-bold text-muted-foreground sticky top-0 bg-background border-b border-border z-10">
+                <thead className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground sticky top-0 bg-background border-b border-border z-10">
                   <tr>
                     <th className="px-5 py-3 text-left">Product Name</th>
                     <th className="px-5 py-3 text-center w-[120px]">

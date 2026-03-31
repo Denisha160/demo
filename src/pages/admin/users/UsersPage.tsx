@@ -206,9 +206,9 @@ const Users = () => {
           <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
             {item.name
               ? item.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
               : "?"}
           </div>
           <div className="min-w-0">
@@ -427,18 +427,17 @@ const Users = () => {
         </div>
       ) : (
         <div className="p-4 bg-muted/10 border border-border/60 rounded-sm shadow-sm min-h-[500px]">
-          <SystemHierarchyView 
+          <SystemHierarchyView
             is_active={
-                filterStatus === "All"
-                  ? undefined
-                  : filterStatus === "Active"
-                    ? true
-                    : false
-            } 
+              filterStatus === "All"
+                ? undefined
+                : filterStatus === "Active"
+                  ? true
+                  : false
+            }
           />
         </div>
       )}
-
 
       <UserModal
         open={modalOpen}

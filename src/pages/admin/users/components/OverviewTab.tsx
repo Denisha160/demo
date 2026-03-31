@@ -122,10 +122,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [apiError, setApiError] = useState<string | null>(null);
     const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
-    const { data: allUsers } = useUsers(
-      { combobox: true },
-      { enabled: true },
-    );
+    const { data: allUsers } = useUsers({ combobox: true }, { enabled: true });
 
     const parentOptions: ComboboxOption[] = ((allUsers as any)?.items || [])
       .filter((u: User) => u.id !== userData.id) // Cannot be own parent

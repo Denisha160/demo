@@ -6,10 +6,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/utils/date";
-import QuotationForm, {
-  Quotation,
-  QuotationFormData,
-} from "./QuotationForm";
+import QuotationForm, { Quotation, QuotationFormData } from "./QuotationForm";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,8 +118,15 @@ const calculateGrandTotal = (quotation: QuotationFormData) => {
         ? discountValue
         : 0;
 
-  const taxAmount = (quotation.tax_details || []).reduce((sum, t) => sum + (Number(t.value) || 0), 0);
-  const addCharges = (quotation.additional_charges || []).reduce((sum, c) => sum + (Number(c.value) || 0), 0) + (Number(quotation.delivery_charges) || 0);
+  const taxAmount = (quotation.tax_details || []).reduce(
+    (sum, t) => sum + (Number(t.value) || 0),
+    0,
+  );
+  const addCharges =
+    (quotation.additional_charges || []).reduce(
+      (sum, c) => sum + (Number(c.value) || 0),
+      0,
+    ) + (Number(quotation.delivery_charges) || 0);
 
   return subtotal - discountAmount + taxAmount + addCharges;
 };

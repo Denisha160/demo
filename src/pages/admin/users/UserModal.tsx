@@ -27,7 +27,9 @@ interface UserModalProps {
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  phone_number: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
+  phone_number: z
+    .string()
+    .regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
   employee_code: z
     .string()
     .min(3, "Employee code must be at least 3 characters"),
@@ -86,10 +88,7 @@ type UserFormData = z.infer<typeof userSchema>;
 
 const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
   const { mutate: createUser, isPending: isCreating } = useCreateUser();
-  const { data: usersData } = useUsers(
-    { combobox: true },
-    { enabled: open },
-  );
+  const { data: usersData } = useUsers({ combobox: true }, { enabled: open });
 
   const userOptions: ComboboxOption[] =
     usersData?.items?.map((u: User) => ({
@@ -163,8 +162,12 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
       // Ensure all dates are in YYYY-MM-DD format for the API payload
       const payload: UserCreatePayload = {
         ...formData,
-        date_of_joining: getLocalDateString(formData.date_of_joining || new Date()),
-        anniversary_date: formData.anniversary_date ? getLocalDateString(formData.anniversary_date) : null,
+        date_of_joining: getLocalDateString(
+          formData.date_of_joining || new Date(),
+        ),
+        anniversary_date: formData.anniversary_date
+          ? getLocalDateString(formData.anniversary_date)
+          : null,
       } as UserCreatePayload;
 
       createUser(payload, {
@@ -343,7 +346,9 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
                 clearable
               />
               {errors.parent_id && (
-                <p className="text-xs text-destructive mt-1">{errors.parent_id}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.parent_id}
+                </p>
               )}
             </div>
             <div className="space-y-1">

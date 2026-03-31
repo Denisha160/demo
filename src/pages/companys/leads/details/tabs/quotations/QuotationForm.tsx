@@ -361,8 +361,8 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                                 <Badge variant="outline" className={cn(
                                                     "text-[9px] h-4 px-1.5 uppercase font-black",
                                                     uiStatusLabel.includes("Rejected") || uiStatusLabel === "Cancelled" ? "border-destructive text-destructive" :
-                                                    uiStatusLabel.includes("Approved") || uiStatusLabel === "Accepted" ? "border-primary text-primary" :
-                                                    uiStatusLabel === "Sent" ? "border-blue-500 text-blue-500" : ""
+                                                        uiStatusLabel.includes("Approved") || uiStatusLabel === "Accepted" ? "border-primary text-primary" :
+                                                            uiStatusLabel === "Sent" ? "border-blue-500 text-blue-500" : ""
                                                 )}>
                                                     {uiStatusLabel}
                                                 </Badge>
@@ -571,103 +571,6 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                             </div>
                         </div>
 
-                        {/* Internal & Approval */}
-                        <div className="space-y-4 pt-4">
-                            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
-                                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Internal & Approval</h3>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 items-start">
-                                <FormField
-                                    control={form.control}
-                                    name="requires_approval"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card border-border/40 space-y-0">
-                                            <div className="space-y-0.5">
-                                                <FormLabel className="text-xs font-bold">Require Approval</FormLabel>
-                                                <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Manager review</p>
-                                            </div>
-                                            <FormControl>
-                                                <Switch checked={field.value} onCheckedChange={field.onChange} className="scale-75" />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                {watchAll.requires_approval && (
-                                    <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
-                                        <FormField
-                                            control={form.control}
-                                            name="approval_status"
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-1">
-                                                    <QuotationFormLabel>Approval Status</QuotationFormLabel>
-                                                    <Select onValueChange={field.onChange} value={field.value || "PENDING"}>
-                                                        <FormControl>
-                                                            <SelectTrigger className="h-8 text-[11px] font-bold border-border/60 rounded-sm">
-                                                                <SelectValue placeholder="Status" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            {approvalStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="approval_remarks"
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-1">
-                                                    <QuotationFormLabel>Approval Remarks</QuotationFormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="Notes for/from approver..." className="h-8 text-xs border-border/60 rounded-sm" {...field} />
-                                                    </FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            {(watchAll.status === "ACCEPTED" || watchAll.approval_status === "APPROVED") && (
-                                <div className="grid grid-cols-2 gap-2 p-2 rounded-sm border border-primary/20 bg-primary/5 animate-in slide-in-from-bottom-2">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase text-primary/70">
-                                            {watchAll.status === "ACCEPTED" ? "Accepted By" : "Approved By"}
-                                        </p>
-                                        <p className="text-sm font-bold truncate">
-                                            {watchAll.status === "ACCEPTED" ? (watchAll.accepted_by || "System") : (watchAll.approved_by || "Pending")}
-                                        </p>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black uppercase text-primary/70">
-                                            {watchAll.status === "ACCEPTED" ? "Accepted At" : "Approved At"}
-                                        </p>
-                                        <p className="text-sm font-bold">
-                                            {watchAll.status === "ACCEPTED" 
-                                                ? (watchAll.accepted_at ? formatDate(new Date(watchAll.accepted_at)) : "-") 
-                                                : (watchAll.approved_at ? formatDate(new Date(watchAll.approved_at)) : "-")
-                                            }
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <FormField
-                                control={form.control}
-                                name="notes"
-                                render={({ field }) => (
-                                    <FormItem className="space-y-1">
-                                        <QuotationFormLabel>Internal Notes</QuotationFormLabel>
-                                        <FormControl>
-                                            <Textarea placeholder="Private notes for team..." className="min-h-[60px] text-xs resize-none rounded-sm border-border/60" {...field} />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
                     </div>
 
                     {/* RIGHT COLUMN: Customer, Taxes, Terms */}
@@ -920,6 +823,112 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                 />
                             </div>
                         </div>
+
+
+
+
+                        {/* Internal & Approval */}
+                        <div className="space-y-4 pt-4">
+                            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
+                                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">Internal & Approval</h3>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 items-start">
+                                <FormField
+                                    control={form.control}
+                                    name="requires_approval"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm bg-card border-border/40 space-y-0">
+                                            <div className="space-y-0.5">
+                                                <FormLabel className="text-xs font-bold">Require Approval</FormLabel>
+                                                <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Manager review</p>
+                                            </div>
+                                            <FormControl>
+                                                <Switch checked={field.value} onCheckedChange={field.onChange} className="scale-75" />
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
+                                {watchAll.requires_approval && (
+                                    <div className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                                        <FormField
+                                            control={form.control}
+                                            name="approval_status"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <QuotationFormLabel>Approval Status</QuotationFormLabel>
+                                                    <Select onValueChange={field.onChange} value={field.value || "PENDING"}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-8 text-[11px] font-bold border-border/60 rounded-sm">
+                                                                <SelectValue placeholder="Status" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {approvalStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="approval_remarks"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-1">
+                                                    <QuotationFormLabel>Approval Remarks</QuotationFormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="Notes for/from approver..." className="h-8 text-xs border-border/60 rounded-sm" {...field} />
+                                                    </FormControl>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {(watchAll.status === "ACCEPTED" || watchAll.approval_status === "APPROVED") && (
+                                <div className="grid grid-cols-2 gap-2 p-2 rounded-sm border border-primary/20 bg-primary/5 animate-in slide-in-from-bottom-2">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase text-primary/70">
+                                            {watchAll.status === "ACCEPTED" ? "Accepted By" : "Approved By"}
+                                        </p>
+                                        <p className="text-sm font-bold truncate">
+                                            {watchAll.status === "ACCEPTED" ? (watchAll.accepted_by || "System") : (watchAll.approved_by || "Pending")}
+                                        </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase text-primary/70">
+                                            {watchAll.status === "ACCEPTED" ? "Accepted At" : "Approved At"}
+                                        </p>
+                                        <p className="text-sm font-bold">
+                                            {watchAll.status === "ACCEPTED"
+                                                ? (watchAll.accepted_at ? formatDate(new Date(watchAll.accepted_at)) : "-")
+                                                : (watchAll.approved_at ? formatDate(new Date(watchAll.approved_at)) : "-")
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <FormField
+                                control={form.control}
+                                name="notes"
+                                render={({ field }) => (
+                                    <FormItem className="space-y-1">
+                                        <QuotationFormLabel>Internal Notes</QuotationFormLabel>
+                                        <FormControl>
+                                            <Textarea placeholder="Private notes for team..." className="min-h-[60px] text-xs resize-none rounded-sm border-border/60" {...field} />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+
+
+
+
                     </div>
                 </div>
             </form>

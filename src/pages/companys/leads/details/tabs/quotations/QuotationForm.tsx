@@ -40,7 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatDateForAPI } from "@/utils/date";
 import { cn } from "@/lib/utils";
-import { QuotationItemsTable } from "./QuotationItemsTable";
+import { QuotationItemsTable } from "./QuotationProductsTable";
 
 const quotationStatuses = [
     "DRAFT",

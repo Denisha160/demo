@@ -168,24 +168,19 @@ const ProfileTab = ({
   const { data: tagsResponse } = useLeadTags();
 
   const statusOptions =
-    (statusResponse as { items: { id: string; name: string }[] })?.items?.map(
-      (item) => ({
-        value: item.id,
-        label: item.name,
-      }),
-    ) || [];
+    (statusResponse as any)?.items?.map((item: any) => ({
+      value: item.id,
+      label: item.name,
+    })) || [];
+
   const sourceOptions =
-    (sourceResponse as { items: { id: string; name: string }[] })?.items?.map(
-      (item) => ({
-        value: item.id,
-        label: item.name,
-      }),
-    ) || [];
-  const users =
-    (usersResponse as { items: { id: string; name: string }[] })?.items ||
-    (usersResponse as { id: string; name: string }[]) ||
-    [];
-  const userOptions = (users as { id: string; name: string }[]).map((user) => ({
+    (sourceResponse as any)?.items?.map((item: any) => ({
+      value: item.id,
+      label: item.name,
+    })) || [];
+
+  const users = (usersResponse as any)?.items || [];
+  const userOptions = users.map((user: any) => ({
     value: user.id,
     label: user.name,
   }));
@@ -228,32 +223,28 @@ const ProfileTab = ({
 
   const countryOptions = useMemo(
     () =>
-      (countriesData as { items: { id: string; name: string }[] })?.items?.map(
-        (item) => ({
-          value: item.id,
-          label: item.name,
-        }),
-      ) || [],
+      (countriesData as any)?.items?.map((item: any) => ({
+        value: item.id,
+        label: item.name,
+      })) || [],
     [countriesData],
   );
+
   const stateOptions = useMemo(
     () =>
-      (statesData as { items: { id: string; name: string }[] })?.items?.map(
-        (item) => ({
-          value: item.id,
-          label: item.name,
-        }),
-      ) || [],
+      (statesData as any)?.items?.map((item: any) => ({
+        value: item.id,
+        label: item.name,
+      })) || [],
     [statesData],
   );
+
   const cityOptions = useMemo(
     () =>
-      (citiesData as { items: { id: string; name: string }[] })?.items?.map(
-        (item) => ({
-          value: item.id,
-          label: item.name,
-        }),
-      ) || [],
+      (citiesData as any)?.items?.map((item: any) => ({
+        value: item.id,
+        label: item.name,
+      })) || [],
     [citiesData],
   );
 

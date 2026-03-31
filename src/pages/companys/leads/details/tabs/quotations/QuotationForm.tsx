@@ -8,9 +8,11 @@ import {
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-    Loader2, Plus, RefreshCw, Trash2, ChevronLeft, Save, FileText, Info, DollarSign, Truck, ShieldCheck, Mail, Phone, ArrowLeft
-
+    Loader2, Plus, RefreshCw, Trash2, ChevronLeft, Save, FileText, Info, DollarSign, Truck, ShieldCheck, Mail, Phone, ArrowLeft, User
 } from "lucide-react";
+import { useLeads } from "@/hooks/useLeads";
+import { useLeadContacts } from "@/hooks/useLeadContacts";
+import { Combobox } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -120,7 +122,7 @@ export const quotationSchema = z.object({
     customer_pan: optionalText,
 
     contact_person_id: optionalText,
-    contact_person_name: optionalText,
+    contact_person_name: z.string().min(1, "Contact name is required"),
     contact_person_email: optionalText,
     contact_person_phone: optionalText,
     contact_person_designation: optionalText,
@@ -233,6 +235,48 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
             cancelled_reason: "",
         },
     });
+
+    const { data: leads = [] } = useLeads({ limit: 10 });
+    const selectedLeadId = form.watch("lead_id");
+    const { data: contactData } = useLeadContacts(selectedLeadId);
+
+    const leadOptions = useMemo(() => {
+        return (leads as any[]).map(l => ({
+            value: l.id,
+            label: l.name || l.title || "Unknown Lead"
+        }));
+    }, [leads]);
+
+    const contactOptions = useMemo(() => {
+        return (contactData?.contacts || []).map(c => ({
+            value: c.id,
+            label: c.name || "Unknown Contact"
+        }));
+    }, [contactData]);
+
+    const handleLeadChange = (leadId: string) => {
+        form.setValue("lead_id", leadId, { shouldValidate: true });
+        const lead = (leads as any[]).find(l => l.id === leadId);
+        if (lead) {
+            form.setValue("customer_name", lead.name || lead.title || "", { shouldDirty: true });
+            form.setValue("customer_email", lead.email || "", { shouldDirty: true });
+            form.setValue("customer_phone", lead.phone || "", { shouldDirty: true });
+            form.setValue("customer_address", lead.address || "", { shouldDirty: true });
+            form.setValue("customer_gst", lead.gst_number || "", { shouldDirty: true });
+            form.setValue("customer_pan", lead.pan_number || "", { shouldDirty: true });
+        }
+    };
+
+    const handleContactChange = (contactId: string) => {
+        const contact = (contactData?.contacts || []).find(c => c.id === contactId);
+        if (contact) {
+            form.setValue("contact_person_id", contact.id, { shouldDirty: true });
+            form.setValue("contact_person_name", contact.name || "", { shouldValidate: true });
+            form.setValue("contact_person_designation", contact.designation || "", { shouldDirty: true });
+            form.setValue("contact_person_email", contact.email || "", { shouldDirty: true });
+            form.setValue("contact_person_phone", contact.phone || "", { shouldDirty: true });
+        }
+    };
 
     const { fields: taxFields, append: appendTax, remove: removeTax } = useFieldArray({
         control: form.control,
@@ -410,10 +454,19 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                     name="contact_person_name"
                                     render={({ field }) => (
                                         <FormItem className="space-y-1">
-                                            <QuotationFormLabel>Contact Name</QuotationFormLabel>
+                                            <QuotationFormLabel required>Contact Name</QuotationFormLabel>
                                             <FormControl>
-                                                <Input placeholder="Name" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
+                                                <Combobox
+                                                    options={contactOptions}
+                                                    value={contactData?.contacts.find(c => c.name === field.value)?.id || ""}
+                                                    onValueChange={handleContactChange}
+                                                    placeholder="Select contact..."
+                                                    searchPlaceholder="Search contacts..."
+                                                    disabled={!selectedLeadId}
+                                                    className="h-8 border-border/60 rounded-sm"
+                                                />
                                             </FormControl>
+                                            <FormMessage className="text-[10px]" />
                                         </FormItem>
                                     )}
                                 />
@@ -607,12 +660,19 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
 
                             <FormField
                                 control={form.control}
-                                name="customer_name"
+                                name="lead_id"
                                 render={({ field }) => (
                                     <FormItem className="space-y-1">
                                         <QuotationFormLabel required>Customer Name</QuotationFormLabel>
                                         <FormControl>
-                                            <Input placeholder="Enter customer name" className="h-8 text-xs font-medium border-border/60 rounded-sm" {...field} />
+                                            <Combobox
+                                                options={leadOptions}
+                                                value={field.value}
+                                                onValueChange={handleLeadChange}
+                                                placeholder="Select a lead..."
+                                                searchPlaceholder="Search leads..."
+                                                className="h-8 border-border/60 rounded-sm"
+                                            />
                                         </FormControl>
                                         <FormMessage className="text-[10px]" />
                                     </FormItem>

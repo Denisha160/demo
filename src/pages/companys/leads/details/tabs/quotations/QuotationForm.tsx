@@ -458,6 +458,52 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                             </div>
                         </div>
 
+                        {/* Taxes */}
+                        <div className="space-y-3 pt-4">
+                            <div className="flex items-center justify-between border-b border-border/20 pb-1.5">
+                                <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5 leading-none">
+                                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Taxes
+                                </h4>
+                                <Button type="button" variant="outline" size="sm" onClick={() => appendTax({ key: "", value: 0 })} className="h-6 text-[9px] font-bold uppercase gap-1">
+                                    <Plus className="h-2.5 w-2.5" /> Add Tax
+                                </Button>
+                            </div>
+                            <div className="space-y-2">
+                                {taxFields.map((field, index) => (
+                                    <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
+                                        <Input placeholder="Tax Name" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`tax_details.${index}.key` as const)} />
+                                        <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`tax_details.${index}.value` as const)} onChange={e => form.setValue(`tax_details.${index}.value`, Number(e.target.value))} />
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeTax(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 pt-2">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5">
+                                    <Truck className="h-3.5 w-3.5" /> Additional Charges
+                                </h4>
+                                <Button type="button" variant="outline" size="sm" onClick={() => appendCharge({ key: "", value: 0 })} className="h-6 text-[9px] font-bold uppercase gap-1">
+                                    <Plus className="h-2.5 w-2.5" /> Add Charge
+                                </Button>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex gap-2 items-start bg-muted/20 p-1 rounded-md">
+                                    <span className="flex-1 px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase flex items-center">Standard Delivery</span>
+                                    <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] bg-background" {...form.register(`delivery_charges` as const)} onChange={e => form.setValue(`delivery_charges`, Number(e.target.value))} />
+                                    <div className="w-8" />
+                                </div>
+                                {chargeFields.map((field, index) => (
+                                    <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
+                                        <Input placeholder="Description" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`additional_charges.${index}.key` as const)} />
+                                        <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`additional_charges.${index}.value` as const)} onChange={e => form.setValue(`additional_charges.${index}.value`, Number(e.target.value))} />
+                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeCharge(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Pricing & Summary */}
                         <div className="space-y-4 pt-4">
                             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
@@ -545,30 +591,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                                 </CardContent>
                             </Card>
 
-                            <div className="space-y-3 pt-2">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5">
-                                        <Truck className="h-3.5 w-3.5" /> Additional Charges
-                                    </h4>
-                                    <Button type="button" variant="outline" size="sm" onClick={() => appendCharge({ key: "", value: 0 })} className="h-6 text-[9px] font-bold uppercase gap-1">
-                                        <Plus className="h-2.5 w-2.5" /> Add Charge
-                                    </Button>
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex gap-2 items-start bg-muted/20 p-1 rounded-md">
-                                        <span className="flex-1 px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase flex items-center">Standard Delivery</span>
-                                        <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] bg-background" {...form.register(`delivery_charges` as const)} onChange={e => form.setValue(`delivery_charges`, Number(e.target.value))} />
-                                        <div className="w-8" />
-                                    </div>
-                                    {chargeFields.map((field, index) => (
-                                        <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
-                                            <Input placeholder="Description" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`additional_charges.${index}.key` as const)} />
-                                            <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`additional_charges.${index}.value` as const)} onChange={e => form.setValue(`additional_charges.${index}.value`, Number(e.target.value))} />
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeCharge(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+
                         </div>
 
                     </div>
@@ -701,26 +724,7 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
                             )}
                         </div>
 
-                        {/* Taxes */}
-                        <div className="space-y-3 pt-4">
-                            <div className="flex items-center justify-between border-b border-border/20 pb-1.5">
-                                <h4 className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1.5 leading-none">
-                                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Taxes
-                                </h4>
-                                <Button type="button" variant="outline" size="sm" onClick={() => appendTax({ key: "", value: 0 })} className="h-6 text-[9px] font-bold uppercase gap-1">
-                                    <Plus className="h-2.5 w-2.5" /> Add Tax
-                                </Button>
-                            </div>
-                            <div className="space-y-2">
-                                {taxFields.map((field, index) => (
-                                    <div key={field.id} className="flex gap-2 items-start animate-in slide-in-from-right-1">
-                                        <Input placeholder="Tax Name" className="h-8 text-xs flex-1 rounded-sm border-border/60" {...form.register(`tax_details.${index}.key` as const)} />
-                                        <Input type="number" placeholder="0.00" className="h-8 text-xs w-[100px] rounded-sm border-border/60" {...form.register(`tax_details.${index}.value` as const)} onChange={e => form.setValue(`tax_details.${index}.value`, Number(e.target.value))} />
-                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeTax(index)} className="h-8 w-8 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></Button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+
 
                         {/* Terms & Logistics */}
                         <div className="space-y-4 pt-4">

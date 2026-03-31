@@ -266,7 +266,11 @@ const QuotationForm = ({ quotationData, onSave, onCancel, isSubmitting }: Quotat
             form.setValue("customer_name", lead.name || lead.title || "", { shouldDirty: true });
             form.setValue("customer_email", lead.email || "", { shouldDirty: true });
             form.setValue("customer_phone", lead.phone || "", { shouldDirty: true });
-            form.setValue("customer_address", lead.address || "", { shouldDirty: true });
+            const addressParts = [lead.address, lead.address_line1, lead.address_line2]
+                .filter(Boolean);
+            const fullAddress = addressParts.join(", ");
+            form.setValue("customer_address", fullAddress || "", { shouldDirty: true });
+
             form.setValue("customer_gst", lead.gst_number || "", { shouldDirty: true });
             form.setValue("customer_pan", lead.pan_number || "", { shouldDirty: true });
         }

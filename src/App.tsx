@@ -60,6 +60,7 @@ import SourcePage from "./pages/companys/leads/source/SourcePage";
 import InventoryDetailPage from "@/pages/admin/inventory/InventoryDetailPage";
 import VisitsPage from "./pages/companys/leads/visits/VisitsPage";
 import TasksPage from "./pages/companys/leads/tasks/TasksPage";
+import LeadTaskViewPage from "./pages/companys/leads/tasks/LeadTaskViewPage";
 import RemindersPage from "./pages/companys/leads/reminders/RemindersPage";
 import FollowUpsPage from "./pages/companys/leads/followups/FollowUps";
 import SalesPage from "./pages/companys/sales/SalesPage";
@@ -374,6 +375,7 @@ const App = () => (
           <Route path="source" element={<SourcePage />} />
           <Route path="visits" element={<VisitsPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="lead/tasks/:leadId" element={<LeadTaskViewPage />} />
           <Route path="reminders" element={<RemindersPage />} />
           <Route path="followups" element={<FollowUpsPage />} />
           <Route path="sales" element={<SalesPage />} />

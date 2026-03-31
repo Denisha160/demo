@@ -44,6 +44,7 @@ export type TaskFormData = z.infer<typeof taskSchema>;
 
 export interface Task extends TaskFormData {
   id: string;
+  lead_id?: string;
   created_at: string;
   assigned_to_name?: string;
 }

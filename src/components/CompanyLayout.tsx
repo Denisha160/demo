@@ -25,6 +25,7 @@ import {
   Award,
   Wind,
   ClipboardList,
+  Clipboard,
   MapPin,
   UserCheck,
   Users,
@@ -579,13 +580,15 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3">
-            {/* <button className="relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 bg-destructive rounded-full ring-2 ring-card" />
-            </button>
+            <Link
+              to={`/${currentCompany.id}/lead/tasks/lead_id`}
+              className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              title="Tasks"
+            >
+              <Clipboard className="h-5 w-5" />
+            </Link>
 
-            <div className="h-6 w-px bg-border hidden sm:block mx-1" /> */}
-
+            <div className="h-6 w-px bg-border hidden sm:block mx-1" />
             <div className="relative">
               <button
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}

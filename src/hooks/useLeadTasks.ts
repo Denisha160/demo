@@ -80,12 +80,19 @@ export function useUpdateLeadTask(leadId?: string) {
   return useMutation({
     mutationFn: ({
       taskId,
+      leadId: payloadLeadId,
       ...payload
-    }: { taskId: string } & Record<string, unknown>) =>
-      updateLeadTask({ leadId, taskId, ...payload }),
-    onSuccess: () => {
+    }: { taskId: string; leadId?: string } & Record<string, unknown>) =>
+      updateLeadTask({ leadId: leadId || payloadLeadId, taskId, ...payload }),
+    onSuccess: (_, variables) => {
+      const targetLeadId = leadId || variables.leadId;
+      if (targetLeadId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.leads.detail(targetLeadId),
+        });
+      }
       queryClient.invalidateQueries({
-        queryKey: queryKeys.leads.detail(leadId || ""),
+        queryKey: queryKeys.allTasks.all,
       });
       toast.success("Task updated successfully.");
     },
@@ -102,10 +109,22 @@ export function useDeleteLeadTask(leadId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (taskId: string) => deleteLeadTask({ leadId, taskId }),
-    onSuccess: () => {
+    mutationFn: (data: string | { taskId: string; leadId: string }) => {
+      if (typeof data === "string") {
+        return deleteLeadTask({ leadId, taskId: data });
+      }
+      return deleteLeadTask({ leadId: data.leadId, taskId: data.taskId });
+    },
+    onSuccess: (_, variables) => {
+      const targetLeadId =
+        typeof variables === "string" ? leadId : variables.leadId;
+      if (targetLeadId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.leads.detail(targetLeadId),
+        });
+      }
       queryClient.invalidateQueries({
-        queryKey: queryKeys.leads.detail(leadId || ""),
+        queryKey: queryKeys.allTasks.all,
       });
       toast.success("Task deleted successfully.");
     },

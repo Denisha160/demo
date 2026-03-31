@@ -82,7 +82,7 @@ const QuotationPage = () => {
             </div>
 
             {/* Form Content */}
-            <div className="px-2 flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto">
                 <QuotationForm
                     onSave={handleSave}
                     onCancel={handleCancel}

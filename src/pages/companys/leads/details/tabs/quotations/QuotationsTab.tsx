@@ -61,15 +61,24 @@ const QuotationsTab = () => {
     setQuotationToDelete(null);
   };
 
-  const columns: Column<Quotation>[] = [
+  const columns: Column<any>[] = [
     {
-      key: "quotation_number",
-      header: "Quotation #",
+      key: "lead_name",
+      header: "Customer",
       render: (item) => (
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-muted-foreground" />
-          <span className="font-mono font-bold text-sm">{item.quotation_number}</span>
+        <div className="flex flex-col">
+          <span className="font-semibold text-sm">{item.lead_name || "—"}</span>
+          {item.quotation_number && (
+            <span className="text-[10px] font-mono text-muted-foreground uppercase">{item.quotation_number}</span>
+          )}
         </div>
+      ),
+    },
+    {
+      key: "company_name",
+      header: "Company",
+      render: (item) => (
+        <span className="text-sm font-medium">{item.company_name || "—"}</span>
       ),
     },
     {
@@ -81,7 +90,7 @@ const QuotationsTab = () => {
     },
     {
       key: "grand_total",
-      header: "Grand Total",
+      header: "Total",
       render: (item) => (
         <span className="text-sm font-bold">
           ₹{(item.grand_total || 0).toLocaleString()}
@@ -95,6 +104,13 @@ const QuotationsTab = () => {
         <Badge variant="outline" className={getStatusColor(item.status)}>
           {item.status}
         </Badge>
+      ),
+    },
+    {
+      key: "created_at",
+      header: "Created At",
+      render: (item) => (
+        <span className="text-xs text-muted-foreground">{formatDate(item.created_at)}</span>
       ),
     },
     {

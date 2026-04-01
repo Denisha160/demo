@@ -41,6 +41,7 @@ import { formatDateForAPI } from "@/utils/date";
 import { useBatchesCombobox } from "@/hooks/useBatch";
 import { useBOMDetails } from "@/hooks/useBom";
 import BatchBomModal from "./components/BatchBomModal";
+import { toast } from "react-toastify";
 
 // ── Batch Selector Component ────────────────────────────────────────────────
 
@@ -231,10 +232,10 @@ const BatchFormPage = () => {
       component_batches =
         isFinishedGood && bomDetails
           ? bomDetails.raw_materials.map((m) => ({
-              raw_product_id: m.raw_product_id,
-              batch_id: selectedComponentBatches[m.raw_product_id],
-              quantity: m.raw_quantity * formData.initial_quantity,
-            }))
+            raw_product_id: m.raw_product_id,
+            batch_id: selectedComponentBatches[m.raw_product_id],
+            quantity: m.raw_quantity * formData.initial_quantity,
+          }))
           : undefined;
 
       // Ensure all components have a batch selected if FG
@@ -391,7 +392,7 @@ const BatchFormPage = () => {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1.5 font-bold uppercase tracking-wider p-0 bg-transparent hover:bg-transparent"
+                        className="h-6 px-2 text-[10px] text-primary hover:text-primary gap-1.5 font-bold uppercase tracking-wider p-0 bg-transparent hover:bg-transparent"
                         onClick={() => setIsBomModalOpen(true)}
                       >
                         <FlaskConical className="h-3 w-3" />
@@ -548,7 +549,7 @@ const BatchFormPage = () => {
           {!isEditing &&
             formData.product_id &&
             products.find((p) => p.id === formData.product_id)?.product_type ===
-              "FINISHED_GOOD" &&
+            "FINISHED_GOOD" &&
             bomDetails && (
               <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
                 <SectionHeader
@@ -648,6 +649,7 @@ const BatchFormPage = () => {
                     <SelectItem value="active">✅ Active</SelectItem>
                     <SelectItem value="blocked">🚫 Blocked</SelectItem>
                     <SelectItem value="expired">⛔ Expired</SelectItem>
+                    <SelectItem value="quarantine">🧪 Quarantine</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -694,7 +696,9 @@ const BatchFormPage = () => {
                   variant={
                     formData.status === "active"
                       ? "success"
-                      : formData.status === "blocked"
+                      : formData.status === "blocked" ||
+                          formData.status === "expired" ||
+                          formData.status === "quarantine"
                         ? "destructive"
                         : "secondary"
                   }

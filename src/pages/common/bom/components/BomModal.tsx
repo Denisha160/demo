@@ -268,7 +268,7 @@ const BomModal = ({
           const currentRawQuantity = prev[index].raw_quantity;
           const finalValue =
             currentRawQuantity === ("" as unknown as number) ||
-            Number(currentRawQuantity) === 0
+              Number(currentRawQuantity) === 0
               ? 1
               : currentRawQuantity;
 
@@ -664,7 +664,7 @@ const BomModal = ({
                   maximumFractionDigits: 2,
                 })}
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium italic font-semibold uppercase tracking-wide">
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
                 Per Unit of Finished Product
               </span>
             </div>
@@ -685,7 +685,7 @@ const BomModal = ({
                   maximumFractionDigits: 2,
                 })}
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium italic font-semibold uppercase tracking-wide">
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
                 From Product Settings
               </span>
             </div>
@@ -714,7 +714,7 @@ const BomModal = ({
                   maximumFractionDigits: 2,
                 })}
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium italic font-semibold uppercase tracking-wide">
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
                 Projected Profit per Unit
               </span>
             </div>

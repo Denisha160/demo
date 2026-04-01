@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const getStatusColor = (status: string) => {
+export const getStatusColor = (status: string) => {
   switch (status?.toUpperCase()) {
     case "DRAFT": return "bg-slate-500/10 text-slate-500 border-slate-500/20";
     case "SENT": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
@@ -62,6 +62,10 @@ const QuotationsTab = () => {
     navigate(`/${companyId}/leads/${leadId}/quotations/${quotation.id}/edit`);
   };
 
+  const handleView = (quotation: Quotation) => {
+    navigate(`/${companyId}/leads/${leadId}/quotations/${quotation.id}/view`);
+  };
+
   const handleDelete = (id: string) => {
     deleteQuotation(id);
     setQuotationToDelete(null);
@@ -73,7 +77,12 @@ const QuotationsTab = () => {
       header: "Customer",
       render: (item) => (
         <div className="flex flex-col">
-          <span className="font-semibold text-sm">{item.lead_name || "—"}</span>
+          <span 
+            onClick={() => handleView(item)}
+            className="font-semibold text-sm text-primary hover:underline cursor-pointer decoration-primary/30 underline-offset-2"
+          >
+            {item.lead_name || "—"}
+          </span>
           {item.quotation_number && (
             <span className="text-[10px] font-mono text-muted-foreground uppercase">{item.quotation_number}</span>
           )}
@@ -164,7 +173,11 @@ const QuotationsTab = () => {
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredQuotations} pageSize={10} />
+      <DataTable 
+        columns={columns} 
+        data={filteredQuotations} 
+        pageSize={10} 
+      />
 
       <AlertDialog
         open={!!quotationToDelete}

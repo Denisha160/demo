@@ -65,6 +65,7 @@ import FollowUpsPage from "./pages/companys/leads/followups/FollowUps";
 import SalesPage from "./pages/companys/sales/SalesPage";
 import SalesMemberDetailPage from "./pages/companys/sales/SalesMemberDetailPage";
 import QuotationPage from "./pages/companys/leads/details/tabs/quotations/QuotationPage";
+import QuotationViewPage from "./pages/companys/leads/details/tabs/quotations/QuotationViewPage";
 import ShiftPage from "./pages/admin/shifts/ShiftPage";
 import ShiftDetailPage from "./pages/admin/shifts/ShiftDetailPage";
 
@@ -351,6 +352,10 @@ const App = () => (
           <Route
             path="leads/:id/quotations/:quotationId/edit"
             element={<QuotationPage />}
+          />
+          <Route
+            path="leads/:id/quotations/:quotationId/view"
+            element={<QuotationViewPage />}
           />
           <Route path="leads/import" element={<ImportPage />} />
           <Route path="salesmen" element={<Salesmen />} />

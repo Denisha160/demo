@@ -30,7 +30,7 @@ const QuotationViewPage = () => {
     {
       key: "item_name",
       header: "Item Details",
-      className: "px-5 py-4",
+      className: "px-2 py-2",
       render: (item) => (
         <div className="flex flex-col gap-0.5">
           <span className="text-sm font-bold text-foreground tracking-tight">
@@ -57,7 +57,7 @@ const QuotationViewPage = () => {
     {
       key: "quantity",
       header: "Qty",
-      className: "px-4 py-4 text-center w-20",
+      className: "px-2 py-2 text-center w-20",
       render: (item) => (
         <span className="text-sm font-bold font-mono">
           {item.quantity}
@@ -67,7 +67,7 @@ const QuotationViewPage = () => {
     {
       key: "unit_price",
       header: "Unit Price",
-      className: "px-4 py-4 text-right w-32",
+      className: "px-2 py-2 text-right w-32",
       render: (item) => (
         <span className="text-sm font-medium text-muted-foreground font-mono">
           ₹{(item.unit_price || 0).toLocaleString()}
@@ -77,7 +77,7 @@ const QuotationViewPage = () => {
     {
       key: "amount",
       header: "Amount",
-      className: "px-5 py-4 text-right w-40",
+      className: "px-2 py-2 text-right w-40",
       render: (item) => (
         <span className="text-sm font-black text-foreground font-mono">
           ₹{(item.quantity * item.unit_price).toLocaleString()}
@@ -111,8 +111,7 @@ const QuotationViewPage = () => {
   }
 
   return (
-    <div className="w-full space-y-2 animate-fade-in bg-slate-50/30 overflow-y-auto h-[calc(100vh-theme(spacing.16))] scrollbar-hide">
-      {/* Top Header - Following SalesMemberDetailPage style */}
+    <div className="w-full space-y-4 animate-fade-in pb-8">      {/* Top Header - Following SalesMemberDetailPage style */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-2">
           <button
@@ -128,9 +127,6 @@ const QuotationViewPage = () => {
                 {quotation.status}
               </Badge>
             </h1>
-            <p className="text-xs text-muted-foreground">
-              Reference: <span className="font-mono font-bold text-foreground">#{quotation.quotation_number}</span>
-            </p>
           </div>
         </div>
 
@@ -266,20 +262,6 @@ const QuotationViewPage = () => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* QR/Verification Placeholder */}
-            <div className="bg-white border border-border rounded-sm p-4 flex items-center justify-between group cursor-default hover:bg-slate-50 transition-colors">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Authenticity</p>
-                <p className="text-[9px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100 flex items-center gap-1 w-fit">
-                  <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-                  Verified Document
-                </p>
-              </div>
-              <div className="h-10 w-10 bg-slate-100 border border-border/40 rounded-[2px] flex items-center justify-center opacity-40 group-hover:opacity-80 transition-opacity">
-                <FileText className="h-5 w-5" />
-              </div>
-            </div>
           </div>
         </div>
       </div>

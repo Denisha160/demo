@@ -166,11 +166,19 @@ const SalesMemberDetailPage = () => {
 
       <div className="bg-card border border-border rounded-sm p-3 shadow-sm">
         <div className="flex flex-col md:flex-row gap-5 items-start">
-          <div
-            className={`h-16 w-16 rounded-full bg-gradient-to-br ${GRADIENTS[colorIdx]} flex items-center justify-center text-white text-xl font-bold shrink-0 shadow`}
-          >
-            {getInitials(user.name)}
-          </div>
+          {user.image_url ? (
+            <img
+              src={user.image_url}
+              alt={user.name}
+              className="h-16 w-16 rounded-full object-cover shrink-0 shadow border border-border"
+            />
+          ) : (
+            <div
+              className={`h-16 w-16 rounded-full bg-gradient-to-br ${GRADIENTS[colorIdx]} flex items-center justify-center text-white text-xl font-bold shrink-0 shadow`}
+            >
+              {getInitials(user.name)}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -226,11 +234,10 @@ const SalesMemberDetailPage = () => {
             <Link
               key={t.key}
               to={`/${companyId}/sales/${userId}/${t.key}`}
-              className={`flex items-center whitespace-nowrap gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTabClass === t.key
+              className={`flex items-center whitespace-nowrap gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${activeTabClass === t.key
                   ? "border-primary text-primary bg-card"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-t-sm"
-              }`}
+                }`}
             >
               <t.icon className="h-4 w-4" />
               {t.label}

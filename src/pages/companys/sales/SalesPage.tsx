@@ -10,12 +10,21 @@ import StatusBadge from "@/components/StatusBadge";
 import { cn } from "@/lib/utils";
 
 const getInitials = (name: string) =>
-  name
+  (name || "?")
     .split(" ")
     .map((w) => w[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+const GRADIENTS = [
+  "from-violet-500 to-purple-600",
+  "from-blue-500 to-cyan-600",
+  "from-emerald-500 to-teal-600",
+  "from-orange-500 to-amber-600",
+  "from-rose-500 to-pink-600",
+  "from-indigo-500 to-blue-600",
+];
 
 const SalesPage = () => {
   const { companyId } = useParams();
@@ -44,18 +53,37 @@ const SalesPage = () => {
       key: "name",
       header: "Name",
       sortable: true,
-      render: (item) => (
-        <div className="flex items-center gap-2.5">
-          <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-foreground truncate">
-              {item.name}
-            </span>
-            <span className="text-[10px] text-muted-foreground truncate md:hidden">
-              {item.email}
-            </span>
+      render: (item) => {
+        const colorIdx = (item.name || "").charCodeAt(0) % GRADIENTS.length;
+        return (
+          <div className="flex items-center gap-2.5 py-0.5">
+            {item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="h-8 w-8 rounded-full object-cover shrink-0 shadow-sm border border-border/50"
+              />
+            ) : (
+              <div
+                className={cn(
+                  "h-8 w-8 rounded-full bg-gradient-to-br flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm transition-transform group-hover:scale-105",
+                  GRADIENTS[colorIdx],
+                )}
+              >
+                {getInitials(item.name || "?")}
+              </div>
+            )}
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-foreground truncate text-xs">
+                {item.name}
+              </span>
+              <span className="text-[9px] text-muted-foreground truncate font-medium">
+                {item.email}
+              </span>
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "email",

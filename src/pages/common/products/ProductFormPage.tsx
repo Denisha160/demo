@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { z } from "zod";
 import { toast } from "react-toastify";
 import {
@@ -309,6 +309,7 @@ interface ProductTabProps {
     showSecret: boolean;
     setShowSecret: (v: boolean) => void;
   };
+  productNameRef?: React.RefObject<HTMLInputElement>;
 }
 
 const BasicInfoTab = ({
@@ -320,6 +321,7 @@ const BasicInfoTab = ({
   comboboxes,
   drawers,
   adminFeature,
+  productNameRef,
 }: ProductTabProps) => (
   <div className="p-1 space-y-4">
     <div className="flex items-center gap-2 mb-4">
@@ -351,6 +353,8 @@ const BasicInfoTab = ({
           )}
         </div>
         <Input
+          ref={productNameRef}
+          autoFocus
           value={productData.product_name ?? ""}
           onChange={(e) => handleChange("product_name", e.target.value)}
           placeholder="Enter product name"
@@ -1581,6 +1585,7 @@ const ProductFormPage = () => {
   const [apiError, setApiError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("measurements");
   const [showSecretInput, setShowSecretInput] = useState(false);
+  const productNameRef = useRef<HTMLInputElement>(null);
 
   // UI states
   const [imagePreviews, setImagePreviews] = useState<
@@ -1591,6 +1596,7 @@ const ProductFormPage = () => {
   const [isFragranceDrawerOpen, setIsFragranceDrawerOpen] = useState(false);
   const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const kitNameRef = useRef<HTMLInputElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [slideIdx, setSlideIdx] = useState(0);
 
@@ -1605,37 +1611,37 @@ const ProductFormPage = () => {
   const debouncedFragranceSearch = useDebounce(fragranceSearch, 300);
 
   // Fetch combobox options
-  const { data: fetchedCategories = [] } = useCategoriesCombobox({
+  const { data: fetchedCategories } = useCategoriesCombobox({
     type: "sub",
     search: debouncedCategorySearch,
   });
-  const { data: fetchedPackages = [] } = usePackagesCombobox({
+  const { data: fetchedPackages } = usePackagesCombobox({
     search: debouncedPackageSearch.trim() || undefined,
   });
-  const { data: fetchedBrands = [] } = useBrandCombobox({
+  const { data: fetchedBrands } = useBrandCombobox({
     search: debouncedBrandSearch,
     status: "active",
   });
-  const { data: fetchedFragrances = [] } = useFragranceCombobox({
+  const { data: fetchedFragrances } = useFragranceCombobox({
     search: debouncedFragranceSearch,
     status: "active",
   });
 
-  const categoryOptions = fetchedCategories.map((cat: Category) => ({
+  const categoryOptions = (fetchedCategories as Category[] || []).map((cat: Category) => ({
     label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
     value: cat.id,
   }));
-  const packageOptions = fetchedPackages.map((pkg: PackageType) => ({
+  const packageOptions = (fetchedPackages as PackageType[] || []).map((pkg: PackageType) => ({
     label: pkg.package_code
       ? `${pkg.package_name} (${pkg.package_code})`
       : pkg.package_name,
     value: pkg.id,
   }));
-  const brandOptions = fetchedBrands.map((b: Brand) => ({
+  const brandOptions = (fetchedBrands as Brand[] || []).map((b: Brand) => ({
     label: b.name,
     value: b.id,
   }));
-  const fragranceOptions = fetchedFragrances.map((f: Fragrance) => ({
+  const fragranceOptions = (fetchedFragrances as Fragrance[] || []).map((f: Fragrance) => ({
     label: f.name,
     value: f.id,
   }));
@@ -1683,6 +1689,13 @@ const ProductFormPage = () => {
   );
 
   // --- Effects ---
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      productNameRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     if (fetchError) toast.error("Failed to load product details");
   }, [fetchError]);
@@ -1990,6 +2003,7 @@ const ProductFormPage = () => {
       showSecret: showSecretInput,
       setShowSecret: setShowSecretInput,
     },
+    productNameRef,
   };
 
   // --- Render ---

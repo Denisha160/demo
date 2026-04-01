@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import {
@@ -151,6 +151,7 @@ const BatchFormPage = () => {
   const [selectedComponentBatches, setSelectedComponentBatches] = useState<
     Record<string, string>
   >({}); // raw_product_id -> batch_id
+  const productRef = useRef<HTMLButtonElement>(null);
   const debouncedProductSearch = useDebounce(productSearch, 300);
 
   // Data + mutations
@@ -163,6 +164,13 @@ const BatchFormPage = () => {
   const { mutate: createBatch, isPending: isCreating } = useCreateBatch();
   const { mutate: updateBatch, isPending: isUpdating } = useUpdateBatch();
   const isPending = isCreating || isUpdating;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      productRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Prefill on edit
   useEffect(() => {
@@ -359,6 +367,7 @@ const BatchFormPage = () => {
                   Product <span className="text-destructive">*</span>
                 </Label>
                 <Combobox
+                  ref={productRef}
                   options={products.map((p) => ({
                     label: `${p.product_name} (${p.code}) - ${p.product_type === "FINISHED_GOOD" ? "Finish Good" : "Raw Material"}`,
                     value: p.id,
@@ -686,7 +695,7 @@ const BatchFormPage = () => {
                     formData.status === "active"
                       ? "success"
                       : formData.status === "blocked"
-                        ? "warning"
+                        ? "destructive"
                         : "secondary"
                   }
                   className="text-[9px] uppercase font-bold h-4 px-1.5"

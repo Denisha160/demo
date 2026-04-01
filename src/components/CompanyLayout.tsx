@@ -30,6 +30,8 @@ import {
   UserCheck,
   Users,
   FileText,
+  Truck,
+  Landmark,
 } from "lucide-react";
 
 import {

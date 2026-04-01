@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +78,7 @@ const PackageModal = ({ isOpen, onClose, packageId }: PackageModalProps) => {
   const { data: pkg, isLoading: isLoadingPkg } = usePackage(packageId);
   const { mutate: createPkg, isPending: isCreating } = useCreatePackage();
   const { mutate: updatePkg, isPending: isUpdating } = useUpdatePackage();
+  const packageCodeRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<PackageFormData>({
     package_code: "",
@@ -93,6 +94,15 @@ const PackageModal = ({ isOpen, onClose, packageId }: PackageModalProps) => {
   const [errors, setErrors] = useState<
     Partial<Record<keyof PackageFormData, string>>
   >({});
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        packageCodeRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (pkg && isEditing) {
@@ -269,6 +279,7 @@ const PackageModal = ({ isOpen, onClose, packageId }: PackageModalProps) => {
               </Label>
               <Input
                 id="package_code"
+                ref={packageCodeRef}
                 name="package_code"
                 placeholder="e.g. PKG-001"
                 value={formData.package_code}

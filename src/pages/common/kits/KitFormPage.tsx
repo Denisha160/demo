@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -31,52 +31,63 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { KitCreatePayload, KitUpdatePayload } from "@/types/kits";
 import PackageModal from "@/pages/common/packages/components/PackageModal";
 
-const ProductInput = ({
-  label,
-  value,
-  error,
-  isEditing = true,
-  onChange,
-  placeholder,
-  type = "text",
-  className = "",
-  prefix,
-}: {
-  label: string;
-  value: string | number;
-  error?: string;
-  isEditing?: boolean;
-  onChange: (val: string) => void;
-  placeholder?: string;
-  type?: string;
-  className?: string;
-  prefix?: React.ReactNode;
-}) => (
-  <div className={`space-y-1.5 ${className}`}>
-    <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-      {label}
-    </Label>
-    <div className={prefix ? "relative" : ""}>
-      {prefix && (
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-          {prefix}
-        </span>
+const ProductInput = forwardRef<
+  HTMLInputElement,
+  {
+    label: string;
+    value: string | number;
+    error?: string;
+    isEditing?: boolean;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    type?: string;
+    className?: string;
+    prefix?: React.ReactNode;
+  }
+>(
+  (
+    {
+      label,
+      value,
+      error,
+      isEditing = true,
+      onChange,
+      placeholder,
+      type = "text",
+      className = "",
+      prefix,
+    },
+    ref,
+  ) => (
+    <div className={`space-y-1.5 ${className}`}>
+      <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+        {label}
+      </Label>
+      <div className={prefix ? "relative" : ""}>
+        {prefix && (
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {prefix}
+          </span>
+        )}
+        <Input
+          ref={ref}
+          type={type}
+          step={type === "number" ? "any" : undefined}
+          value={value?.toString() || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`h-8 text-sm rounded-sm ${prefix ? "pl-8" : ""} ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+          disabled={!isEditing}
+        />
+      </div>
+      {error && (
+        <p className="text-[10px] text-destructive mt-0.5 ml-0.5">{error}</p>
       )}
-      <Input
-        type={type}
-        step={type === "number" ? "any" : undefined}
-        value={value?.toString() || ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={`h-8 text-sm rounded-sm ${prefix ? "pl-8" : ""} ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
-        disabled={!isEditing}
-      />
     </div>
-    {error && (
-      <p className="text-[10px] text-destructive mt-0.5 ml-0.5">{error}</p>
-    )}
-  </div>
+  ),
 );
+
+ProductInput.displayName = "ProductInput";
 
 // Schema matches backend requirements
 const kitSchema = z.object({
@@ -106,6 +117,7 @@ const KitFormPage = () => {
   const navigate = useNavigate();
   const isEditing = !!id;
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const kitNameRef = useRef<HTMLInputElement>(null);
 
   // Data Hooks
   const { data: kitDetails, isLoading: isLoadingDetails } = useKitDetails(id);
@@ -142,6 +154,13 @@ const KitFormPage = () => {
 
   const items = watch("items") || [];
   const is_active = watch("is_active");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      kitNameRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Initialize/Reset form
   useEffect(() => {
@@ -330,6 +349,7 @@ const KitFormPage = () => {
 
             <div className="grid grid-cols-1 gap-4">
               <ProductInput
+                ref={kitNameRef}
                 label="Kit Name"
                 value={watch("name")}
                 error={errors.name?.message}

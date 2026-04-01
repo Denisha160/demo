@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Hash,
   Plus,
@@ -93,6 +93,7 @@ const GenerateSerialsPage = () => {
       location?: string;
     }[]
   >([]);
+  const batchRef = useRef<HTMLButtonElement>(null);
   const debouncedBatchSearch = useDebounce(batchSearch, 300);
 
   // Fetch batches for selection
@@ -105,6 +106,13 @@ const GenerateSerialsPage = () => {
     () => batches.find((b) => b.id === selectedBatchId),
     [batches, selectedBatchId],
   );
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      batchRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const {
     register,
@@ -334,6 +342,7 @@ const GenerateSerialsPage = () => {
                   Select Batch <span className="text-destructive">*</span>
                 </Label>
                 <Combobox
+                  ref={batchRef}
                   options={batches.map((b) => ({
                     label: `${b.batch_number} - ${b.product_name}`,
                     value: b.id,

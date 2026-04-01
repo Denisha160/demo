@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { z } from "zod";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
@@ -108,6 +108,7 @@ const BomModal = ({
     });
 
   // State
+  const finishedProductRef = useRef<HTMLButtonElement>(null);
   const [selectedBomId, setSelectedBomId] = useState<string>("");
   const [materials, setMaterials] = useState<RawMaterialItem[]>([]);
   const [errors, setErrors] = useState<
@@ -126,6 +127,15 @@ const BomModal = ({
     isLoadingFinishedProduct ||
     isLoadingFG ||
     isLoadingRM;
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        finishedProductRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   // Initialize/Reset form
   useEffect(() => {
@@ -464,6 +474,7 @@ const BomModal = ({
             Finished Product
           </Label>
           <Combobox
+            ref={finishedProductRef}
             options={finishedGoods.map((p: Product) => ({
               label: `${p.product_name} (${p.code})`,
               value: p.id,

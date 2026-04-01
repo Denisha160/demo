@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   useCreateLeadContact,
@@ -54,6 +54,7 @@ const ContactModal = ({
   onSave,
   initialData,
 }: ContactModalProps) => {
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const { id: leadId = "" } = useParams<{ id: string }>();
   const createMutation = useCreateLeadContact();
   const updateMutation = useUpdateLeadContact();
@@ -74,6 +75,11 @@ const ContactModal = ({
   // Reset form when initialData changes or modal opens/closes
   useEffect(() => {
     if (open) {
+      // Focus the first input after a small delay to allow modal animation
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 300);
+
       if (initialData) {
         form.reset({
           fullName: initialData.name,
@@ -95,6 +101,7 @@ const ContactModal = ({
           active: true,
         });
       }
+      return () => clearTimeout(timer);
     }
   }, [open, initialData, form]);
 
@@ -191,7 +198,15 @@ const ContactModal = ({
                     Full Name <span className="text-destructive">*</span>{" "}
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter full name" {...field} />
+                    <Input
+                      autoFocus
+                      ref={(e) => {
+                        field.ref(e);
+                        nameInputRef.current = e;
+                      }}
+                      placeholder="Enter full name"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { z } from "zod";
 import { useForm, UseFormSetError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -100,6 +100,14 @@ const FollowUpModal = ({
   useEffect(() => {
     if (!open) return;
 
+    // Focus the first input after a small delay to allow modal animation
+    const timer = setTimeout(() => {
+      statusTriggerRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  useEffect(() => {
     if (isEditing && followUpData) {
       reset({
         status: followUpData.status || "SCHEDULED",
@@ -133,6 +141,7 @@ const FollowUpModal = ({
   const status = watch("status");
   const followUpMethod = watch("follow_up_method");
   const scheduledAt = watch("scheduled_at");
+  const statusTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <Modal
@@ -173,7 +182,7 @@ const FollowUpModal = ({
                 setValue("status", val, { shouldValidate: true })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger ref={statusTriggerRef}>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>

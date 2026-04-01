@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +81,7 @@ const TaskModal = ({
     value: user.id,
     label: user.name,
   }));
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -95,6 +96,15 @@ const TaskModal = ({
       reminder_time: "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -185,6 +195,11 @@ const TaskModal = ({
                 </FormLabel>
                 <FormControl>
                   <Input
+                    autoFocus
+                    ref={(e) => {
+                      field.ref(e);
+                      titleInputRef.current = e;
+                    }}
                     placeholder="Task title"
                     className="h-9 text-xs"
                     disabled={isSubmitting}

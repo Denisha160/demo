@@ -1,4 +1,4 @@
-import { ComponentProps, useMemo, useState } from "react";
+import { ComponentProps, useMemo, useState, useRef, useEffect } from "react";
 import { useForm, useWatch, UseFormSetError } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -115,6 +115,9 @@ const QuotationForm = ({
   onCancel,
   isSubmitting,
 }: QuotationFormProps) => {
+  const leadComboboxRef = useRef<HTMLButtonElement>(null);
+  const datePickerRef = useRef<any>(null);
+
   const form = useForm<QuotationFormData>({
     resolver: zodResolver(quotationSchema),
     defaultValues: quotationData || {
@@ -142,6 +145,18 @@ const QuotationForm = ({
       amount_in_words: "",
     },
   });
+
+  // Focus Customer/Lead on mount for new quotations
+  useEffect(() => {
+    if (!quotationData?.id) {
+      const timer = setTimeout(() => {
+        if (leadComboboxRef.current) {
+          leadComboboxRef.current.focus();
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [quotationData?.id]);
 
   const [leadSearch, setLeadSearch] = useState("");
   const debouncedLeadSearch = useDebounce(leadSearch, 500);
@@ -186,6 +201,26 @@ const QuotationForm = ({
       form.setValue("customer_pan", lead.pan_number || "", {
         shouldDirty: true,
       });
+
+      // Move focus to Quotation Date after selection and open it
+      setTimeout(() => {
+        if (datePickerRef.current) {
+          // If RSuite DatePicker has an open method, use it to make entry faster
+          if (typeof datePickerRef.current.open === "function") {
+            datePickerRef.current.open();
+          } else {
+            // Fallback to focusing the input element
+            const dateInput =
+              datePickerRef.current.root?.querySelector("input") ||
+              datePickerRef.current.querySelector?.("input");
+            if (dateInput) {
+              dateInput.focus();
+            } else if (datePickerRef.current.focus) {
+              datePickerRef.current.focus();
+            }
+          }
+        }
+      }, 100);
     }
   };
 
@@ -238,6 +273,7 @@ const QuotationForm = ({
                     </div>
                     <FormControl>
                       <Combobox
+                        ref={leadComboboxRef}
                         options={leadOptions}
                         value={field.value}
                         onValueChange={handleLeadChange}

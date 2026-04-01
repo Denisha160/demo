@@ -163,17 +163,17 @@ const QuotationViewPage = () => {
                   )}
 
                 </div>
-                <div>
-                  <div className="flex  items-end gap-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Quotation Date</span>
-                    <span className="text-sm font-bold flex items-center gap-1.5 bg-muted/40 rounded-sm">
+                <div className="flex flex-wrap gap-x-8 gap-y-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/50">Quotation Date</span>
+                    <span className="text-xs font-bold text-foreground bg-muted/50 px-2 py-0.5 rounded-sm border border-border/40 w-fit">
                       {formatDate(quotation.quotation_date)}
                     </span>
                   </div>
-                  <div className="flex  items-end gap-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Quotation Number</span>
-                    <span className="text-sm font-bold flex items-center gap-1.5 bg-muted/40 rounded-sm">
-                      {quotation.quotation_number}
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/50">Quotation Number</span>
+                    <span className="text-xs font-bold text-foreground bg-muted/50 px-2 py-0.5 rounded-sm border border-border/40 w-fit">
+                      #{quotation.quotation_number}
                     </span>
                   </div>
                 </div>
@@ -228,7 +228,7 @@ const QuotationViewPage = () => {
               <div className="bg-blue-50/30 border border-blue-500/10 rounded-sm p-4">
                 <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-600/60 mb-2 flex items-center gap-1.5">
                   <BadgeInfo className="h-3 w-3" />
-                  Standard Terms & Conditions
+                  Notes
                 </h4>
                 <p className="text-xs text-slate-600 leading-relaxed italic">
                   "{quotation.notes}"

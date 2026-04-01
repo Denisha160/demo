@@ -5,89 +5,97 @@ import { UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
-import { useCreateQuotation, useUpdateQuotation, useQuotation } from "@/hooks/useQuotations";
+import {
+  useCreateQuotation,
+  useUpdateQuotation,
+  useQuotation,
+} from "@/hooks/useQuotations";
 import { formatDate } from "@/utils/date";
 
 const QuotationPage = () => {
   const { companyId, id: leadId, quotationId } = useParams();
   const navigate = useNavigate();
-  
-  const { data: quotationData, isLoading: isLoadingQuotation } = useQuotation(quotationId);
-  const { mutate: createQuotation, isPending: isCreating } = useCreateQuotation();
-  const { mutate: updateQuotation, isPending: isUpdating } = useUpdateQuotation();
+
+  const { data: quotationData, isLoading: isLoadingQuotation } =
+    useQuotation(quotationId);
+  const { mutate: createQuotation, isPending: isCreating } =
+    useCreateQuotation();
+  const { mutate: updateQuotation, isPending: isUpdating } =
+    useUpdateQuotation();
 
   const isSubmitting = isCreating || isUpdating;
 
   const initialData = useMemo(() => {
     if (!quotationData) return undefined;
-    
+
     const rawData = quotationData as any;
-    
+
     // Map items from total_amount to amount if needed
     const mappedItems = rawData.items?.map((item: any) => ({
       ...item,
       amount: item.amount || 0,
       gst_percentage: item.gst_percentage || item.gst || 18,
       gst_amount: item.gst_amount || item.tax_amount || 0,
-      type: item.kit_id ? "kit" : "product"
+      type: item.kit_id ? "kit" : "product",
     }));
 
     return {
       ...rawData,
       tax_total: rawData.tax_total || rawData.total_tax_amount || 0,
       items: mappedItems,
-      quotation_date: formatDate(rawData.quotation_date)
+      quotation_date: formatDate(rawData.quotation_date),
     };
   }, [quotationData]);
 
-  const handleSave = useCallback((
-    data: QuotationFormData,
-    setError: UseFormSetError<QuotationFormData>,
-  ) => {
-    const cleanPayload = (obj: any): any => {
-      if (Array.isArray(obj)) {
-        return obj.map(cleanPayload);
-      }
-      if (obj !== null && typeof obj === "object") {
-        return Object.keys(obj).reduce((acc, key) => {
-          let value = obj[key];
-          if (value === "" || value === undefined) {
-            value = null;
-          } else if (typeof value === "object") {
-            value = cleanPayload(value);
-          }
-          acc[key] = value;
-          return acc;
-        }, {} as any);
-      }
-      return obj;
-    };
+  const handleSave = useCallback(
+    (data: QuotationFormData, setError: UseFormSetError<QuotationFormData>) => {
+      const cleanPayload = (obj: any): any => {
+        if (Array.isArray(obj)) {
+          return obj.map(cleanPayload);
+        }
+        if (obj !== null && typeof obj === "object") {
+          return Object.keys(obj).reduce((acc, key) => {
+            let value = obj[key];
+            if (value === "" || value === undefined) {
+              value = null;
+            } else if (typeof value === "object") {
+              value = cleanPayload(value);
+            }
+            acc[key] = value;
+            return acc;
+          }, {} as any);
+        }
+        return obj;
+      };
 
-    const payload = {
-      ...cleanPayload(data),
-      lead_id: leadId!,
-    };
+      const payload = {
+        ...cleanPayload(data),
+        lead_id: leadId!,
+      };
 
-    if (quotationId) {
-      updateQuotation(
-        { id: quotationId, ...payload } as any,
-        {
+      if (quotationId) {
+        updateQuotation({ id: quotationId, ...payload } as any, {
           onSuccess: () => {
             navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
           },
-        }
-      );
-    } else {
-      createQuotation(
-        payload as any,
-        {
+        });
+      } else {
+        createQuotation(payload as any, {
           onSuccess: () => {
             navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
           },
-        }
-      );
-    }
-  }, [companyId, leadId, quotationId, createQuotation, updateQuotation, navigate]);
+        });
+      }
+    },
+    [
+      companyId,
+      leadId,
+      quotationId,
+      createQuotation,
+      updateQuotation,
+      navigate,
+    ],
+  );
 
   const handleCancel = () => {
     navigate(`/${companyId}/leads/${leadId}?tab=quotations`);

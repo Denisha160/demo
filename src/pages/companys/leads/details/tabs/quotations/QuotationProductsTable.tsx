@@ -30,10 +30,9 @@ export const QuotationProductsTable = () => {
   const debouncedFgSearch = useDebounce(fgSearch, 300);
   const debouncedKitSearch = useDebounce(kitSearch, 300);
 
-  const { data: allItems = [], isLoading: isLoadingItems } =
-    useAllProducts({
-      search: debouncedFgSearch.trim() || undefined,
-    });
+  const { data: allItems = [], isLoading: isLoadingItems } = useAllProducts({
+    search: debouncedFgSearch.trim() || undefined,
+  });
 
   const {
     fields: itemFields,
@@ -75,7 +74,6 @@ export const QuotationProductsTable = () => {
       focusRow(newIndex);
     }, 50);
   };
-
 
   const focusRow = (index: number) => {
     const rowWrapper = document.querySelector(
@@ -183,7 +181,7 @@ export const QuotationProductsTable = () => {
               Bill Items
             </h3>
           </div>
-          {(isLoadingItems) && (
+          {isLoadingItems && (
             <span className="text-[10px] text-muted-foreground animate-pulse font-medium">
               Loading...
             </span>
@@ -258,7 +256,9 @@ export const QuotationProductsTable = () => {
                     </td>
                     <td className="px-2 py-1.5">
                       <Input
-                        {...register(`items.${index}.item_description` as const)}
+                        {...register(
+                          `items.${index}.item_description` as const,
+                        )}
                         placeholder="Description"
                         className="h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
                       />
@@ -293,7 +293,8 @@ export const QuotationProductsTable = () => {
                     </td>
                     <td className="px-2 py-1.5">
                       <div className="text-xs font-black text-foreground font-mono">
-                        ₹{(watch(`items.${index}.amount`) || 0).toLocaleString()}
+                        ₹
+                        {(watch(`items.${index}.amount`) || 0).toLocaleString()}
                       </div>
                     </td>
                     <td className="px-2 py-1.5">
@@ -309,7 +310,10 @@ export const QuotationProductsTable = () => {
                     </td>
                     <td className="px-2 py-1.5">
                       <div className="text-xs font-black text-primary font-mono">
-                        ₹{(watch(`items.${index}.gst_amount`) || 0).toLocaleString()}
+                        ₹
+                        {(
+                          watch(`items.${index}.gst_amount`) || 0
+                        ).toLocaleString()}
                       </div>
                     </td>
                     <td className="px-2 py-1.5">
@@ -344,7 +348,6 @@ export const QuotationProductsTable = () => {
                           Add Product
                         </span>
                       </button>
-
 
                       {/* Right side: Scan Input Only */}
                       <div className="flex-1 flex items-center h-full relative group focus-within:bg-background transition-colors">

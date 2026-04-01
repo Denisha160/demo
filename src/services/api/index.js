@@ -831,8 +831,6 @@ export const deleteShift = (id) => {
   return axios({ method: "DELETE", url });
 };
 
-
-
 export const listQuotation = (params) => {
   const url = `quotation`;
   return axios({ method: "GET", url, params });

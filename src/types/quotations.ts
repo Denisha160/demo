@@ -45,7 +45,12 @@ export interface Quotation {
 
 export type QuotationCreatePayload = Omit<
   Quotation,
-  "id" | "created_at" | "updated_at" | "sub_total" | "total_tax_amount" | "grand_total"
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "sub_total"
+  | "total_tax_amount"
+  | "grand_total"
 >;
 
 export type QuotationUpdatePayload = Partial<QuotationCreatePayload> & {

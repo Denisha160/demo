@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Plus, Search, Trash2 } from "lucide-react";
+import { Edit, Plus, Search, Trash2, FileText } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/utils/date";
-import QuotationForm, { Quotation, QuotationFormData } from "./QuotationForm";
+import { Badge } from "@/components/ui/badge";
+import { useQuotations, useDeleteQuotation } from "@/hooks/useQuotations";
+import { Quotation } from "@/types/quotations";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,82 +19,56 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const initialQuotations: Quotation[] = [
-  {
-    id: "1",
-    lead_id: "Bell Borer III - kadin.waelchi@example.net",
-    quotation_date: "2026-03-20",
-    customer_name: "Acme Industries",
-    customer_email: "purchase@acme.com",
-    customer_phone: "9876543210",
-    customer_address: "Bangalore, Karnataka",
-    customer_gst: "29ABCDE1234F1Z5",
-    customer_pan: "ABCDE1234F",
-    items: [
-      {
-        product_id: "p1",
-        product_name: "Product 1",
-        quantity: 1,
-        rate: 10000,
-        amount: 10000,
-        tax_rate: 18,
-      },
-    ],
-    total_tax_amount: 1800,
-    created_at: new Date().toISOString(),
-    amount_in_words: "Eleven thousand eight hundred only",
-  },
-];
-
-const calculateGrandTotal = (quotation: QuotationFormData) => {
-  const itemsTotal = (quotation.items || []).reduce(
-    (sum, item) => sum + (Number(item.amount) || 0),
-    0,
-  );
-  const taxAmount = Number(quotation.total_tax_amount) || 0;
-  return itemsTotal + taxAmount;
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "DRAFT": return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+    case "SENT": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+    case "ACCEPTED": return "bg-green-500/10 text-green-500 border-green-500/20";
+    case "REJECTED": return "bg-red-500/10 text-red-500 border-red-500/20";
+    default: return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+  }
 };
 
 const QuotationsTab = () => {
-  const [quotations, setQuotations] = useState<Quotation[]>(initialQuotations);
   const [search, setSearch] = useState("");
-  const { companyId, id } = useParams();
+  const { companyId, id: leadId } = useParams();
   const navigate = useNavigate();
-  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(
-    null,
-  );
+  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(null);
 
-  const filteredQuotations = quotations.filter((quotation) => {
+  const { data: quotationsData, isLoading } = useQuotations({ lead_id: leadId });
+  const { mutate: deleteQuotation } = useDeleteQuotation();
+
+  const quotations = useMemo(() => quotationsData?.items || [], [quotationsData]);
+
+  const filteredQuotations = useMemo(() => {
     const query = search.toLowerCase();
-    return (
-      quotation.customer_name?.toLowerCase().includes(query) ||
-      quotation.customer_email?.toLowerCase().includes(query)
+    return quotations.filter((q) => 
+      q.quotation_number.toLowerCase().includes(query) ||
+      q.status.toLowerCase().includes(query)
     );
-  });
+  }, [quotations, search]);
 
   const handleCreate = () => {
-    navigate(`/${companyId}/leads/${id}/quotations/new`);
+    navigate(`/${companyId}/leads/${leadId}/quotations/new`);
   };
 
   const handleEdit = (quotation: Quotation) => {
-    navigate(`/${companyId}/leads/${id}/quotations/${quotation.id}/edit`);
+    navigate(`/${companyId}/leads/${leadId}/quotations/${quotation.id}/edit`);
   };
 
   const handleDelete = (id: string) => {
-    setQuotations((prev) => prev.filter((quotation) => quotation.id !== id));
+    deleteQuotation(id);
     setQuotationToDelete(null);
   };
 
   const columns: Column<Quotation>[] = [
     {
-      key: "customer_name",
-      header: "Customer",
+      key: "quotation_number",
+      header: "Quotation #",
       render: (item) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-sm">{item.customer_name}</span>
-          <span className="text-[10px] text-muted-foreground">
-            {item.customer_email}
-          </span>
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-muted-foreground" />
+          <span className="font-mono font-bold text-sm">{item.quotation_number}</span>
         </div>
       ),
     },
@@ -104,19 +80,21 @@ const QuotationsTab = () => {
       ),
     },
     {
-      key: "items",
-      header: "Items",
+      key: "grand_total",
+      header: "Grand Total",
       render: (item) => (
-        <span className="text-sm">{(item.items || []).length} Items</span>
+        <span className="text-sm font-bold">
+          ₹{(item.grand_total || 0).toLocaleString()}
+        </span>
       ),
     },
     {
-      key: "id",
-      header: "Grand Total",
+      key: "status",
+      header: "Status",
       render: (item) => (
-        <span className="text-sm font-medium">
-          ₹{calculateGrandTotal(item).toLocaleString()}
-        </span>
+        <Badge variant="outline" className={getStatusColor(item.status)}>
+          {item.status}
+        </Badge>
       ),
     },
     {
@@ -174,8 +152,8 @@ const QuotationsTab = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this quotation for "
-              {quotationToDelete?.customer_name}". This action cannot be undone.
+              This will permanently delete quotation "
+              {quotationToDelete?.quotation_number}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

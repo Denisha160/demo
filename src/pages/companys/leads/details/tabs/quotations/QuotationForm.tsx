@@ -8,6 +8,7 @@ import { useLeadContacts } from "@/hooks/useLeadContacts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -38,16 +39,12 @@ const requiredNumber = z.preprocess(
 const quotationItemSchema = z.object({
   product_id: z.string().optional().nullable(),
   kit_id: z.string().optional().nullable(),
-  product_name: z.string().min(1, "Name is required"),
-  product_code: optionalText,
-  description: optionalText,
-  long_description: optionalText,
-  quantity: requiredNumber.default(1),
-  rate: requiredNumber,
-  tax_rate: requiredNumber.default(0),
-  amount: requiredNumber,
-  unit: optionalText.default("pcs"),
-  is_optional: z.boolean().default(false),
+  item_name: z.string().min(1, "Name is required"),
+  item_code: optionalText,
+  item_description: optionalText,
+  quantity: requiredNumber.pipe(z.number().positive("Quantity must be greater than 0")),
+  unit_price: requiredNumber.pipe(z.number().min(0, "Unit price cannot be negative")),
+  amount: requiredNumber, // local only for display
   type: z.enum(["product", "kit"]).default("product"),
   fragrance_name: optionalText,
   category_id: optionalText.nullable(),
@@ -56,22 +53,16 @@ const quotationItemSchema = z.object({
 
 export const quotationSchema = z.object({
   lead_id: z.string().min(1, "Lead is required"),
+  quotation_number: z.string().min(1, "Quotation number is required").max(50),
   quotation_date: z.string().min(1, "Quotation date is required"),
-  customer_name: optionalText,
-  customer_email: z
-    .string()
-    .email("Invalid email")
-    .optional()
-    .or(z.literal("")),
-  customer_phone: optionalText,
-  customer_address: optionalText,
-  customer_gst: optionalText,
-  customer_pan: optionalText,
-  items: z.array(quotationItemSchema).min(1, "At least one item is required"),
-  sub_total: requiredNumber,
-  total_tax_amount: requiredNumber,
-  grand_total: requiredNumber,
+  status: z.enum(['DRAFT', 'SENT', 'VIEWED', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'REVISED', 'CANCELLED']).default('DRAFT'),
   amount_in_words: optionalText,
+  notes: optionalText,
+  items: z.array(quotationItemSchema).min(1, "At least one item is required"),
+  // These might be needed for the UI calculation but shouldn't break the stripUnknown if handled in onSubmit
+  sub_total: requiredNumber.optional(),
+  total_tax_amount: requiredNumber.optional(),
+  grand_total: requiredNumber.optional(),
 });
 
 export type QuotationFormData = z.infer<typeof quotationSchema>;
@@ -130,27 +121,23 @@ const QuotationForm = ({
     resolver: zodResolver(quotationSchema),
     defaultValues: quotationData || {
       quotation_date: formatDate(new Date()),
+      quotation_number: `QT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
       lead_id: "",
+      status: "DRAFT",
+      notes: "",
       sub_total: 0,
       total_tax_amount: 0,
       grand_total: 0,
-      customer_gst: "",
-      customer_pan: "",
-
       items: [
         {
           product_id: "",
           kit_id: "",
-          product_name: "",
-          product_code: "",
-          description: "",
-          long_description: "",
+          item_name: "",
+          item_code: "",
+          item_description: "",
           quantity: 1,
-          rate: 0,
-          tax_rate: 0,
+          unit_price: 0,
           amount: 0,
-          unit: "-",
-          is_optional: false,
           type: "product",
           fragrance_name: "",
           category_id: null,
@@ -195,28 +182,7 @@ const QuotationForm = ({
     form.setValue("lead_id", leadId, { shouldValidate: true });
     const lead = (leads as any[]).find((l) => l.id === leadId);
     if (lead) {
-      form.setValue("customer_name", lead.name || lead.title || "", {
-        shouldDirty: true,
-      });
-      form.setValue("customer_email", lead.email || "", { shouldDirty: true });
-      form.setValue("customer_phone", lead.phone || "", { shouldDirty: true });
-      const addressParts = [
-        lead.address,
-        lead.address_line1,
-        lead.address_line2,
-      ].filter(Boolean);
-      const fullAddress = addressParts.join(", ");
-      form.setValue("customer_address", fullAddress || "", {
-        shouldDirty: true,
-      });
-
-      form.setValue("customer_gst", lead.gst_number || "", {
-        shouldDirty: true,
-      });
-      form.setValue("customer_pan", lead.pan_number || "", {
-        shouldDirty: true,
-      });
-
+      // Set lead related fields if needed, but the customer fields are removed from schema
       // Move focus to Quotation Date after selection and open it
       setTimeout(() => {
         if (datePickerRef.current) {
@@ -247,18 +213,14 @@ const QuotationForm = ({
     let tax = 0;
 
     itemsList.forEach((item) => {
-      if (!item.is_optional) {
-        const amt = Number(item.amount) || 0;
-        const taxRate = Number(item.tax_rate) || 0;
-        sub += amt;
-        tax += amt * (taxRate / 100);
-      }
+      const amt = Number(item.amount) || 0;
+      sub += amt;
     });
 
     return {
       subtotal: sub,
-      totalTax: tax,
-      grandTotal: sub + tax,
+      totalTax: 0, // No tax in the new schema but used for UI
+      grandTotal: sub,
     };
   }, [watchAll.items]);
 
@@ -291,13 +253,36 @@ const QuotationForm = ({
       >
         <Card className="bg-muted/5 border-border/40 overflow-hidden shadow-none mb-2">
           <CardContent className="p-2 space-y-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Quotation Number */}
+              <FormField
+                control={form.control}
+                name="quotation_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <QuotationFormLabel required className="text-[11px]">
+                      Quotation #
+                    </QuotationFormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          {...field}
+                          placeholder="QT-2024-001"
+                          className="h-10 border-border/60 rounded-md font-mono font-bold uppercase"
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+
               {/* Customer Selection */}
               <FormField
                 control={form.control}
                 name="lead_id"
                 render={({ field }) => (
-                  <FormItem className="space-y-2">
+                  <FormItem>
                     <div className="flex items-center gap-2">
                       <QuotationFormLabel required className="text-[11px]">
                         Customer / Lead
@@ -347,47 +332,26 @@ const QuotationForm = ({
             {form.watch("lead_id") && (
               <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Email Address
-                    </span>
-                    <span className="text-xs font-semibold text-foreground break-all">
-                      {form.watch("customer_email") || "Not provided"}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Contact Number
-                    </span>
-                    <span className="text-xs font-semibold text-foreground">
-                      {form.watch("customer_phone") || "Not provided"}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      GST Registration
-                    </span>
-                    <span className="text-xs font-semibold text-foreground uppercase tracking-tight">
-                      {form.watch("customer_gst") || "Not available"}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      PAN Number
-                    </span>
-                    <span className="text-xs font-semibold text-foreground uppercase tracking-tight">
-                      {form.watch("customer_pan") || "Not available"}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1 bg-muted/20 rounded-md">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Billing Address
-                    </span>
-                    <span className="text-xs font-semibold text-foreground uppercase tracking-tight">
-                      {form.watch("customer_address") ||
-                        "No billing address on file for this lead."}
-                    </span>
-                  </div>
+                  {(leads as any[]).find(l => l.id === selectedLeadId) && (
+                    <>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                          Email Address
+                        </span>
+                        <span className="text-xs font-semibold text-foreground break-all">
+                          {((leads as any[]).find(l => l.id === selectedLeadId) as any)?.email || "Not provided"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                          Contact Number
+                        </span>
+                        <span className="text-xs font-semibold text-foreground">
+                          {((leads as any[]).find(l => l.id === selectedLeadId) as any)?.phone || "Not provided"}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -452,6 +416,25 @@ const QuotationForm = ({
                       <div className="min-h-[50px] p-3 text-xs font-bold text-primary bg-primary/5 border border-primary/20 rounded-sm leading-relaxed uppercase tracking-tighter italic">
                         {field.value || "Zero Only"}
                       </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <QuotationFormLabel>Additional Notes</QuotationFormLabel>
+                    <FormControl>
+                      <textarea
+                        {...field}
+                        rows={3}
+                        placeholder="Priority customer - first order"
+                        className="w-full p-3 text-xs bg-muted/20 border border-border/40 rounded-sm focus:ring-1 focus:ring-primary/20 outline-none transition-all resize-none"
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>

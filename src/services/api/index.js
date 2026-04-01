@@ -826,4 +826,31 @@ export const deleteShift = (id) => {
   return axios({ method: "DELETE", url });
 };
 
+
+
+export const listQuotation = (params) => {
+  const url = `quotation`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getQuotationDetails = (id, params) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createQuotation = (data) => {
+  const url = `quotation`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateQuotation = ({ id, ...data }) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteQuotation = (id) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
 // end region

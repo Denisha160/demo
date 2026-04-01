@@ -60,16 +60,12 @@ export const QuotationProductsTable = () => {
       appendItem({
         product_id: "",
         kit_id: "",
-        product_name: "",
-        product_code: "",
-        description: "",
-        long_description: "",
+        item_name: "",
+        item_code: "",
+        item_description: "",
         quantity: 1,
-        rate: 0,
-        tax_rate: 0,
+        unit_price: 0,
         amount: 0,
-        unit: "-",
-        is_optional: false,
         type: type,
         fragrance_name: "",
         category_id: null,
@@ -115,7 +111,7 @@ export const QuotationProductsTable = () => {
 
   const handleItemAmountUpdate = (index: number) => {
     const item = getValues(`items.${index}`);
-    const amount = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
+    const amount = (Number(item.quantity) || 0) * (Number(item.unit_price) || 0);
     setValue(`items.${index}.amount`, amount, { shouldDirty: true });
   };
 
@@ -139,13 +135,12 @@ export const QuotationProductsTable = () => {
     updateItem(index, {
       ...currentItems[index],
       product_id: product.id,
-      product_name: product.product_name,
-      product_code: product.code || "",
-      description: product.product_name,
-      rate: product.selling_price || 0,
+      item_name: product.product_name,
+      item_code: product.code || "",
+      item_description: product.product_name,
+      unit_price: product.selling_price || 0,
       amount:
         (currentItems[index].quantity || 1) * (product.selling_price || 0),
-      unit: product.base_unit || "pcs",
       fragrance_name: product.fragrance_name || "",
       category_id: product.category_id || null,
       category_name: product.category_name || "",
@@ -171,12 +166,11 @@ export const QuotationProductsTable = () => {
     updateItem(index, {
       ...currentItems[index],
       kit_id: kit.id,
-      product_name: kit.name,
-      product_code: kit.sku || "",
-      description: kit.name,
-      rate: kit.kit_price || 0,
+      item_name: kit.name,
+      item_code: kit.sku || "",
+      item_description: kit.name,
+      unit_price: kit.kit_price || 0,
       amount: (currentItems[index].quantity || 1) * (kit.kit_price || 0),
-      unit: "kit",
       fragrance_name: "",
       category_id: null,
       category_name: "",
@@ -218,9 +212,8 @@ export const QuotationProductsTable = () => {
                   </th>
                   <th className="min-w-[120px] w-[120px] px-2 py-2">Code</th>
                   <th className="min-w-[280px] px-2 py-2">Item</th>
-                  <th className="w-[100px] px-2 py-2 text-center">Unit</th>
                   <th className="w-[100px] px-2 py-2">Qty</th>
-                  <th className="w-[140px] px-2 py-2">Rate</th>
+                  <th className="w-[140px] px-2 py-2">Unit Price</th>
                   <th className="w-[140px] px-2 py-2 text-right">Amount</th>
                   <th className="w-[40px] px-2 py-2 text-center"></th>
                 </tr>
@@ -249,7 +242,7 @@ export const QuotationProductsTable = () => {
                     </td>
                     <td className="px-2 py-1.5 text-center text-xs font-bold text-muted-foreground/40">
                       <Input
-                        {...register(`items.${index}.product_code` as const)}
+                        {...register(`items.${index}.item_code` as const)}
                         className="h-8 text-xs font-mono bg-muted/20 border-transparent text-muted-foreground cursor-not-allowed w-full focus-visible:ring-0 shadow-none"
                         placeholder="Code"
                         disabled
@@ -306,14 +299,6 @@ export const QuotationProductsTable = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-2 py-1.5 text-center">
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] bg-muted/30 border-transparent px-2 font-medium"
-                      >
-                        {watch(`items.${index}.unit`) || "-"}
-                      </Badge>
-                    </td>
                     <td className="px-2 py-1.5">
                       <Input
                         type="number"
@@ -321,7 +306,6 @@ export const QuotationProductsTable = () => {
                         step="0.01"
                         {...register(`items.${index}.quantity` as const, {
                           valueAsNumber: true,
-
                           onChange: () => handleItemAmountUpdate(index),
                         })}
                         className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
@@ -335,7 +319,7 @@ export const QuotationProductsTable = () => {
                         <Input
                           type="number"
                           step="0.01"
-                          {...register(`items.${index}.rate` as const, {
+                          {...register(`items.${index}.unit_price` as const, {
                             valueAsNumber: true,
                             onChange: () => handleItemAmountUpdate(index),
                           })}

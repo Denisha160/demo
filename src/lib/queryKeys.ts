@@ -140,4 +140,11 @@ export const queryKeys = {
       [...queryKeys.hierarchy.all, "list", filters] as const,
     detail: (id: string) => [...queryKeys.hierarchy.all, "detail", id] as const,
   },
+  quotations: {
+    all: ["quotations"] as const,
+    list: (filters?: Record<string, unknown>) =>
+      [...queryKeys.quotations.all, "list", filters] as const,
+    detail: (id: string) =>
+      [...queryKeys.quotations.all, "detail", id] as const,
+  },
 } as const;

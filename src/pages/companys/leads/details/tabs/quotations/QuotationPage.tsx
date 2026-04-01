@@ -1,38 +1,51 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import QuotationForm, { QuotationFormData } from "./QuotationForm";
 import { UseFormSetError } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { useCreateQuotation, useUpdateQuotation, useQuotation } from "@/hooks/useQuotations";
 
 const QuotationPage = () => {
   const { companyId, id: leadId, quotationId } = useParams();
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { data: quotationData, isLoading: isLoadingQuotation } = useQuotation(quotationId);
+  const { mutate: createQuotation, isPending: isCreating } = useCreateQuotation();
+  const { mutate: updateQuotation, isPending: isUpdating } = useUpdateQuotation();
 
-  const handleSave = async (
+  const isSubmitting = isCreating || isUpdating;
+
+  const handleSave = useCallback((
     data: QuotationFormData,
     setError: UseFormSetError<QuotationFormData>,
   ) => {
-    setIsSubmitting(true);
-    try {
-      console.log("Saving quotation for lead:", leadId, data);
-      // Mock API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(
-        quotationId
-          ? "Quotation updated successfully"
-          : "Quotation created successfully",
+    const payload = {
+      ...data,
+      lead_id: leadId!, // Ensure lead_id is present from URL if not in form
+    };
+
+    if (quotationId) {
+      updateQuotation(
+        { id: quotationId, ...payload } as any,
+        {
+          onSuccess: () => {
+            navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
+          },
+        }
       );
-      navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
-    } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Failed to save quotation");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      createQuotation(
+        payload as any,
+        {
+          onSuccess: () => {
+            navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
+          },
+        }
+      );
     }
-  };
+  }, [companyId, leadId, quotationId, createQuotation, updateQuotation, navigate]);
 
   const handleCancel = () => {
     navigate(`/${companyId}/leads/${leadId}?tab=quotations`);

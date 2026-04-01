@@ -44,12 +44,13 @@ const quotationItemSchema = z.object({
   item_description: optionalText,
   quantity: requiredNumber.pipe(z.number().positive("Quantity must be greater than 0")),
   unit_price: requiredNumber.pipe(z.number().min(0, "Unit price cannot be negative")),
-  amount: requiredNumber, // local only for display
+  amount: requiredNumber,
+  gst_percentage: requiredNumber.default(18),
+  gst_amount: requiredNumber,
   type: z.enum(["product", "kit"]).default("product"),
   fragrance_name: optionalText,
   category_id: optionalText.nullable(),
   category_name: optionalText,
-  gst: requiredNumber.default(18),
 });
 
 export const quotationSchema = z.object({
@@ -63,7 +64,7 @@ export const quotationSchema = z.object({
   items: z.array(quotationItemSchema).min(1, "At least one item is required"),
   // These might be needed for the UI calculation but shouldn't break the stripUnknown if handled in onSubmit
   sub_total: requiredNumber.optional(),
-  total_tax_amount: requiredNumber.optional(),
+  tax_total: requiredNumber.optional(),
   grand_total: requiredNumber.optional(),
 });
 
@@ -129,7 +130,7 @@ const QuotationForm = ({
       gst_number: "",
       pan_number: "",
       sub_total: 0,
-      total_tax_amount: 0,
+      tax_total: 0,
       grand_total: 0,
       items: [
         {
@@ -141,11 +142,12 @@ const QuotationForm = ({
           quantity: 1,
           unit_price: 0,
           amount: 0,
+          gst_percentage: 18,
+          gst_amount: 0,
           type: "product",
           fragrance_name: "",
           category_id: null,
           category_name: "",
-          gst: 18,
         },
       ],
       amount_in_words: "",
@@ -189,7 +191,7 @@ const QuotationForm = ({
       // Set lead related fields
       form.setValue("gst_number", lead.gst_number || "", { shouldDirty: true });
       form.setValue("pan_number", lead.pan_number || "", { shouldDirty: true });
-      
+
       // Move focus to Quotation Date after selection and open it
       setTimeout(() => {
         if (datePickerRef.current) {
@@ -221,11 +223,10 @@ const QuotationForm = ({
 
     itemsList.forEach((item) => {
       const amt = Number(item.amount) || 0;
-      const gstPercent = Number(item.gst) || 0;
-      const itemTax = (amt * gstPercent) / 100;
-      
+      const gstAmt = Number(item.gst_amount) || 0;
+
       sub += amt;
-      tax += itemTax;
+      tax += gstAmt;
     });
 
     return {
@@ -240,7 +241,7 @@ const QuotationForm = ({
     const words = numberToWords(totals.grandTotal);
     form.setValue("amount_in_words", words, { shouldDirty: true });
     form.setValue("sub_total", totals.subtotal, { shouldDirty: true });
-    form.setValue("total_tax_amount", totals.totalTax, { shouldDirty: true });
+    form.setValue("tax_total", totals.totalTax, { shouldDirty: true });
     form.setValue("grand_total", totals.grandTotal, { shouldDirty: true });
   }, [totals.grandTotal, totals.totalTax, totals.subtotal, form]);
 
@@ -323,7 +324,7 @@ const QuotationForm = ({
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pb-2 p-3 bg-muted/20 rounded-md border border-border/20">
                   {(() => {
                     const lead = (leads as any[]).find(l => l.id === selectedLeadId);
-                    
+
                     // Fallback to quotationData if lead not found in search results
                     const displayEmail = lead?.email || (quotationData as any)?.lead_email || "—";
                     const displayPhone = lead?.phone || (quotationData as any)?.lead_phone || "—";

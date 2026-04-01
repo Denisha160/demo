@@ -60,7 +60,8 @@ export const QuotationProductsTable = () => {
         fragrance_name: "",
         category_id: null,
         category_name: "",
-        gst: 18,
+        gst_percentage: 18,
+        gst_amount: 0,
       });
     },
     [appendItem],
@@ -94,8 +95,15 @@ export const QuotationProductsTable = () => {
 
   const handleItemAmountUpdate = (index: number) => {
     const item = getValues(`items.${index}`);
-    const amount = (Number(item.quantity) || 0) * (Number(item.unit_price) || 0);
+    const qty = Number(item.quantity) || 0;
+    const price = Number(item.unit_price) || 0;
+    const gstPercent = Number(item.gst_percentage) || 0;
+
+    const amount = qty * price;
+    const gstAmount = (amount * gstPercent) / 100;
+
     setValue(`items.${index}.amount`, amount, { shouldDirty: true });
+    setValue(`items.${index}.gst_amount`, gstAmount, { shouldDirty: true });
   };
 
   const handleSelectItemInline = (index: number, itemId: string) => {
@@ -134,7 +142,8 @@ export const QuotationProductsTable = () => {
         fragrance_name: p.fragrance_name || "",
         category_id: p.category_id || null,
         category_name: p.category_name || "",
-        gst: 18,
+        gst_percentage: 18,
+        gst_amount: (p.selling_price || 0) * 0.18,
       });
     } else {
       const k = item.original;
@@ -151,7 +160,8 @@ export const QuotationProductsTable = () => {
         fragrance_name: "",
         category_id: null,
         category_name: "",
-        gst: 18,
+        gst_percentage: 18,
+        gst_amount: (k.kit_price || 0) * 0.18,
       });
     }
   };
@@ -189,9 +199,10 @@ export const QuotationProductsTable = () => {
                   <th className="min-w-[200px] px-2 py-2">Item</th>
                   <th className="min-w-[200px] px-2 py-2">Description</th>
                   <th className="min-w-[80px] px-2 py-2">Qty</th>
-                  <th className="min-w-[120px] px-2 py-2">Unit Price</th>
-                  <th className="min-w-[100px] px-2 py-2">GST %</th>
-                  <th className="min-w-[140px] px-2 py-2 text-right pr-4">Amount</th>
+                  <th className="min-w-[120px] px-2 py-2">Price</th>
+                  <th className="min-w-[140px] px-2 py-2">Amt (Excl. Tax)</th>
+                  <th className="min-w-[80px] px-2 py-2">GST %</th>
+                  <th className="min-w-[120px] px-2 py-2">GST Amt</th>
                   <th className="w-[50px] px-2 py-2 text-center"></th>
                 </tr>
               </thead>
@@ -280,20 +291,25 @@ export const QuotationProductsTable = () => {
                         />
                       </div>
                     </td>
+                    <td className="px-2 py-1.5 text-right">
+                      <div className="text-xs font-black text-foreground font-mono">
+                        ₹{(watch(`items.${index}.amount`) || 0).toLocaleString()}
+                      </div>
+                    </td>
                     <td className="px-2 py-1.5">
                       <Input
                         type="number"
                         step="0.01"
-                        {...register(`items.${index}.gst` as const, {
+                        {...register(`items.${index}.gst_percentage` as const, {
                           valueAsNumber: true,
+                          onChange: () => handleItemAmountUpdate(index),
                         })}
                         className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
                       />
                     </td>
-                    <td className="px-2 py-1.5 text-right pr-4">
-                      <div className="text-xs font-black text-foreground font-mono">
-                        ₹
-                        {(watch(`items.${index}.amount`) || 0).toLocaleString()}
+                    <td className="px-2 py-1.5 text-right">
+                      <div className="text-xs font-black text-primary font-mono">
+                        ₹{(watch(`items.${index}.gst_amount`) || 0).toLocaleString()}
                       </div>
                     </td>
                     <td className="px-2 py-1.5 text-center">
@@ -315,7 +331,7 @@ export const QuotationProductsTable = () => {
               {/* Seamless 50/50 Footer Row directly attached to the table layout */}
               <tfoot className="w-full">
                 <tr className="border-t border-border/20 bg-muted/5">
-                  <td colSpan={8} className="p-0 border-none">
+                  <td colSpan={9} className="p-0 border-none">
                     <div className="flex items-center w-full h-10 divide-x divide-border/20">
                       {/* Left side: Add Product Button */}
                       <button

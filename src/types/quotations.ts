@@ -19,6 +19,8 @@ export interface QuotationItem {
   category_name?: string | null;
   quantity: number;
   unit_price: number;
+  gst_percentage?: number;
+  gst_amount?: number;
 }
 
 export interface Quotation {
@@ -33,7 +35,7 @@ export interface Quotation {
   notes?: string | null;
   items: QuotationItem[];
   sub_total: number;
-  total_tax_amount: number;
+  tax_total: number;
   grand_total: number;
   created_at: string;
   updated_at: string;

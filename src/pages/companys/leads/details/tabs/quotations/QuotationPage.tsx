@@ -21,17 +21,22 @@ const QuotationPage = () => {
   const initialData = useMemo(() => {
     if (!quotationData) return undefined;
     
+    const rawData = quotationData as any;
+    
     // Map items from total_amount to amount if needed
-    const mappedItems = quotationData.items?.map((item: any) => ({
+    const mappedItems = rawData.items?.map((item: any) => ({
       ...item,
-      amount: item.total_amount || item.amount || 0,
+      amount: item.amount || 0,
+      gst_percentage: item.gst_percentage || item.gst || 18,
+      gst_amount: item.gst_amount || item.tax_amount || 0,
       type: item.kit_id ? "kit" : "product"
     }));
 
     return {
-      ...quotationData,
+      ...rawData,
+      tax_total: rawData.tax_total || rawData.total_tax_amount || 0,
       items: mappedItems,
-      quotation_date: formatDate(quotationData.quotation_date)
+      quotation_date: formatDate(rawData.quotation_date)
     };
   }, [quotationData]);
 

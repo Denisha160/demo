@@ -384,16 +384,15 @@ const QuotationForm = ({
               />
             </div>
 
-            {/* Customer Details Display */}
+            {/* Customer Details Display - Compact */}
             {selectedLeadId && (
-              <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pb-2 p-3 bg-muted/20 rounded-sm border border-border/20">
+              <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+                <div className="flex flex-wrap gap-6 bg-muted/20 rounded-sm border border-border/10">
                   {(() => {
                     const lead = (leads as any[]).find(
                       (l) => l.id === selectedLeadId,
                     );
 
-                    // Fallback to quotationData if lead not found in search results
                     const displayEmail =
                       lead?.email || (quotationData as any)?.lead_email || "—";
                     const displayPhone =
@@ -402,56 +401,31 @@ const QuotationForm = ({
                       lead?.gst_number ||
                       (quotationData as any)?.gst_number ||
                       "—";
-                    const displayPan =
-                      lead?.pan_number ||
-                      (quotationData as any)?.pan_number ||
-                      "—";
-                    const displayAddress =
-                      lead?.address ||
-                      lead?.full_address ||
-                      (quotationData as any)?.lead_address ||
-                      "—";
 
                     return (
                       <>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                            Email Address
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest">
+                            Email
                           </span>
-                          <span className="text-[11px] font-semibold text-foreground break-all">
+                          <span className="text-[11px] font-bold text-foreground">
                             {displayEmail}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                            Contact Number
+                        <div className="flex items-center gap-2 border-l border-border/20 pl-6">
+                          <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest">
+                            Phone
                           </span>
-                          <span className="text-[11px] font-semibold text-foreground">
+                          <span className="text-[11px] font-bold text-foreground">
                             {displayPhone}
                           </span>
                         </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                            GST Number
+                        <div className="flex items-center gap-2 border-l border-border/20 pl-6">
+                          <span className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest">
+                            GST
                           </span>
-                          <span className="text-[11px] font-semibold text-foreground">
+                          <span className="text-[11px] font-mono font-bold text-primary">
                             {displayGst}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                            PAN Number
-                          </span>
-                          <span className="text-[11px] font-semibold text-foreground">
-                            {displayPan}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                            Address
-                          </span>
-                          <span className="text-[11px] font-semibold text-foreground leading-tight">
-                            {displayAddress}
                           </span>
                         </div>
                       </>

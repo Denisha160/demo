@@ -71,6 +71,9 @@ export const QuotationProductsTable = () => {
         unit: "-",
         is_optional: false,
         type: type,
+        fragrance_name: "",
+        category_id: null,
+        category_name: "",
       });
     },
     [appendItem],
@@ -143,6 +146,9 @@ export const QuotationProductsTable = () => {
       amount:
         (currentItems[index].quantity || 1) * (product.selling_price || 0),
       unit: product.base_unit || "pcs",
+      fragrance_name: product.fragrance_name || "",
+      category_id: product.category_id || null,
+      category_name: product.category_name || "",
     });
   };
 
@@ -171,6 +177,9 @@ export const QuotationProductsTable = () => {
       rate: kit.kit_price || 0,
       amount: (currentItems[index].quantity || 1) * (kit.kit_price || 0),
       unit: "kit",
+      fragrance_name: "",
+      category_id: null,
+      category_name: "",
     });
   };
 

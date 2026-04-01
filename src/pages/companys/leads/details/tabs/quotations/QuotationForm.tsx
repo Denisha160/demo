@@ -20,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatDateForAPI } from "@/utils/date";
 import { cn } from "@/lib/utils";
 import { QuotationProductsTable } from "./QuotationProductsTable";
+import { numberToWords } from "@/utils/numberToWords";
 
 const optionalText = z.string().optional().or(z.literal(""));
 
@@ -48,6 +49,9 @@ const quotationItemSchema = z.object({
   unit: optionalText.default("pcs"),
   is_optional: z.boolean().default(false),
   type: z.enum(["product", "kit"]).default("product"),
+  fragrance_name: optionalText,
+  category_id: optionalText.nullable(),
+  category_name: optionalText,
 });
 
 export const quotationSchema = z.object({
@@ -144,6 +148,9 @@ const QuotationForm = ({
           unit: "-",
           is_optional: false,
           type: "product",
+          fragrance_name: "",
+          category_id: null,
+          category_name: "",
         },
       ],
       amount_in_words: "",
@@ -232,16 +239,31 @@ const QuotationForm = ({
 
   const totals = useMemo(() => {
     const itemsList = watchAll.items || [];
-    const sub = itemsList.reduce(
-      (sum, item) => sum + (item.is_optional ? 0 : Number(item.amount) || 0),
-      0,
-    );
+    let sub = 0;
+    let tax = 0;
+
+    itemsList.forEach((item) => {
+      if (!item.is_optional) {
+        const amt = Number(item.amount) || 0;
+        const taxRate = Number(item.tax_rate) || 0;
+        sub += amt;
+        tax += amt * (taxRate / 100);
+      }
+    });
 
     return {
       subtotal: sub,
-      grandTotal: sub,
+      totalTax: tax,
+      grandTotal: sub + tax,
     };
   }, [watchAll.items]);
+
+  // Auto-update amount_in_words and total_tax_amount when grandTotal changes
+  useEffect(() => {
+    const words = numberToWords(totals.grandTotal);
+    form.setValue("amount_in_words", words, { shouldDirty: true });
+    form.setValue("total_tax_amount", totals.totalTax, { shouldDirty: true });
+  }, [totals.grandTotal, totals.totalTax, form]);
 
   const onSubmit = (data: QuotationFormData) => {
     onSave(
@@ -381,7 +403,27 @@ const QuotationForm = ({
           <Card className="bg-muted/10 border-border/40 overflow-hidden shadow-none">
             <CardContent className="p-4 space-y-4">
               {/* Calculations Preview */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="p-2.5 bg-muted/20 rounded border border-border/40 flex flex-col justify-center">
+                  <span className="text-[9px] uppercase font-bold text-muted-foreground">
+                    Subtotal
+                  </span>
+                  <span className="text-sm font-bold">
+                    {totals.subtotal.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
+                <div className="p-2.5 bg-muted/20 rounded border border-border/40 flex flex-col justify-center">
+                  <span className="text-[9px] uppercase font-bold text-muted-foreground">
+                    Total Tax
+                  </span>
+                  <span className="text-sm font-bold">
+                    {totals.totalTax.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
+                  </span>
+                </div>
                 <div className="p-2.5 bg-primary/5 rounded border border-primary/20 flex flex-col justify-center">
                   <span className="text-[9px] uppercase font-bold text-primary">
                     Grand Total
@@ -401,8 +443,8 @@ const QuotationForm = ({
                   <FormItem className="space-y-1">
                     <QuotationFormLabel>Amount in Words</QuotationFormLabel>
                     <FormControl>
-                      <div className="min-h-[50px] p-3 text-xs font-bold text-muted-foreground bg-muted/20 border border-border/40 rounded-sm leading-relaxed uppercase tracking-tighter italic">
-                        {field.value || "Calculating amount..."}
+                      <div className="min-h-[50px] p-3 text-xs font-bold text-primary bg-primary/5 border border-primary/20 rounded-sm leading-relaxed uppercase tracking-tighter italic">
+                        {field.value || "Zero Only"}
                       </div>
                     </FormControl>
                     <FormMessage className="text-[10px]" />

@@ -329,7 +329,7 @@ const QuotationForm = ({
                         onValueChange={handleLeadChange}
                         placeholder="Select a customer..."
                         searchPlaceholder="Search leads..."
-                        className="h-10 border-border/60 rounded-md"
+                        className="h-10 border-border/60 rounded-sm"
                         searchValue={leadSearch}
                         onSearchChange={setLeadSearch}
                         disabled={!!leadIdFromUrl}
@@ -355,7 +355,7 @@ const QuotationForm = ({
                       ref={datePickerRef}
                       value={field.value}
                       onChange={(v) => field.onChange(v || "")}
-                      className="h-10 border-border/60 rounded-md"
+                      className="h-10 border-border/60 rounded-sm"
                     />
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -366,7 +366,7 @@ const QuotationForm = ({
             {/* Customer Details Display */}
             {selectedLeadId && (
               <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pb-2 p-3 bg-muted/20 rounded-md border border-border/20">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pb-2 p-3 bg-muted/20 rounded-sm border border-border/20">
                   {(() => {
                     const lead = (leads as any[]).find(l => l.id === selectedLeadId);
 

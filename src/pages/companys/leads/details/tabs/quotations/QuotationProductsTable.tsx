@@ -174,7 +174,7 @@ export const QuotationProductsTable = () => {
 
   return (
     <div className="mb-3 animate-in fade-in slide-in-from-top-4 duration-700">
-      <Card className="border-border/40 shadow-sm overflow-hidden rounded-md">
+      <Card className="border-border/40 shadow-sm overflow-hidden rounded-sm">
         {/* Header */}
         <div className="bg-muted/10 px-4 py-2.5 border-b border-border/20 flex items-center justify-between">
           <div className="flex items-center gap-2">

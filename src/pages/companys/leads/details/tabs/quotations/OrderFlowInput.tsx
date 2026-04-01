@@ -742,7 +742,7 @@ const QuotationForm = ({
                 </Button>
               </div>
               <div className="space-y-2">
-                <div className="flex gap-2 items-start bg-muted/20 p-1 rounded-md">
+                <div className="flex gap-2 items-start bg-muted/20 p-1 rounded-sm">
                   <span className="flex-1 px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase flex items-center">
                     Standard Delivery
                   </span>

@@ -352,7 +352,7 @@ const TaskModal = ({
                 control={form.control}
                 name="set_reminder"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3 bg-muted/5">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-sm border p-3 bg-muted/5">
                     <FormControl>
                       <Checkbox
                         id="set_reminder_task"

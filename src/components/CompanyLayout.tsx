@@ -116,66 +116,66 @@ const navItems: NavItemEntry[] = [
   // { label: "Attendance", icon: Clock, path: "attendance" },
   // { label: "Suppliers", icon: Truck, path: "suppliers" },
   // { label: "Parties", icon: Users, path: "parties" },
-  // {
-  //   label: "Product Setup",
-  //   icon: Blocks,
-  //   children: [
-  //     {
-  //       label: "Products",
-  //       icon: Box,
-  //       path: "products",
-  //       permission: "product.read",
-  //     },
-  //     {
-  //       label: "Recipes",
-  //       icon: List,
-  //       path: "recipes",
-  //       permission: "product-bom.read",
-  //     },
-  //     {
-  //       label: "Kits",
-  //       icon: Package,
-  //       path: "kits",
-  //       permission: "product-kit.read",
-  //     },
-  //     {
-  //       label: "Categories",
-  //       icon: Tags,
-  //       path: "product-categories",
-  //       permission: "product-category.read",
-  //     },
-  //     {
-  //       label: "Brands",
-  //       icon: Award,
-  //       path: "brands",
-  //       permission: "product-brand.read",
-  //     },
-  //     {
-  //       label: "Fragrances",
-  //       icon: Wind,
-  //       path: "fragrances",
-  //       permission: "product-fragrance.read",
-  //     },
-  //     {
-  //       label: "Packages",
-  //       icon: Package,
-  //       path: "packages",
-  //       permission: "product-package.read",
-  //     },
-  //   ],
-  // },
-  // {
-  //   label: "Batches",
-  //   icon: Blocks,
-  //   path: "batches",
-  //   permission: "inventory-batch.read",
-  // },
-  // {
-  //   label: "Serial Numbers",
-  //   icon: Hash,
-  //   path: "serials",
-  //   permission: "inventory-serial.read",
-  // },
+  {
+    label: "Product Setup",
+    icon: Blocks,
+    children: [
+      {
+        label: "Products",
+        icon: Box,
+        path: "products",
+        permission: "product.read",
+      },
+      {
+        label: "Recipes",
+        icon: List,
+        path: "recipes",
+        permission: "product-bom.read",
+      },
+      {
+        label: "Kits",
+        icon: Package,
+        path: "kits",
+        permission: "product-kit.read",
+      },
+      {
+        label: "Categories",
+        icon: Tags,
+        path: "product-categories",
+        permission: "product-category.read",
+      },
+      {
+        label: "Brands",
+        icon: Award,
+        path: "brands",
+        permission: "product-brand.read",
+      },
+      {
+        label: "Fragrances",
+        icon: Wind,
+        path: "fragrances",
+        permission: "product-fragrance.read",
+      },
+      {
+        label: "Packages",
+        icon: Package,
+        path: "packages",
+        permission: "product-package.read",
+      },
+    ],
+  },
+  {
+    label: "Batches",
+    icon: Blocks,
+    path: "batches",
+    permission: "inventory-batch.read",
+  },
+  {
+    label: "Serial Numbers",
+    icon: Hash,
+    path: "serials",
+    permission: "inventory-serial.read",
+  },
   // { label: "Accounts", icon: Landmark, path: "accounts" },
 ];
 
@@ -219,7 +219,7 @@ const NavGroup = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          w-full flex items-center justify-between px-2 py-2 text-sm rounded-md transition-all duration-200 group
+          w-full flex items-center justify-between px-2 py-2 text-sm rounded-sm transition-all duration-200 group
           ${active ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground hover:text-foreground hover:bg-accent"}
         `}
         style={active ? { color: `hsl(${theme.primary})` } : {}}
@@ -243,7 +243,7 @@ const NavGroup = ({
                 to={`/${currentCompany.id}/${child.path}`}
                 onClick={onCloseSidebar}
                 className={`
-                  flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-md transition-all duration-200
+                  flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-sm transition-all duration-200
                   ${childActive
                     ? "bg-primary/15 text-primary font-bold"
                     : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
@@ -402,7 +402,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                   (user?.is_root_user || companies.length > 1) &&
                   setIsCompanyDropdownOpen(!isCompanyDropdownOpen)
                 }
-                className={`flex items-center gap-2 w-full h-9 px-2 rounded-md transition-colors text-left overflow-hidden ${user?.is_root_user || companies.length > 1 ? "hover:bg-accent" : "cursor-default"}`}
+                className={`flex items-center gap-2 w-full h-9 px-2 rounded-sm transition-colors text-left overflow-hidden ${user?.is_root_user || companies.length > 1 ? "hover:bg-accent" : "cursor-default"}`}
               >
                 <div className="h-6 w-6 bg-primary text-primary-foreground flex items-center justify-center rounded-sm shrink-0">
                   <span className="text-[10px] font-bold">
@@ -421,7 +421,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
               {/* Dropdown Menu */}
               {isCompanyDropdownOpen && (
-                <div className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-md shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-full left-0 w-full mt-1 bg-popover border border-border rounded-sm shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-1">
                     <div className="px-2 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                       Switch Company
@@ -450,7 +450,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                             {company.display_name || company.legal_name}
                           </span>
                           {currentCompany.id === company.id && (
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                            <div className="h-1.5 w-1.5 rounded-sm bg-primary" />
                           )}
                         </button>
                       );
@@ -466,7 +466,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                 setSidebarCollapsed(true);
                 setSidebarOpen(false);
               }}
-              className="h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
+              className="h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-sm transition-colors shrink-0 hidden lg:flex"
               title="Hide sidebar"
             >
               <PanelLeftClose className="h-4 w-4" />
@@ -523,7 +523,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                   to={itemPath}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                  flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
+                  flex items-center gap-3 px-2 py-2 text-sm rounded-sm transition-all duration-200 group
                   ${active
                       ? "bg-primary/10 text-primary font-bold"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -550,7 +550,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             <Link
               to="/admin/companies"
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-foreground w-full rounded-md hover:bg-accent transition-colors"
+              className="flex items-center gap-2 px-2 py-2 text-sm text-muted-foreground hover:text-foreground w-full rounded-sm hover:bg-accent transition-colors"
             >
               <ShieldCheck className="h-4 w-4" />
               Admin Panel
@@ -567,7 +567,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             {sidebarCollapsed && (
               <button
                 onClick={() => setSidebarCollapsed(false)}
-                className="hidden lg:flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-all"
+                className="hidden lg:flex h-9 w-9 items-center justify-center rounded-sm hover:bg-accent text-muted-foreground hover:text-foreground transition-all"
                 title="Show sidebar"
               >
                 <PanelLeft className="h-4 w-4" />
@@ -577,7 +577,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md hover:bg-accent text-muted-foreground"
+              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-sm hover:bg-accent text-muted-foreground"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -590,7 +590,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
           <div className="flex items-center gap-1 sm:gap-3">
             <Link
               to={`/${currentCompany.id}/lead/tasks/lead_id`}
-              className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+              className="h-9 w-9 flex items-center justify-center rounded-sm hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
               title="Tasks"
             >
               <Clipboard className="h-5 w-5" />
@@ -600,9 +600,9 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
             <div className="relative">
               <button
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors"
+                className="flex items-center gap-2 cursor-pointer p-1 rounded-sm hover:bg-accent transition-colors"
               >
-                <div className="h-7 w-7 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-sm text-primary-foreground">
+                <div className="h-7 w-7 bg-gradient-to-br from-primary to-primary/80 rounded-sm flex items-center justify-center shadow-sm text-primary-foreground">
                   <span className="text-[10px] font-bold">{initials}</span>
                 </div>
                 <div className="hidden md:block text-left mr-1">
@@ -619,7 +619,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                 createPortal(
                   <div
                     ref={dropdownRef}
-                    className="fixed top-14 right-4 w-56 bg-popover border border-border rounded-md shadow-lg z-[9999] animate-in fade-in zoom-in-95 duration-200"
+                    className="fixed top-14 right-4 w-56 bg-popover border border-border rounded-sm shadow-lg z-[9999] animate-in fade-in zoom-in-95 duration-200"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="p-1">

@@ -550,7 +550,7 @@ export default function VerifyLeadModal({
           </div>
 
           {(form.watch("has_warehouse") || form.watch("has_showroom")) && (
-            <div className="space-y-2 p-3 mt-1 rounded-xl border border-border/40 bg-muted/5">
+            <div className="space-y-2 p-3 mt-1 rounded-sm border border-border/40 bg-muted/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {form.watch("has_warehouse") && (
                   <div className="grid grid-cols-2 gap-2">
@@ -643,7 +643,7 @@ export default function VerifyLeadModal({
           )}
 
           {form.watch("has_delivery_vehicles") && (
-            <div className="mt-2 p-2 rounded-xl border border-border/40 bg-muted/5">
+            <div className="mt-2 p-2 rounded-sm border border-border/40 bg-muted/5">
               <div className="overflow-x-auto rounded-lg border border-border/20">
                 <table className="w-full text-left text-[11px]">
                   <thead className="bg-background/50 uppercase text-xs font-bold">

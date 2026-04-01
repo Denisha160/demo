@@ -516,7 +516,7 @@ const BomModal = ({
             </Button>
           </div>
 
-          <div className="border rounded-md overflow-hidden bg-card/30 backdrop-blur-sm shadow-inner min-h-[100px]">
+          <div className="border rounded-sm overflow-hidden bg-card/30 backdrop-blur-sm shadow-inner min-h-[100px]">
             <table className="w-full text-xs">
               <thead className="bg-secondary/50 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
                 <tr>
@@ -649,7 +649,7 @@ const BomModal = ({
 
         {/* Cost Summary Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-primary/5 rounded-md border border-primary/10 space-y-2 group hover:bg-primary/[0.08] transition-all">
+          <div className="p-4 bg-primary/5 rounded-sm border border-primary/10 space-y-2 group hover:bg-primary/[0.08] transition-all">
             <div className="flex items-center gap-2 text-primary">
               <Calculator className="h-4 w-4 group-hover:scale-110 transition-transform" />
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
@@ -670,7 +670,7 @@ const BomModal = ({
             </div>
           </div>
 
-          <div className="p-4 bg-muted/30 rounded-md border border-border space-y-2 group hover:bg-muted/40 transition-all">
+          <div className="p-4 bg-muted/30 rounded-sm border border-border space-y-2 group hover:bg-muted/40 transition-all">
             <div className="flex items-center gap-2 text-muted-foreground">
               <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
@@ -692,7 +692,7 @@ const BomModal = ({
           </div>
 
           <div
-            className={`p-4 rounded-md border transition-all space-y-2 group ${profit >= 0 ? "bg-emerald-500/5 border-emerald-500/10 hover:bg-emerald-500/10" : "bg-destructive/5 border-destructive/10 hover:bg-destructive/10"}`}
+            className={`p-4 rounded-sm border transition-all space-y-2 group ${profit >= 0 ? "bg-emerald-500/5 border-emerald-500/10 hover:bg-emerald-500/10" : "bg-destructive/5 border-destructive/10 hover:bg-destructive/10"}`}
           >
             <div
               className={`flex items-center gap-2 ${profit >= 0 ? "text-emerald-600" : "text-destructive"}`}

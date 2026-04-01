@@ -137,7 +137,7 @@ const BrandsPage = () => {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-muted rounded-md">
+          <div className="p-2 bg-muted rounded-sm">
             <Award className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>

@@ -197,7 +197,7 @@ const StatusFormModal = ({
             control={form.control}
             name="is_active"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between space-x-2 py-2 border rounded-md px-3 bg-muted/20">
+              <FormItem className="flex items-center justify-between space-x-2 py-2 border rounded-sm px-3 bg-muted/20">
                 <div className="flex flex-col space-y-1">
                   <FormLabel className="text-xs font-bold">
                     Active Status

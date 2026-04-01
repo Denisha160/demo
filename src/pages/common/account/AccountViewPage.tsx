@@ -197,7 +197,7 @@ const AccountViewPage = () => {
       </div>
 
       {/* Top Details Grid */}
-      <div className="bg-card border border-border shadow-sm rounded-xl p-5">
+      <div className="bg-card border border-border shadow-sm rounded-sm p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center">

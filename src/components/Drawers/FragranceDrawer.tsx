@@ -134,7 +134,7 @@ export function FragranceDrawer({ open, onOpenChange }: FragranceDrawerProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 rounded-md hover:bg-muted/80"
+              className="h-7 w-7 hover:bg-muted/80"
             >
               <X className="h-3.5 w-3.5" />
             </Button>
@@ -150,7 +150,7 @@ export function FragranceDrawer({ open, onOpenChange }: FragranceDrawerProps) {
               placeholder="Search fragrances..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-9 text-sm border-muted-foreground/20 focus-visible:ring-primary/30 rounded-md"
+              className="pl-8 h-9 text-sm border-muted-foreground/20 focus-visible:ring-primary/30"
             />
           </div>
           <Button
@@ -213,7 +213,7 @@ export function FragranceDrawer({ open, onOpenChange }: FragranceDrawerProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 rounded-md opacity-50 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:text-primary shrink-0"
+                    className="h-7 w-7 opacity-50 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:text-primary shrink-0"
                     onClick={() => handleEdit(fragrance)}
                   >
                     <Edit2 className="h-3 w-3" />
@@ -235,7 +235,7 @@ export function FragranceDrawer({ open, onOpenChange }: FragranceDrawerProps) {
             variant="ghost"
             size="icon"
             onClick={handleBack}
-            className="h-8 w-8 rounded-full"
+            className="h-8 w-8"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

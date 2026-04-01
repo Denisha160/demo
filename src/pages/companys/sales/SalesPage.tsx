@@ -53,37 +53,32 @@ const SalesPage = () => {
       key: "name",
       header: "Name",
       sortable: true,
-      render: (item) => {
-        const colorIdx = (item.name || "").charCodeAt(0) % GRADIENTS.length;
-        return (
-          <div className="flex items-center gap-2.5 py-0.5">
+      render: (item) => (
+        <div className={`flex items-center gap-3 transition-opacity`}>
+          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20 overflow-hidden">
             {item.image_url ? (
               <img
                 src={item.image_url}
                 alt={item.name}
-                className="h-8 w-8 rounded-full object-cover shrink-0 shadow-sm border border-border/50"
+                className="h-full w-full object-cover"
               />
+            ) : item.name ? (
+              item.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .substring(0, 2)
             ) : (
-              <div
-                className={cn(
-                  "h-8 w-8 rounded-full bg-gradient-to-br flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-sm transition-transform group-hover:scale-105",
-                  GRADIENTS[colorIdx],
-                )}
-              >
-                {getInitials(item.name || "?")}
-              </div>
+              "?"
             )}
-            <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-foreground truncate text-xs">
-                {item.name}
-              </span>
-              <span className="text-[9px] text-muted-foreground truncate font-medium">
-                {item.email}
-              </span>
-            </div>
           </div>
-        );
-      },
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {item.name}
+            </p>
+          </div>
+        </div>
+      ),
     },
     {
       key: "email",
@@ -231,7 +226,7 @@ const SalesPage = () => {
       </div>
 
       {/* Data Table */}
-      <div className="bg-card rounded-md border border-border/50 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-sm border border-border/50 shadow-sm overflow-hidden">
         <DataTable
           columns={columns}
           data={users}

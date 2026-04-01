@@ -224,8 +224,7 @@ function DataTable<T extends Record<string, any>>({
   }, [data.length, totalPages, currentPage, serverSide]);
 
   return (
-    <div className="relative flex flex-col rounded-md border border-border/60 bg-card shadow-sm shadow-card">
-      {/* Aesthetic Loader - Only covers the tbody (rows) and leaves Headers visible! */}
+    <div className="relative flex flex-col rounded-sm border border-border/60 bg-card shadow-sm shadow-card">
       {isLoading && paginatedData.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 top-[33px] z-20 flex items-center justify-center rounded-b-md bg-background/50 backdrop-blur-[1px]">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />

@@ -102,8 +102,8 @@ const ContactsTab = () => {
       header: "Full Name",
       render: (item) => (
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold font-mono text-xs">
-            {item.name.charAt(0)}
+          <div className="h-8 w-8 rounded-sm bg-primary/10 text-primary flex items-center justify-center font-bold font-mono text-xs border border-primary/20">
+            {(item.name || "?").charAt(0).toUpperCase()}
           </div>
           <div className="flex flex-col">
             <span className="font-semibold text-foreground text-sm">

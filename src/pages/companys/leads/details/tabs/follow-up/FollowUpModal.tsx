@@ -281,7 +281,7 @@ const FollowUpModal = ({
 
           {/* {(status === "SCHEDULED" || status === "RESCHEDULED") && (
             <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
-              <div className="flex flex-row items-center space-x-2 rounded-md border p-3 bg-muted/5">
+              <div className="flex flex-row items-center space-x-2 rounded-sm border p-3 bg-muted/5">
                 <Checkbox
                   id="set_reminder_followup"
                   checked={watch("set_reminder")}

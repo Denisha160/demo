@@ -368,7 +368,7 @@ const HierarchyPage = () => {
 
       {/* ── Global Modal ── */}
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[420px] rounded-xl border-border shadow-2xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[420px] rounded-sm border-border shadow-2xl p-0 overflow-hidden">
           <div className="bg-primary/5 px-6 py-4 border-b border-primary/10">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-primary font-bold">

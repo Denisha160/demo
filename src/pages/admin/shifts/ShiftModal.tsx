@@ -182,7 +182,7 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between border rounded-md p-3 bg-muted/30">
+        <div className="flex items-center justify-between border rounded-sm p-3 bg-muted/30">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
               Active

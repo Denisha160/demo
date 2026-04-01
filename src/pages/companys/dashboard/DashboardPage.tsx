@@ -175,7 +175,7 @@ const Dashboard = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Revenue Chart */}
-        <div className="shadow-sm border border-border bg-card rounded-md p-4">
+        <div className="shadow-sm border border-border bg-card rounded-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-foreground">
               Monthly Revenue (Accepted)
@@ -227,7 +227,7 @@ const Dashboard = () => {
         </div>
 
         {/* Conversion Chart */}
-        <div className="shadow-sm border border-border bg-card rounded-md p-4">
+        <div className="shadow-sm border border-border bg-card rounded-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-foreground">
               Conversion Performance (%)
@@ -276,7 +276,7 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Deals by Stage */}
-        <div className="lg:col-span-1 shadow-sm border border-border bg-card rounded-md p-4">
+        <div className="lg:col-span-1 shadow-sm border border-border bg-card rounded-sm p-4">
           <h3 className="text-sm font-semibold text-foreground mb-4">
             Deals by Stage
           </h3>
@@ -339,7 +339,7 @@ const Dashboard = () => {
 
         <div className="lg:col-span-2 space-y-4">
           {/* Recent Deals */}
-          <div className="shadow-sm border border-border bg-card rounded-md p-0 overflow-hidden">
+          <div className="shadow-sm border border-border bg-card rounded-sm p-0 overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">
                 Recent Deals
@@ -362,7 +362,7 @@ const Dashboard = () => {
       </div>
 
       {/* Activity Feed */}
-      <div className="shadow-sm border border-border bg-card rounded-md">
+      <div className="shadow-sm border border-border bg-card rounded-sm">
         <div className="px-4 py-3 border-b border-border">
           <h2 className="text-sm font-semibold text-foreground">
             Recent Activity

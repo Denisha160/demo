@@ -115,7 +115,7 @@ const BomPage = () => {
       className: "w-[300px]",
       render: (item) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-primary/5 rounded-md flex items-center justify-center border border-primary/10 text-primary">
+          <div className="h-10 w-10 bg-primary/5 rounded-sm flex items-center justify-center border border-primary/10 text-primary">
             <Package className="h-5 w-5" />
           </div>
           <div className="min-w-0">
@@ -236,7 +236,7 @@ const BomPage = () => {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div className="rounded-sm border border-border bg-card shadow-sm">
         <DataTable
           data={items}
           columns={columns}

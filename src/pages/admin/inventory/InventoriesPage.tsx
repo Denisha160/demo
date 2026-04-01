@@ -116,7 +116,7 @@ const InventoriesPage = () => {
             )
           }
         >
-          <div className="p-2 bg-muted rounded-md text-muted-foreground group-hover:bg-primary/10 transition-colors">
+          <div className="p-2 bg-muted rounded-sm text-muted-foreground group-hover:bg-primary/10 transition-colors">
             {item.inventory_type === "PRODUCT" ? (
               <Box className="h-4 w-4 group-hover:text-primary transition-colors" />
             ) : (

@@ -365,7 +365,7 @@ const GenerateSerialsPage = () => {
               </div>
 
               {selectedBatch && (
-                <div className="grid grid-cols-2 gap-4 p-3 bg-muted/20 border border-dashed border-border/60 rounded-md animate-in fade-in slide-in-from-top-2">
+                <div className="grid grid-cols-2 gap-4 p-3 bg-muted/20 border border-dashed border-border/60 rounded-sm animate-in fade-in slide-in-from-top-2">
                   <div className="space-y-1">
                     <p className="text-[10px] text-muted-foreground uppercase">
                       Initial Quantity
@@ -423,7 +423,7 @@ const GenerateSerialsPage = () => {
                 )}
               </div>
 
-              <div className="bg-muted/30 rounded-md p-3 border border-border/40">
+              <div className="bg-muted/30 rounded-sm p-3 border border-border/40">
                 <p className="text-[9px] font-bold text-muted-foreground uppercase mb-2">
                   Available Variables:
                 </p>
@@ -484,7 +484,7 @@ const GenerateSerialsPage = () => {
               )}
             </div>
 
-            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-md flex items-start gap-3">
+            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-sm flex items-start gap-3">
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
               <p className="text-[10px] text-amber-800 dark:text-amber-400">
                 <strong>Note:</strong> Generating{" "}
@@ -507,7 +507,7 @@ const GenerateSerialsPage = () => {
               title="Serials Management"
             />
             <div className="space-y-4 flex-1">
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-md flex items-start gap-3">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-sm flex items-start gap-3">
                 <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-[10px] text-amber-800 dark:text-amber-400">
                   <strong>Note:</strong> You can edit the individual serial

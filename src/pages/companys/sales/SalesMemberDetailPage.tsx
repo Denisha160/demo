@@ -28,14 +28,7 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-const GRADIENTS = [
-  "from-violet-500 to-purple-600",
-  "from-blue-500 to-cyan-600",
-  "from-emerald-500 to-teal-600",
-  "from-orange-500 to-amber-600",
-  "from-rose-500 to-pink-600",
-  "from-indigo-500 to-blue-600",
-];
+
 
 type TabKey = "visits" | "followups" | "tasks" | "activity";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
@@ -98,7 +91,7 @@ const SalesMemberDetailPage = () => {
     return hierarchyOptions.find((opt) => opt.value === selectedUserId)?.label;
   }, [hierarchyOptions, selectedUserId]);
 
-  const colorIdx = (user?.name || "").charCodeAt(0) % GRADIENTS.length;
+
 
   if (userLoading) {
     return (
@@ -170,12 +163,10 @@ const SalesMemberDetailPage = () => {
             <img
               src={user.image_url}
               alt={user.name}
-              className="h-16 w-16 rounded-full object-cover shrink-0 shadow border border-border"
+              className="h-16 w-16 rounded-sm object-cover shrink-0 shadow border border-border"
             />
           ) : (
-            <div
-              className={`h-16 w-16 rounded-full bg-gradient-to-br ${GRADIENTS[colorIdx]} flex items-center justify-center text-white text-xl font-bold shrink-0 shadow`}
-            >
+            <div className="h-16 w-16 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xl font-bold shrink-0 border border-primary/20 shadow-sm">
               {getInitials(user.name)}
             </div>
           )}

@@ -114,60 +114,66 @@ const navItems: NavItemEntry[] = [
   // { label: "Attendance", icon: Clock, path: "attendance" },
   // { label: "Suppliers", icon: Truck, path: "suppliers" },
   // { label: "Parties", icon: Users, path: "parties" },
-  // {
-  //   label: "Product Setup",
-  //   icon: Blocks,
-  //   children: [
-  //     {
-  //       label: "Products",
-  //       icon: Box,
-  //       path: "products",
-  //       permission: "product.read",
-  //     },
-  //     {
-  //       label: "Recipes",
-  //       icon: List,
-  //       path: "recipes",
-  //       permission: "product-bom.read",
-  //     },
-  //     {
-  //       label: "Kits",
-  //       icon: Package,
-  //       path: "kits",
-  //       permission: "product-kit.read",
-  //     },
-  // {
-  //   label: "Categories",
-  //   icon: Tags,
-  //   path: "product-categories",
-  //   permission: "product-category.read",
-  // },
-  //     {
-  //       label: "Brands",
-  //       icon: Award,
-  //       path: "brands",
-  //       permission: "product-brand.read",
-  //     },
-  //     {
-  //       label: "Fragrances",
-  //       icon: Wind,
-  //       path: "fragrances",
-  //       permission: "product-fragrance.read",
-  //     },
-  //   ],
-  // },
-  // {
-  //   label: "Batches",
-  //   icon: Blocks,
-  //   path: "batches",
-  //   permission: "inventory-batch.read",
-  // },
-  // {
-  //   label: "Serial Numbers",
-  //   icon: Hash,
-  //   path: "serials",
-  //   permission: "inventory-serial.read",
-  // },
+  {
+    label: "Product Setup",
+    icon: Blocks,
+    children: [
+      {
+        label: "Products",
+        icon: Box,
+        path: "products",
+        permission: "product.read",
+      },
+      {
+        label: "Recipes",
+        icon: List,
+        path: "recipes",
+        permission: "product-bom.read",
+      },
+      {
+        label: "Kits",
+        icon: Package,
+        path: "kits",
+        permission: "product-kit.read",
+      },
+      {
+        label: "Categories",
+        icon: Tags,
+        path: "product-categories",
+        permission: "product-category.read",
+      },
+      {
+        label: "Brands",
+        icon: Award,
+        path: "brands",
+        permission: "product-brand.read",
+      },
+      {
+        label: "Fragrances",
+        icon: Wind,
+        path: "fragrances",
+        permission: "product-fragrance.read",
+      },
+      {
+        label: "Packages",
+        icon: Package,
+        path: "packages",
+        permission: "product-package.read",
+      },
+    ],
+  },
+  {
+    label: "Batches",
+    icon: Blocks,
+    path: "batches",
+    permission: "inventory-batch.read",
+  },
+  {
+    label: "Serial Numbers",
+    icon: Hash,
+    path: "serials",
+    permission: "inventory-serial.read",
+  },
   // { label: "Accounts", icon: Landmark, path: "accounts" },
 ];
 
@@ -236,10 +242,9 @@ const NavGroup = ({
                 onClick={onCloseSidebar}
                 className={`
                   flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-md transition-all duration-200
-                  ${
-                    childActive
-                      ? "bg-primary/15 text-primary font-bold"
-                      : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
+                  ${childActive
+                    ? "bg-primary/15 text-primary font-bold"
+                    : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
                   }
                 `}
                 style={childActive ? { color: `hsl(${theme.primary})` } : {}}
@@ -293,11 +298,11 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   };
   const initials = user?.name
     ? user.name
-        .split(" ")
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "ME";
 
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
@@ -517,11 +522,10 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                   onClick={() => setSidebarOpen(false)}
                   className={`
                   flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
-                  ${
-                    active
+                  ${active
                       ? "bg-primary/10 text-primary font-bold"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  }
+                    }
                 `}
                   style={
                     active ? { color: `hsl(${currentTheme.primary})` } : {}

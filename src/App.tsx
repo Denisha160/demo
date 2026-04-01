@@ -254,7 +254,6 @@ const App = () => (
           <Route path="products" element={<Products />} />
           <Route path="products/new" element={<ProductFormPage />} />
           <Route path="products/:id" element={<ProductFormPage />} />
-          <Route path="packages" element={<PackagesPage />} />
           <Route path="recipes" element={<BomPage />} />
           <Route path="kits" element={<KitsPage />} />
           <Route path="kits/new" element={<KitFormPage />} />
@@ -381,6 +380,7 @@ const App = () => (
           <Route path="followups" element={<FollowUpsPage />} />
           <Route path="sales" element={<SalesPage />} />
           <Route path="sales/:userId" element={<SalesMemberDetailPage />} />
+          <Route path="packages" element={<PackagesPage />} />
           <Route
             path="sales/:userId/:tab"
             element={<SalesMemberDetailPage />}

@@ -60,6 +60,7 @@ export const QuotationProductsTable = () => {
         fragrance_name: "",
         category_id: null,
         category_name: "",
+        gst: 18,
       });
     },
     [appendItem],
@@ -133,6 +134,7 @@ export const QuotationProductsTable = () => {
         fragrance_name: p.fragrance_name || "",
         category_id: p.category_id || null,
         category_name: p.category_name || "",
+        gst: 18,
       });
     } else {
       const k = item.original;
@@ -149,6 +151,7 @@ export const QuotationProductsTable = () => {
         fragrance_name: "",
         category_id: null,
         category_name: "",
+        gst: 18,
       });
     }
   };
@@ -182,14 +185,12 @@ export const QuotationProductsTable = () => {
             <table className="w-full text-left border-collapse">
               <thead className="bg-muted/5 border-b border-border/20 text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
                 <tr>
-                  <th className="w-[40px] px-3 py-2 text-center">#</th>
-                  <th className="w-[80px] px-3 py-2 text-center text-xs">
-                    Type
-                  </th>
                   <th className="min-w-[120px] w-[120px] px-2 py-2">Code</th>
-                  <th className="min-w-[280px] px-2 py-2">Item</th>
-                  <th className="w-[100px] px-2 py-2">Qty</th>
-                  <th className="w-[140px] px-2 py-2">Unit Price</th>
+                  <th className="min-w-[240px] px-2 py-2">Item</th>
+                  <th className="min-w-[240px] px-2 py-2">Description</th>
+                  <th className="w-[80px] px-2 py-2">Qty</th>
+                  <th className="w-[120px] px-2 py-2">Unit Price</th>
+                  <th className="w-[80px] px-2 py-2">GST %</th>
                   <th className="w-[140px] px-2 py-2 text-right">Amount</th>
                   <th className="w-[40px] px-2 py-2 text-center"></th>
                 </tr>
@@ -200,22 +201,6 @@ export const QuotationProductsTable = () => {
                     key={field.id}
                     className="hover:bg-muted/5 transition-colors group"
                   >
-                    <td className="px-3 py-1.5 text-center">
-                      <Badge
-                        variant="destructive"
-                        className={cn(
-                          "text-[9px] uppercase font-black px-1.5 h-4 tracking-tighter",
-                          watch(`items.${index}.type`) === "product"
-                            ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                            : "bg-purple-500/10 text-purple-500 border-purple-500/20",
-                        )}
-                      >
-                        {watch(`items.${index}.type`)}
-                      </Badge>
-                    </td>
-                    <td className="px-2 py-1.5 text-center text-xs font-bold text-muted-foreground/40">
-                      {index + 1}
-                    </td>
                     <td className="px-2 py-1.5 text-center text-xs font-bold text-muted-foreground/40">
                       <Input
                         {...register(`items.${index}.item_code` as const)}
@@ -262,6 +247,13 @@ export const QuotationProductsTable = () => {
                     </td>
                     <td className="px-2 py-1.5">
                       <Input
+                        {...register(`items.${index}.item_description` as const)}
+                        placeholder="Description"
+                        className="h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
+                      />
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <Input
                         type="number"
                         autoFocus={true}
                         step="0.01"
@@ -287,6 +279,16 @@ export const QuotationProductsTable = () => {
                           className="h-8 text-right text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium w-full"
                         />
                       </div>
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        {...register(`items.${index}.gst` as const, {
+                          valueAsNumber: true,
+                        })}
+                        className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
+                      />
                     </td>
                     <td className="px-2 py-1.5 text-right">
                       <div className="text-xs font-black text-foreground pr-2 font-mono">

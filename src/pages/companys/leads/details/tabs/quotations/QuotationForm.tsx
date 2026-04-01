@@ -49,6 +49,7 @@ const quotationItemSchema = z.object({
   fragrance_name: optionalText,
   category_id: optionalText.nullable(),
   category_name: optionalText,
+  gst: requiredNumber.default(18),
 });
 
 export const quotationSchema = z.object({
@@ -144,6 +145,7 @@ const QuotationForm = ({
           fragrance_name: "",
           category_id: null,
           category_name: "",
+          gst: 18,
         },
       ],
       amount_in_words: "",
@@ -219,13 +221,17 @@ const QuotationForm = ({
 
     itemsList.forEach((item) => {
       const amt = Number(item.amount) || 0;
+      const gstPercent = Number(item.gst) || 0;
+      const itemTax = (amt * gstPercent) / 100;
+      
       sub += amt;
+      tax += itemTax;
     });
 
     return {
       subtotal: sub,
-      totalTax: 0, // No tax in the new schema but used for UI
-      grandTotal: sub,
+      totalTax: tax,
+      grandTotal: sub + tax,
     };
   }, [watchAll.items]);
 

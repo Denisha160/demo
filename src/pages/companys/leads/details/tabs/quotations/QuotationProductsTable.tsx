@@ -185,14 +185,14 @@ export const QuotationProductsTable = () => {
             <table className="w-full text-left border-collapse">
               <thead className="bg-muted/5 border-b border-border/20 text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
                 <tr>
-                  <th className="min-w-[120px] w-[120px] px-2 py-2">Code</th>
-                  <th className="min-w-[240px] px-2 py-2">Item</th>
-                  <th className="min-w-[240px] px-2 py-2">Description</th>
-                  <th className="w-[80px] px-2 py-2">Qty</th>
-                  <th className="w-[120px] px-2 py-2">Unit Price</th>
-                  <th className="w-[80px] px-2 py-2">GST %</th>
-                  <th className="w-[140px] px-2 py-2 text-right">Amount</th>
-                  <th className="w-[40px] px-2 py-2 text-center"></th>
+                  <th className="min-w-[100px] px-2 py-2">Code</th>
+                  <th className="min-w-[200px] px-2 py-2">Item</th>
+                  <th className="min-w-[200px] px-2 py-2">Description</th>
+                  <th className="min-w-[80px] px-2 py-2">Qty</th>
+                  <th className="min-w-[120px] px-2 py-2">Unit Price</th>
+                  <th className="min-w-[100px] px-2 py-2">GST %</th>
+                  <th className="min-w-[140px] px-2 py-2 text-right pr-4">Amount</th>
+                  <th className="w-[50px] px-2 py-2 text-center"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
@@ -290,8 +290,8 @@ export const QuotationProductsTable = () => {
                         className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
                       />
                     </td>
-                    <td className="px-2 py-1.5 text-right">
-                      <div className="text-xs font-black text-foreground pr-2 font-mono">
+                    <td className="px-2 py-1.5 text-right pr-4">
+                      <div className="text-xs font-black text-foreground font-mono">
                         ₹
                         {(watch(`items.${index}.amount`) || 0).toLocaleString()}
                       </div>

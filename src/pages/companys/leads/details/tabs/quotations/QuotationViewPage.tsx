@@ -38,7 +38,7 @@ const QuotationViewPage = () => {
           </span>
           <div className="flex items-center gap-2">
             <span className="text-[9px] font-mono font-black text-muted-foreground bg-slate-100 px-1 border border-border/40 rounded-[2px] uppercase">
-              {item.item_code || "GEN-PROD"}
+              {item.item_code}
             </span>
             {item.fragrance_name && (
               <span className="text-[9px] font-black text-violet-600 bg-violet-50 px-1 border border-violet-100 rounded-[2px] uppercase">
@@ -155,21 +155,31 @@ const QuotationViewPage = () => {
                   <h2 className="text-xl font-black text-foreground tracking-tight">
                     {quotation.lead_name}
                   </h2>
-                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                    <Building2 className="h-3.5 w-3.5 text-primary/40" />
-                    {quotation.company_name || "Self / Individual Account"}
-                  </p>
+                  {quotation.company_name && (
+                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 text-primary/40" />
+                      {quotation.company_name}
+                    </p>
+                  )}
+
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Document Date</span>
-                  <span className="text-sm font-bold flex items-center gap-1.5 bg-muted/40 px-2 py-0.5 rounded-sm">
-                    <Calendar className="h-3.5 w-3.5 text-primary/60" />
-                    {formatDate(quotation.quotation_date)}
-                  </span>
+                <div>
+                  <div className="flex  items-end gap-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Quotation Date</span>
+                    <span className="text-sm font-bold flex items-center gap-1.5 bg-muted/40 rounded-sm">
+                      {formatDate(quotation.quotation_date)}
+                    </span>
+                  </div>
+                  <div className="flex  items-end gap-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Quotation Number</span>
+                    <span className="text-sm font-bold flex items-center gap-1.5 bg-muted/40 rounded-sm">
+                      {quotation.quotation_number}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-2 flex flex-wrap gap-x-8 gap-y-3 pt-2 border-t border-border/10">
+              <div className="flex flex-wrap gap-x-8 gap-y-3 border-t border-border/10">
                 {(quotation as any).lead_email && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground hover:underline cursor-pointer">
                     <MailIcon className="h-4 w-4 shrink-0 text-primary/60" />

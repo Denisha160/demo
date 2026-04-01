@@ -21,9 +21,28 @@ const QuotationPage = () => {
     data: QuotationFormData,
     setError: UseFormSetError<QuotationFormData>,
   ) => {
+    const cleanPayload = (obj: any): any => {
+      if (Array.isArray(obj)) {
+        return obj.map(cleanPayload);
+      }
+      if (obj !== null && typeof obj === "object") {
+        return Object.keys(obj).reduce((acc, key) => {
+          let value = obj[key];
+          if (value === "" || value === undefined) {
+            value = null;
+          } else if (typeof value === "object") {
+            value = cleanPayload(value);
+          }
+          acc[key] = value;
+          return acc;
+        }, {} as any);
+      }
+      return obj;
+    };
+
     const payload = {
-      ...data,
-      lead_id: leadId!, // Ensure lead_id is present from URL if not in form
+      ...cleanPayload(data),
+      lead_id: leadId!,
     };
 
     if (quotationId) {

@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Plus, Trash2, Scan, AlertCircle } from "lucide-react";
+import { Package, Plus, Trash2, Scan, AlertCircle, Info } from "lucide-react";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 import { QuotationFormData } from "./QuotationForm";
 import { FormMessage } from "@/components/ui/form";
+import KitViewModal from "@/pages/common/kits/KitViewModal";
 
 export const QuotationProductsTable = () => {
   const {
@@ -26,6 +27,8 @@ export const QuotationProductsTable = () => {
   const [fgSearch, setFgSearch] = useState("");
   const [kitSearch, setKitSearch] = useState("");
   const [scanValue, setScanValue] = useState("");
+  const [selectedKitId, setSelectedKitId] = useState<string | null>(null);
+  const [isKitViewOpen, setIsKitViewOpen] = useState(false);
   const debouncedFgSearch = useDebounce(fgSearch, 300);
   const debouncedKitSearch = useDebounce(kitSearch, 300);
 
@@ -261,20 +264,36 @@ export const QuotationProductsTable = () => {
                             onSearchChange={setFgSearch}
                           />
                         ) : (
-                          <Combobox
-                            options={kits.map((k) => ({
-                              label: k.name,
-                              value: k.id,
-                            }))}
-                            value={watch(`items.${index}.kit_id`) || ""}
-                            onValueChange={(val) =>
-                              handleSelectKitInline(index, val)
-                            }
-                            placeholder="Search kits..."
-                            className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
-                            searchValue={kitSearch}
-                            onSearchChange={setKitSearch}
-                          />
+                          <div className="space-y-1">
+                            <Combobox
+                              options={kits.map((k) => ({
+                                label: k.name,
+                                value: k.id,
+                              }))}
+                              value={watch(`items.${index}.kit_id`) || ""}
+                              onValueChange={(val) =>
+                                handleSelectKitInline(index, val)
+                              }
+                              placeholder="Search kits..."
+                              className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
+                              searchValue={kitSearch}
+                              onSearchChange={setKitSearch}
+                            />
+                            {watch(`items.${index}.kit_id`) && (
+                              <p
+                                onClick={() => {
+                                  setSelectedKitId(
+                                    watch(`items.${index}.kit_id`) || null,
+                                  );
+                                  setIsKitViewOpen(true);
+                                }}
+                                className="text-[10px] text-primary cursor-pointer hover:underline font-bold flex items-center gap-1 mt-1 px-1"
+                              >
+                                <Info className="h-3 w-3" />
+                                View Kit Details
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -399,6 +418,12 @@ export const QuotationProductsTable = () => {
           </span>
         </div>
       )}
+
+      <KitViewModal
+        open={isKitViewOpen}
+        onClose={() => setIsKitViewOpen(false)}
+        kitId={selectedKitId || undefined}
+      />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { ComponentProps, useMemo, useState, useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { useForm, useWatch, UseFormSetError } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +9,6 @@ import { useLeadContacts } from "@/hooks/useLeadContacts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -117,15 +117,15 @@ const QuotationForm = ({
   onCancel,
   isSubmitting,
 }: QuotationFormProps) => {
+  const { id: leadIdFromUrl } = useParams();
   const leadComboboxRef = useRef<HTMLButtonElement>(null);
   const datePickerRef = useRef<any>(null);
 
-  const form = useForm<QuotationFormData>({
-    resolver: zodResolver(quotationSchema),
-    defaultValues: quotationData || {
+  const defaultValues = useMemo(() => {
+    return quotationData || {
       quotation_date: formatDate(new Date()),
-      lead_id: "",
-      status: "DRAFT",
+      lead_id: leadIdFromUrl || "",
+      status: "DRAFT" as const,
       notes: "",
       gst_number: "",
       pan_number: "",
@@ -144,41 +144,84 @@ const QuotationForm = ({
           amount: 0,
           gst_percentage: 18,
           gst_amount: 0,
-          type: "product",
+          type: "product" as const,
           fragrance_name: "",
           category_id: null,
           category_name: "",
         },
       ],
       amount_in_words: "",
-    },
+    };
+  }, [quotationData, leadIdFromUrl]);
+
+  const form = useForm<QuotationFormData>({
+    resolver: zodResolver(quotationSchema),
+    defaultValues: defaultValues,
   });
 
-  // Focus Customer/Lead on mount for new quotations
+  useEffect(() => {
+    if (leadIdFromUrl && !form.getValues("lead_id")) {
+      form.setValue("lead_id", leadIdFromUrl);
+    }
+  }, [leadIdFromUrl, form]);
+
+  const [leadSearch, setLeadSearch] = useState("");
+  const debouncedLeadSearch = useDebounce(leadSearch, 500);
+
+  const { data: leads = [] as any[] } = useLeads({
+    search: debouncedLeadSearch,
+    limit: 10,
+  });
+
+  useEffect(() => {
+    const leadsList = (leads || []) as any[];
+    if (leadIdFromUrl && leadsList.length > 0) {
+      const lead = leadsList.find((l) => l.id === leadIdFromUrl);
+      if (lead) {
+        form.setValue("gst_number", lead.gst_number || "", { shouldDirty: true });
+        form.setValue("pan_number", lead.pan_number || "", { shouldDirty: true });
+      }
+    }
+  }, [leadIdFromUrl, leads, form]);
+
   useEffect(() => {
     if (!quotationData?.id) {
       const timer = setTimeout(() => {
-        if (leadComboboxRef.current) {
+        if (leadIdFromUrl) {
+          if (datePickerRef.current) {
+            const dateInput =
+              datePickerRef.current.root?.querySelector("input") ||
+              datePickerRef.current.querySelector?.("input");
+            if (dateInput) {
+              dateInput.focus();
+            } else if (datePickerRef.current.focus) {
+              datePickerRef.current.focus();
+            }
+          }
+
+          // After a moment, if date is already there (default), user might want to start adding products
+          // But focusing too many things at once is hard. 
+          // We'll focus the first item combobox after a longer delay if needed, or user can tab.
+          setTimeout(() => {
+            const firstItemCombobox = document.querySelector('[data-combobox-index="0"] button[role="combobox"]');
+            if (firstItemCombobox) {
+              (firstItemCombobox as HTMLElement).focus();
+            }
+          }, 800);
+
+        } else if (leadComboboxRef.current) {
           leadComboboxRef.current.focus();
         }
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [quotationData?.id]);
-
-  const [leadSearch, setLeadSearch] = useState("");
-  const debouncedLeadSearch = useDebounce(leadSearch, 500);
-
-  const { data: leads = [] } = useLeads({
-    search: debouncedLeadSearch,
-    limit: 10,
-  });
+  }, [quotationData?.id, leadIdFromUrl]);
 
   const selectedLeadId = form.watch("lead_id");
   const { data: contactData } = useLeadContacts(selectedLeadId);
 
   const leadOptions = useMemo(() => {
-    return (leads as any[]).map((l) => ({
+    return ((leads || []) as any[]).map((l) => ({
       value: l.id,
       label: l.name || l.title || "Unknown Lead",
     }));
@@ -289,6 +332,7 @@ const QuotationForm = ({
                         className="h-10 border-border/60 rounded-md"
                         searchValue={leadSearch}
                         onSearchChange={setLeadSearch}
+                        disabled={!!leadIdFromUrl}
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
@@ -308,6 +352,7 @@ const QuotationForm = ({
                       </QuotationFormLabel>
                     </div>
                     <DatePicker
+                      ref={datePickerRef}
                       value={field.value}
                       onChange={(v) => field.onChange(v || "")}
                       className="h-10 border-border/60 rounded-md"

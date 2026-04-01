@@ -12,13 +12,13 @@ interface DatePickerProps {
   disabled?: boolean;
 }
 
-export function DatePicker({
+export const DatePicker = React.forwardRef<any, DatePickerProps>(({
   value,
   onChange,
   placeholder = "dd/MM/yyyy",
   className,
   disabled,
-}: DatePickerProps) {
+}, ref) => {
   const parsedDate = React.useMemo(() => {
     if (!value) return null;
 
@@ -88,6 +88,7 @@ export function DatePicker({
   return (
     <div className={className} style={{ width: "100%", position: "relative" }}>
       <RSuiteDatePicker
+        ref={ref}
         value={parsedDate}
         onChange={handleDateChange}
         format="dd/MM/yyyy"
@@ -108,4 +109,4 @@ export function DatePicker({
       />
     </div>
   );
-}
+});

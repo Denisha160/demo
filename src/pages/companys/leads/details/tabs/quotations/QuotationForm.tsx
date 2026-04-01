@@ -35,8 +35,9 @@ const requiredNumber = z.preprocess(
 );
 
 const quotationItemSchema = z.object({
-  product_id: z.string().min(1, "Product is required"),
-  product_name: z.string().min(1, "Product name is required"),
+  product_id: z.string().optional().nullable(),
+  kit_id: z.string().optional().nullable(),
+  product_name: z.string().min(1, "Name is required"),
   product_code: optionalText,
   description: optionalText,
   long_description: optionalText,
@@ -46,6 +47,7 @@ const quotationItemSchema = z.object({
   amount: requiredNumber,
   unit: optionalText.default("pcs"),
   is_optional: z.boolean().default(false),
+  type: z.enum(["product", "kit"]).default("product"),
 });
 
 export const quotationSchema = z.object({
@@ -130,6 +132,7 @@ const QuotationForm = ({
       items: [
         {
           product_id: "",
+          kit_id: "",
           product_name: "",
           product_code: "",
           description: "",
@@ -140,6 +143,7 @@ const QuotationForm = ({
           amount: 0,
           unit: "-",
           is_optional: false,
+          type: "product",
         },
       ],
       amount_in_words: "",

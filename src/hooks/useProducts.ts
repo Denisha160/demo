@@ -3,6 +3,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import {
   createProduct,
   listProducts,
+  listAllProducts,
   updateProduct,
   getProductDetails,
   uploadProductPhoto,
@@ -40,6 +41,35 @@ export function useProductsCombobox(params?: Record<string, unknown>) {
         combobox: true,
       })) as ApiResponse<ProductComboboxResponse>;
       return response.data?.products ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useAllProducts(params?: Record<string, unknown>) {
+  return useQuery<{ id: string; name: string; type: "product" | "kit"; original: any }[]>({
+    queryKey: queryKeys.products.allItems(params),
+    queryFn: async () => {
+      const response = (await listAllProducts(params)) as ApiResponse<{
+        products: any[];
+        kits: any[];
+      }>;
+      
+      const products = (response.data?.products ?? []).map(p => ({
+        id: p.id,
+        name: p.product_name,
+        type: "product" as const,
+        original: p
+      }));
+
+      const kits = (response.data?.kits ?? []).map(k => ({
+        id: k.id,
+        name: k.name,
+        type: "kit" as const,
+        original: k
+      }));
+
+      return [...products, ...kits];
     },
     staleTime: 5 * 60 * 1000,
   });

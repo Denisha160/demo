@@ -23,8 +23,10 @@ export interface QuotationItem {
 
 export interface Quotation {
   id: string;
-  quotation_number: string;
+  quotation_number: string | number;
   lead_id: string;
+  lead_name?: string | null;
+  company_name?: string | null;
   quotation_date: string;
   status: QuotationStatus;
   amount_in_words?: string | null;

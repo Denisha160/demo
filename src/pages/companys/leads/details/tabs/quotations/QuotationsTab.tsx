@@ -20,11 +20,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const getStatusColor = (status: string) => {
-  switch (status) {
+  switch (status?.toUpperCase()) {
     case "DRAFT": return "bg-slate-500/10 text-slate-500 border-slate-500/20";
     case "SENT": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+    case "VIEWED": return "bg-purple-500/10 text-purple-500 border-purple-500/20";
     case "ACCEPTED": return "bg-green-500/10 text-green-500 border-green-500/20";
     case "REJECTED": return "bg-red-500/10 text-red-500 border-red-500/20";
+    case "EXPIRED": return "bg-orange-500/10 text-orange-500 border-orange-500/20";
+    case "CANCELLED": return "bg-gray-500/10 text-gray-500 border-gray-500/20";
     default: return "bg-slate-500/10 text-slate-500 border-slate-500/20";
   }
 };
@@ -42,10 +45,13 @@ const QuotationsTab = () => {
 
   const filteredQuotations = useMemo(() => {
     const query = search.toLowerCase();
-    return quotations.filter((q) => 
-      q.quotation_number.toLowerCase().includes(query) ||
-      q.status.toLowerCase().includes(query)
-    );
+    return quotations.filter((q) => {
+      const qNum = String(q.quotation_number || "").toLowerCase();
+      const status = String(q.status || "").toLowerCase();
+      const leadName = String(q.lead_name || "").toLowerCase();
+      
+      return qNum.includes(query) || status.includes(query) || leadName.includes(query);
+    });
   }, [quotations, search]);
 
   const handleCreate = () => {

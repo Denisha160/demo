@@ -201,6 +201,11 @@ export const listProducts = (params) => {
   return axios({ method: "GET", url, params });
 };
 
+export const listAllProducts = (params) => {
+  const url = `products/all-items`;
+  return axios({ method: "GET", url, params });
+};
+
 export const getProductDetails = (id) => {
   const url = `products/${id}`;
   return axios({ method: "GET", url });

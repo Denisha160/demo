@@ -1,8 +1,7 @@
 import { useFormContext, useFieldArray } from "react-hook-form";
-import { useProductsCombobox } from "@/hooks/useProducts";
+import { useAllProducts } from "@/hooks/useProducts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useKitList } from "@/hooks/useKits";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,6 @@ import { Package, Plus, Trash2, Scan, AlertCircle, Info } from "lucide-react";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 import { QuotationFormData } from "./QuotationForm";
-import { FormMessage } from "@/components/ui/form";
 import KitViewModal from "@/pages/common/kits/KitViewModal";
 
 export const QuotationProductsTable = () => {
@@ -32,18 +30,10 @@ export const QuotationProductsTable = () => {
   const debouncedFgSearch = useDebounce(fgSearch, 300);
   const debouncedKitSearch = useDebounce(kitSearch, 300);
 
-  const { data: products = [], isLoading: isLoadingProducts } =
-    useProductsCombobox({
-      type: "FINISHED_GOOD",
-      status: "active",
+  const { data: allItems = [], isLoading: isLoadingItems } =
+    useAllProducts({
       search: debouncedFgSearch.trim() || undefined,
     });
-  const { data: kitsData, isLoading: isLoadingKits } = useKitList({
-    search: debouncedKitSearch.trim() || undefined,
-    limit: 20,
-  });
-
-  const kits = useMemo(() => kitsData?.items || [], [kitsData]);
 
   const {
     fields: itemFields,
@@ -107,66 +97,60 @@ export const QuotationProductsTable = () => {
     setValue(`items.${index}.amount`, amount, { shouldDirty: true });
   };
 
-  const handleSelectProductInline = (index: number, productId: string) => {
+  const handleSelectItemInline = (index: number, itemId: string) => {
+    const item = allItems.find((i) => i.id === itemId);
+    if (!item) return;
+
     const currentItems = getValues("items") || [];
     const isDuplicate = currentItems.some(
-      (item, i) =>
-        i !== index && item.type === "product" && item.product_id === productId,
+      (existing, i) =>
+        i !== index &&
+        existing.type === item.type &&
+        (item.type === "product"
+          ? existing.product_id === itemId
+          : existing.kit_id === itemId),
     );
 
     if (isDuplicate) {
       toast.error(
-        "You have already added this product. Duplicate items are not allowed.",
+        `You have already added this ${item.type}. Duplicate items are not allowed.`,
       );
       return;
     }
 
-    const product = products.find((p) => p.id === productId);
-    if (!product) return;
-
-    updateItem(index, {
-      ...currentItems[index],
-      product_id: product.id,
-      item_name: product.product_name,
-      item_code: product.code || "",
-      item_description: product.product_name,
-      unit_price: product.selling_price || 0,
-      amount:
-        (currentItems[index].quantity || 1) * (product.selling_price || 0),
-      fragrance_name: product.fragrance_name || "",
-      category_id: product.category_id || null,
-      category_name: product.category_name || "",
-    });
-  };
-
-  const handleSelectKitInline = (index: number, kitId: string) => {
-    const currentItems = getValues("items") || [];
-    const isDuplicate = currentItems.some(
-      (item, i) => i !== index && item.type === "kit" && item.kit_id === kitId,
-    );
-
-    if (isDuplicate) {
-      toast.error(
-        "You have already added this kit. Duplicate items are not allowed.",
-      );
-      return;
+    if (item.type === "product") {
+      const p = item.original;
+      updateItem(index, {
+        ...currentItems[index],
+        type: "product",
+        product_id: p.id,
+        kit_id: "",
+        item_name: p.product_name,
+        item_code: p.code || "",
+        item_description: p.product_name,
+        unit_price: p.selling_price || 0,
+        amount: (currentItems[index].quantity || 1) * (p.selling_price || 0),
+        fragrance_name: p.fragrance_name || "",
+        category_id: p.category_id || null,
+        category_name: p.category_name || "",
+      });
+    } else {
+      const k = item.original;
+      updateItem(index, {
+        ...currentItems[index],
+        type: "kit",
+        kit_id: k.id,
+        product_id: "",
+        item_name: k.name,
+        item_code: k.sku || "",
+        item_description: k.name,
+        unit_price: k.kit_price || 0,
+        amount: (currentItems[index].quantity || 1) * (k.kit_price || 0),
+        fragrance_name: "",
+        category_id: null,
+        category_name: "",
+      });
     }
-
-    const kit = kits.find((k) => k.id === kitId);
-    if (!kit) return;
-
-    updateItem(index, {
-      ...currentItems[index],
-      kit_id: kit.id,
-      item_name: kit.name,
-      item_code: kit.sku || "",
-      item_description: kit.name,
-      unit_price: kit.kit_price || 0,
-      amount: (currentItems[index].quantity || 1) * (kit.kit_price || 0),
-      fragrance_name: "",
-      category_id: null,
-      category_name: "",
-    });
   };
 
   const handleScanProduct = () => {
@@ -186,7 +170,7 @@ export const QuotationProductsTable = () => {
               Bill Items
             </h3>
           </div>
-          {(isLoadingProducts) && (
+          {(isLoadingItems) && (
             <span className="text-[10px] text-muted-foreground animate-pulse font-medium">
               Loading...
             </span>
@@ -242,37 +226,24 @@ export const QuotationProductsTable = () => {
                     </td>
                     <td className="px-2 py-1.5">
                       <div data-combobox-index={index} className="w-full">
-                        {watch(`items.${index}.type`) === "product" ? (
-                          <Combobox
-                            options={products.map((p) => ({
-                              label: `${p.product_name} (${p.code})`,
-                              value: p.id,
-                            }))}
-                            value={watch(`items.${index}.product_id`) || ""}
-                            onValueChange={(val) =>
-                              handleSelectProductInline(index, val)
-                            }
-                            placeholder="Search products..."
-                            className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
-                            searchValue={fgSearch}
-                            onSearchChange={setFgSearch}
-                          />
-                        ) : (
-                          <Combobox
-                            options={kits.map((k) => ({
-                              label: k.name,
-                              value: k.id,
-                            }))}
-                            value={watch(`items.${index}.kit_id`) || ""}
-                            onValueChange={(val) =>
-                              handleSelectKitInline(index, val)
-                            }
-                            placeholder="Search kits..."
-                            className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
-                            searchValue={kitSearch}
-                            onSearchChange={setKitSearch}
-                          />
-                        )}
+                        <Combobox
+                          options={allItems.map((item) => ({
+                            label: item.name,
+                            value: item.id,
+                          }))}
+                          value={
+                            watch(`items.${index}.type`) === "product"
+                              ? watch(`items.${index}.product_id`) || ""
+                              : watch(`items.${index}.kit_id`) || ""
+                          }
+                          onValueChange={(val) =>
+                            handleSelectItemInline(index, val)
+                          }
+                          placeholder="Search products or kits..."
+                          className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
+                          searchValue={fgSearch}
+                          onSearchChange={setFgSearch}
+                        />
                         {watch(`items.${index}.kit_id`) && (
                           <p
                             onClick={() => {

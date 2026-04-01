@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import Modal from "@/components/Modal";
@@ -111,6 +111,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     Partial<Record<keyof UserFormData | "confirmPassword", string>>
   >({});
   const [apiError, setApiError] = useState<string | null>(null);
+  const fullNameRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<UserFormData>({
     name: user?.name || "",
@@ -234,6 +235,15 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     if (apiError) setApiError(null);
   };
 
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        fullNameRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   const handleClose = () => {
     setErrors({});
     setApiError(null);
@@ -295,6 +305,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
               </Label>
               <Input
                 id="name"
+                ref={fullNameRef}
                 placeholder="John Doe"
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}

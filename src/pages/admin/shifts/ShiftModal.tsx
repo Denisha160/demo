@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
   const [endTime, setEndTime] = useState(shift?.end_time || "");
   const [isActive, setIsActive] = useState(shift?.is_active ?? true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const shiftNameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setName(shift?.name || "");
@@ -41,6 +42,15 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
     setIsActive(shift?.is_active ?? true);
     setErrors({});
   }, [shift, open]);
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        shiftNameRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -107,6 +117,7 @@ const ShiftModal = ({ open, onClose, onSave, shift }: ShiftModalProps) => {
           </Label>
           <Input
             id="shift-name"
+            ref={shiftNameRef}
             value={name}
             onChange={(e) => {
               setName(e.target.value);

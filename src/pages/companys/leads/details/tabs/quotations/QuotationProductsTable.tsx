@@ -91,9 +91,9 @@ export const QuotationProductsTable = () => {
     }
   };
 
-  const handleItemAmountUpdate = (index: number) => {
+  const handleItemAmountUpdate = (index: number, newQty?: number) => {
     const item = getValues(`items.${index}`);
-    const qty = Number(item.quantity) || 0;
+    const qty = newQty !== undefined ? newQty : (Number(item.quantity) || 0);
     const price = Number(item.unit_price) || 0;
     const gstPercent = Number(item.gst_percentage) || 0;
 
@@ -102,6 +102,9 @@ export const QuotationProductsTable = () => {
 
     setValue(`items.${index}.amount`, amount, { shouldDirty: true });
     setValue(`items.${index}.gst_amount`, gstAmount, { shouldDirty: true });
+    if (item.item_name) {
+      setValue(`items.${index}.item_description`, `${item.item_name} x ${qty}`, { shouldDirty: true });
+    }
   };
 
   const handleSelectItemInline = (index: number, itemId: string) => {
@@ -134,7 +137,7 @@ export const QuotationProductsTable = () => {
         kit_id: "",
         item_name: p.product_name,
         item_code: p.code || "",
-        item_description: p.product_name,
+        item_description: `${p.product_name} x ${currentItems[index].quantity || 1}`,
         unit_price: p.selling_price || 0,
         amount: (currentItems[index].quantity || 1) * (p.selling_price || 0),
         fragrance_name: p.fragrance_name || "",
@@ -152,7 +155,7 @@ export const QuotationProductsTable = () => {
         product_id: "",
         item_name: k.name,
         item_code: k.sku || "",
-        item_description: k.name,
+        item_description: `${k.name} x ${currentItems[index].quantity || 1}`,
         unit_price: k.kit_price || 0,
         amount: (currentItems[index].quantity || 1) * (k.kit_price || 0),
         fragrance_name: "",
@@ -198,9 +201,9 @@ export const QuotationProductsTable = () => {
                   <th className="min-w-[200px] px-2 py-2">Description</th>
                   <th className="min-w-[80px] px-2 py-2">Qty</th>
                   <th className="min-w-[120px] px-2 py-2">Price</th>
-                  <th className="min-w-[140px] px-2 py-2">Amt (Excl. Tax)</th>
                   <th className="min-w-[80px] px-2 py-2">GST %</th>
-                  <th className="min-w-[120px] px-2 py-2">GST Amt</th>
+                  <th className="min-w-[140px] px-2 py-2">Amt (Excl. Tax)</th>
+
                   <th className="w-[50px] px-2 py-2"></th>
                 </tr>
               </thead>
@@ -219,38 +222,41 @@ export const QuotationProductsTable = () => {
                       />
                     </td>
                     <td className="px-2 py-1.5">
-                      <div data-combobox-index={index} className="w-full">
-                        <Combobox
-                          options={allItems.map((item) => ({
-                            label: item.name,
-                            value: item.id,
-                          }))}
-                          value={
-                            watch(`items.${index}.type`) === "product"
-                              ? watch(`items.${index}.product_id`) || ""
-                              : watch(`items.${index}.kit_id`) || ""
-                          }
-                          onValueChange={(val) =>
-                            handleSelectItemInline(index, val)
-                          }
-                          placeholder="Search products or kits..."
-                          className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
-                          searchValue={fgSearch}
-                          onSearchChange={setFgSearch}
-                        />
+                      <div data-combobox-index={index} className="w-full flex items-center gap-2">
+                        <div className="flex-1">
+                          <Combobox
+                            options={allItems.map((item) => ({
+                              label: item.name,
+                              value: item.id,
+                            }))}
+                            value={
+                              watch(`items.${index}.type`) === "product"
+                                ? watch(`items.${index}.product_id`) || ""
+                                : watch(`items.${index}.kit_id`) || ""
+                            }
+                            onValueChange={(val) =>
+                              handleSelectItemInline(index, val)
+                            }
+                            placeholder="Search products or kits..."
+                            className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
+                            searchValue={fgSearch}
+                            onSearchChange={setFgSearch}
+                          />
+                        </div>
                         {watch(`items.${index}.kit_id`) && (
-                          <p
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10"
                             onClick={() => {
-                              setSelectedKitId(
-                                watch(`items.${index}.kit_id`) || null,
-                              );
+                              setSelectedKitId(watch(`items.${index}.kit_id`) || null);
                               setIsKitViewOpen(true);
                             }}
-                            className="text-[10px] text-primary cursor-pointer hover:underline font-bold flex items-center gap-1 mt-1 px-1"
+                            title="View Kit Details"
                           >
-                            <Info className="h-3 w-3" />
-                            View Kit Details
-                          </p>
+                            <Info className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -270,7 +276,7 @@ export const QuotationProductsTable = () => {
                         step="0.01"
                         {...register(`items.${index}.quantity` as const, {
                           valueAsNumber: true,
-                          onChange: () => handleItemAmountUpdate(index),
+                          onChange: (e) => handleItemAmountUpdate(index, Number(e.target.value)),
                         })}
                         className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
                       />
@@ -292,23 +298,6 @@ export const QuotationProductsTable = () => {
                       </div>
                     </td>
                     <td className="px-2 py-1.5">
-                      <div className="text-xs font-black text-foreground font-mono">
-                        ₹
-                        {(watch(`items.${index}.amount`) || 0).toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-2 py-1.5">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...register(`items.${index}.gst_percentage` as const, {
-                          valueAsNumber: true,
-                          onChange: () => handleItemAmountUpdate(index),
-                        })}
-                        className="h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
-                      />
-                    </td>
-                    <td className="px-2 py-1.5">
                       <div className="text-xs font-black text-primary font-mono">
                         ₹
                         {(
@@ -316,6 +305,13 @@ export const QuotationProductsTable = () => {
                         ).toLocaleString()}
                       </div>
                     </td>
+                    <td className="px-2 py-1.5">
+                      <div className="text-xs font-black text-foreground font-mono">
+                        ₹
+                        {(watch(`items.${index}.amount`) || 0).toLocaleString()}
+                      </div>
+                    </td>
+
                     <td className="px-2 py-1.5">
                       <Button
                         type="button"

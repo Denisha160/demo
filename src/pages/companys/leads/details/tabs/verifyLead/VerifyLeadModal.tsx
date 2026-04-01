@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Search, MapPin } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -87,6 +87,7 @@ export default function VerifyLeadModal({
 }: VerifyLeadModalProps) {
   const verifyMutation = useVerifyLead();
   const updateMutation = useUpdateVerifyLead();
+  const customerTypeRef = useRef<HTMLButtonElement>(null);
   const [citySearch, setCitySearch] = useState("");
   const debouncedCitySearch = useDebounce(citySearch, 300);
 
@@ -136,6 +137,11 @@ export default function VerifyLeadModal({
 
   useEffect(() => {
     if (open) {
+      // Focus the customer type combobox after delay
+      const timer = setTimeout(() => {
+        customerTypeRef.current?.focus();
+      }, 300);
+
       if (initialData) {
         form.reset({
           has_warehouse: initialData.has_warehouse ?? false,
@@ -161,6 +167,7 @@ export default function VerifyLeadModal({
         form.reset();
       }
       setCitySearch("");
+      return () => clearTimeout(timer);
     }
   }, [open, form, initialData]);
 
@@ -282,6 +289,7 @@ export default function VerifyLeadModal({
                   </FormLabel>
                   <FormControl>
                     <Combobox
+                      ref={customerTypeRef}
                       options={customerTypes}
                       value={field.value}
                       onValueChange={field.onChange}

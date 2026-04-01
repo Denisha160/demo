@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ const SourceModal = ({
   onSave,
   isSubmitting,
 }: SourceModalProps) => {
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<SourceFormData>({
     resolver: zodResolver(sourceSchema),
     defaultValues: {
@@ -51,6 +52,15 @@ const SourceModal = ({
       is_active: true,
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   // Reset form when sourceData changes or modal opens
   useEffect(() => {
@@ -129,6 +139,11 @@ const SourceModal = ({
                 </FormLabel>
                 <FormControl>
                   <Input
+                    autoFocus
+                    ref={(e) => {
+                      field.ref(e);
+                      nameInputRef.current = e;
+                    }}
                     placeholder="e.g. Website"
                     className="h-9 text-xs"
                     disabled={isSubmitting}

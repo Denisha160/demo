@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ const StatusFormModal = ({
   onSave,
   isSubmitting,
 }: StatusFormModalProps) => {
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<StatusFormData>({
     resolver: zodResolver(statusSchema),
     defaultValues: {
@@ -53,6 +54,15 @@ const StatusFormModal = ({
       is_active: true,
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   // Reset form when statusData changes or modal opens
   useEffect(() => {
@@ -133,7 +143,12 @@ const StatusFormModal = ({
                 </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g. New Lead"
+                    autoFocus
+                    ref={(e) => {
+                      field.ref(e);
+                      nameInputRef.current = e;
+                    }}
+                    placeholder="e.g. New Status"
                     className="h-9 text-xs"
                     disabled={isSubmitting}
                     {...field}

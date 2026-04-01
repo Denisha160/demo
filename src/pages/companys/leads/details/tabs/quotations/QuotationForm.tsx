@@ -53,10 +53,11 @@ const quotationItemSchema = z.object({
 
 export const quotationSchema = z.object({
   lead_id: z.string().min(1, "Lead is required"),
-  quotation_number: z.string().min(1, "Quotation number is required").max(50),
   quotation_date: z.string().min(1, "Quotation date is required"),
   status: z.enum(['DRAFT', 'SENT', 'VIEWED', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'REVISED', 'CANCELLED']).default('DRAFT'),
   amount_in_words: optionalText,
+  gst_number: optionalText,
+  pan_number: optionalText,
   notes: optionalText,
   items: z.array(quotationItemSchema).min(1, "At least one item is required"),
   // These might be needed for the UI calculation but shouldn't break the stripUnknown if handled in onSubmit
@@ -121,10 +122,11 @@ const QuotationForm = ({
     resolver: zodResolver(quotationSchema),
     defaultValues: quotationData || {
       quotation_date: formatDate(new Date()),
-      quotation_number: `QT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
       lead_id: "",
       status: "DRAFT",
       notes: "",
+      gst_number: "",
+      pan_number: "",
       sub_total: 0,
       total_tax_amount: 0,
       grand_total: 0,
@@ -182,7 +184,10 @@ const QuotationForm = ({
     form.setValue("lead_id", leadId, { shouldValidate: true });
     const lead = (leads as any[]).find((l) => l.id === leadId);
     if (lead) {
-      // Set lead related fields if needed, but the customer fields are removed from schema
+      // Set lead related fields
+      form.setValue("gst_number", lead.gst_number || "", { shouldDirty: true });
+      form.setValue("pan_number", lead.pan_number || "", { shouldDirty: true });
+      
       // Move focus to Quotation Date after selection and open it
       setTimeout(() => {
         if (datePickerRef.current) {
@@ -254,35 +259,13 @@ const QuotationForm = ({
         <Card className="bg-muted/5 border-border/40 overflow-hidden shadow-none mb-2">
           <CardContent className="p-2 space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Quotation Number */}
-              <FormField
-                control={form.control}
-                name="quotation_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <QuotationFormLabel required className="text-[11px]">
-                      Quotation #
-                    </QuotationFormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          {...field}
-                          placeholder="QT-2024-001"
-                          className="h-10 border-border/60 rounded-md font-mono font-bold uppercase"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-[10px]" />
-                  </FormItem>
-                )}
-              />
 
               {/* Customer Selection */}
               <FormField
                 control={form.control}
                 name="lead_id"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="md:col-span-2">
                     <div className="flex items-center gap-2">
                       <QuotationFormLabel required className="text-[11px]">
                         Customer / Lead
@@ -330,28 +313,56 @@ const QuotationForm = ({
 
             {/* Customer Details Display */}
             {form.watch("lead_id") && (
-              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
-                  {(leads as any[]).find(l => l.id === selectedLeadId) && (
-                    <>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                          Email Address
-                        </span>
-                        <span className="text-xs font-semibold text-foreground break-all">
-                          {((leads as any[]).find(l => l.id === selectedLeadId) as any)?.email || "Not provided"}
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                          Contact Number
-                        </span>
-                        <span className="text-xs font-semibold text-foreground">
-                          {((leads as any[]).find(l => l.id === selectedLeadId) as any)?.phone || "Not provided"}
-                        </span>
-                      </div>
-                    </>
-                  )}
+              <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pb-2 p-3 bg-muted/20 rounded-md border border-border/20">
+                  {(() => {
+                    const lead = (leads as any[]).find(l => l.id === selectedLeadId);
+                    if (!lead) return null;
+                    return (
+                      <>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Email Address
+                          </span>
+                          <span className="text-[11px] font-semibold text-foreground break-all">
+                            {lead.email || "—"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Contact Number
+                          </span>
+                          <span className="text-[11px] font-semibold text-foreground">
+                            {lead.phone || "—"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            GST Number
+                          </span>
+                          <span className="text-[11px] font-semibold text-foreground">
+                            {lead.gst_number || "—"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            PAN Number
+                          </span>
+                          <span className="text-[11px] font-semibold text-foreground">
+                            {lead.pan_number || "—"}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Address
+                          </span>
+                          <span className="text-[11px] font-semibold text-foreground leading-tight">
+                            {lead.address || lead.full_address || "—"}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}

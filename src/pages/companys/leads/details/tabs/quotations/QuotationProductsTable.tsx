@@ -84,14 +84,6 @@ export const QuotationProductsTable = () => {
     }, 50);
   };
 
-  const handleAddKitClick = () => {
-    const newIndex = itemFields.length;
-    addNewRow("kit");
-
-    setTimeout(() => {
-      focusRow(newIndex);
-    }, 50);
-  };
 
   const focusRow = (index: number) => {
     const rowWrapper = document.querySelector(
@@ -147,35 +139,6 @@ export const QuotationProductsTable = () => {
     });
   };
 
-  const handleSelectKitInline = (index: number, kitId: string) => {
-    const currentItems = getValues("items") || [];
-    const isDuplicate = currentItems.some(
-      (item, i) => i !== index && item.type === "kit" && item.kit_id === kitId,
-    );
-
-    if (isDuplicate) {
-      toast.error(
-        "You have already added this kit. Duplicate items are not allowed.",
-      );
-      return;
-    }
-
-    const kit = kits.find((k) => k.id === kitId);
-    if (!kit) return;
-
-    updateItem(index, {
-      ...currentItems[index],
-      kit_id: kit.id,
-      item_name: kit.name,
-      item_code: kit.sku || "",
-      item_description: kit.name,
-      unit_price: kit.kit_price || 0,
-      amount: (currentItems[index].quantity || 1) * (kit.kit_price || 0),
-      fragrance_name: "",
-      category_id: null,
-      category_name: "",
-    });
-  };
 
   const handleScanProduct = () => {
     if (!scanValue.trim()) return;
@@ -194,7 +157,7 @@ export const QuotationProductsTable = () => {
               Bill Items
             </h3>
           </div>
-          {(isLoadingProducts || isLoadingKits) && (
+          {(isLoadingProducts) && (
             <span className="text-[10px] text-muted-foreground animate-pulse font-medium">
               Loading...
             </span>
@@ -250,52 +213,33 @@ export const QuotationProductsTable = () => {
                     </td>
                     <td className="px-2 py-1.5">
                       <div data-combobox-index={index} className="w-full">
-                        {watch(`items.${index}.type`) === "product" ? (
-                          <Combobox
-                            options={products.map((p) => ({
-                              label: `${p.product_name} (${p.code})`,
-                              value: p.id,
-                            }))}
-                            value={watch(`items.${index}.product_id`) || ""}
-                            onValueChange={(val) =>
-                              handleSelectProductInline(index, val)
-                            }
-                            placeholder="Search products..."
-                            className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
-                            searchValue={fgSearch}
-                            onSearchChange={setFgSearch}
-                          />
-                        ) : (
-                          <div className="space-y-1">
-                            <Combobox
-                              options={kits.map((k) => ({
-                                label: k.name,
-                                value: k.id,
-                              }))}
-                              value={watch(`items.${index}.kit_id`) || ""}
-                              onValueChange={(val) =>
-                                handleSelectKitInline(index, val)
-                              }
-                              placeholder="Search kits..."
-                              className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
-                              searchValue={kitSearch}
-                              onSearchChange={setKitSearch}
-                            />
-                            {watch(`items.${index}.kit_id`) && (
-                              <p
-                                onClick={() => {
-                                  setSelectedKitId(
-                                    watch(`items.${index}.kit_id`) || null,
-                                  );
-                                  setIsKitViewOpen(true);
-                                }}
-                                className="text-[10px] text-primary cursor-pointer hover:underline font-bold flex items-center gap-1 mt-1 px-1"
-                              >
-                                <Info className="h-3 w-3" />
-                                View Kit Details
-                              </p>
-                            )}
-                          </div>
+                        <Combobox
+                          options={products.map((p) => ({
+                            label: `${p.product_name} (${p.code})`,
+                            value: p.id,
+                          }))}
+                          value={watch(`items.${index}.product_id`) || ""}
+                          onValueChange={(val) =>
+                            handleSelectProductInline(index, val)
+                          }
+                          placeholder="Search products..."
+                          className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
+                          searchValue={fgSearch}
+                          onSearchChange={setFgSearch}
+                        />
+                        {watch(`items.${index}.kit_id`) && (
+                          <p
+                            onClick={() => {
+                              setSelectedKitId(
+                                watch(`items.${index}.kit_id`) || null,
+                              );
+                              setIsKitViewOpen(true);
+                            }}
+                            className="text-[10px] text-primary cursor-pointer hover:underline font-bold flex items-center gap-1 mt-1 px-1"
+                          >
+                            <Info className="h-3 w-3" />
+                            View Kit Details
+                          </p>
                         )}
                       </div>
                     </td>
@@ -366,17 +310,6 @@ export const QuotationProductsTable = () => {
                         </span>
                       </button>
 
-                      {/* Add Kit Button */}
-                      <button
-                        type="button"
-                        className="flex-1 flex items-center justify-center gap-2 h-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all group focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50"
-                        onClick={handleAddKitClick}
-                      >
-                        <Plus className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                        <span className="text-[11px] font-black uppercase tracking-widest">
-                          Add Kit
-                        </span>
-                      </button>
 
                       {/* Right side: Scan Input Only */}
                       <div className="flex-1 flex items-center h-full relative group focus-within:bg-background transition-colors">

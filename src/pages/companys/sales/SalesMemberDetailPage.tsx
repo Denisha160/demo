@@ -225,10 +225,11 @@ const SalesMemberDetailPage = () => {
             <Link
               key={t.key}
               to={`/${companyId}/sales/${userId}/${t.key}`}
-              className={`flex items-center whitespace-nowrap gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${activeTabClass === t.key
+              className={`flex items-center whitespace-nowrap gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTabClass === t.key
                   ? "border-primary text-primary bg-card"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-t-sm"
-                }`}
+              }`}
             >
               <t.icon className="h-4 w-4" />
               {t.label}

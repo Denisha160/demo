@@ -42,8 +42,12 @@ const quotationItemSchema = z.object({
   item_name: z.string().min(1, "Name is required"),
   item_code: optionalText,
   item_description: optionalText,
-  quantity: requiredNumber.pipe(z.number().positive("Quantity must be greater than 0")),
-  unit_price: requiredNumber.pipe(z.number().min(0, "Unit price cannot be negative")),
+  quantity: requiredNumber.pipe(
+    z.number().positive("Quantity must be greater than 0"),
+  ),
+  unit_price: requiredNumber.pipe(
+    z.number().min(0, "Unit price cannot be negative"),
+  ),
   amount: requiredNumber,
   gst_percentage: requiredNumber.default(18),
   gst_amount: requiredNumber,
@@ -56,7 +60,18 @@ const quotationItemSchema = z.object({
 export const quotationSchema = z.object({
   lead_id: z.string().min(1, "Lead is required"),
   quotation_date: z.string().min(1, "Quotation date is required"),
-  status: z.enum(['DRAFT', 'SENT', 'VIEWED', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'REVISED', 'CANCELLED']).default('DRAFT'),
+  status: z
+    .enum([
+      "DRAFT",
+      "SENT",
+      "VIEWED",
+      "ACCEPTED",
+      "REJECTED",
+      "EXPIRED",
+      "REVISED",
+      "CANCELLED",
+    ])
+    .default("DRAFT"),
   amount_in_words: optionalText,
   gst_number: optionalText,
   pan_number: optionalText,
@@ -122,36 +137,38 @@ const QuotationForm = ({
   const datePickerRef = useRef<any>(null);
 
   const defaultValues = useMemo(() => {
-    return quotationData || {
-      quotation_date: formatDate(new Date()),
-      lead_id: leadIdFromUrl || "",
-      status: "DRAFT" as const,
-      notes: "",
-      gst_number: "",
-      pan_number: "",
-      sub_total: 0,
-      tax_total: 0,
-      grand_total: 0,
-      items: [
-        {
-          product_id: "",
-          kit_id: "",
-          item_name: "",
-          item_code: "",
-          item_description: "",
-          quantity: 1,
-          unit_price: 0,
-          amount: 0,
-          gst_percentage: 18,
-          gst_amount: 0,
-          type: "product" as const,
-          fragrance_name: "",
-          category_id: null,
-          category_name: "",
-        },
-      ],
-      amount_in_words: "",
-    };
+    return (
+      quotationData || {
+        quotation_date: formatDate(new Date()),
+        lead_id: leadIdFromUrl || "",
+        status: "DRAFT" as const,
+        notes: "",
+        gst_number: "",
+        pan_number: "",
+        sub_total: 0,
+        tax_total: 0,
+        grand_total: 0,
+        items: [
+          {
+            product_id: "",
+            kit_id: "",
+            item_name: "",
+            item_code: "",
+            item_description: "",
+            quantity: 1,
+            unit_price: 0,
+            amount: 0,
+            gst_percentage: 18,
+            gst_amount: 0,
+            type: "product" as const,
+            fragrance_name: "",
+            category_id: null,
+            category_name: "",
+          },
+        ],
+        amount_in_words: "",
+      }
+    );
   }, [quotationData, leadIdFromUrl]);
 
   const form = useForm<QuotationFormData>({
@@ -178,8 +195,12 @@ const QuotationForm = ({
     if (leadIdFromUrl && leadsList.length > 0) {
       const lead = leadsList.find((l) => l.id === leadIdFromUrl);
       if (lead) {
-        form.setValue("gst_number", lead.gst_number || "", { shouldDirty: true });
-        form.setValue("pan_number", lead.pan_number || "", { shouldDirty: true });
+        form.setValue("gst_number", lead.gst_number || "", {
+          shouldDirty: true,
+        });
+        form.setValue("pan_number", lead.pan_number || "", {
+          shouldDirty: true,
+        });
       }
     }
   }, [leadIdFromUrl, leads, form]);
@@ -200,15 +221,16 @@ const QuotationForm = ({
           }
 
           // After a moment, if date is already there (default), user might want to start adding products
-          // But focusing too many things at once is hard. 
+          // But focusing too many things at once is hard.
           // We'll focus the first item combobox after a longer delay if needed, or user can tab.
           setTimeout(() => {
-            const firstItemCombobox = document.querySelector('[data-combobox-index="0"] button[role="combobox"]');
+            const firstItemCombobox = document.querySelector(
+              '[data-combobox-index="0"] button[role="combobox"]',
+            );
             if (firstItemCombobox) {
               (firstItemCombobox as HTMLElement).focus();
             }
           }, 800);
-
         } else if (leadComboboxRef.current) {
           leadComboboxRef.current.focus();
         }
@@ -309,7 +331,6 @@ const QuotationForm = ({
         <Card className="bg-muted/5 border-border/40 overflow-hidden shadow-none mb-2">
           <CardContent className="p-2 space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
               {/* Customer Selection */}
               <FormField
                 control={form.control}
@@ -368,14 +389,28 @@ const QuotationForm = ({
               <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pb-2 p-3 bg-muted/20 rounded-sm border border-border/20">
                   {(() => {
-                    const lead = (leads as any[]).find(l => l.id === selectedLeadId);
+                    const lead = (leads as any[]).find(
+                      (l) => l.id === selectedLeadId,
+                    );
 
                     // Fallback to quotationData if lead not found in search results
-                    const displayEmail = lead?.email || (quotationData as any)?.lead_email || "—";
-                    const displayPhone = lead?.phone || (quotationData as any)?.lead_phone || "—";
-                    const displayGst = lead?.gst_number || (quotationData as any)?.gst_number || "—";
-                    const displayPan = lead?.pan_number || (quotationData as any)?.pan_number || "—";
-                    const displayAddress = lead?.address || lead?.full_address || (quotationData as any)?.lead_address || "—";
+                    const displayEmail =
+                      lead?.email || (quotationData as any)?.lead_email || "—";
+                    const displayPhone =
+                      lead?.phone || (quotationData as any)?.lead_phone || "—";
+                    const displayGst =
+                      lead?.gst_number ||
+                      (quotationData as any)?.gst_number ||
+                      "—";
+                    const displayPan =
+                      lead?.pan_number ||
+                      (quotationData as any)?.pan_number ||
+                      "—";
+                    const displayAddress =
+                      lead?.address ||
+                      lead?.full_address ||
+                      (quotationData as any)?.lead_address ||
+                      "—";
 
                     return (
                       <>

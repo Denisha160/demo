@@ -47,26 +47,28 @@ export function useProductsCombobox(params?: Record<string, unknown>) {
 }
 
 export function useAllProducts(params?: Record<string, unknown>) {
-  return useQuery<{ id: string; name: string; type: "product" | "kit"; original: any }[]>({
+  return useQuery<
+    { id: string; name: string; type: "product" | "kit"; original: any }[]
+  >({
     queryKey: queryKeys.products.allItems(params),
     queryFn: async () => {
       const response = (await listAllProducts(params)) as ApiResponse<{
         products: any[];
         kits: any[];
       }>;
-      
-      const products = (response.data?.products ?? []).map(p => ({
+
+      const products = (response.data?.products ?? []).map((p) => ({
         id: p.id,
         name: p.product_name,
         type: "product" as const,
-        original: p
+        original: p,
       }));
 
-      const kits = (response.data?.kits ?? []).map(k => ({
+      const kits = (response.data?.kits ?? []).map((k) => ({
         id: k.id,
         name: k.name,
         type: "kit" as const,
-        original: k
+        original: k,
       }));
 
       return [...products, ...kits];

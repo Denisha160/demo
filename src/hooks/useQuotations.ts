@@ -33,7 +33,9 @@ export function useQuotation(id?: string) {
     queryKey: queryKeys.quotations.detail(id!),
     queryFn: async () => {
       if (!id) return null;
-      const response = (await getQuotationDetails(id)) as ApiResponse<Quotation>;
+      const response = (await getQuotationDetails(
+        id,
+      )) as ApiResponse<Quotation>;
       return response.data;
     },
     enabled: !!id,
@@ -51,7 +53,9 @@ export function useCreateQuotation() {
     },
     onError: (error: ApiErrorResponse) => {
       console.error("Create quotation failed:", error);
-      toast.error(error?.response?.data?.message || "Failed to create quotation");
+      toast.error(
+        error?.response?.data?.message || "Failed to create quotation",
+      );
     },
   });
 }
@@ -67,7 +71,9 @@ export function useUpdateQuotation() {
     },
     onError: (error: ApiErrorResponse) => {
       console.error("Update quotation failed:", error);
-      toast.error(error?.response?.data?.message || "Failed to update quotation");
+      toast.error(
+        error?.response?.data?.message || "Failed to update quotation",
+      );
     },
   });
 }
@@ -83,7 +89,9 @@ export function useDeleteQuotation() {
     },
     onError: (error: ApiErrorResponse) => {
       console.error("Delete quotation failed:", error);
-      toast.error(error?.response?.data?.message || "Failed to delete quotation");
+      toast.error(
+        error?.response?.data?.message || "Failed to delete quotation",
+      );
     },
   });
 }

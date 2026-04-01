@@ -300,11 +300,11 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   };
   const initials = user?.name
     ? user.name
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : "ME";
 
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
@@ -523,11 +523,14 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                   to={itemPath}
                   onClick={() => setSidebarOpen(false)}
                   className={`
+                  flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
+                  ${
+                    active
                   flex items-center gap-3 px-2 py-2 text-sm rounded-sm transition-all duration-200 group
                   ${active
                       ? "bg-primary/10 text-primary font-bold"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    }
+                  }
                 `}
                   style={
                     active ? { color: `hsl(${currentTheme.primary})` } : {}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Plus, Search, Trash2, FileText } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
@@ -8,6 +8,7 @@ import { formatDate } from "@/utils/date";
 import { Badge } from "@/components/ui/badge";
 import { useQuotations, useDeleteQuotation } from "@/hooks/useQuotations";
 import { Quotation } from "@/types/quotations";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,14 +22,22 @@ import {
 
 export const getStatusColor = (status: string) => {
   switch (status?.toUpperCase()) {
-    case "DRAFT": return "bg-slate-500/10 text-slate-500 border-slate-500/20";
-    case "SENT": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-    case "VIEWED": return "bg-purple-500/10 text-purple-500 border-purple-500/20";
-    case "ACCEPTED": return "bg-green-500/10 text-green-500 border-green-500/20";
-    case "REJECTED": return "bg-red-500/10 text-red-500 border-red-500/20";
-    case "EXPIRED": return "bg-orange-500/10 text-orange-500 border-orange-500/20";
-    case "CANCELLED": return "bg-gray-500/10 text-gray-500 border-gray-500/20";
-    default: return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+    case "DRAFT":
+      return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+    case "SENT":
+      return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+    case "VIEWED":
+      return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+    case "ACCEPTED":
+      return "bg-green-500/10 text-green-500 border-green-500/20";
+    case "REJECTED":
+      return "bg-red-500/10 text-red-500 border-red-500/20";
+    case "EXPIRED":
+      return "bg-orange-500/10 text-orange-500 border-orange-500/20";
+    case "CANCELLED":
+      return "bg-gray-500/10 text-gray-500 border-gray-500/20";
+    default:
+      return "bg-slate-500/10 text-slate-500 border-slate-500/20";
   }
 };
 
@@ -36,23 +45,21 @@ const QuotationsTab = () => {
   const [search, setSearch] = useState("");
   const { companyId, id: leadId } = useParams();
   const navigate = useNavigate();
-  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(null);
+  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(
+    null,
+  );
 
-  const { data: quotationsData, isLoading } = useQuotations({ lead_id: leadId });
+  const debouncedSearch = useDebounce(search, 500);
+  const { data: quotationsData, isLoading } = useQuotations({
+    lead_id: leadId,
+    search: debouncedSearch || undefined,
+  });
   const { mutate: deleteQuotation } = useDeleteQuotation();
 
-  const quotations = useMemo(() => quotationsData?.items || [], [quotationsData]);
-
-  const filteredQuotations = useMemo(() => {
-    const query = search.toLowerCase();
-    return quotations.filter((q) => {
-      const qNum = String(q.quotation_number || "").toLowerCase();
-      const status = String(q.status || "").toLowerCase();
-      const leadName = String(q.lead_name || "").toLowerCase();
-      
-      return qNum.includes(query) || status.includes(query) || leadName.includes(query);
-    });
-  }, [quotations, search]);
+  const quotations = useMemo(
+    () => quotationsData?.items || [],
+    [quotationsData],
+  );
 
   const handleCreate = () => {
     navigate(`/${companyId}/leads/${leadId}/quotations/new`);
@@ -77,14 +84,16 @@ const QuotationsTab = () => {
       header: "Customer",
       render: (item) => (
         <div className="flex flex-col">
-          <span 
+          <span
             onClick={() => handleView(item)}
             className="font-semibold text-sm text-primary hover:underline cursor-pointer decoration-primary/30 underline-offset-2"
           >
             {item.lead_name || "—"}
           </span>
           {item.quotation_number && (
-            <span className="text-[10px] font-mono text-muted-foreground uppercase">{item.quotation_number}</span>
+            <span className="text-[10px] font-mono text-muted-foreground uppercase">
+              {item.quotation_number}
+            </span>
           )}
         </div>
       ),
@@ -125,7 +134,9 @@ const QuotationsTab = () => {
       key: "created_at",
       header: "Created At",
       render: (item) => (
-        <span className="text-xs text-muted-foreground">{formatDate(item.created_at)}</span>
+        <span className="text-xs text-muted-foreground">
+          {formatDate(item.created_at)}
+        </span>
       ),
     },
     {
@@ -173,11 +184,7 @@ const QuotationsTab = () => {
         </div>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={filteredQuotations} 
-        pageSize={10} 
-      />
+      <DataTable columns={columns} data={quotations} pageSize={10} />
 
       <AlertDialog
         open={!!quotationToDelete}
@@ -188,7 +195,8 @@ const QuotationsTab = () => {
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete quotation "
-              {quotationToDelete?.quotation_number}". This action cannot be undone.
+              {quotationToDelete?.quotation_number}". This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

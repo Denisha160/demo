@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import QuotationForm, { QuotationFormData } from "./QuotationForm";
 import { UseFormSetError } from "react-hook-form";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { useCreateQuotation, useUpdateQuotation, useQuotation } from "@/hooks/useQuotations";
+import { formatDate } from "@/utils/date";
 
 const QuotationPage = () => {
   const { companyId, id: leadId, quotationId } = useParams();
@@ -16,6 +17,23 @@ const QuotationPage = () => {
   const { mutate: updateQuotation, isPending: isUpdating } = useUpdateQuotation();
 
   const isSubmitting = isCreating || isUpdating;
+
+  const initialData = useMemo(() => {
+    if (!quotationData) return undefined;
+    
+    // Map items from total_amount to amount if needed
+    const mappedItems = quotationData.items?.map((item: any) => ({
+      ...item,
+      amount: item.total_amount || item.amount || 0,
+      type: item.kit_id ? "kit" : "product"
+    }));
+
+    return {
+      ...quotationData,
+      items: mappedItems,
+      quotation_date: formatDate(quotationData.quotation_date)
+    };
+  }, [quotationData]);
 
   const handleSave = useCallback((
     data: QuotationFormData,
@@ -70,8 +88,13 @@ const QuotationPage = () => {
     navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
   };
 
-  // No pre-filling lead_id for new quotations as per request
-  const initialData = quotationId ? undefined : ({ status: "DRAFT" } as any);
+  if (quotationId && isLoadingQuotation) {
+    return (
+      <div className="flex h-[calc(100vh-theme(spacing.16))] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in  ">

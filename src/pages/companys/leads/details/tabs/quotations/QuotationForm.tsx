@@ -312,12 +312,19 @@ const QuotationForm = ({
             </div>
 
             {/* Customer Details Display */}
-            {form.watch("lead_id") && (
+            {selectedLeadId && (
               <div className="pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pb-2 p-3 bg-muted/20 rounded-md border border-border/20">
                   {(() => {
                     const lead = (leads as any[]).find(l => l.id === selectedLeadId);
-                    if (!lead) return null;
+                    
+                    // Fallback to quotationData if lead not found in search results
+                    const displayEmail = lead?.email || (quotationData as any)?.lead_email || "—";
+                    const displayPhone = lead?.phone || (quotationData as any)?.lead_phone || "—";
+                    const displayGst = lead?.gst_number || (quotationData as any)?.gst_number || "—";
+                    const displayPan = lead?.pan_number || (quotationData as any)?.pan_number || "—";
+                    const displayAddress = lead?.address || lead?.full_address || (quotationData as any)?.lead_address || "—";
+
                     return (
                       <>
                         <div className="flex flex-col gap-1">
@@ -325,7 +332,7 @@ const QuotationForm = ({
                             Email Address
                           </span>
                           <span className="text-[11px] font-semibold text-foreground break-all">
-                            {lead.email || "—"}
+                            {displayEmail}
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -333,7 +340,7 @@ const QuotationForm = ({
                             Contact Number
                           </span>
                           <span className="text-[11px] font-semibold text-foreground">
-                            {lead.phone || "—"}
+                            {displayPhone}
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -341,7 +348,7 @@ const QuotationForm = ({
                             GST Number
                           </span>
                           <span className="text-[11px] font-semibold text-foreground">
-                            {lead.gst_number || "—"}
+                            {displayGst}
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -349,7 +356,7 @@ const QuotationForm = ({
                             PAN Number
                           </span>
                           <span className="text-[11px] font-semibold text-foreground">
-                            {lead.pan_number || "—"}
+                            {displayPan}
                           </span>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -357,7 +364,7 @@ const QuotationForm = ({
                             Address
                           </span>
                           <span className="text-[11px] font-semibold text-foreground leading-tight">
-                            {lead.address || lead.full_address || "—"}
+                            {displayAddress}
                           </span>
                         </div>
                       </>

@@ -27,8 +27,10 @@ export interface Quotation {
   id: string;
   quotation_number: string | number;
   lead_id: string;
-  lead_name?: string | null;
-  company_name?: string | null;
+  lead_name: string;
+  lead_email?: string;
+  lead_phone?: string;
+  company_name: string | null;
   quotation_date: string;
   status: QuotationStatus;
   amount_in_words?: string | null;

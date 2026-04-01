@@ -203,7 +203,7 @@ export const QuotationProductsTable = () => {
                   <th className="min-w-[140px] px-2 py-2">Amt (Excl. Tax)</th>
                   <th className="min-w-[80px] px-2 py-2">GST %</th>
                   <th className="min-w-[120px] px-2 py-2">GST Amt</th>
-                  <th className="w-[50px] px-2 py-2 text-center"></th>
+                  <th className="w-[50px] px-2 py-2"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
@@ -212,7 +212,7 @@ export const QuotationProductsTable = () => {
                     key={field.id}
                     className="hover:bg-muted/5 transition-colors group"
                   >
-                    <td className="px-2 py-1.5 text-center text-xs font-bold text-muted-foreground/40">
+                    <td className="px-2 py-1.5  text-xs font-bold text-muted-foreground/40">
                       <Input
                         {...register(`items.${index}.item_code` as const)}
                         className="h-8 text-xs font-mono bg-muted/20 border-transparent text-muted-foreground cursor-not-allowed w-full focus-visible:ring-0 shadow-none"
@@ -287,11 +287,11 @@ export const QuotationProductsTable = () => {
                             valueAsNumber: true,
                             onChange: () => handleItemAmountUpdate(index),
                           })}
-                          className="h-8 text-right text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium w-full"
+                          className="h-8 text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium w-full"
                         />
                       </div>
                     </td>
-                    <td className="px-2 py-1.5 text-right">
+                    <td className="px-2 py-1.5">
                       <div className="text-xs font-black text-foreground font-mono">
                         ₹{(watch(`items.${index}.amount`) || 0).toLocaleString()}
                       </div>
@@ -304,15 +304,15 @@ export const QuotationProductsTable = () => {
                           valueAsNumber: true,
                           onChange: () => handleItemAmountUpdate(index),
                         })}
-                        className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
+                        className="h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
                       />
                     </td>
-                    <td className="px-2 py-1.5 text-right">
+                    <td className="px-2 py-1.5">
                       <div className="text-xs font-black text-primary font-mono">
                         ₹{(watch(`items.${index}.gst_amount`) || 0).toLocaleString()}
                       </div>
                     </td>
-                    <td className="px-2 py-1.5 text-center">
+                    <td className="px-2 py-1.5">
                       <Button
                         type="button"
                         variant="ghost"

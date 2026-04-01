@@ -57,7 +57,7 @@ const QuotationViewPage = () => {
     {
       key: "quantity",
       header: "Qty",
-      className: "px-2 py-2 text-center w-20",
+      className: "px-2 py-2 w-20",
       render: (item) => (
         <span className="text-sm font-bold font-mono">
           {item.quantity}
@@ -67,7 +67,7 @@ const QuotationViewPage = () => {
     {
       key: "unit_price",
       header: "Unit Price",
-      className: "px-2 py-2 text-right w-32",
+      className: "px-2 py-2  w-32",
       render: (item) => (
         <span className="text-sm font-medium text-muted-foreground font-mono">
           ₹{(item.unit_price || 0).toLocaleString()}
@@ -77,10 +77,30 @@ const QuotationViewPage = () => {
     {
       key: "amount",
       header: "Amount",
-      className: "px-2 py-2 text-right w-40",
+      className: "px-2 py-2 w-40",
       render: (item) => (
         <span className="text-sm font-black text-foreground font-mono">
           ₹{(item.quantity * item.unit_price).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: "gst_percentage",
+      header: "GST %",
+      className: "px-2 py-2 w-20",
+      render: (item) => (
+        <span className="text-xs font-bold text-muted-foreground">
+          {item.gst_percentage || 0}%
+        </span>
+      ),
+    },
+    {
+      key: "gst_amount",
+      header: "GST Amt",
+      className: "px-2 py-2 w-32",
+      render: (item) => (
+        <span className="text-sm font-bold text-primary font-mono tabular-nums">
+          ₹{(item.gst_amount || 0).toLocaleString()}
         </span>
       ),
     },
@@ -244,7 +264,7 @@ const QuotationViewPage = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center text-muted-foreground">
                     <span className="text-[10px] font-black uppercase tracking-widest">Base Amount</span>
-                    <span className="text-sm font-bold font-mono">₹{(quotation.grand_total - (quotation.tax_total || 0)).toLocaleString()}</span>
+                    <span className="text-sm font-bold font-mono">₹{(quotation.sub_total || (quotation as any).subtotal || (quotation.grand_total - (quotation.tax_total || 0))).toLocaleString()}</span>
                   </div>
                   {(quotation.tax_total || 0) > 0 && (
                     <div className="flex justify-between items-center text-emerald-600">

@@ -68,7 +68,9 @@ export const quotationSchema = z.object({
   customer_gst: optionalText,
   customer_pan: optionalText,
   items: z.array(quotationItemSchema).min(1, "At least one item is required"),
+  sub_total: requiredNumber,
   total_tax_amount: requiredNumber,
+  grand_total: requiredNumber,
   amount_in_words: optionalText,
 });
 
@@ -129,7 +131,9 @@ const QuotationForm = ({
     defaultValues: quotationData || {
       quotation_date: formatDate(new Date()),
       lead_id: "",
+      sub_total: 0,
       total_tax_amount: 0,
+      grand_total: 0,
       customer_gst: "",
       customer_pan: "",
 
@@ -262,8 +266,10 @@ const QuotationForm = ({
   useEffect(() => {
     const words = numberToWords(totals.grandTotal);
     form.setValue("amount_in_words", words, { shouldDirty: true });
+    form.setValue("sub_total", totals.subtotal, { shouldDirty: true });
     form.setValue("total_tax_amount", totals.totalTax, { shouldDirty: true });
-  }, [totals.grandTotal, totals.totalTax, form]);
+    form.setValue("grand_total", totals.grandTotal, { shouldDirty: true });
+  }, [totals.grandTotal, totals.totalTax, totals.subtotal, form]);
 
   const onSubmit = (data: QuotationFormData) => {
     onSave(

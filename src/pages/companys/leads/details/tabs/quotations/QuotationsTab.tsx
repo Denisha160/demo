@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Plus, Search, Trash2, FileText } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
@@ -8,6 +8,7 @@ import { formatDate } from "@/utils/date";
 import { Badge } from "@/components/ui/badge";
 import { useQuotations, useDeleteQuotation } from "@/hooks/useQuotations";
 import { Quotation } from "@/types/quotations";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,21 +39,14 @@ const QuotationsTab = () => {
   const navigate = useNavigate();
   const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(null);
 
-  const { data: quotationsData, isLoading } = useQuotations({ lead_id: leadId });
+  const debouncedSearch = useDebounce(search, 500);
+  const { data: quotationsData, isLoading } = useQuotations({ 
+    lead_id: leadId, 
+    search: debouncedSearch || undefined 
+  });
   const { mutate: deleteQuotation } = useDeleteQuotation();
 
   const quotations = useMemo(() => quotationsData?.items || [], [quotationsData]);
-
-  const filteredQuotations = useMemo(() => {
-    const query = search.toLowerCase();
-    return quotations.filter((q) => {
-      const qNum = String(q.quotation_number || "").toLowerCase();
-      const status = String(q.status || "").toLowerCase();
-      const leadName = String(q.lead_name || "").toLowerCase();
-      
-      return qNum.includes(query) || status.includes(query) || leadName.includes(query);
-    });
-  }, [quotations, search]);
 
   const handleCreate = () => {
     navigate(`/${companyId}/leads/${leadId}/quotations/new`);
@@ -175,7 +169,7 @@ const QuotationsTab = () => {
 
       <DataTable 
         columns={columns} 
-        data={filteredQuotations} 
+        data={quotations} 
         pageSize={10} 
       />
 

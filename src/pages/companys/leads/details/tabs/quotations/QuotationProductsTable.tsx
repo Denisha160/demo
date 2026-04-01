@@ -199,8 +199,11 @@ export const QuotationProductsTable = () => {
                     <td className="px-2 py-1.5">
                       <Input
                         type="number"
+                        autoFocus={true}
+                        step="0.01"
                         {...register(`items.${index}.quantity` as const, {
                           valueAsNumber: true,
+
                           onChange: () => handleItemAmountUpdate(index),
                         })}
                         className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"

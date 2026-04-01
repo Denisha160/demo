@@ -1627,24 +1627,30 @@ const ProductFormPage = () => {
     status: "active",
   });
 
-  const categoryOptions = (fetchedCategories as Category[] || []).map((cat: Category) => ({
-    label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
-    value: cat.id,
-  }));
-  const packageOptions = (fetchedPackages as PackageType[] || []).map((pkg: PackageType) => ({
-    label: pkg.package_code
-      ? `${pkg.package_name} (${pkg.package_code})`
-      : pkg.package_name,
-    value: pkg.id,
-  }));
-  const brandOptions = (fetchedBrands as Brand[] || []).map((b: Brand) => ({
+  const categoryOptions = ((fetchedCategories as Category[]) || []).map(
+    (cat: Category) => ({
+      label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
+      value: cat.id,
+    }),
+  );
+  const packageOptions = ((fetchedPackages as PackageType[]) || []).map(
+    (pkg: PackageType) => ({
+      label: pkg.package_code
+        ? `${pkg.package_name} (${pkg.package_code})`
+        : pkg.package_name,
+      value: pkg.id,
+    }),
+  );
+  const brandOptions = ((fetchedBrands as Brand[]) || []).map((b: Brand) => ({
     label: b.name,
     value: b.id,
   }));
-  const fragranceOptions = (fetchedFragrances as Fragrance[] || []).map((f: Fragrance) => ({
-    label: f.name,
-    value: f.id,
-  }));
+  const fragranceOptions = ((fetchedFragrances as Fragrance[]) || []).map(
+    (f: Fragrance) => ({
+      label: f.name,
+      value: f.id,
+    }),
+  );
 
   // Metadata Handlers
   const getInitialMetadata = useCallback((dataToParse: Partial<Product>) => {

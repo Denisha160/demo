@@ -232,10 +232,10 @@ const BatchFormPage = () => {
       component_batches =
         isFinishedGood && bomDetails
           ? bomDetails.raw_materials.map((m) => ({
-            raw_product_id: m.raw_product_id,
-            batch_id: selectedComponentBatches[m.raw_product_id],
-            quantity: m.raw_quantity * formData.initial_quantity,
-          }))
+              raw_product_id: m.raw_product_id,
+              batch_id: selectedComponentBatches[m.raw_product_id],
+              quantity: m.raw_quantity * formData.initial_quantity,
+            }))
           : undefined;
 
       // Ensure all components have a batch selected if FG
@@ -549,7 +549,7 @@ const BatchFormPage = () => {
           {!isEditing &&
             formData.product_id &&
             products.find((p) => p.id === formData.product_id)?.product_type ===
-            "FINISHED_GOOD" &&
+              "FINISHED_GOOD" &&
             bomDetails && (
               <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
                 <SectionHeader

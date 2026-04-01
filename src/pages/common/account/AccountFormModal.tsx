@@ -52,7 +52,7 @@ const AccountFormModal = ({
   isEditing = false,
   onSave,
 }: AccountFormModalProps) => {
-    const {
+  const {
     register,
     handleSubmit,
     setValue,

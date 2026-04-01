@@ -268,7 +268,7 @@ const BomModal = ({
           const currentRawQuantity = prev[index].raw_quantity;
           const finalValue =
             currentRawQuantity === ("" as unknown as number) ||
-              Number(currentRawQuantity) === 0
+            Number(currentRawQuantity) === 0
               ? 1
               : currentRawQuantity;
 

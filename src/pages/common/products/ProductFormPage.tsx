@@ -274,14 +274,13 @@ const ProductFormPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in overflow-hidden">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-50 border-b border-border bg-white transition-all duration-200 mb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2">
+      <div className="sticky top-0 z-50 border-b border-border transition-all duration-200 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full border border-border/50 hover:bg-muted shrink-0"
               onClick={() => navigate(-1)}
             >
               <ArrowLeft className="h-5 w-5" />
@@ -302,7 +301,6 @@ const ProductFormPage = () => {
               type="button"
               variant="outline"
               size="sm"
-              className="text-[11px] px-6 h-10 font-black uppercase tracking-widest border-border/60"
               onClick={() => navigate(-1)}
               disabled={isSaving}
             >
@@ -312,7 +310,6 @@ const ProductFormPage = () => {
               type="submit"
               form="product-form"
               size="sm"
-              className="text-[11px] px-8 h-10 font-black uppercase tracking-widest shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90"
               disabled={isSaving}
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Package className="h-4 w-4 mr-2" />}

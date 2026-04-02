@@ -272,33 +272,58 @@ const ProductFormPage = () => {
   if (isLoading) return <div className="flex flex-col items-center justify-center h-64 space-y-4"><Loader2 className="animate-spin h-8 w-8 text-primary" /><p className="text-muted-foreground">Loading product details...</p></div>;
 
   return (
-    <div className="w-full mx-auto space-y-2 animate-fade-in relative">
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2 mb-4">
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-sm border border-border shrink-0" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="min-w-0">
-            <h2 className="text-sm font-bold text-primary leading-none truncate uppercase tracking-widest flex items-center gap-2">
-              <Box className="w-4 h-4" />
-              {isNew ? "Create New Product" : "Product Detail"}
-            </h2>
+    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in  ">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-50 bg-white">
+        <div className="max-w-[1600px] mx-auto py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2 mb-4">
+          <div className="flex items-center gap-4">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full border border-border/50 hover:bg-muted shrink-0"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex flex-col">
+              <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none mb-1">Product Repository</h2>
+              <div className="flex items-center gap-2">
+                <Box className="w-5 h-5 text-primary" />
+                <h1 className="text-xl font-black text-foreground uppercase tracking-tighter">
+                  {isNew ? "Create New Product" : "Edit Product Record"}
+                </h1>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button type="submit" form="product-form" size="sm" disabled={isSaving}>
-            {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            {isSaving ? "Saving..." : isNew ? "Create Product" : "Save Changes"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-[11px] px-6 h-10 font-black uppercase tracking-widest border-border/60"
+              onClick={() => navigate(-1)}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="product-form"
+              size="sm"
+              className="text-[11px] px-8 h-10 font-black uppercase tracking-widest shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90"
+              disabled={isSaving}
+            >
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Package className="h-4 w-4 mr-2" />}
+              {isSaving ? "Saving..." : isNew ? "Create Product" : "Update Changes"}
+            </Button>
+          </div>
         </div>
       </div>
 
       <Form {...form}>
-        <form id="product-form" onSubmit={form.handleSubmit(onSubmit)} className="p-4 border border-border rounded-lg bg-card shadow-sm space-y-6 animate-in fade-in-50 duration-300">
+        <form id="product-form" onSubmit={form.handleSubmit(onSubmit)}>
           {/* Top Section: Basic Info & Images */}
           <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
             {/* Basic Info Section (7 Cols) */}

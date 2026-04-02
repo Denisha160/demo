@@ -468,7 +468,7 @@ const QuotationForm = ({
                         {...field}
                         rows={3}
                         placeholder="Priority customer - first order"
-                        className="w-full p-3 text-xs bg-muted/20 border border-border/40 rounded-sm focus:ring-1 focus:ring-primary/20 outline-none transition-all resize-none"
+                        className="w-full text-xs bg-white border border-border/40 rounded-sm focus:ring-1 transition-all"
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />

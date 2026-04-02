@@ -318,51 +318,8 @@ const QuotationForm = ({
   return (
     <Form {...form}>
       <form
-        id="quotation-form"
         onSubmit={form.handleSubmit(onSubmit)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
-            // Allow buttons to respond naturally to Enter
-            if ((e.target as HTMLElement).tagName === "BUTTON") return;
-
-            // Special handling for DatePicker - jump to first product item instead of opening calendar
-            const isDateInput = (e.target as HTMLElement).closest(".rs-picker-date");
-            if (isDateInput) {
-              e.preventDefault();
-              const firstItemCombobox = document.querySelector(
-                '[data-combobox-index="0"] button[role="combobox"]',
-              );
-              if (firstItemCombobox) {
-                (firstItemCombobox as HTMLElement).focus();
-              }
-              return;
-            }
-
-            // If focused on a Combobox trigger, open it on Enter
-            if ((e.target as HTMLElement).getAttribute("role") === "combobox") {
-              // Usually the button itself or the input inside
-              // Let the natural behavior or a manual click handle it
-              (e.target as HTMLElement).click();
-              return;
-            }
-
-            // Prevent accidental form submission
-            e.preventDefault();
-
-            // Find all interactive elements to simulate Tab behavior
-            const form = e.currentTarget;
-            const focusableElements = Array.from(
-              form.querySelectorAll('input:not([disabled]), button:not([disabled]):not([tabindex="-1"]), select:not([disabled]), textarea:not([disabled]), [role="combobox"]:not([disabled])')
-            );
-
-            const index = focusableElements.indexOf(e.target as any);
-            if (index > -1 && index < focusableElements.length - 1) {
-              const nextElement = focusableElements[index + 1] as HTMLElement;
-              nextElement.focus();
-            }
-          }
-        }}
-        className="max-w-full mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500"
+        className="space-y-4 pt-2"
       >
         <Card className="bg-muted/5 border-border/40 overflow-hidden shadow-none mb-2">
           <CardContent className="p-2 space-y-2">

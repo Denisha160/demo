@@ -294,10 +294,15 @@ const QuotationForm = ({
       tax += gstAmt;
     });
 
+    const rawTotal = sub + tax;
+    const roundedTotal = Math.round(rawTotal);
+    const roundOff = roundedTotal - rawTotal;
+
     return {
       subtotal: sub,
       totalTax: tax,
-      grandTotal: sub + tax,
+      grandTotal: roundedTotal,
+      roundOff: roundOff,
     };
   }, [watchAll.items]);
 
@@ -521,6 +526,21 @@ const QuotationForm = ({
                       })}
                     </span>
                   </div>
+
+                  {Math.abs(totals.roundOff) > 0.001 && (
+                    <div className="flex justify-between items-center text-muted-foreground italic">
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
+                        Round Off
+                      </span>
+                      <span className="text-[11px] font-bold font-mono tracking-tight">
+                        {totals.roundOff > 0 ? "+" : ""}
+                        {totals.roundOff.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-2 border-t border-border/50">

@@ -317,10 +317,7 @@ const QuotationForm = ({
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4 pt-2"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
         <Card className="bg-muted/5 border-border/40 overflow-hidden shadow-none mb-2">
           <CardContent className="p-2 space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -499,7 +496,8 @@ const QuotationForm = ({
                       Base Amount
                     </span>
                     <span className="text-sm font-bold font-mono">
-                      ₹{totals.subtotal.toLocaleString(undefined, {
+                      ₹
+                      {totals.subtotal.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </span>
@@ -509,7 +507,8 @@ const QuotationForm = ({
                       Appl. Tax (GST)
                     </span>
                     <span className="text-sm font-bold font-mono tracking-tight">
-                      +₹{totals.totalTax.toLocaleString(undefined, {
+                      +₹
+                      {totals.totalTax.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </span>
@@ -537,7 +536,8 @@ const QuotationForm = ({
                   </p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-3xl font-black text-foreground tracking-tighter font-mono">
-                      ₹{totals.grandTotal.toLocaleString(undefined, {
+                      ₹
+                      {totals.grandTotal.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </span>

@@ -28,8 +28,6 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-
-
 type TabKey = "visits" | "followups" | "tasks" | "activity";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "visits", label: "Visits", icon: MapPin },
@@ -90,8 +88,6 @@ const SalesMemberDetailPage = () => {
   const selectedUserName = useMemo(() => {
     return hierarchyOptions.find((opt) => opt.value === selectedUserId)?.label;
   }, [hierarchyOptions, selectedUserId]);
-
-
 
   if (userLoading) {
     return (

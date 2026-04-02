@@ -93,7 +93,7 @@ export const QuotationProductsTable = () => {
 
   const handleItemAmountUpdate = (index: number, newQty?: number) => {
     const item = getValues(`items.${index}`);
-    const qty = newQty !== undefined ? newQty : (Number(item.quantity) || 0);
+    const qty = newQty !== undefined ? newQty : Number(item.quantity) || 0;
     const price = Number(item.unit_price) || 0;
     const gstPercent = Number(item.gst_percentage) || 0;
 
@@ -104,7 +104,11 @@ export const QuotationProductsTable = () => {
     setValue(`items.${index}.amount`, amount, { shouldDirty: true });
     setValue(`items.${index}.gst_amount`, gstAmount, { shouldDirty: true });
     if (item.item_name) {
-      setValue(`items.${index}.item_description`, `${item.item_name} x ${qty}`, { shouldDirty: true });
+      setValue(
+        `items.${index}.item_description`,
+        `${item.item_name} x ${qty}`,
+        { shouldDirty: true },
+      );
     }
   };
 
@@ -222,7 +226,10 @@ export const QuotationProductsTable = () => {
                       />
                     </td>
                     <td className="px-2 py-1.5">
-                      <div data-combobox-index={index} className="w-full flex items-center gap-2">
+                      <div
+                        data-combobox-index={index}
+                        className="w-full flex items-center gap-2"
+                      >
                         <div className="flex-1">
                           <Combobox
                             options={allItems.map((item) => ({
@@ -250,7 +257,9 @@ export const QuotationProductsTable = () => {
                             size="icon"
                             className="h-8 w-8 shrink-0 text-primary hover:bg-primary/10"
                             onClick={() => {
-                              setSelectedKitId(watch(`items.${index}.kit_id`) || null);
+                              setSelectedKitId(
+                                watch(`items.${index}.kit_id`) || null,
+                              );
                               setIsKitViewOpen(true);
                             }}
                             title="View Kit Details"
@@ -276,7 +285,11 @@ export const QuotationProductsTable = () => {
                         step="0.01"
                         {...register(`items.${index}.quantity` as const, {
                           valueAsNumber: true,
-                          onChange: (e) => handleItemAmountUpdate(index, Number(e.target.value)),
+                          onChange: (e) =>
+                            handleItemAmountUpdate(
+                              index,
+                              Number(e.target.value),
+                            ),
                         })}
                         className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
                       />
@@ -310,11 +323,10 @@ export const QuotationProductsTable = () => {
                     </td>
                     <td className="px-2 py-1.5">
                       <div className="text-xs font-black text-foreground font-mono">
-                        ₹{(watch(`items.${index}.amount`) || 0).toLocaleString()}
+                        ₹
+                        {(watch(`items.${index}.amount`) || 0).toLocaleString()}
                       </div>
                     </td>
-
-
 
                     <td className="px-2 py-1.5">
                       <Button

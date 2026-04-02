@@ -160,7 +160,8 @@ export const QuotationProductsTable = () => {
         product_id: "",
         item_name: k.name,
         item_code: k.sku || "",
-        item_description: `${k.name} x ${currentItems[index].quantity || 1}`,
+        item_description:
+          k.description || `${k.name} x ${currentItems[index].quantity || 1}`,
         unit_price: k.kit_price || 0,
         amount: (currentItems[index].quantity || 1) * (k.kit_price || 0),
         fragrance_name: "",

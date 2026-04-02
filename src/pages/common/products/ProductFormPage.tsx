@@ -272,8 +272,8 @@ const ProductFormPage = () => {
   if (isLoading) return <div className="flex flex-col items-center justify-center h-64 space-y-4"><Loader2 className="animate-spin h-8 w-8 text-primary" /><p className="text-muted-foreground">Loading product details...</p></div>;
 
   return (
-    <div className="w-full mx-auto space-y-2 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2 mb-4">
+    <div className="w-full mx-auto space-y-2 animate-fade-in relative">
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2 mb-4">
         <div className="flex items-center gap-2">
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-sm border border-border shrink-0" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />

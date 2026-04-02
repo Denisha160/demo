@@ -97,7 +97,8 @@ export const QuotationProductsTable = () => {
     const price = Number(item.unit_price) || 0;
     const gstPercent = Number(item.gst_percentage) || 0;
 
-    const amount = Number((qty * price).toFixed(2));
+    const rawAmount = qty * price;
+    const amount = Math.round(rawAmount);
     const gstAmount = Number(((amount * gstPercent) / 100).toFixed(2));
 
     setValue(`items.${index}.amount`, amount, { shouldDirty: true });

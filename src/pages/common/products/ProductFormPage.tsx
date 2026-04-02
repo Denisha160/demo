@@ -272,11 +272,11 @@ const ProductFormPage = () => {
   if (isLoading) return <div className="flex flex-col items-center justify-center h-64 space-y-4"><Loader2 className="animate-spin h-8 w-8 text-primary" /><p className="text-muted-foreground">Loading product details...</p></div>;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in  ">
+    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in overflow-hidden">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-50 bg-white">
-        <div className="max-w-[1600px] mx-auto py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2 mb-4">
-          <div className="flex items-center gap-4">
+      <div className="sticky top-0 z-50 border-b border-border bg-white transition-all duration-200 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2">
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -322,342 +322,344 @@ const ProductFormPage = () => {
         </div>
       </div>
 
-      <Form {...form}>
-        <form id="product-form" onSubmit={form.handleSubmit(onSubmit)}>
-          {/* Top Section: Basic Info & Images */}
-          <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
-            {/* Basic Info Section (7 Cols) */}
-            <div className="xl:col-span-7 space-y-2">
-              <div className="flex items-center gap-2 mb-4">
-                <Package className="h-4 w-4 text-primary" />
-                <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Basic Information</h3>
-              </div>
+      {/* Scrollable Form Content */}
+      <div className="flex-1 overflow-y-auto">
+        <Form {...form}>
+          <form id="product-form" onSubmit={form.handleSubmit(onSubmit)}>
+            {/* Top Section: Basic Info & Images */}
+            <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
+              {/* Basic Info Section (7 Cols) */}
+              <div className="xl:col-span-7 space-y-2">
+                <div className="flex items-center gap-2 mb-4">
+                  <Package className="h-4 w-4 text-primary" />
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Basic Information</h3>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Column 1: Name & Category */}
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="product_name"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Name</FormLabel>
-                          {isRoot && (
-                            <Button type="button" variant="ghost" size="sm" className={`h-5 px-1.5 text-[9px] gap-1 hover:bg-primary/10 ${showSecretInput ? "text-primary" : "text-muted-foreground"}`} onClick={() => setShowSecretInput(!showSecretInput)}>
-                              <Lock className="h-2.5 w-2.5" />{showSecretInput ? "Hide Secret" : "Add Secret"}
-                            </Button>
-                          )}
-                        </div>
-                        <FormControl><Input ref={productNameRef} {...field} placeholder="Enter product name" autoFocus={true} className="text-sm" /></FormControl>
-                        <FormMessage className="text-[10px]" />
-                        {isRoot && showSecretInput && (
-                          <FormField
-                            control={form.control}
-                            name="secret_name"
-                            render={({ field: sField }) => (
-                              <div className="mt-2 animate-in slide-in-from-top-1 duration-200">
-                                <Label className="text-[10px] font-bold text-primary uppercase tracking-wide flex items-center gap-1"><Lock className="h-2.5 w-2.5" /> Secret Name</Label>
-                                <Input {...sField} value={sField.value || ""} placeholder="Backend/Secret name" className="text-sm mt-1 border-primary/30" />
-                              </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Column 1: Name & Category */}
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="product_name"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Name</FormLabel>
+                            {isRoot && (
+                              <Button type="button" variant="ghost" size="sm" className={`h-5 px-1.5 text-[9px] gap-1 hover:bg-primary/10 ${showSecretInput ? "text-primary" : "text-muted-foreground"}`} onClick={() => setShowSecretInput(!showSecretInput)}>
+                                <Lock className="h-2.5 w-2.5" />{showSecretInput ? "Hide Secret" : "Add Secret"}
+                              </Button>
                             )}
+                          </div>
+                          <FormControl><Input ref={productNameRef} {...field} placeholder="Enter product name" autoFocus={true} className="text-sm" /></FormControl>
+                          <FormMessage className="text-[10px]" />
+                          {isRoot && showSecretInput && (
+                            <FormField
+                              control={form.control}
+                              name="secret_name"
+                              render={({ field: sField }) => (
+                                <div className="mt-2 animate-in slide-in-from-top-1 duration-200">
+                                  <Label className="text-[10px] font-bold text-primary uppercase tracking-wide flex items-center gap-1"><Lock className="h-2.5 w-2.5" /> Secret Name</Label>
+                                  <Input {...sField} value={sField.value || ""} placeholder="Backend/Secret name" className="text-sm mt-1 border-primary/30" />
+                                </div>
+                              )}
+                            />
+                          )}
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="category_id"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Category</FormLabel>
+                          <Combobox
+                            options={comboboxes.category.options}
+                            value={field.value || ""}
+                            onValueChange={field.onChange}
+                            placeholder="Select category..."
+
+                            searchValue={categorySearch}
+                            onSearchChange={setCategorySearch}
                           />
+                          <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsCategoryDrawerOpen(true)}>
+                            <Plus className="h-3 w-3" /> Add New Category
+                          </Button>
+                          <FormMessage className="text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Column 2: Code & BrandItem/HSN */}
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="code"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Code</FormLabel>
+                          <FormControl><Input {...field} value={field.value || ""} placeholder="DEMO" className="text-sm" /></FormControl>
+                          <FormMessage className="text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="is_brand"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1.5">
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Brand Item</FormLabel>
+                            <RadioGroup onValueChange={(val) => field.onChange(val === "yes")} value={field.value ? "yes" : "no"} className="flex items-center gap-3">
+                              <div className="flex items-center space-x-1.5"><RadioGroupItem value="yes" id="brand-yes" /><Label htmlFor="brand-yes" className="text-sm cursor-pointer font-medium m-0">Yes</Label></div>
+                              <div className="flex items-center space-x-1.5"><RadioGroupItem value="no" id="brand-no" /><Label htmlFor="brand-no" className="text-sm cursor-pointer font-medium m-0">No</Label></div>
+                            </RadioGroup>
+                          </FormItem>
                         )}
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="category_id"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Category</FormLabel>
-                        <Combobox
-                          options={comboboxes.category.options}
-                          value={field.value || ""}
-                          onValueChange={field.onChange}
-                          placeholder="Select category..."
-
-                          searchValue={categorySearch}
-                          onSearchChange={setCategorySearch}
-                        />
-                        <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsCategoryDrawerOpen(true)}>
-                          <Plus className="h-3 w-3" /> Add New Category
-                        </Button>
-                        <FormMessage className="text-[10px]" />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Column 2: Code & BrandItem/HSN */}
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="code"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Code</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} placeholder="DEMO" className="text-sm" /></FormControl>
-                        <FormMessage className="text-[10px]" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="is_brand"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Brand Item</FormLabel>
-                          <RadioGroup onValueChange={(val) => field.onChange(val === "yes")} value={field.value ? "yes" : "no"} className="flex items-center gap-3">
-                            <div className="flex items-center space-x-1.5"><RadioGroupItem value="yes" id="brand-yes" /><Label htmlFor="brand-yes" className="text-sm cursor-pointer font-medium m-0">Yes</Label></div>
-                            <div className="flex items-center space-x-1.5"><RadioGroupItem value="no" id="brand-no" /><Label htmlFor="brand-no" className="text-sm cursor-pointer font-medium m-0">No</Label></div>
-                          </RadioGroup>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="hsn_code"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">HSN Code</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} placeholder="e.g. 3401.19" className="text-sm" /></FormControl>
-                          <FormMessage className="text-[10px]" />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Column 3: Type & Fragrance/Brand */}
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="product_type"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl><SelectTrigger className="text-sm"><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
-                          <SelectContent>
-                            <SelectItem value="FINISHED_GOOD" className="text-xs">Finished Good</SelectItem>
-                            <SelectItem value="SEMI_FINISHED" className="text-xs">Semi Finished</SelectItem>
-                            <SelectItem value="RAW_MATERIAL" className="text-xs">Raw Material</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage className="text-[10px]" />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <FormField
-                      control={form.control}
-                      name="fragrance_id"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Fragrance</FormLabel>
-                          <Combobox
-                            options={comboboxes.fragrance.options}
-                            value={field.value || ""}
-                            onValueChange={field.onChange}
-                            placeholder="Select fragrance..."
-
-                            searchValue={fragranceSearch}
-                            onSearchChange={setFragranceSearch}
-                          />
-                          <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsFragranceDrawerOpen(true)}>
-                            <Plus className="h-3 w-3" /> Add New Fragrance
-                          </Button>
-                          <FormMessage className="text-[10px]" />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="brand_id"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1.5">
-                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Brand</FormLabel>
-                          <Combobox
-                            options={comboboxes.brand.options}
-                            value={field.value || ""}
-                            onValueChange={field.onChange}
-                            placeholder="Select brand..."
-
-                            searchValue={brandSearch}
-                            onSearchChange={setBrandSearch}
-                            disabled={!form.watch("is_brand")}
-                          />
-                          <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsBrandDrawerOpen(true)}>
-                            <Plus className="h-3 w-3" /> Add New Brand
-                          </Button>
-                          <FormMessage className="text-[10px]" />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Pricing Grid underneath basic grid */}
-              <div className="pt-4 border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-                <FormField
-                  control={form.control}
-                  name="cost_price"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Cost Price</FormLabel>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
-                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm pl-7" placeholder="0.00" />
-                      </div>
-                      <FormMessage className="text-[10px]" />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="selling_price"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Selling Price</FormLabel>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
-                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm pl-7" placeholder="0.00" />
-                      </div>
-                      <FormMessage className="text-[10px]" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Sidebar Photo Area (3 Cols) */}
-            <div className="xl:col-span-3 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="h-4 w-4 text-primary" />
-                  <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Product Images</h3>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-[10px] font-bold uppercase tracking-wider gap-2 px-3 border-border hover:bg-primary/5 text-foreground disabled:opacity-50"
-                    onClick={() => setIsPhotoModalOpen(true)}
-                    disabled={isNew || isSaving}
-                  >
-                    <UploadCloud className="h-3.5 w-3.5" /> Add Photos
-                  </Button>
-                  {isNew && (
-                    <span className="text-[9px] text-muted-foreground italic text-right">
-                      Save product first to upload photos
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-2 border-dashed border-border/60 rounded-md p-4 bg-muted/5 min-h-[220px] flex flex-col items-center justify-center relative group">
-                {imagePreviews.length === 0 ? (
-                  <div className="flex flex-col items-center text-center gap-2 text-muted-foreground">
-                    <ImageIcon className=" w-10 opacity-20" />
-                    <p className="text-[11px] font-medium">No images uploaded yet</p>
-                    <p className="text-[9px] uppercase tracking-tighter opacity-60">JPG, PNG, WEBP · AUTO-COMPRESSED</p>
-                  </div>
-                ) : (
-                  <div className="w-full h-full flex flex-col gap-4">
-                    <div className="relative aspect-video w-full rounded-sm overflow-hidden bg-card border border-border shadow-sm">
-                      <img
-                        src={imagePreviews[Math.min(slideIdx, imagePreviews.length - 1)].url}
-                        alt="Product Photo"
-                        className="w-full h-full object-cover cursor-zoom-in"
-                        onClick={() => setLightboxIndex(Math.min(slideIdx, imagePreviews.length - 1))}
                       />
-                      <div className="absolute top-2 left-2 bg-black/70 text-white text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
-                        {Math.min(slideIdx, imagePreviews.length - 1) + 1} / {imagePreviews.length}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const idx = Math.min(slideIdx, imagePreviews.length - 1);
-                          if (imagePreviews[idx].id) deletePhoto({ productId: id!, imageId: imagePreviews[idx].id! });
-                          setImagePreviews(prev => prev.filter((_, i) => i !== idx));
-                          if (idx > 0) setSlideIdx(idx - 1);
-                        }}
-                        className="absolute top-2 right-2 bg-black/70 hover:bg-destructive text-white rounded-full p-1.5 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Carousel Dots */}
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                        {imagePreviews.map((_, i) => (
-                          <div key={i} className={`h-1.5 w-1.5 rounded-full transition-all ${i === slideIdx ? "bg-primary w-3" : "bg-white/50"}`} />
-                        ))}
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="hsn_code"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1.5">
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">HSN Code</FormLabel>
+                            <FormControl><Input {...field} value={field.value || ""} placeholder="e.g. 3401.19" className="text-sm" /></FormControl>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                    <p className="text-[9px] text-center font-bold text-muted-foreground uppercase tracking-[0.15em]">JPG, PNG, WEBP · AUTO-COMPRESSED</p>
                   </div>
-                )}
+
+                  {/* Column 3: Type & Fragrance/Brand */}
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="product_type"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1.5">
+                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger className="text-sm"><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                              <SelectItem value="FINISHED_GOOD" className="text-xs">Finished Good</SelectItem>
+                              <SelectItem value="SEMI_FINISHED" className="text-xs">Semi Finished</SelectItem>
+                              <SelectItem value="RAW_MATERIAL" className="text-xs">Raw Material</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-[10px]" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="fragrance_id"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1.5">
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Fragrance</FormLabel>
+                            <Combobox
+                              options={comboboxes.fragrance.options}
+                              value={field.value || ""}
+                              onValueChange={field.onChange}
+                              placeholder="Select fragrance..."
+
+                              searchValue={fragranceSearch}
+                              onSearchChange={setFragranceSearch}
+                            />
+                            <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsFragranceDrawerOpen(true)}>
+                              <Plus className="h-3 w-3" /> Add New Fragrance
+                            </Button>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="brand_id"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1.5">
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Brand</FormLabel>
+                            <Combobox
+                              options={comboboxes.brand.options}
+                              value={field.value || ""}
+                              onValueChange={field.onChange}
+                              placeholder="Select brand..."
+
+                              searchValue={brandSearch}
+                              onSearchChange={setBrandSearch}
+                              disabled={!form.watch("is_brand")}
+                            />
+                            <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsBrandDrawerOpen(true)}>
+                              <Plus className="h-3 w-3" /> Add New Brand
+                            </Button>
+                            <FormMessage className="text-[10px]" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pricing Grid underneath basic grid */}
+                <div className="pt-4 border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                  <FormField
+                    control={form.control}
+                    name="cost_price"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Cost Price</FormLabel>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
+                          <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm pl-7" placeholder="0.00" />
+                        </div>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="selling_price"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Selling Price</FormLabel>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
+                          <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm pl-7" placeholder="0.00" />
+                        </div>
+                        <FormMessage className="text-[10px]" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Sidebar Photo Area (3 Cols) */}
+              <div className="xl:col-span-3 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Product Images</h3>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[10px] font-bold uppercase tracking-wider gap-2 px-3 border-border hover:bg-primary/5 text-foreground disabled:opacity-50"
+                      onClick={() => setIsPhotoModalOpen(true)}
+                      disabled={isNew || isSaving}
+                    >
+                      <UploadCloud className="h-3.5 w-3.5" /> Add Photos
+                    </Button>
+                    {isNew && (
+                      <span className="text-[9px] text-muted-foreground italic text-right">
+                        Save product first to upload photos
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border-2 border-dashed border-border/60 rounded-md p-4 bg-muted/5 min-h-[220px] flex flex-col items-center justify-center relative group">
+                  {imagePreviews.length === 0 ? (
+                    <div className="flex flex-col items-center text-center gap-2 text-muted-foreground">
+                      <ImageIcon className=" w-10 opacity-20" />
+                      <p className="text-[11px] font-medium">No images uploaded yet</p>
+                      <p className="text-[9px] uppercase tracking-tighter opacity-60">JPG, PNG, WEBP · AUTO-COMPRESSED</p>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex flex-col gap-4">
+                      <div className="relative aspect-video w-full rounded-sm overflow-hidden bg-card border border-border shadow-sm">
+                        <img
+                          src={imagePreviews[Math.min(slideIdx, imagePreviews.length - 1)].url}
+                          alt="Product Photo"
+                          className="w-full h-full object-cover cursor-zoom-in"
+                          onClick={() => setLightboxIndex(Math.min(slideIdx, imagePreviews.length - 1))}
+                        />
+                        <div className="absolute top-2 left-2 bg-black/70 text-white text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
+                          {Math.min(slideIdx, imagePreviews.length - 1) + 1} / {imagePreviews.length}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const idx = Math.min(slideIdx, imagePreviews.length - 1);
+                            if (imagePreviews[idx].id) deletePhoto({ productId: id!, imageId: imagePreviews[idx].id! });
+                            setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+                            if (idx > 0) setSlideIdx(idx - 1);
+                          }}
+                          className="absolute top-2 right-2 bg-black/70 hover:bg-destructive text-white rounded-full p-1.5 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Carousel Dots */}
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                          {imagePreviews.map((_, i) => (
+                            <div key={i} className={`h-1.5 w-1.5 rounded-full transition-all ${i === slideIdx ? "bg-primary w-3" : "bg-white/50"}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-[9px] text-center font-bold text-muted-foreground uppercase tracking-[0.15em]">JPG, PNG, WEBP · AUTO-COMPRESSED</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Full Width Tabs Section */}
-          <div className="mt-8">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-4 gap-1">
-                <TabsTrigger value="measurements" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Units & Measurements</TabsTrigger>
-                {form.watch("product_type") !== "RAW_MATERIAL" && (
-                  <TabsTrigger value="packaging" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Packaging</TabsTrigger>
-                )}
-                <TabsTrigger value="specifications" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Specifications</TabsTrigger>
-                {form.watch("product_type") !== "RAW_MATERIAL" && (
-                  <>
-                    <TabsTrigger value="kits" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Kits</TabsTrigger>
-                    <TabsTrigger value="recipes" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Recipes</TabsTrigger>
-                  </>
-                )}
-              </TabsList>
+            {/* Full Width Tabs Section */}
+            <div className="mt-8">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-4 gap-1">
+                  <TabsTrigger value="measurements" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Units & Measurements</TabsTrigger>
+                  {form.watch("product_type") !== "RAW_MATERIAL" && (
+                    <TabsTrigger value="packaging" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Packaging</TabsTrigger>
+                  )}
+                  <TabsTrigger value="specifications" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Specifications</TabsTrigger>
+                  {form.watch("product_type") !== "RAW_MATERIAL" && (
+                    <>
+                      <TabsTrigger value="kits" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Kits</TabsTrigger>
+                      <TabsTrigger value="recipes" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Recipes</TabsTrigger>
+                    </>
+                  )}
+                </TabsList>
 
-              <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <TabsContent value="measurements" className="m-0 focus-visible:outline-none">
+                <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  <TabsContent value="measurements" className="m-0 focus-visible:outline-none">
 
-                  <UnitsMeasurementsTab form={form} />
-                </TabsContent>
+                    <UnitsMeasurementsTab form={form} />
+                  </TabsContent>
 
-                <TabsContent value="packaging" className="m-0 focus-visible:outline-none">
+                  <TabsContent value="packaging" className="m-0 focus-visible:outline-none">
 
-                  <PackagingTab form={form} comboboxes={comboboxes} packageModal={{ setOpen: setIsPackageModalOpen }} />
-                </TabsContent>
+                    <PackagingTab form={form} comboboxes={comboboxes} packageModal={{ setOpen: setIsPackageModalOpen }} />
+                  </TabsContent>
 
-                <TabsContent value="specifications" className="m-0 focus-visible:outline-none">
+                  <TabsContent value="specifications" className="m-0 focus-visible:outline-none">
 
-                  <SpecificationsTab metadata={{ metaColors, setMetaColors, metaFeatures, setMetaFeatures, metaParams, setMetaParams, metaAttrs: metaAttributes, setMetaAttrs: setMetaAttributes }} />
-                </TabsContent>
+                    <SpecificationsTab metadata={{ metaColors, setMetaColors, metaFeatures, setMetaFeatures, metaParams, setMetaParams, metaAttrs: metaAttributes, setMetaAttrs: setMetaAttributes }} />
+                  </TabsContent>
 
-                <TabsContent value="kits" className="m-0 focus-visible:outline-none">
+                  <TabsContent value="kits" className="m-0 focus-visible:outline-none">
 
-                  <KitsTab productId={id} productType={form.watch("product_type")} isNew={isNew} />
-                </TabsContent>
+                    <KitsTab productId={id} productType={form.watch("product_type")} isNew={isNew} />
+                  </TabsContent>
 
-                <TabsContent value="recipes" className="m-0 focus-visible:outline-none">
+                  <TabsContent value="recipes" className="m-0 focus-visible:outline-none">
 
-                  <RecipesTab productId={id} productType={form.watch("product_type")} isNew={isNew} sellingPrice={Number(form.watch("selling_price") || 0)} />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </div>
-
-        </form>
-      </Form>
+                    <RecipesTab productId={id} productType={form.watch("product_type")} isNew={isNew} sellingPrice={Number(form.watch("selling_price") || 0)} />
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
+          </form>
+        </Form>
+      </div>
 
       <CategoryDrawer open={isCategoryDrawerOpen} onOpenChange={setIsCategoryDrawerOpen} />
       <FragranceDrawer open={isFragranceDrawerOpen} onOpenChange={setIsFragranceDrawerOpen} />

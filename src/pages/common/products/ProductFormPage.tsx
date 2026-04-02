@@ -273,7 +273,7 @@ const ProductFormPage = () => {
 
   return (
     <div className="w-full mx-auto space-y-2 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2">
         <div className="flex items-center gap-2">
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-sm border border-border shrink-0" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />

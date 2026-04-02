@@ -203,7 +203,6 @@ export const QuotationProductsTable = () => {
                   <th className="min-w-[120px] px-2 py-2">Price</th>
                   <th className="min-w-[80px] px-2 py-2">GST %</th>
                   <th className="min-w-[140px] px-2 py-2">Amt (Excl. Tax)</th>
-
                   <th className="w-[50px] px-2 py-2"></th>
                 </tr>
               </thead>
@@ -298,19 +297,23 @@ export const QuotationProductsTable = () => {
                       </div>
                     </td>
                     <td className="px-2 py-1.5">
-                      <div className="text-xs font-black text-primary font-mono">
-                        ₹
-                        {(
-                          watch(`items.${index}.gst_amount`) || 0
-                        ).toLocaleString()}
-                      </div>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        {...register(`items.${index}.gst_percentage` as const, {
+                          valueAsNumber: true,
+                          onChange: () => handleItemAmountUpdate(index),
+                        })}
+                        className="h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
+                      />
                     </td>
                     <td className="px-2 py-1.5">
                       <div className="text-xs font-black text-foreground font-mono">
-                        ₹
-                        {(watch(`items.${index}.amount`) || 0).toLocaleString()}
+                        ₹{(watch(`items.${index}.amount`) || 0).toLocaleString()}
                       </div>
                     </td>
+
+
 
                     <td className="px-2 py-1.5">
                       <Button

@@ -85,8 +85,8 @@ const productSchema = z.object({
   height: z.number().nullable().optional(),
   size_value: z.number().nullable().optional(),
   dimension_unit: z.enum(["mm", "cm", "m", "in", "ft"]).nullable().optional(),
-  cost_price: z.number().nullable().optional(),
-  selling_price: z.number().nullable().optional(),
+  cost_price: z.coerce.number({ invalid_type_error: "Must be a number" }).min(0, "Cost price is required"),
+  selling_price: z.coerce.number({ invalid_type_error: "Must be a number" }).min(0, "Selling price is required"),
   hsn_code: z.string().optional().nullable(),
   shape: z.string().optional().nullable(),
   capacity: z.string().optional().nullable(),
@@ -472,7 +472,7 @@ const ProductFormPage = () => {
                       <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Cost Price</FormLabel>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
-                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? null : Number(e.target.value))} className="text-sm h-10 pl-7" placeholder="0.00" />
+                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm h-10 pl-7" placeholder="0.00" />
                       </div>
                       <FormMessage className="text-[10px]" />
                     </FormItem>
@@ -486,7 +486,7 @@ const ProductFormPage = () => {
                       <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Selling Price</FormLabel>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
-                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? null : Number(e.target.value))} className="text-sm h-10 pl-7" placeholder="0.00" />
+                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm h-10 pl-7" placeholder="0.00" />
                       </div>
                       <FormMessage className="text-[10px]" />
                     </FormItem>

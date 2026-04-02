@@ -357,6 +357,7 @@ export const QuotationProductsTable = () => {
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
+                              e.stopPropagation();
                               handleScanProduct();
                             }
                           }}

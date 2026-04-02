@@ -210,27 +210,21 @@ const QuotationForm = ({
       const timer = setTimeout(() => {
         if (leadIdFromUrl) {
           if (datePickerRef.current) {
-            const dateInput =
-              datePickerRef.current.root?.querySelector("input") ||
-              datePickerRef.current.querySelector?.("input");
-            if (dateInput) {
-              dateInput.focus();
-            } else if (datePickerRef.current.focus) {
-              datePickerRef.current.focus();
+            // RSuite DatePicker has an open method which also focuses
+            if (typeof datePickerRef.current.open === "function") {
+              datePickerRef.current.open();
+            } else {
+              // Fallback
+              const dateInput =
+                datePickerRef.current.root?.querySelector("input") ||
+                datePickerRef.current.querySelector?.("input");
+              if (dateInput) {
+                dateInput.focus();
+              } else if (datePickerRef.current.focus) {
+                datePickerRef.current.focus();
+              }
             }
           }
-
-          // After a moment, if date is already there (default), user might want to start adding products
-          // But focusing too many things at once is hard.
-          // We'll focus the first item combobox after a longer delay if needed, or user can tab.
-          setTimeout(() => {
-            const firstItemCombobox = document.querySelector(
-              '[data-combobox-index="0"] button[role="combobox"]',
-            );
-            if (firstItemCombobox) {
-              (firstItemCombobox as HTMLElement).focus();
-            }
-          }, 800);
         } else if (leadComboboxRef.current) {
           leadComboboxRef.current.focus();
         }

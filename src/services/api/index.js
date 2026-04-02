@@ -101,6 +101,21 @@ export const deleteUser = (id) => {
   return axios({ method: "DELETE", url });
 };
 
+export const uploadUserPhoto = (id, formData) => {
+  const url = `users/${id}/image`;
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const removeUserPhoto = (id) => {
+  const url = `users/${id}/image`;
+  return axios({ method: "DELETE", url });
+};
+
 export const updateUserPermissions = (id, data) => {
   const url = `users/${id}/permissions`;
   return axios({ method: "PUT", url, data });
@@ -183,6 +198,11 @@ export const getAvailablePermissions = () => {
 
 export const listProducts = (params) => {
   const url = `products`;
+  return axios({ method: "GET", url, params });
+};
+
+export const listAllProducts = (params) => {
+  const url = `products/all-items`;
   return axios({ method: "GET", url, params });
 };
 
@@ -782,4 +802,58 @@ export const deleteHierarchy = (id) => {
   const url = `hierarchy/${id}`;
   return axios({ method: "DELETE", url });
 };
+// end region
+// region Shifts
+// ===================== Shifts =====================
+
+export const listShifts = (params) => {
+  const url = `shifts`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getShiftDetails = (id, params) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createShift = (data) => {
+  const url = `shifts`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateShift = ({ id, ...data }) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteShift = (id) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
+export const listQuotation = (params) => {
+  const url = `quotation`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getQuotationDetails = (id, params) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createQuotation = (data) => {
+  const url = `quotation`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateQuotation = ({ id, ...data }) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteQuotation = (id) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
 // end region

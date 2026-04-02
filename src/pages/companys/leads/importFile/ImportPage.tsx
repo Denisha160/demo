@@ -7,7 +7,9 @@ import {
   Info,
   CheckCircle2,
   AlertCircle,
+  RotateCcw,
 } from "lucide-react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +34,7 @@ interface LeadImportItem {
   website?: string;
   phone: string;
   expected_revenue?: string;
-  tags?: string;
+  priority?: string;
 }
 
 const ImportPage = () => {
@@ -40,16 +42,19 @@ const ImportPage = () => {
   const { companyId } = useParams();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fallbackStatus, setFallbackStatus] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const downloadDemoMutation = useDownloadDemoCSV();
   const importLeadsMutation = useImportLeads();
 
   const { data: statusResponse } = useLeadStatuses({ limit: 100 });
   const statusOptions =
-    (statusResponse as { items?: { id: string; name: string }[] })?.items?.map((item) => ({
-      value: item.id,
-      label: item.name,
-    })) || [];
+    (statusResponse as { items?: { id: string; name: string }[] })?.items?.map(
+      (item) => ({
+        value: item.id,
+        label: item.name,
+      }),
+    ) || [];
 
   const columns: Column<LeadImportItem>[] = [
     { key: "name", header: "* Name" },
@@ -66,7 +71,7 @@ const ImportPage = () => {
     { key: "website", header: "Website" },
     { key: "phone", header: "* Phone" },
     { key: "expected_revenue", header: "Expected Revenue" },
-    { key: "tags", header: "Tags" },
+    { key: "priority", header: "Priority" },
   ];
 
   const sampleData = [
@@ -86,7 +91,7 @@ const ImportPage = () => {
       website: "https://abc-corp.com",
       phone: "9876543210",
       expected_revenue: "50000",
-      tags: "High Priority, Q1 Lead",
+      priority: "HOT",
     },
   ];
 
@@ -94,6 +99,32 @@ const ImportPage = () => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
+  };
+
+  const handleReset = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const parseCSVLine = (line: string) => {
+    const result = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current.trim().replace(/^"|"$/g, ""));
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim().replace(/^"|"$/g, ""));
+    return result;
   };
 
   const handleImport = () => {
@@ -113,7 +144,7 @@ const ImportPage = () => {
         return;
       }
 
-      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+      const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase());
       const items: any[] = [];
 
       // Map headers to field names
@@ -136,15 +167,15 @@ const ImportPage = () => {
         phone: "phone",
         expected_revenue: "expected_revenue",
         "expected revenue": "expected_revenue",
-        tags: "tags",
+        priority: "priority",
       };
 
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
 
-        // Simple CSV split (doesn't handle commas in quotes, but standard for this use case)
-        const values = line.split(",").map((v) => v.trim());
+        // Robust CSV parsing that handles commas in quotes
+        const values = parseCSVLine(line);
         const item: any = {};
 
         headers.forEach((header, index) => {
@@ -171,7 +202,7 @@ const ImportPage = () => {
           onSuccess: () => {
             navigate(`/${companyId}/leads`);
           },
-        }
+        },
       );
     };
 
@@ -225,7 +256,9 @@ const ImportPage = () => {
             <div className="rounded-sm border border-blue-500/10 bg-blue-500/5 p-3 backdrop-blur-sm">
               <div className="mb-2 flex items-center gap-2 text-blue-600">
                 <Info className="h-4 w-4" />
-                <h2 className="text-xs font-bold uppercase tracking-wider">Import Instructions</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wider">
+                  Import Instructions
+                </h2>
               </div>
               <ul className="grid gap-2 md:grid-cols-3">
                 <li className="flex gap-2 text-xs leading-tight text-muted-foreground bg-white/40 p-2 rounded-sm border border-white/60">
@@ -233,7 +266,8 @@ const ImportPage = () => {
                     1
                   </span>
                   <p>
-                    Data must match the column headers in the example table. Use <strong>UTF-8</strong> encoding.
+                    Data must match the column headers in the example table. Use{" "}
+                    <strong>UTF-8</strong> encoding.
                   </p>
                 </li>
                 <li className="flex gap-2 text-xs leading-tight text-muted-foreground bg-white/40 p-2 rounded-sm border border-white/60">
@@ -241,7 +275,8 @@ const ImportPage = () => {
                     2
                   </span>
                   <p>
-                    Dates should be formatted as <strong>d-m-yyyy</strong> (e.g., 27-03-2026).
+                    Dates should be formatted as <strong>d-m-yyyy</strong>{" "}
+                    (e.g., 27-03-2026).
                   </p>
                 </li>
                 <li className="flex gap-2 text-xs leading-tight text-muted-foreground bg-white/40 p-2 rounded-sm border border-white/60">
@@ -249,7 +284,9 @@ const ImportPage = () => {
                     3
                   </span>
                   <p>
-                    Leads won't be imported if <strong>email already exists</strong> (based on validation settings).
+                    Leads won't be imported if{" "}
+                    <strong>email already exists</strong> (based on validation
+                    settings).
                   </p>
                 </li>
               </ul>
@@ -273,7 +310,9 @@ const ImportPage = () => {
             <div className="space-y-4 rounded-sm border border-border/60 bg-card p-4 shadow-sm">
               <div className="flex items-center gap-2 text-primary">
                 <FileUp className="h-4 w-4" />
-                <h2 className="text-xs font-bold uppercase tracking-wider">Choose CSV File</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wider">
+                  Choose CSV File
+                </h2>
               </div>
 
               <div className="space-y-2">
@@ -288,6 +327,7 @@ const ImportPage = () => {
                     id="csv-file"
                     type="file"
                     accept=".csv"
+                    ref={fileInputRef}
                     className="h-10 cursor-pointer border-dashed border-2 bg-muted/30 pt-2.5 group-hover:border-primary/50 transition-all text-xs rounded-sm"
                     onChange={handleFileChange}
                   />
@@ -303,7 +343,10 @@ const ImportPage = () => {
                 {selectedFile && (
                   <div className="mt-2 flex items-center gap-2 rounded-sm bg-green-500/10 px-2 py-1.5 text-[10px] font-medium text-green-600 border border-green-500/20">
                     <CheckCircle2 className="h-3 w-3" />
-                    <span className="truncate">Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)</span>
+                    <span className="truncate">
+                      Selected: {selectedFile.name} (
+                      {(selectedFile.size / 1024).toFixed(2)} KB)
+                    </span>
                   </div>
                 )}
               </div>
@@ -320,6 +363,17 @@ const ImportPage = () => {
             >
               Cancel
             </Button>
+            {selectedFile && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-6 gap-2 font-bold text-[10px] uppercase tracking-widest rounded-sm border-destructive/20 text-destructive hover:bg-destructive/5 hover:border-destructive/30 transition-all active:scale-95"
+                onClick={handleReset}
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset
+              </Button>
+            )}
             <Button
               size="sm"
               className="h-9 px-10 font-bold text-[10px] uppercase tracking-widest rounded-sm shadow-md shadow-primary/10 transition-all active:scale-95"

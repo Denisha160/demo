@@ -96,8 +96,8 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: visits = [], isLoading } = useLeadVisits(leadId, {
-    startDate: formatDateForAPI(dateRange?.from),
-    endDate: formatDateForAPI(dateRange?.to),
+    ...(dateRange?.from ? { startDate: formatDateForAPI(dateRange.from) } : {}),
+    ...(dateRange?.to ? { endDate: formatDateForAPI(dateRange.to) } : {}),
     limit,
     offset: (page - 1) * limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
@@ -220,7 +220,7 @@ const VisitsTab = ({ leadId }: VisitsTabProps) => {
             <img
               src={item.image_url}
               alt={item.visit_image_name || item.title}
-              className="h-12 w-12 cursor-pointer rounded-md border border-border/60 object-cover transition-transform hover:scale-105 active:scale-95"
+              className="h-12 w-12 cursor-pointer rounded-sm border border-border/60 object-cover transition-transform hover:scale-105 active:scale-95"
               onClick={() => setSelectedImageUrl(item.image_url || null)}
             />
           ) : null}

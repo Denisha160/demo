@@ -762,8 +762,8 @@ const LeadsPage = () => {
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
       <div className="border-b border-border">
-        <div className="overflow-x-auto 2xl:overflow-x-visible scrollbar-premium py-2">
-          <div className="flex items-center justify-between gap-2 min-w-max px-2 2xl:min-w-0 2xl:w-full">
+        <div className="overflow-x-auto 2xl:overflow-x-visible scrollbar-premium pb-2">
+          <div className="flex items-center justify-between gap-2 min-w-max 2xl:min-w-0 2xl:w-full">
             <div className="flex items-center gap-2">
               {/* Search */}
               <div className="relative w-64 2xl:w-72">

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -74,6 +74,8 @@ const AccountFormModal = ({
     },
   });
 
+  const accountNameRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (open) {
       if (isEditing && accountData) {
@@ -103,6 +105,15 @@ const AccountFormModal = ({
       }
     }
   }, [open, isEditing, accountData, reset]);
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        accountNameRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const handleFormSubmit = (data: AccountFormData) => {
     onSave(data);
@@ -157,6 +168,11 @@ const AccountFormModal = ({
               />
               <Input
                 {...register("accountName")}
+                ref={(e) => {
+                  register("accountName").ref(e);
+                  (accountNameRef as any).current = e;
+                }}
+                autoFocus
                 placeholder="Enter account name"
                 className={`pl-9 h-9 border-border focus-visible:ring-primary/20 text-sm font-medium ${errors.accountName ? "border-destructive focus-visible:ring-destructive/20" : ""}`}
               />

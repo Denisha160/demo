@@ -194,7 +194,7 @@ const AccountPage = () => {
           {filteredAccounts.map((account) => (
             <div
               key={account.id}
-              className="group relative flex flex-col bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
+              className="group relative flex flex-col bg-card border border-border rounded-sm shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
               onClick={() => navigate(account.id)}
             >
               <div className="absolute top-0 right-0 p-3 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
@@ -205,7 +205,7 @@ const AccountPage = () => {
                 <div className="flex items-start justify-between">
                   <Badge
                     variant={account.isActive ? "success" : "secondary"}
-                    className="rounded-full px-2 py-0 text-[10px] uppercase tracking-wider font-bold"
+                    className="rounded-sm px-2 py-0 text-[10px] uppercase tracking-wider font-bold"
                   >
                     {account.isActive ? "Active" : "Inactive"}
                   </Badge>
@@ -281,7 +281,7 @@ const AccountPage = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-sm bg-muted/5">
-          <div className="h-16 w-16 bg-primary/5 rounded-full flex items-center justify-center mb-4 text-primary/40">
+          <div className="h-16 w-16 bg-primary/5 rounded-sm flex items-center justify-center mb-4 text-primary/40">
             <Landmark className="h-8 w-8" />
           </div>
           <h3 className="text-lg font-bold text-foreground">

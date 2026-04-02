@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ export type TaskFormData = z.infer<typeof taskSchema>;
 
 export interface Task extends TaskFormData {
   id: string;
+  lead_id?: string;
   created_at: string;
   assigned_to_name?: string;
 }
@@ -80,6 +81,7 @@ const TaskModal = ({
     value: user.id,
     label: user.name,
   }));
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -94,6 +96,15 @@ const TaskModal = ({
       reminder_time: "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -184,6 +195,11 @@ const TaskModal = ({
                 </FormLabel>
                 <FormControl>
                   <Input
+                    autoFocus
+                    ref={(e) => {
+                      field.ref(e);
+                      titleInputRef.current = e;
+                    }}
                     placeholder="Task title"
                     className="h-9 text-xs"
                     disabled={isSubmitting}
@@ -294,7 +310,7 @@ const TaskModal = ({
                       value={field.value}
                       onValueChange={field.onChange}
                       placeholder="Search and select a user..."
-                      disabled={isSubmitting}
+                      disabled={true}
                       className={
                         form.formState.errors.assigned_to
                           ? "border-destructive"
@@ -336,7 +352,7 @@ const TaskModal = ({
                 control={form.control}
                 name="set_reminder"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-3 bg-muted/5">
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-sm border p-3 bg-muted/5">
                     <FormControl>
                       <Checkbox
                         id="set_reminder_task"

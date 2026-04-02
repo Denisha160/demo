@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,7 @@ const CallLogModal = ({
   onSave,
   isSubmitting,
 }: CallLogModalProps) => {
+  const callTypeTriggerRef = useRef<HTMLButtonElement>(null);
   const form = useForm<CallLogFormData>({
     resolver: zodResolver(callLogSchema),
     defaultValues: {
@@ -74,6 +75,15 @@ const CallLogModal = ({
       created_at: "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        callTypeTriggerRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -169,7 +179,10 @@ const CallLogModal = ({
                     disabled={isSubmitting}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-9 text-xs">
+                      <SelectTrigger
+                        ref={callTypeTriggerRef}
+                        className="h-9 text-xs"
+                      >
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                     </FormControl>

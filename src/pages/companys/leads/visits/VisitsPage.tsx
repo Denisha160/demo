@@ -188,7 +188,7 @@ const VisitsPage = () => {
             <img
               src={item.image_url}
               alt={item.visit_image_name || item.title}
-              className="h-12 w-12 rounded-md border border-border/60 object-cover"
+              className="h-12 w-12 rounded-sm border border-border/60 object-cover"
             />
           ) : null}
           <div className="flex flex-col">

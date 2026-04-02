@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { z } from "zod";
 import { toast } from "react-toastify";
 import {
@@ -309,6 +309,7 @@ interface ProductTabProps {
     showSecret: boolean;
     setShowSecret: (v: boolean) => void;
   };
+  productNameRef?: React.RefObject<HTMLInputElement>;
 }
 
 const BasicInfoTab = ({
@@ -320,6 +321,7 @@ const BasicInfoTab = ({
   comboboxes,
   drawers,
   adminFeature,
+  productNameRef,
 }: ProductTabProps) => (
   <div className="p-1 space-y-4">
     <div className="flex items-center gap-2 mb-4">
@@ -351,6 +353,8 @@ const BasicInfoTab = ({
           )}
         </div>
         <Input
+          ref={productNameRef}
+          autoFocus
           value={productData.product_name ?? ""}
           onChange={(e) => handleChange("product_name", e.target.value)}
           placeholder="Enter product name"
@@ -875,7 +879,7 @@ const SpecificationsTab = ({ metadata }: ProductTabProps) => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Colors */}
-        <div className="bg-muted/30 p-4 rounded-md border flex flex-col gap-3">
+        <div className="bg-muted/30 p-4 rounded-sm border flex flex-col gap-3">
           <div className="flex justify-between items-center w-full">
             <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 m-0">
               <Tags className="h-3 w-3" /> Available Colors
@@ -920,7 +924,7 @@ const SpecificationsTab = ({ metadata }: ProductTabProps) => {
         </div>
 
         {/* Features */}
-        <div className="bg-muted/30 p-4 rounded-md border flex flex-col gap-3">
+        <div className="bg-muted/30 p-4 rounded-sm border flex flex-col gap-3">
           <div className="flex justify-between items-center w-full">
             <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 m-0">
               <Shield className="h-3 w-3" /> Key Features
@@ -965,7 +969,7 @@ const SpecificationsTab = ({ metadata }: ProductTabProps) => {
         </div>
 
         {/* Parameters */}
-        <div className="bg-muted/30 p-4 rounded-md border flex flex-col gap-3">
+        <div className="bg-muted/30 p-4 rounded-sm border flex flex-col gap-3">
           <div className="flex justify-between items-center w-full">
             <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 m-0">
               <Layers className="h-3 w-3" /> Parameters
@@ -1024,7 +1028,7 @@ const SpecificationsTab = ({ metadata }: ProductTabProps) => {
         </div>
 
         {/* Attributes */}
-        <div className="bg-muted/30 p-4 rounded-md border flex flex-col gap-3">
+        <div className="bg-muted/30 p-4 rounded-sm border flex flex-col gap-3">
           <div className="flex justify-between items-center w-full">
             <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1 m-0">
               <Box className="h-3 w-3" /> Attributes
@@ -1216,7 +1220,7 @@ const KitsTab = ({
       {/* Header section with Stats */}
       <div className="flex items-center justify-between border-b border-border/60 pb-3 h-8">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-primary/10 rounded-md">
+          <div className="p-1.5 bg-primary/10 rounded-sm">
             <Layers className="h-3.5 w-3.5 text-primary" />
           </div>
           <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.1em]">
@@ -1226,7 +1230,7 @@ const KitsTab = ({
         {!isLoadingAssoc && kitsByProduct.length > 0 && (
           <Badge
             variant="outline"
-            className="h-5 text-[9px] font-bold uppercase tracking-wider rounded-md border-primary/20 bg-primary/5 text-primary"
+            className="h-5 text-[9px] font-bold uppercase tracking-wider rounded-sm border-primary/20 bg-primary/5 text-primary"
           >
             {kitsByProduct.length}{" "}
             {kitsByProduct.length === 1 ? "Association" : "Associations"}
@@ -1236,8 +1240,8 @@ const KitsTab = ({
 
       {/* Quick Add Section */}
       <div className="relative group">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-        <div className="relative bg-card border border-border/80 rounded-xl shadow-sm p-4 space-y-4">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-sm blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+        <div className="relative bg-card border border-border/80 rounded-sm shadow-sm p-4 space-y-4">
           <div className="flex flex-col lg:flex-row items-end gap-3">
             <div className="flex-[3] w-full space-y-1.5">
               <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-0.5">
@@ -1299,7 +1303,7 @@ const KitsTab = ({
             Current Kit Memberships
           </span>
         </div>
-        <div className="rounded-xl border border-border/60 overflow-hidden shadow-inner bg-muted/5">
+        <div className="rounded-sm border border-border/60 overflow-hidden shadow-inner bg-muted/5">
           <DataTable
             data={kitsByProduct}
             columns={columns}
@@ -1378,7 +1382,7 @@ const RecipesTab = ({
       {/* Header section */}
       <div className="flex items-center justify-between border-b border-border/60 pb-3 h-8">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-primary/10 rounded-md">
+          <div className="p-1.5 bg-primary/10 rounded-sm">
             <Activity className="h-3.5 w-3.5 text-primary" />
           </div>
           <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.1em]">
@@ -1401,7 +1405,7 @@ const RecipesTab = ({
         </div>
       ) : !bom || !bom.raw_materials || bom.raw_materials.length === 0 ? (
         <div
-          className="flex flex-col items-center justify-center p-12 text-center bg-muted/5 rounded-xl border border-dashed border-border group hover:bg-muted/10 transition-all cursor-pointer"
+          className="flex flex-col items-center justify-center p-12 text-center bg-muted/5 rounded-sm border border-dashed border-border group hover:bg-muted/10 transition-all cursor-pointer"
           onClick={() => setIsBomModalOpen(true)}
         >
           <div className="h-12 w-12 bg-primary/5 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -1419,7 +1423,7 @@ const RecipesTab = ({
         <div className="space-y-6">
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 space-y-1">
+            <div className="p-4 bg-primary/5 rounded-sm border border-primary/10 space-y-1">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Base Material Cost
               </p>
@@ -1430,7 +1434,7 @@ const RecipesTab = ({
                 })}
               </p>
             </div>
-            <div className="p-4 bg-muted/30 rounded-xl border border-border/60 space-y-1">
+            <div className="p-4 bg-muted/30 rounded-sm border border-border/60 space-y-1">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 Selling Price
               </p>
@@ -1442,7 +1446,7 @@ const RecipesTab = ({
               </p>
             </div>
             <div
-              className={`p-4 rounded-xl border space-y-1 ${profit >= 0 ? "bg-emerald-500/5 border-emerald-500/10" : "bg-destructive/5 border-destructive/10"}`}
+              className={`p-4 rounded-sm border space-y-1 ${profit >= 0 ? "bg-emerald-500/5 border-emerald-500/10" : "bg-destructive/5 border-destructive/10"}`}
             >
               <p
                 className={`text-[10px] font-bold uppercase tracking-widest ${profit >= 0 ? "text-emerald-600" : "text-destructive"}`}
@@ -1466,7 +1470,7 @@ const RecipesTab = ({
                 Formula Ingredients
               </span>
             </div>
-            <div className="rounded-xl border border-border/60 overflow-hidden shadow-inner bg-card">
+            <div className="rounded-sm border border-border/60 overflow-hidden shadow-inner bg-card">
               <table className="w-full text-xs">
                 <thead className="bg-muted/40 text-[10px] uppercase font-bold text-muted-foreground border-b border-border/60">
                   <tr>
@@ -1581,6 +1585,7 @@ const ProductFormPage = () => {
   const [apiError, setApiError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("measurements");
   const [showSecretInput, setShowSecretInput] = useState(false);
+  const productNameRef = useRef<HTMLInputElement>(null);
 
   // UI states
   const [imagePreviews, setImagePreviews] = useState<
@@ -1591,6 +1596,7 @@ const ProductFormPage = () => {
   const [isFragranceDrawerOpen, setIsFragranceDrawerOpen] = useState(false);
   const [isBrandDrawerOpen, setIsBrandDrawerOpen] = useState(false);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const kitNameRef = useRef<HTMLInputElement>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [slideIdx, setSlideIdx] = useState(0);
 
@@ -1605,40 +1611,46 @@ const ProductFormPage = () => {
   const debouncedFragranceSearch = useDebounce(fragranceSearch, 300);
 
   // Fetch combobox options
-  const { data: fetchedCategories = [] } = useCategoriesCombobox({
+  const { data: fetchedCategories } = useCategoriesCombobox({
     type: "sub",
     search: debouncedCategorySearch,
   });
-  const { data: fetchedPackages = [] } = usePackagesCombobox({
+  const { data: fetchedPackages } = usePackagesCombobox({
     search: debouncedPackageSearch.trim() || undefined,
   });
-  const { data: fetchedBrands = [] } = useBrandCombobox({
+  const { data: fetchedBrands } = useBrandCombobox({
     search: debouncedBrandSearch,
     status: "active",
   });
-  const { data: fetchedFragrances = [] } = useFragranceCombobox({
+  const { data: fetchedFragrances } = useFragranceCombobox({
     search: debouncedFragranceSearch,
     status: "active",
   });
 
-  const categoryOptions = fetchedCategories.map((cat: Category) => ({
-    label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
-    value: cat.id,
-  }));
-  const packageOptions = fetchedPackages.map((pkg: PackageType) => ({
-    label: pkg.package_code
-      ? `${pkg.package_name} (${pkg.package_code})`
-      : pkg.package_name,
-    value: pkg.id,
-  }));
-  const brandOptions = fetchedBrands.map((b: Brand) => ({
+  const categoryOptions = ((fetchedCategories as Category[]) || []).map(
+    (cat: Category) => ({
+      label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
+      value: cat.id,
+    }),
+  );
+  const packageOptions = ((fetchedPackages as PackageType[]) || []).map(
+    (pkg: PackageType) => ({
+      label: pkg.package_code
+        ? `${pkg.package_name} (${pkg.package_code})`
+        : pkg.package_name,
+      value: pkg.id,
+    }),
+  );
+  const brandOptions = ((fetchedBrands as Brand[]) || []).map((b: Brand) => ({
     label: b.name,
     value: b.id,
   }));
-  const fragranceOptions = fetchedFragrances.map((f: Fragrance) => ({
-    label: f.name,
-    value: f.id,
-  }));
+  const fragranceOptions = ((fetchedFragrances as Fragrance[]) || []).map(
+    (f: Fragrance) => ({
+      label: f.name,
+      value: f.id,
+    }),
+  );
 
   // Metadata Handlers
   const getInitialMetadata = useCallback((dataToParse: Partial<Product>) => {
@@ -1683,6 +1695,13 @@ const ProductFormPage = () => {
   );
 
   // --- Effects ---
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      productNameRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     if (fetchError) toast.error("Failed to load product details");
   }, [fetchError]);
@@ -1990,6 +2009,7 @@ const ProductFormPage = () => {
       showSecret: showSecretInput,
       setShowSecret: setShowSecretInput,
     },
+    productNameRef,
   };
 
   // --- Render ---
@@ -2069,7 +2089,7 @@ const ProductFormPage = () => {
                 ) : (
                   <div className="flex flex-col w-full gap-2 flex-1">
                     <div
-                      className="relative w-full rounded-md overflow-hidden bg-muted/20 border border-border group cursor-zoom-in"
+                      className="relative w-full rounded-sm overflow-hidden bg-muted/20 border border-border group cursor-zoom-in"
                       style={{ minHeight: 160 }}
                     >
                       <img
@@ -2281,7 +2301,7 @@ const ProductFormPage = () => {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="text-sm rounded-md gap-2 px-4 font-medium"
+                className="text-sm gap-2 px-4 font-medium"
                 onClick={handleReset}
                 disabled={isSaving}
               >
@@ -2290,7 +2310,7 @@ const ProductFormPage = () => {
               <Button
                 type="button"
                 size="sm"
-                className="text-sm rounded-md gap-2 px-4 font-medium"
+                className="text-sm gap-2 px-4 font-medium"
                 onClick={handleSave}
                 disabled={isSaving}
               >

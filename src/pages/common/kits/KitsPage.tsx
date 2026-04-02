@@ -366,7 +366,7 @@ const KitsPage = () => {
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
-                className="h-[200px] rounded-xl border border-border bg-card animate-pulse shadow-sm"
+                className="h-[200px] rounded-sm border border-border bg-card animate-pulse shadow-sm"
               />
             ))}
           </div>
@@ -376,7 +376,7 @@ const KitsPage = () => {
               {items.map((kit) => (
                 <div
                   key={kit.id}
-                  className="group relative flex flex-col bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
+                  className="group relative flex flex-col bg-card border border-border rounded-sm shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
                   onClick={() => setViewKitId(kit.id)}
                 >
                   {/* Decorative BG */}
@@ -556,7 +556,7 @@ const KitsPage = () => {
         open={!!kitToDelete}
         onOpenChange={(open) => !open && setKitToDelete(null)}
       >
-        <AlertDialogContent className="rounded-xl border-border shadow-2xl">
+        <AlertDialogContent className="rounded-sm border-border shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
@@ -571,7 +571,7 @@ const KitsPage = () => {
           <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={isDeleting}
-              className="rounded-md border-border"
+              className="rounded-sm border-border"
             >
               Cancel
             </AlertDialogCancel>
@@ -585,7 +585,7 @@ const KitsPage = () => {
                   });
                 }
               }}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-md"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-sm"
             >
               {isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

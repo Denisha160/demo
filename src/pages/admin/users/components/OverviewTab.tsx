@@ -6,12 +6,7 @@ import {
   Briefcase,
   User as UserIcon,
   CreditCard,
-  Loader2,
-  Monitor,
-  Smartphone,
-  Globe,
-  Clock,
-  ShieldCheck,
+  Trash2,
 } from "lucide-react";
 import { EditableDetailItem, SelectOption } from "./EditableDetailItem";
 import {
@@ -21,32 +16,37 @@ import {
   useImperativeHandle,
   useEffect,
 } from "react";
-import { useUpdateUser, useUserSessions } from "@/hooks/useUsers";
+import {
+  useUpdateUser,
+  useUsers,
+  useUploadUserPhoto,
+  useRemoveUserPhoto,
+} from "@/hooks/useUsers";
+import { useShifts } from "@/hooks/useShifts";
 import { z } from "zod";
 import {
   UserDetailData,
   UserUpdatePayload,
   ApiErrorResponse,
-  getLocalDateString,
   User,
 } from "@/types/user";
-import { useUsers } from "@/hooks/useUsers";
+import { formatDateForAPI } from "@/utils/date";
 import { ComboboxOption } from "@/components/ui/combobox";
+import { Shift } from "@/types/shift";
 
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  phone_number: z.string().regex(/^[0-9+\-\s]{10,15}$/, "Invalid phone number"),
+  phone_number: z
+    .string()
+    .regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
   employee_code: z
     .string()
     .min(3, "Employee code must be at least 3 characters"),
   date_of_joining: z.string().min(1, "Date of joining is required"),
   department: z.string().optional().nullable(),
   region: z.string().optional().nullable(),
-  work_shift: z
-    .enum(["morning", "evening", "night", "rotating"])
-    .optional()
-    .nullable(),
+  shift_id: z.string().uuid().optional().nullable().or(z.literal("")),
   gender: z
     .enum(["male", "female", "other", "prefer_not_to_say"])
     .optional()
@@ -95,7 +95,6 @@ interface OverviewTabProps {
   setUserData: (data: UserDetailData) => void;
   genderOptions: SelectOption[];
   maritalStatusOptions: SelectOption[];
-  workShiftOptions: SelectOption[];
   onSavingChange?: (isSaving: boolean) => void;
 }
 
@@ -111,7 +110,6 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
       setUserData,
       genderOptions,
       maritalStatusOptions,
-      workShiftOptions,
       onSavingChange,
     },
     ref,
@@ -121,39 +119,70 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
     const [confirmPassword, setConfirmPassword] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [apiError, setApiError] = useState<string | null>(null);
-    const { mutate: updateUser, isPending: isUpdating } = useUpdateUser();
-    const { data: allUsers } = useUsers(
-      { combobox: true },
-      { enabled: true },
+
+    // Hooks
+    const { mutate: updateUser, isPending: isUpdatingDetails } =
+      useUpdateUser();
+    const { mutate: uploadPhoto, isPending: isUploadingPhoto } =
+      useUploadUserPhoto();
+    const { mutate: removePhoto, isPending: isRemovingPhoto } =
+      useRemoveUserPhoto();
+    const { data: usersData } = useUsers({ combobox: true });
+    const { data: shiftsData } = useShifts({ combobox: true });
+
+    const isUpdating = isUpdatingDetails || isUploadingPhoto || isRemovingPhoto;
+
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(
+      userData.image_url || null,
     );
 
-    const parentOptions: ComboboxOption[] = ((allUsers as any)?.items || [])
-      .filter((u: User) => u.id !== userData.id) // Cannot be own parent
-      .map((u: User) => ({
-        label: `${u.name} ${u.employee_code ? `(${u.employee_code})` : ""}`,
-        value: u.id,
-      }));
+    // Sync previewUrl with userData.image_url when it changes from the parent
+    useEffect(() => {
+      setPreviewUrl(userData.image_url || null);
+    }, [userData.image_url]);
 
     useEffect(() => {
       onSavingChange?.(isUpdating);
     }, [isUpdating, onSavingChange]);
 
+    const parentOptions: ComboboxOption[] = (usersData?.items || [])
+      .filter((u: User) => u.id !== userData.id)
+      .map((u: User) => ({
+        label: `${u.name} ${u.employee_code ? `(${u.employee_code})` : ""}`,
+        value: u.id,
+      }));
+
+    const shiftOptions: ComboboxOption[] =
+      shiftsData?.shifts?.map((s: Shift) => ({
+        label: s.name,
+        value: s.id,
+      })) || [];
+
+    const handleRemovePhoto = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (
+        window.confirm("Are you sure you want to remove your profile photo?")
+      ) {
+        removePhoto(userData.id!, {
+          onSuccess: () => {
+            setPreviewUrl(null);
+            setSelectedFile(null);
+            setUserData({ ...userData, image_url: "" });
+            if (fileInputRef.current) fileInputRef.current.value = "";
+          },
+        });
+      }
+    };
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        // Restrict to JPG and PNG only
-        if (
-          file.type === "image/jpeg" ||
-          file.type === "image/png" ||
-          file.type === "image/jpg"
-        ) {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setUserData({ ...userData, image_url: reader.result as string });
-          };
-          reader.readAsDataURL(file);
+        if (file.type.startsWith("image/")) {
+          setSelectedFile(file);
+          setPreviewUrl(URL.createObjectURL(file));
         } else {
-          alert("Please upload a JPG or PNG image.");
+          alert("Please upload an image file.");
         }
       }
     };
@@ -204,16 +233,14 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
         setConfirmPassword("");
         setErrors({});
         setApiError(null);
+        setSelectedFile(null);
+        setPreviewUrl(userData.image_url || null);
       },
     }));
 
     const handleSave = () => {
       try {
-        // Validate basic data
-        userSchema.parse({
-          ...userData,
-          password: password || undefined,
-        });
+        userSchema.parse({ ...userData, password: password || undefined });
 
         if (password && password !== confirmPassword) {
           setErrors((prev) => ({
@@ -232,34 +259,27 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
           phone_number: userData.phone_number,
           email: userData.email,
           personal_email: userData.personal_email,
-          employee_code: userData.employee_code,
-          date_of_joining: userData.date_of_joining,
+          date_of_joining: formatDateForAPI(userData.date_of_joining, false),
           department: userData.department,
           region: userData.region,
-          work_shift: userData.work_shift,
+          shift_id: userData.shift_id,
           is_active: userData.is_active,
           is_root_user: userData.is_root_user,
           gender: userData.gender,
-          date_of_birth: userData.date_of_birth,
+          date_of_birth: formatDateForAPI(userData.date_of_birth, false),
           marital_status: userData.marital_status,
-          anniversary_date: userData.anniversary_date,
+          anniversary_date: formatDateForAPI(userData.anniversary_date, false),
           basic_salary: userData.basic_salary,
           opening_balance: userData.opening_balance,
           pan_number: userData.pan_number,
           gst_number: userData.gst_number,
           address: userData.address,
-          image_url: userData.image_url,
           parent_id: userData.parent_id,
         };
-        if (password) {
-          payload.password = password;
-        }
 
-        // Clean empty string dates to null to avoid ISO validation errors
+        if (password) payload.password = password;
         if (payload.date_of_birth === "") payload.date_of_birth = null;
         if (payload.anniversary_date === "") payload.anniversary_date = null;
-
-        // Ensure numeric fields are casted correctly
         payload.opening_balance =
           String(payload.opening_balance) === ""
             ? 0
@@ -271,8 +291,14 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
 
         updateUser(payload, {
           onSuccess: () => {
-            setPassword(""); // Clear password field on success
+            setPassword("");
             setConfirmPassword("");
+            if (selectedFile) {
+              const formData = new FormData();
+              formData.append("image", selectedFile);
+              uploadPhoto({ id: userData.id!, formData });
+              setSelectedFile(null);
+            }
           },
           onError: (error: unknown) => {
             const err = error as ApiErrorResponse;
@@ -280,28 +306,11 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               err?.response?.data ||
               err ||
               {}) as ApiErrorResponse;
-
             if (
               errorData?.code === "validation_error" &&
               errorData.details?.body
             ) {
               setErrors(errorData.details.body);
-            } else if (
-              errorData?.code === "duplicate_key_value" ||
-              errorData?.code === "CONFLICT" ||
-              errorData?.code === "conflict"
-            ) {
-              const msg = errorData.message || "A duplicate record exists.";
-              setApiError(msg);
-
-              // Show below specific input based on message content
-              if (msg.toLowerCase().includes("email")) {
-                setErrors((prev) => ({ ...prev, email: msg }));
-              } else if (msg.toLowerCase().includes("phone")) {
-                setErrors((prev) => ({ ...prev, phone_number: msg }));
-              } else if (msg.toLowerCase().includes("employee")) {
-                setErrors((prev) => ({ ...prev, employee_code: msg }));
-              }
             } else if (errorData?.message) {
               setApiError(errorData.message);
             } else {
@@ -313,9 +322,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
         if (error instanceof z.ZodError) {
           const newErrors: Record<string, string> = {};
           error.errors.forEach((err) => {
-            if (err.path[0]) {
-              newErrors[err.path[0] as string] = err.message;
-            }
+            if (err.path[0]) newErrors[err.path[0] as string] = err.message;
           });
           setErrors(newErrors);
         }
@@ -328,16 +335,10 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
       updateUser(
         { id: userData.id!, is_active: newStatus },
         {
-          onSuccess: () => {
-            setUserData({ ...userData, is_active: newStatus });
-          },
+          onSuccess: () => setUserData({ ...userData, is_active: newStatus }),
           onError: (error: unknown) => {
             const err = error as ApiErrorResponse;
-            const errorData = (err?.details ||
-              err?.response?.data ||
-              err ||
-              {}) as ApiErrorResponse;
-            setApiError(errorData?.message || "Failed to update user status.");
+            setApiError(err?.message || "Failed to update user status.");
           },
         },
       );
@@ -345,37 +346,47 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
 
     return (
       <div className="p-5 border border-border rounded-sm bg-card shadow-sm space-y-2">
-        {/* Main Identity Info Header */}
         <div className="flex flex-col sm:flex-row items-center gap-5 pb-6 border-b border-border/50">
-          <div
-            className="h-24 w-24 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-4xl font-bold border border-primary/20 shrink-0 overflow-hidden relative group cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {userData.image_url ? (
-              <img
-                src={userData.image_url}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              userData.name
-                ?.split(" ")
-                .map((n: string) => n[0])
-                .join("")
-                .substring(0, 2) || "U"
-            )}
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera className="w-6 h-6 text-white mb-1" />
-              <span className="text-[10px] text-white font-semibold">
-                Upload Photo
-              </span>
+          <div className="relative group">
+            <div
+              className="h-24 w-24 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-4xl font-bold border border-primary/20 shrink-0 overflow-hidden cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                userData.name
+                  ?.split(" ")
+                  .map((n: string) => n[0])
+                  .join("")
+                  .substring(0, 2) || "U"
+              )}
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera className="w-6 h-6 text-white mb-1" />
+                <span className="text-[10px] text-white font-semibold uppercase tracking-widest">
+                  Update
+                </span>
+              </div>
             </div>
+            {previewUrl && (
+              <button
+                onClick={handleRemovePhoto}
+                className="absolute -top-2 -right-2 bg-destructive text-white p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/90 hover:scale-110 flex items-center justify-center border-2 border-background z-20"
+                title="Remove Photo"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            )}
           </div>
           <input
             type="file"
             ref={fileInputRef}
             className="hidden"
-            accept=".jpg,.jpeg,.png"
+            accept="image/*"
             onChange={handleImageUpload}
           />
           <div className="min-w-0 flex-1 space-y-2">
@@ -426,7 +437,6 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               isEditing={true}
               onChange={(val) => handleChange("phone_number", val)}
             />
-
             <EditableDetailItem
               label="Employee Code"
               value={userData.employee_code}
@@ -452,7 +462,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               label="Date of Joining"
               value={
                 userData.date_of_joining
-                  ? getLocalDateString(userData.date_of_joining)
+                  ? formatDateForAPI(userData.date_of_joining, false)
                   : ""
               }
               error={errors.date_of_joining}
@@ -460,15 +470,15 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               onChange={(val) => handleChange("date_of_joining", val)}
               type="date"
             />
-
             <EditableDetailItem
               label="Work Shift"
-              value={userData.work_shift}
-              error={errors.work_shift}
+              value={userData.shift_id}
+              resolvedLabel={userData.shift_name}
+              error={errors.shift_id}
               isEditing={true}
-              onChange={(val) => handleChange("work_shift", val)}
-              type="select"
-              options={workShiftOptions}
+              onChange={(val) => handleChange("shift_id", val)}
+              type="combobox"
+              options={shiftOptions}
             />
             <EditableDetailItem
               label="Reporting To (Parent User)"
@@ -546,7 +556,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               label="Date of Birth"
               value={
                 userData.date_of_birth
-                  ? getLocalDateString(userData.date_of_birth)
+                  ? formatDateForAPI(userData.date_of_birth, false)
                   : ""
               }
               error={errors.date_of_birth}
@@ -554,7 +564,6 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               onChange={(val) => handleChange("date_of_birth", val)}
               type="date"
             />
-
             <EditableDetailItem
               label="Marital Status"
               value={userData.marital_status}
@@ -569,7 +578,7 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
                 label="Anniversary Date"
                 value={
                   userData.anniversary_date
-                    ? getLocalDateString(userData.anniversary_date)
+                    ? formatDateForAPI(userData.anniversary_date, false)
                     : ""
                 }
                 error={errors.anniversary_date}
@@ -578,7 +587,6 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
                 type="date"
               />
             )}
-
             <div className="md:col-span-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <EditableDetailItem
@@ -597,14 +605,14 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
                   type="textarea"
                 />
                 <EditableDetailItem
-                  label="Update Password (Leave blank to keep current)"
+                  label="Update Password"
                   value={password}
                   error={errors.password}
                   isEditing={true}
                   onChange={handlePasswordChange}
                 />
                 <EditableDetailItem
-                  label="Confirm New Password"
+                  label="Confirm Password"
                   value={confirmPassword}
                   error={errors.confirmPassword}
                   isEditing={true}
@@ -615,13 +623,12 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
           </div>
         </div>
 
-        {/* Actions */}
         <div className="pt-6 border-t border-border/50 flex justify-between gap-3 items-center">
           <Button
             type="button"
             variant={userData.is_active ? "destructive" : "default"}
             size="sm"
-            className="h-8 text-[10px] font-semibold tracking-widest uppercase rounded-sm gap-2 px-4"
+            className="h-8 text-[10px] font-semibold tracking-widest uppercase rounded-sm gap-2 px-4 shadow-sm"
             onClick={handleToggleActive}
             disabled={isUpdating}
           >

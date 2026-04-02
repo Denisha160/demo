@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -31,52 +31,63 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { KitCreatePayload, KitUpdatePayload } from "@/types/kits";
 import PackageModal from "@/pages/common/packages/components/PackageModal";
 
-const ProductInput = ({
-  label,
-  value,
-  error,
-  isEditing = true,
-  onChange,
-  placeholder,
-  type = "text",
-  className = "",
-  prefix,
-}: {
-  label: string;
-  value: string | number;
-  error?: string;
-  isEditing?: boolean;
-  onChange: (val: string) => void;
-  placeholder?: string;
-  type?: string;
-  className?: string;
-  prefix?: React.ReactNode;
-}) => (
-  <div className={`space-y-1.5 ${className}`}>
-    <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-      {label}
-    </Label>
-    <div className={prefix ? "relative" : ""}>
-      {prefix && (
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-          {prefix}
-        </span>
+const ProductInput = forwardRef<
+  HTMLInputElement,
+  {
+    label: string;
+    value: string | number;
+    error?: string;
+    isEditing?: boolean;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    type?: string;
+    className?: string;
+    prefix?: React.ReactNode;
+  }
+>(
+  (
+    {
+      label,
+      value,
+      error,
+      isEditing = true,
+      onChange,
+      placeholder,
+      type = "text",
+      className = "",
+      prefix,
+    },
+    ref,
+  ) => (
+    <div className={`space-y-1.5 ${className}`}>
+      <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+        {label}
+      </Label>
+      <div className={prefix ? "relative" : ""}>
+        {prefix && (
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {prefix}
+          </span>
+        )}
+        <Input
+          ref={ref}
+          type={type}
+          step={type === "number" ? "any" : undefined}
+          value={value?.toString() || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`h-8 text-sm rounded-sm ${prefix ? "pl-8" : ""} ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+          disabled={!isEditing}
+        />
+      </div>
+      {error && (
+        <p className="text-[10px] text-destructive mt-0.5 ml-0.5">{error}</p>
       )}
-      <Input
-        type={type}
-        step={type === "number" ? "any" : undefined}
-        value={value?.toString() || ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={`h-8 text-sm rounded-sm ${prefix ? "pl-8" : ""} ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
-        disabled={!isEditing}
-      />
     </div>
-    {error && (
-      <p className="text-[10px] text-destructive mt-0.5 ml-0.5">{error}</p>
-    )}
-  </div>
+  ),
 );
+
+ProductInput.displayName = "ProductInput";
 
 // Schema matches backend requirements
 const kitSchema = z.object({
@@ -106,6 +117,7 @@ const KitFormPage = () => {
   const navigate = useNavigate();
   const isEditing = !!id;
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const kitNameRef = useRef<HTMLInputElement>(null);
 
   // Data Hooks
   const { data: kitDetails, isLoading: isLoadingDetails } = useKitDetails(id);
@@ -142,6 +154,13 @@ const KitFormPage = () => {
 
   const items = watch("items") || [];
   const is_active = watch("is_active");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      kitNameRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Initialize/Reset form
   useEffect(() => {
@@ -276,7 +295,7 @@ const KitFormPage = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary flex items-center gap-2">
+            <h2 className="text-sm font-bold leading-none truncate uppercase tracking-widest text-primary flex items-center gap-2">
               <Box className="w-4 h-4" />
               {isEditing ? "Edit Kit" : "Create New Kit"}
             </h2>
@@ -330,6 +349,7 @@ const KitFormPage = () => {
 
             <div className="grid grid-cols-1 gap-4">
               <ProductInput
+                ref={kitNameRef}
                 label="Kit Name"
                 value={watch("name")}
                 error={errors.name?.message}
@@ -452,7 +472,7 @@ const KitFormPage = () => {
 
             <div className="flex-1 overflow-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/30 text-[10px] uppercase tracking-wider font-bold text-muted-foreground sticky top-0 bg-background border-b border-border z-10">
+                <thead className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground sticky top-0 bg-background border-b border-border z-10">
                   <tr>
                     <th className="px-5 py-3 text-left">Product Name</th>
                     <th className="px-5 py-3 text-center w-[120px]">
@@ -493,10 +513,10 @@ const KitFormPage = () => {
                               <img
                                 src={item.image_url}
                                 alt={item.product_name}
-                                className="w-10 h-10 object-cover rounded-md border border-border"
+                                className="w-10 h-10 object-cover rounded-sm border border-border"
                               />
                             ) : (
-                              <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center border border-border shrink-0">
+                              <div className="w-10 h-10 bg-muted rounded-sm flex items-center justify-center border border-border shrink-0">
                                 <Package className="w-5 h-5 opacity-20" />
                               </div>
                             )}
@@ -600,7 +620,7 @@ const KitFormPage = () => {
                           shouldDirty: true,
                         })
                       }
-                      className="h-9 pl-7 pr-3 text-right text-lg font-bold font-mono text-emerald-600 border-emerald-500/30 bg-emerald-500/5 focus-visible:ring-emerald-500/20 w-[150px] rounded-md"
+                      className="h-9 pl-7 pr-3 text-right text-lg font-bold font-mono text-emerald-600 border-emerald-500/30 bg-emerald-500/5 focus-visible:ring-emerald-500/20 w-[150px] rounded-sm"
                     />
                   </div>
                 </div>

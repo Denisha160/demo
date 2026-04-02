@@ -162,7 +162,7 @@ const BrandModal = ({
         </div>
 
         {/* Is Active */}
-        <div className="flex items-center justify-between p-2 rounded-md border bg-muted/20">
+        <div className="flex items-center justify-between p-2 rounded-sm border bg-muted/20">
           <div className="space-y-0.5">
             <Label className="text-sm">Active Status</Label>
             <p className="text-[11px] text-muted-foreground">

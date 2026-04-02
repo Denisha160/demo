@@ -7,6 +7,8 @@ import {
   getSystemHierarchy,
   createUser,
   updateUser,
+  uploadUserPhoto,
+  removeUserPhoto,
   listUserSessions,
   deleteUser,
   updateUserPermissions,
@@ -18,15 +20,19 @@ import {
   ApiErrorResponse,
   UserSession,
   UserSessionListResponse,
+  UserListResponse,
 } from "@/types/user";
 import { queryKeys } from "@/lib/queryKeys";
 
-export const useUsers = (params?: Record<string, unknown>, options?: any) => {
+export const useUsers = (
+  params?: Record<string, unknown>,
+  options?: Record<string, any>,
+) => {
   return useQuery({
     queryKey: queryKeys.users.list(params),
     queryFn: async () => {
       const response = await listUsers(params);
-      return response.data;
+      return response.data as UserListResponse;
     },
     ...options,
   });
@@ -56,7 +62,9 @@ export const useUserHierarchy = (id: string, enabled: boolean = true) => {
 
 export const useSystemHierarchy = (params?: { is_active?: boolean }) => {
   return useQuery({
-    queryKey: queryKeys.users.systemHierarchy(params as Record<string, unknown>),
+    queryKey: queryKeys.users.systemHierarchy(
+      params as Record<string, unknown>,
+    ),
     queryFn: async () => {
       const response = await getSystemHierarchy(params);
       return response.data;
@@ -132,6 +140,54 @@ export const useUpdateUser = () => {
       }
 
       toast.error(message);
+    },
+  });
+};
+
+export const useUploadUserPhoto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      formData,
+    }: {
+      id: string;
+      formData: FormData;
+    }) => {
+      const response = await uploadUserPhoto(id, formData);
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.detail(variables.id),
+      });
+      toast.success("Profile photo updated!");
+    },
+    onError: (error: unknown) => {
+      console.error("Failed to upload photo:", error);
+      toast.error("Failed to upload profile photo.");
+    },
+  });
+};
+
+export const useRemoveUserPhoto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await removeUserPhoto(id);
+      return response;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.detail(id),
+      });
+      toast.success("Profile photo removed!");
+    },
+    onError: (error: unknown) => {
+      console.error("Failed to remove photo:", error);
+      toast.error("Failed to remove profile photo.");
     },
   });
 };

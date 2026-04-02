@@ -153,11 +153,12 @@ const EmployeesPage = () => {
           className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => navigate(`${row.id}`)}
         >
-          <div className="h-7 w-7 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[10px] font-bold">
+          <div className="h-7 w-7 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-[10px] font-bold border border-primary/20">
             {row.name
               .split(" ")
               .map((n) => n[0])
-              .join("")}
+              .join("")
+              .substring(0, 2)}
           </div>
           <div>
             <p className="text-sm font-medium text-foreground leading-none">

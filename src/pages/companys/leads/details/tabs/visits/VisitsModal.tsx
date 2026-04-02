@@ -78,6 +78,7 @@ const VisitsModal = ({
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const { data: contactData } = useLeadContacts(leadId);
 
@@ -204,6 +205,15 @@ const VisitsModal = ({
     setLocationMessage("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, [open, visitData, form]);
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -370,6 +380,11 @@ const VisitsModal = ({
                   </FormLabel>
                   <FormControl>
                     <Input
+                      autoFocus
+                      ref={(e) => {
+                        field.ref(e);
+                        titleInputRef.current = e;
+                      }}
                       placeholder="Visit title"
                       className="h-9 text-xs"
                       disabled={isSubmitting}

@@ -119,10 +119,10 @@ const CategoryDetailPage = () => {
             <img
               src={item.image_url}
               alt={item.product_name}
-              className="h-8 w-8 object-cover rounded-md"
+              className="h-8 w-8 object-cover rounded-sm"
             />
           ) : (
-            <div className="p-2 bg-muted rounded-md">
+            <div className="p-2 bg-muted rounded-sm">
               <Box className="h-4 w-4 text-muted-foreground" />
             </div>
           )}

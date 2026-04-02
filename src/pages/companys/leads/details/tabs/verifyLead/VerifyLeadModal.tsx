@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Search, MapPin } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -34,8 +34,8 @@ const verifyFormSchema = z.object({
     .int()
     .min(1, "At least 1 property is required"),
   cities_of_operation: z.array(z.string()).default([]),
-  total_staff: z.coerce.number().int().min(0).optional(),
-  years_of_experience: z.coerce.number().int().min(0).optional(),
+  total_staff: z.coerce.number().int().min(0).optional().nullable(),
+  years_of_experience: z.coerce.number().int().min(0).optional().nullable(),
   annual_turnover: z.coerce
     .number({
       required_error: "Annual turnover is required",
@@ -70,7 +70,13 @@ interface VerifyLeadModalProps {
   open: boolean;
   onClose: () => void;
   leadId: string;
-  initialData?: any;
+  initialData?: VerifyFormData & {
+    warehouse_location?: string | null;
+    warehouse_size?: number | null;
+    showroom_location?: string | null;
+    showroom_size?: number | null;
+    verification_notes?: string | null;
+  };
 }
 
 export default function VerifyLeadModal({
@@ -81,16 +87,18 @@ export default function VerifyLeadModal({
 }: VerifyLeadModalProps) {
   const verifyMutation = useVerifyLead();
   const updateMutation = useUpdateVerifyLead();
+  const customerTypeRef = useRef<HTMLButtonElement>(null);
   const [citySearch, setCitySearch] = useState("");
   const debouncedCitySearch = useDebounce(citySearch, 300);
 
   const { data: cityResults, isLoading: isCitiesLoading } = useListCity({
     search: debouncedCitySearch,
     limit: 10,
+    combobox: true,
   });
 
   const cityOptions = useMemo(() => {
-    return ((cityResults as any)?.items || []).map((c: any) => ({
+    return (cityResults?.items || []).map((c) => ({
       label: `${c.name}, ${c.state_name || ""}, ${c.country_name || ""}`
         .replace(/, , /g, ", ")
         .trim(),
@@ -129,19 +137,24 @@ export default function VerifyLeadModal({
 
   useEffect(() => {
     if (open) {
+      // Focus the customer type combobox after delay
+      const timer = setTimeout(() => {
+        customerTypeRef.current?.focus();
+      }, 300);
+
       if (initialData) {
         form.reset({
           has_warehouse: initialData.has_warehouse ?? false,
           has_showroom: initialData.has_showroom ?? false,
           has_delivery_vehicles: initialData.has_delivery_vehicles ?? false,
           number_of_vehicles: initialData.number_of_vehicles ?? 0,
-          total_staff: initialData.total_staff ?? "",
-          years_of_experience: initialData.years_of_experience ?? "",
-          annual_turnover: initialData.annual_turnover ?? "",
-          number_of_properties: initialData.number_of_properties ?? "",
-          property_type: initialData.property_type ?? "",
-          property_name: initialData.property_name ?? "",
-          customer_type: initialData.customer_type ?? "",
+          total_staff: initialData.total_staff ?? undefined,
+          years_of_experience: initialData.years_of_experience ?? undefined,
+          annual_turnover: initialData.annual_turnover ?? 0,
+          number_of_properties: initialData.number_of_properties ?? 1,
+          property_type: initialData.property_type || ("OTHER" as any),
+          property_name: initialData.property_name || "",
+          customer_type: initialData.customer_type || ("DEALER" as any),
           warehouse_location: initialData.warehouse_location ?? "",
           warehouse_size: initialData.warehouse_size ?? null,
           showroom_location: initialData.showroom_location ?? "",
@@ -154,6 +167,7 @@ export default function VerifyLeadModal({
         form.reset();
       }
       setCitySearch("");
+      return () => clearTimeout(timer);
     }
   }, [open, form, initialData]);
 
@@ -275,6 +289,7 @@ export default function VerifyLeadModal({
                   </FormLabel>
                   <FormControl>
                     <Combobox
+                      ref={customerTypeRef}
                       options={customerTypes}
                       value={field.value}
                       onValueChange={field.onChange}
@@ -535,7 +550,7 @@ export default function VerifyLeadModal({
           </div>
 
           {(form.watch("has_warehouse") || form.watch("has_showroom")) && (
-            <div className="space-y-2 p-3 mt-1 rounded-xl border border-border/40 bg-muted/5">
+            <div className="space-y-2 p-3 mt-1 rounded-sm border border-border/40 bg-muted/5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {form.watch("has_warehouse") && (
                   <div className="grid grid-cols-2 gap-2">
@@ -628,7 +643,7 @@ export default function VerifyLeadModal({
           )}
 
           {form.watch("has_delivery_vehicles") && (
-            <div className="mt-2 p-2 rounded-xl border border-border/40 bg-muted/5">
+            <div className="mt-2 p-2 rounded-sm border border-border/40 bg-muted/5">
               <div className="overflow-x-auto rounded-lg border border-border/20">
                 <table className="w-full text-left text-[11px]">
                   <thead className="bg-background/50 uppercase text-xs font-bold">

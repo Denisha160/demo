@@ -130,33 +130,36 @@ const FollowUpTab = ({ leadId, defaultAssignedTo }: FollowUpTabProps) => {
     data: FollowUpFormData,
     setError: (field: keyof FollowUpFormData, err: any) => void,
   ) => {
+    // reminder_time / set_reminder: not included in payload for now.
     const { set_reminder, reminder_time, ...formData } = data;
     const payload = {
       ...formData,
       scheduled_at: formatDateForAPI(formData.scheduled_at),
     };
 
+    // Reminder creation temporarily disabled.
     const handleReminderCreation = () => {
-      if (
-        (data.status === "SCHEDULED" || data.status === "RESCHEDULED") &&
-        set_reminder &&
-        reminder_time
-      ) {
-        createReminderMutation.mutate({
-          title: `Reminder: Follow-up (${
-            data.purpose || data.follow_up_method || "Scheduled"
-          })`,
-          description:
-            data.remarks ||
-            data.purpose ||
-            "Follow-up reminder created automatically",
-          remind_at: formatDateForAPI(data.scheduled_at),
-          remind_time: reminder_time,
-        });
-      }
+      // if (
+      //   (data.status === "SCHEDULED" || data.status === "RESCHEDULED") &&
+      //   set_reminder &&
+      //   reminder_time
+      // ) {
+      //   createReminderMutation.mutate({
+      //     title: `Reminder: Follow-up (${data.purpose || data.follow_up_method || "Scheduled"
+      //       })`,
+      //     description:
+      //       data.remarks ||
+      //       data.purpose ||
+      //       "Follow-up reminder created automatically",
+      //     remind_at: formatDateForAPI(data.scheduled_at),
+      //     remind_time: reminder_time,
+      //   });
+      // }
     };
 
     if (editingFollowUp) {
+      const willReschedule = data.status === "RESCHEDULED";
+
       updateFollowUpMutation.mutate(
         {
           followupId: editingFollowUp.id,
@@ -164,7 +167,24 @@ const FollowUpTab = ({ leadId, defaultAssignedTo }: FollowUpTabProps) => {
         },
         {
           onSuccess: () => {
-            handleReminderCreation();
+            if (willReschedule) {
+              createFollowUpMutation.mutate(
+                { ...payload },
+                {
+                  onSuccess: () => {
+                    handleReminderCreation();
+                  },
+                  onError: (error) => {
+                    console.error(
+                      "Failed to create follow-up after reschedule:",
+                      error,
+                    );
+                  },
+                },
+              );
+            } else {
+              handleReminderCreation();
+            }
             setOpen(false);
             setEditingFollowUp(null);
           },

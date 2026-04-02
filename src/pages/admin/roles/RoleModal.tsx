@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ const RoleModal = ({ open, onClose, onSave, role }: RoleModalProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (role) {
@@ -33,6 +34,15 @@ const RoleModal = ({ open, onClose, onSave, role }: RoleModalProps) => {
       setDescription("");
     }
   }, [role, open]);
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        nameRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +107,7 @@ const RoleModal = ({ open, onClose, onSave, role }: RoleModalProps) => {
           </Label>
           <Input
             id="name"
+            ref={nameRef}
             value={name}
             onChange={(e) => {
               setName(e.target.value);

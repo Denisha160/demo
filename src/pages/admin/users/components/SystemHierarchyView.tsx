@@ -1,9 +1,7 @@
-import { useSystemHierarchy } from "@/hooks/useUsers";
-import { Loader2, User, ChevronRight, ChevronDown } from "lucide-react";
-import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import React from "react";
+import { Mail, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSystemHierarchy } from "@/hooks/useUsers";
 
 interface HierarchyNode {
   id: string;
@@ -13,120 +11,197 @@ interface HierarchyNode {
   image_url?: string;
   is_active: boolean;
   department?: string;
+  level: number;
   children?: HierarchyNode[];
 }
 
 interface RecursiveNodeProps {
   node: HierarchyNode;
-  level: number;
+}
+interface SystemHierarchyViewProps {
+  is_active?: boolean;
 }
 
-const RecursiveNode = ({ node, level }: RecursiveNodeProps) => {
-    const [isOpen, setIsOpen] = useState(level < 2); // Auto-expand first few levels
-    const hasChildren = node.children && node.children.length > 0;
-    const navigate = useNavigate();
-  
-    return (
-      <div className="space-y-2">
-        <div 
-          className={`flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-card/50 hover:bg-accent/50 transition-all group cursor-pointer ${level === 0 ? "border-primary/50 bg-primary/5" : ""}`}
-          onClick={() => navigate(`/admin/users/${node.id}`)}
-        >
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {hasChildren ? (
-              <button 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setIsOpen(!isOpen);
-                }}
-                className="p-1 hover:bg-accent rounded-sm transition-colors text-muted-foreground shrink-0"
-              >
-                {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </button>
+const TreeCard = ({
+  node,
+  onClick,
+}: {
+  node: HierarchyNode;
+  onClick: (node: HierarchyNode) => void;
+}) => {
+  const reports = node.children?.length || 0;
+  const roleLabel = node.department;
+
+  return (
+    <div
+      className="relative flex flex-col items-center group cursor-pointer"
+      onClick={() => onClick(node)}
+    >
+      <div className="z-10 border border-border rounded-lg p-3 w-[220px] bg-card/60 shadow-sm transition-all">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 border border-primary/20 overflow-hidden mb-1">
+            {node.image_url ? (
+              <img
+                src={node.image_url}
+                alt={node.name}
+                className="h-full w-full object-cover"
+              />
+            ) : node.name ? (
+              node.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .substring(0, 2)
+                .toUpperCase()
             ) : (
-              <div className="w-6 shrink-0" />
+              "?"
             )}
-            
-            <Avatar className="h-9 w-9 border border-primary/20 shrink-0 shadow-sm">
-              <AvatarImage src={node.image_url} alt={node.name} />
-              <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                {node.name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-  
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-bold truncate text-foreground group-hover:text-primary transition-colors">
-                  {node.name}
-                </p>
-                {!node.is_active && (
-                   <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" title="Inactive" />
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground truncate uppercase tracking-[0.1em]">
-                {node.employee_code} {node.department ? `| ${node.department}` : ""}
-              </p>
-            </div>
           </div>
-  
-          <div className="hidden md:block text-right shrink-0 pr-2">
-            <p className="text-[10px] text-muted-foreground/60">
-              {node.email}
-            </p>
+          <p className="text-[9px] uppercase tracking-widest font-black text-primary/70">
+            {roleLabel}
+          </p>
+          <h4 className="text-xs font-black text-foreground uppercase tracking-tight truncate w-full">
+            {node.name || "Unnamed"}
+          </h4>
+          <div className="flex items-center justify-center gap-1.5 mt-0.5 opacity-70 group-hover:opacity-100 transition-opacity">
+            <Mail className="h-2.5 w-2.5 text-muted-foreground" />
+            <span className="text-[8px] text-muted-foreground truncate max-w-[150px]">
+              {node.email || "Email not set"}
+            </span>
           </div>
         </div>
-  
-        {hasChildren && isOpen && (
-          <div className="relative ml-4 pl-4 border-l border-border/30 space-y-2 py-1">
-            {node.children!.map((child) => (
-              <RecursiveNode key={child.id} node={child} level={level + 1} />
-            ))}
-          </div>
-        )}
       </div>
-    );
-  };
 
-const SystemHierarchyView = ({ is_active }: { is_active?: boolean }) => {
-  const { data: hierarchy, isLoading, error } = useSystemHierarchy({ is_active });
+      {reports > 0 && (
+        <div className="relative flex flex-col items-center">
+          <div className="w-[2px] h-8 bg-black mt-0" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TreeNodeComponent = ({
+  node,
+  onClick,
+}: {
+  node: HierarchyNode;
+  onClick: (node: HierarchyNode) => void;
+}) => {
+  const children = node.children || [];
+
+  return (
+    <div className="flex flex-col items-center shrink-0">
+      <TreeCard node={node} onClick={onClick} />
+
+      {children.length > 0 && (
+        <div className="relative flex mt-0  tree-children">
+          {children.map((child) => (
+            <div
+              key={child.id}
+              className="relative flex flex-col items-center tree-branch pt-4 px-2"
+            >
+              <div className="absolute top-[8px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-black z-10" />
+              <TreeNodeComponent node={child} onClick={onClick} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SystemHierarchyView = ({ is_active }: SystemHierarchyViewProps) => {
+  const { data, isLoading, error } = useSystemHierarchy({ is_active });
+  const navigate = useNavigate();
+
+  const handleNodeClick = (node: HierarchyNode) => {
+    navigate(`${node.id}`);
+  };
+  const roots: HierarchyNode[] = React.useMemo(() => {
+    if (!data) return [];
+    return Array.isArray(data) ? data : [data];
+  }, [data]);
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center p-24 space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Establishing Communication Lines...
+      <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+          Loading hierarchy
         </p>
       </div>
     );
   }
 
-  if (error || !hierarchy || hierarchy.length === 0) {
+  if (error || roots.length === 0) {
     return (
-      <div className="p-12 text-center bg-card rounded-lg border border-border/50">
-        <User className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-        <p className="text-sm font-medium text-foreground">Hierarchy mapping unavailable</p>
-        <p className="text-xs text-muted-foreground mt-1 text-balance">
-          {error ? "There was an error retrieving the organizational data." : "No hierarchy data found with current filters."}
+      <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground">
+        <p>No hierarchy information available.</p>
+        <p className="text-xs">
+          Try adjusting the filters or refresh the page.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {hierarchy.map((root: HierarchyNode) => (
-            <div key={root.id} className="space-y-4">
-                 <div className="flex items-center gap-2 px-2 py-1 border-b border-primary/20 w-fit mb-2">
-                    <Badge variant="outline" className="text-[10px] uppercase font-black bg-primary/5 text-primary border-primary/20 tracking-tighter">
-                        Root Organization
-                    </Badge>
-                </div>
-                <RecursiveNode node={root} level={0} />
-            </div>
+    <div className="w-full h-full overflow-auto rounded-sm p-8 select-none">
+      <div className="min-w-max flex flex-col items-center gap-10">
+        {roots.map((node) => (
+          <TreeNodeComponent
+            key={node.id}
+            node={node}
+            onClick={handleNodeClick}
+          />
         ))}
       </div>
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+              .tree-children::before {
+                  content: '';
+                  position: absolute;
+                  top: -16px;
+                  left: 50%;
+                  width: 2px;
+                  height: 18px;
+                  background: black;
+                  transform: translateX(-50%);
+              }
+              .tree-branch::before {
+                  content: '';
+                  position: absolute;
+                  top: 0;
+                  height: 2px;
+                  background: black;
+                  width: 100%;
+              }
+              .tree-branch::after {
+                  content: '';
+                  position: absolute;
+                  top: 0;
+                  left: 50%;
+                  width: 2px;
+                  height: 16px;
+                  background: black;
+                  transform: translateX(-50%);
+              }
+              .tree-branch:first-child::before {
+                  left: 50%;
+                  width: 50%;
+              }
+              .tree-branch:last-child::before {
+                  left: 0;
+                  width: 50%;
+              }
+              .tree-branch:only-child::before {
+                  display: none;
+              }
+          `,
+        }}
+      />
     </div>
   );
 };

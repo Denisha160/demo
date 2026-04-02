@@ -40,7 +40,7 @@ const InfoCard = ({
 }) => (
   <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
     <div
-      className={`p-2 rounded-md bg-background border border-border/50 ${colorClass}`}
+      className={`p-2 rounded-sm bg-background border border-border/50 ${colorClass}`}
     >
       <Icon className="h-4 w-4" />
     </div>
@@ -159,7 +159,7 @@ const VerifyLeadPage = ({ details, leadId }: VerifyLeadPageProps) => {
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
             <Warehouse className="h-3 w-3" /> Warehouse Details
           </h3>
-          <div className="p-4 rounded-xl border border-border/50 bg-muted/10 space-y-3">
+          <div className="p-4 rounded-sm border border-border/50 bg-muted/10 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
                 Has Warehouse?
@@ -200,7 +200,7 @@ const VerifyLeadPage = ({ details, leadId }: VerifyLeadPageProps) => {
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
             <Landmark className="h-3 w-3" /> Showroom Details
           </h3>
-          <div className="p-4 rounded-xl border border-border/50 bg-muted/10 space-y-3">
+          <div className="p-4 rounded-sm border border-border/50 bg-muted/10 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
                 Has Showroom?
@@ -290,7 +290,7 @@ const VerifyLeadPage = ({ details, leadId }: VerifyLeadPageProps) => {
         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
           <FileText className="h-3 w-3" /> Verification Notes
         </h3>
-        <div className="p-4 rounded-xl border border-border/50 bg-secondary/10">
+        <div className="p-4 rounded-sm border border-border/50 bg-secondary/10">
           <p className="text-sm text-foreground/90 leading-relaxed italic">
             {details.verification_notes || "No notes provided."}
           </p>

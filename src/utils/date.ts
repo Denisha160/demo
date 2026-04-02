@@ -70,15 +70,21 @@ export function parseFormattedDate(dateStr?: string | null): Date | null {
 
 export function formatDateForAPI(
   dateInput?: string | Date | null,
-): string | undefined {
-  if (!dateInput) return undefined;
+  includeTime = true,
+): string {
+  if (!dateInput) return "";
   const date =
     dateInput instanceof Date ? dateInput : parseFormattedDate(dateInput);
-  if (!date || isNaN(date.getTime())) return undefined;
+  if (!date || isNaN(date.getTime())) return "";
 
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const day = date.getDate().toString().padStart(2, "0");
+
+  if (!includeTime) {
+    return `${year}-${month}-${day}`;
+  }
+
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
   const seconds = date.getSeconds().toString().padStart(2, "0");

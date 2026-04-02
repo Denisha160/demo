@@ -75,9 +75,6 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
     const handleSelect = (selectedValue: string) => {
       onValueChange(selectedValue === value ? "" : selectedValue);
       setOpen(false);
-      if (onSearchChange) {
-        onSearchChange("");
-      }
     };
 
     const handleClear = (e?: React.MouseEvent) => {
@@ -92,8 +89,15 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       onSearchChange?.("");
     };
 
+    const handleOpenChange = (newOpen: boolean) => {
+      setOpen(newOpen);
+      if (newOpen && value && selectedLabel && onSearchChange) {
+        onSearchChange(selectedLabel);
+      }
+    };
+
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             ref={ref}
@@ -115,7 +119,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
               className,
             )}
           >
-            <span className="truncate">{selectedLabel ?? placeholder}</span>
+            <span className="truncate">{selectedLabel || placeholder}</span>
             <div className="flex items-center gap-1 shrink-0 ml-2">
               {clearable && value && (
                 <span

@@ -28,15 +28,6 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-const GRADIENTS = [
-  "from-violet-500 to-purple-600",
-  "from-blue-500 to-cyan-600",
-  "from-emerald-500 to-teal-600",
-  "from-orange-500 to-amber-600",
-  "from-rose-500 to-pink-600",
-  "from-indigo-500 to-blue-600",
-];
-
 type TabKey = "visits" | "followups" | "tasks" | "activity";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "visits", label: "Visits", icon: MapPin },
@@ -97,8 +88,6 @@ const SalesMemberDetailPage = () => {
   const selectedUserName = useMemo(() => {
     return hierarchyOptions.find((opt) => opt.value === selectedUserId)?.label;
   }, [hierarchyOptions, selectedUserId]);
-
-  const colorIdx = (user?.name || "").charCodeAt(0) % GRADIENTS.length;
 
   if (userLoading) {
     return (
@@ -166,11 +155,17 @@ const SalesMemberDetailPage = () => {
 
       <div className="bg-card border border-border rounded-sm p-3 shadow-sm">
         <div className="flex flex-col md:flex-row gap-5 items-start">
-          <div
-            className={`h-16 w-16 rounded-full bg-gradient-to-br ${GRADIENTS[colorIdx]} flex items-center justify-center text-white text-xl font-bold shrink-0 shadow`}
-          >
-            {getInitials(user.name)}
-          </div>
+          {user.image_url ? (
+            <img
+              src={user.image_url}
+              alt={user.name}
+              className="h-16 w-16 rounded-sm object-cover shrink-0 shadow border border-border"
+            />
+          ) : (
+            <div className="h-16 w-16 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xl font-bold shrink-0 border border-primary/20 shadow-sm">
+              {getInitials(user.name)}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -245,9 +240,7 @@ const SalesMemberDetailPage = () => {
         {activeTabClass === "followups" && (
           <UserFollowUpsTab userId={selectedUserId} />
         )}
-        {activeTabClass === "tasks" && (
-          <UserTasksTab userId={selectedUserId} />
-        )}
+        {activeTabClass === "tasks" && <UserTasksTab userId={selectedUserId} />}
         {activeTabClass === "activity" && (
           <UserActivitiesTab userId={selectedUserId} />
         )}

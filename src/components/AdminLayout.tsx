@@ -20,7 +20,7 @@ import {
   Blocks,
   Hash,
   Award,
-  Wind,
+  TimerReset,
   Landmark,
   MapPin,
 } from "lucide-react";
@@ -89,12 +89,18 @@ const navItems: NavItemEntry[] = [
   //       path: "/admin/kits",
   //       permission: "product-kit.read",
   //     },
-  //     {
-  //       label: "Categories",
-  //       icon: Tags,
-  //       path: "/admin/product-categories",
-  //       permission: "product-category.read",
-  //     },
+  {
+    label: "Categories",
+    icon: Tags,
+    path: "/admin/product-categories",
+    permission: "product-category.read",
+  },
+  {
+    label: "Shifts",
+    icon: TimerReset,
+    path: "/admin/shifts",
+    permission: "shifts.read",
+  },
   //     {
   //       label: "Brands",
   //       icon: Award,
@@ -148,7 +154,7 @@ const NavGroup = ({ item, active, onCloseSidebar }: NavGroupProps) => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-                    w-full flex items-center justify-between px-2 py-2 text-sm rounded-md transition-all duration-200 group
+                    w-full flex items-center justify-between px-2 py-2 text-sm rounded-sm transition-all duration-200 group
                     ${active ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground hover:text-foreground hover:bg-accent"}
                 `}
         style={active ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
@@ -175,11 +181,12 @@ const NavGroup = ({ item, active, onCloseSidebar }: NavGroupProps) => {
                 to={child.path!}
                 onClick={onCloseSidebar}
                 className={`
-                                    flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-md transition-all duration-200
-                                    ${childActive
-                    ? "bg-primary/15 text-primary font-bold"
-                    : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
-                  }
+                                    flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-sm transition-all duration-200
+                                    ${
+                                      childActive
+                                        ? "bg-primary/15 text-primary font-bold"
+                                        : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
+                                    }
                                 `}
                 style={childActive ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
               >
@@ -214,11 +221,11 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
   // Derive initials from user name (e.g. "Admin" → "AD", "John Doe" → "JD")
   const initials = user?.name
     ? user.name
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : "AD";
 
   const activeNavItem = navItems.find((item) => {
@@ -291,7 +298,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                 setSidebarCollapsed(true);
                 setSidebarOpen(false);
               }}
-              className="h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors shrink-0 hidden lg:flex"
+              className="h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent rounded-sm transition-colors shrink-0 hidden lg:flex"
               title="Hide sidebar"
             >
               <PanelLeftClose className="h-4 w-4" />
@@ -320,12 +327,12 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
             .map((item) => {
               const active = item.children
                 ? item.children.some(
-                  (child) =>
-                    location.pathname === child.path ||
-                    location.pathname.startsWith(`${child.path}/`),
-                )
+                    (child) =>
+                      location.pathname === child.path ||
+                      location.pathname.startsWith(`${child.path}/`),
+                  )
                 : location.pathname === item.path ||
-                location.pathname.startsWith(`${item.path}/`);
+                  location.pathname.startsWith(`${item.path}/`);
 
               if (item.children) {
                 const visibleChildren = item.children.filter(
@@ -350,11 +357,12 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                   to={item.path!}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                                        flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
-                                        ${active
-                      ? "bg-primary/10 text-primary font-bold"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    }
+                                        flex items-center gap-3 px-2 py-2 text-sm rounded-sm transition-all duration-200 group
+                                        ${
+                                          active
+                                            ? "bg-primary/10 text-primary font-bold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                                        }
                                 `}
                   style={active ? { color: `hsl(${ADMIN_PRIMARY})` } : {}}
                 >
@@ -372,7 +380,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
           <button
             onClick={() => logout()}
             disabled={isLoggingOut}
-            className="flex items-center gap-3 px-2 py-2 text-sm text-muted-foreground hover:text-destructive w-full rounded-md hover:bg-destructive/10 transition-colors group"
+            className="flex items-center gap-3 px-2 py-2 text-sm text-muted-foreground hover:text-destructive w-full rounded-sm hover:bg-destructive/10 transition-colors group"
           >
             <LogOut className="h-4 w-4 text-muted-foreground group-hover:text-destructive" />
             {isLoggingOut ? "Signing out…" : "Sign out"}
@@ -388,7 +396,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
             {sidebarCollapsed && (
               <button
                 onClick={() => setSidebarCollapsed(false)}
-                className="hidden lg:flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-all"
+                className="hidden lg:flex h-9 w-9 items-center justify-center rounded-sm hover:bg-accent text-muted-foreground hover:text-foreground transition-all"
                 title="Show sidebar"
               >
                 <PanelLeft className="h-4 w-4" />
@@ -397,7 +405,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
 
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-md hover:bg-accent text-muted-foreground"
+              className="lg:hidden h-9 w-9 flex items-center justify-center rounded-sm hover:bg-accent text-muted-foreground"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -407,7 +415,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3">
-            <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-primary/20">
+            <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider border border-primary/20">
               System Admin
             </span>
 
@@ -415,9 +423,9 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
               <button
                 ref={buttonRef}
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center gap-2 cursor-pointer p-1 rounded-md hover:bg-accent transition-colors"
+                className="flex items-center gap-2 cursor-pointer p-1 rounded-sm hover:bg-accent transition-colors"
               >
-                <div className="h-7 w-7 bg-primary rounded-full flex items-center justify-center shadow-sm text-primary-foreground">
+                <div className="h-7 w-7 bg-primary rounded-sm flex items-center justify-center shadow-sm text-primary-foreground">
                   <span className="text-[10px] font-bold">{initials}</span>
                 </div>
                 <ChevronDown
@@ -429,7 +437,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
                 createPortal(
                   <div
                     ref={dropdownRef}
-                    className="fixed top-14 right-4 w-56 bg-popover border border-border rounded-md shadow-lg z-[9999] animate-in fade-in zoom-in-95 duration-200"
+                    className="fixed top-14 right-4 w-56 bg-popover border border-border rounded-sm shadow-lg z-[9999] animate-in fade-in zoom-in-95 duration-200"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="p-1">
@@ -462,7 +470,7 @@ const AdminLayout = ({ title }: AdminLayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-2 space-y-2">
+        <main className="flex-1 overflow-auto p-2 space-y-2 scrollbar-thin">
           <Outlet />
         </main>
       </div>

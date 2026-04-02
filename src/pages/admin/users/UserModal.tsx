@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import Modal from "@/components/Modal";
@@ -6,15 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
-
 import {
-  User,
-  UserCreatePayload,
-  ApiErrorResponse,
-  getLocalDateString,
-} from "@/types/user";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { User, UserCreatePayload, ApiErrorResponse } from "@/types/user";
 import { useCreateUser, useUsers } from "@/hooks/useUsers";
+import { useShifts } from "@/hooks/useShifts";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
+import { Shift } from "@/types/shift";
+import { formatDateForAPI } from "@/utils/date";
 
 interface UserModalProps {
   open: boolean;
@@ -27,17 +32,16 @@ interface UserModalProps {
 const userSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  phone_number: z.string().regex(/^[0-9+\-\s]{10,15}$/, "Invalid phone number"),
+  phone_number: z
+    .string()
+    .regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
   employee_code: z
     .string()
     .min(3, "Employee code must be at least 3 characters"),
   date_of_joining: z.string().min(1, "Date of joining is required"),
   department: z.string().optional().nullable(),
   region: z.string().optional().nullable(),
-  work_shift: z
-    .enum(["morning", "evening", "night", "rotating"])
-    .optional()
-    .nullable(),
+  shift_id: z.string().uuid().optional().nullable().or(z.literal("")),
   gender: z
     .enum(["male", "female", "other", "prefer_not_to_say"])
     .optional()
@@ -86,10 +90,14 @@ type UserFormData = z.infer<typeof userSchema>;
 
 const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
   const { mutate: createUser, isPending: isCreating } = useCreateUser();
-  const { data: usersData } = useUsers(
-    { combobox: true },
-    { enabled: open },
-  );
+  const { data: usersData } = useUsers({ combobox: true }, { enabled: open });
+  const { data: shiftsData } = useShifts({ combobox: true });
+
+  const shiftOptions: ComboboxOption[] =
+    shiftsData?.shifts?.map((s: Shift) => ({
+      value: s.id,
+      label: `${s.name} (${s.start_time.slice(0, 5)} - ${s.end_time.slice(0, 5)})`,
+    })) || [];
 
   const userOptions: ComboboxOption[] =
     usersData?.items?.map((u: User) => ({
@@ -103,6 +111,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     Partial<Record<keyof UserFormData | "confirmPassword", string>>
   >({});
   const [apiError, setApiError] = useState<string | null>(null);
+  const fullNameRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<UserFormData>({
     name: user?.name || "",
@@ -111,12 +120,13 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     phone_number: user?.phone_number || "",
     employee_code: user?.employee_code || "",
     date_of_joining: user?.date_of_joining
-      ? getLocalDateString(user?.date_of_joining)
-      : getLocalDateString(new Date()),
+      ? formatDateForAPI(user?.date_of_joining, false)
+      : formatDateForAPI(new Date(), false),
     department: user?.department || "",
     is_active: user?.is_active ?? true,
     basic_salary: user?.basic_salary || 0,
     parent_id: user?.parent_id || "",
+    shift_id: user?.shift_id || "",
   });
 
   const validateForm = () => {
@@ -160,7 +170,19 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     }
 
     if (!user) {
-      createUser(formData as UserCreatePayload, {
+      // Use formatDateForAPI with false for YYYY-MM-DD
+      const payload: UserCreatePayload = {
+        ...formData,
+        date_of_joining: formatDateForAPI(
+          formData.date_of_joining || new Date(),
+          false,
+        ),
+        anniversary_date: formData.anniversary_date
+          ? formatDateForAPI(formData.anniversary_date, false)
+          : null,
+      } as UserCreatePayload;
+
+      createUser(payload, {
         onSuccess: (data) => {
           handleClose();
           if (onSave) onSave(data as unknown as User);
@@ -213,6 +235,15 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
     if (apiError) setApiError(null);
   };
 
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        fullNameRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   const handleClose = () => {
     setErrors({});
     setApiError(null);
@@ -222,8 +253,9 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
       password: "",
       phone_number: "",
       employee_code: "",
-      date_of_joining: getLocalDateString(new Date()),
+      date_of_joining: formatDateForAPI(new Date(), false),
       parent_id: "",
+      shift_id: "",
     });
     setConfirmPassword("");
     setShowPassword(false);
@@ -273,6 +305,7 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
               </Label>
               <Input
                 id="name"
+                ref={fullNameRef}
                 placeholder="John Doe"
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
@@ -336,7 +369,9 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
                 clearable
               />
               {errors.parent_id && (
-                <p className="text-xs text-destructive mt-1">{errors.parent_id}</p>
+                <p className="text-xs text-destructive mt-1">
+                  {errors.parent_id}
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -365,15 +400,15 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
               <DatePicker
                 value={
                   formData.date_of_joining
-                    ? getLocalDateString(formData.date_of_joining)
+                    ? formatDateForAPI(formData.date_of_joining, false)
                     : ""
                 }
                 onChange={(val) =>
                   handleChange(
                     "date_of_joining",
                     val
-                      ? getLocalDateString(val)
-                      : getLocalDateString(new Date()),
+                      ? formatDateForAPI(val, false)
+                      : formatDateForAPI(new Date(), false),
                   )
                 }
                 placeholder="dd/MM/yyyy"
@@ -387,7 +422,24 @@ const UserModal = ({ open, onClose, onSave, user }: UserModalProps) => {
             </div>
           </div>
 
-          {/* Password fields for new user */}
+          <div className="space-y-1">
+            <Label htmlFor="shift_id" className="text-sm">
+              Shift
+            </Label>
+            <Combobox
+              options={shiftOptions}
+              value={formData.shift_id || ""}
+              onValueChange={(val) => handleChange("shift_id", val)}
+              placeholder="Select shift..."
+              className="h-8 text-sm"
+              disabled={isPending}
+              clearable
+            />
+            {errors.shift_id && (
+              <p className="text-xs text-destructive mt-1">{errors.shift_id}</p>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="password" className="text-sm">

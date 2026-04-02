@@ -15,6 +15,8 @@ export const queryKeys = {
     all: ["products"] as const,
     list: (filters?: Record<string, unknown>) =>
       [...queryKeys.products.all, "list", filters] as const,
+    allItems: (filters?: Record<string, unknown>) =>
+      [...queryKeys.products.all, "all-items", filters] as const,
     detail: (id: string) => [...queryKeys.products.all, "detail", id] as const,
   },
   orders: {
@@ -139,5 +141,12 @@ export const queryKeys = {
     list: (filters?: string | Record<string, unknown>) =>
       [...queryKeys.hierarchy.all, "list", filters] as const,
     detail: (id: string) => [...queryKeys.hierarchy.all, "detail", id] as const,
+  },
+  quotations: {
+    all: ["quotations"] as const,
+    list: (filters?: Record<string, unknown>) =>
+      [...queryKeys.quotations.all, "list", filters] as const,
+    detail: (id: string) =>
+      [...queryKeys.quotations.all, "detail", id] as const,
   },
 } as const;

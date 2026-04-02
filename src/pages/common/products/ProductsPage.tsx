@@ -176,7 +176,7 @@ const ProductsPage = () => {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => navigate(`${routePrefix}/products/${item.id}`)}
         >
-          <div className="p-2 bg-muted rounded-md group-hover:bg-primary/10 transition-colors">
+          <div className="p-2 bg-muted rounded-sm group-hover:bg-primary/10 transition-colors">
             {item.product_type === "FINISHED_GOOD" ? (
               <Package className="h-4 w-4 group-hover:text-primary transition-colors" />
             ) : (

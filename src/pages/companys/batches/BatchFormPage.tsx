@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import {
@@ -37,9 +37,11 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { BatchCreatePayload, BatchUpdatePayload } from "@/types/batch";
 import { format } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
+import { formatDateForAPI } from "@/utils/date";
 import { useBatchesCombobox } from "@/hooks/useBatch";
 import { useBOMDetails } from "@/hooks/useBom";
 import BatchBomModal from "./components/BatchBomModal";
+import { toast } from "react-toastify";
 
 // ── Batch Selector Component ────────────────────────────────────────────────
 
@@ -150,6 +152,7 @@ const BatchFormPage = () => {
   const [selectedComponentBatches, setSelectedComponentBatches] = useState<
     Record<string, string>
   >({}); // raw_product_id -> batch_id
+  const productRef = useRef<HTMLButtonElement>(null);
   const debouncedProductSearch = useDebounce(productSearch, 300);
 
   // Data + mutations
@@ -163,6 +166,13 @@ const BatchFormPage = () => {
   const { mutate: updateBatch, isPending: isUpdating } = useUpdateBatch();
   const isPending = isCreating || isUpdating;
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      productRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Prefill on edit
   useEffect(() => {
     if (existingBatch && isEditing) {
@@ -174,7 +184,7 @@ const BatchFormPage = () => {
           : format(new Date(), "yyyy-MM-dd"),
         expiry_date: existingBatch.expiry_date
           ? format(new Date(existingBatch.expiry_date), "yyyy-MM-dd")
-          : "",
+          : format(new Date(), "yyyy-MM-dd"),
         location: existingBatch.location || "",
         initial_quantity: Number(existingBatch.initial_quantity),
         status: (existingBatch.status as BatchFormData["status"]) || "active",
@@ -242,8 +252,8 @@ const BatchFormPage = () => {
     const payload: BatchCreatePayload = {
       product_id: formData.product_id,
       batch_number: formData.batch_number,
-      manufacturing_date: formData.manufacturing_date,
-      expiry_date: formData.expiry_date || null,
+      manufacturing_date: formatDateForAPI(formData.manufacturing_date)!,
+      expiry_date: formatDateForAPI(formData.expiry_date) || null,
       location: formData.location || null,
       initial_quantity: formData.initial_quantity,
       status: formData.status,
@@ -358,6 +368,7 @@ const BatchFormPage = () => {
                   Product <span className="text-destructive">*</span>
                 </Label>
                 <Combobox
+                  ref={productRef}
                   options={products.map((p) => ({
                     label: `${p.product_name} (${p.code}) - ${p.product_type === "FINISHED_GOOD" ? "Finish Good" : "Raw Material"}`,
                     value: p.id,
@@ -381,7 +392,7 @@ const BatchFormPage = () => {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1.5 font-bold uppercase tracking-wider p-0 bg-transparent hover:bg-transparent"
+                        className="h-6 px-2 text-[10px] text-primary hover:text-primary gap-1.5 font-bold uppercase tracking-wider p-0 bg-transparent hover:bg-transparent"
                         onClick={() => setIsBomModalOpen(true)}
                       >
                         <FlaskConical className="h-3 w-3" />
@@ -638,6 +649,7 @@ const BatchFormPage = () => {
                     <SelectItem value="active">✅ Active</SelectItem>
                     <SelectItem value="blocked">🚫 Blocked</SelectItem>
                     <SelectItem value="expired">⛔ Expired</SelectItem>
+                    <SelectItem value="quarantine">🧪 Quarantine</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -684,8 +696,10 @@ const BatchFormPage = () => {
                   variant={
                     formData.status === "active"
                       ? "success"
-                      : formData.status === "blocked"
-                        ? "warning"
+                      : formData.status === "blocked" ||
+                          formData.status === "expired" ||
+                          formData.status === "quarantine"
+                        ? "destructive"
                         : "secondary"
                   }
                   className="text-[9px] uppercase font-bold h-4 px-1.5"

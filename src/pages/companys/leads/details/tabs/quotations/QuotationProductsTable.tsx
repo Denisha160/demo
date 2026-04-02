@@ -264,6 +264,7 @@ export const QuotationProductsTable = () => {
                         {...register(
                           `items.${index}.item_description` as const,
                         )}
+                        autoFocus={true}
                         placeholder="Description"
                         className="h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
                       />
@@ -271,7 +272,6 @@ export const QuotationProductsTable = () => {
                     <td className="px-2 py-1.5">
                       <Input
                         type="number"
-                        autoFocus={true}
                         step="0.01"
                         {...register(`items.${index}.quantity` as const, {
                           valueAsNumber: true,

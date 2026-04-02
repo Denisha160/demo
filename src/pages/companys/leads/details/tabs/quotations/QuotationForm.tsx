@@ -210,19 +210,14 @@ const QuotationForm = ({
       const timer = setTimeout(() => {
         if (leadIdFromUrl) {
           if (datePickerRef.current) {
-            // RSuite DatePicker has an open method which also focuses
-            if (typeof datePickerRef.current.open === "function") {
-              datePickerRef.current.open();
-            } else {
-              // Fallback
-              const dateInput =
-                datePickerRef.current.root?.querySelector("input") ||
-                datePickerRef.current.querySelector?.("input");
-              if (dateInput) {
-                dateInput.focus();
-              } else if (datePickerRef.current.focus) {
-                datePickerRef.current.focus();
-              }
+            const dateInput =
+              datePickerRef.current.root?.querySelector("input") ||
+              datePickerRef.current.querySelector?.("input");
+
+            if (dateInput) {
+              dateInput.focus();
+            } else if (typeof datePickerRef.current.focus === "function") {
+              datePickerRef.current.focus();
             }
           }
         } else if (leadComboboxRef.current) {
@@ -329,6 +324,27 @@ const QuotationForm = ({
           if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
             // Allow buttons to respond naturally to Enter
             if ((e.target as HTMLElement).tagName === "BUTTON") return;
+
+            // Special handling for DatePicker - jump to first product item instead of opening calendar
+            const isDateInput = (e.target as HTMLElement).closest(".rs-picker-date");
+            if (isDateInput) {
+              e.preventDefault();
+              const firstItemCombobox = document.querySelector(
+                '[data-combobox-index="0"] button[role="combobox"]',
+              );
+              if (firstItemCombobox) {
+                (firstItemCombobox as HTMLElement).focus();
+              }
+              return;
+            }
+
+            // If focused on a Combobox trigger, open it on Enter
+            if ((e.target as HTMLElement).getAttribute("role") === "combobox") {
+              // Usually the button itself or the input inside
+              // Let the natural behavior or a manual click handle it
+              (e.target as HTMLElement).click();
+              return;
+            }
 
             // Prevent accidental form submission
             e.preventDefault();

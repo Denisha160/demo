@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useForm, useWatch, UseFormSetError } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DollarSign } from "lucide-react";
+import { DollarSign, FileText } from "lucide-react";
 import { useLeads } from "@/hooks/useLeads";
 import { useLeadContacts } from "@/hooks/useLeadContacts";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -440,67 +440,18 @@ const QuotationForm = ({
         {/* BILL ITEMS SECTION - FULL WIDTH */}
         <QuotationProductsTable />
 
-        {/* Pricing & Summary */}
-        <div className="space-y-2 pt-2">
-          <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
-            <DollarSign className="h-3.5 w-3.5 text-primary" />
-            <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">
-              Pricing & Summary
-            </h3>
-          </div>
+        {/* Footer Section: Notes & Pricing */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-2">
+          {/* Left Side: Notes & Amount in Words */}
+          <div className="lg:col-span-2 space-y-2">
+            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
+              <FileText className="h-3.5 w-3.5 text-primary" />
+              <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">
+                Notes & Additional Info
+              </h3>
+            </div>
 
-          <Card className="bg-muted/10 border-border/40 overflow-hidden shadow-none">
-            <CardContent className="p-4 space-y-4">
-              {/* Calculations Preview */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                <div className="p-2.5 bg-muted/20 rounded border border-border/40 flex flex-col justify-center">
-                  <span className="text-[9px] uppercase font-bold text-muted-foreground">
-                    Subtotal
-                  </span>
-                  <span className="text-sm font-bold">
-                    {totals.subtotal.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="p-2.5 bg-muted/20 rounded border border-border/40 flex flex-col justify-center">
-                  <span className="text-[9px] uppercase font-bold text-muted-foreground">
-                    Total Tax
-                  </span>
-                  <span className="text-sm font-bold">
-                    {totals.totalTax.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-                <div className="p-2.5 bg-primary/5 rounded border border-primary/20 flex flex-col justify-center">
-                  <span className="text-[9px] uppercase font-bold text-primary">
-                    Grand Total
-                  </span>
-                  <span className="text-base font-black">
-                    {totals.grandTotal.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-              </div>
-
-              <FormField
-                control={form.control}
-                name="amount_in_words"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <QuotationFormLabel>Amount in Words</QuotationFormLabel>
-                    <FormControl>
-                      <div className="min-h-[50px] p-3 text-xs font-bold text-primary bg-primary/5 border border-primary/20 rounded-sm leading-relaxed uppercase tracking-tighter italic">
-                        {field.value || "Zero Only"}
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-[10px]" />
-                  </FormItem>
-                )}
-              />
-
+            <div className="space-y-2">
               <FormField
                 control={form.control}
                 name="notes"
@@ -519,8 +470,77 @@ const QuotationForm = ({
                   </FormItem>
                 )}
               />
-            </CardContent>
-          </Card>
+
+              <FormField
+                control={form.control}
+                name="amount_in_words"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <QuotationFormLabel>Amount in Words</QuotationFormLabel>
+                    <FormControl>
+                      <div className="min-h-[40px] p-3 text-[10px] font-bold text-muted-foreground bg-muted/30 border border-border/40 rounded-sm leading-relaxed uppercase tracking-tight italic">
+                        {field.value || "Zero Only"}
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Right Side: Pricing Summary */}
+          <div className="lg:col-span-1 space-y-2">
+            <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
+              <DollarSign className="h-3.5 w-3.5 text-primary" />
+              <h3 className="text-[11px] font-bold text-foreground uppercase tracking-widest">
+                Pricing Summary
+              </h3>
+            </div>
+
+            <Card className="border-border/40 shadow-none bg-card border-l-4 border-l-primary overflow-hidden">
+              <CardContent className="p-4 space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-muted-foreground">
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      Base Amount
+                    </span>
+                    <span className="text-sm font-bold font-mono">
+                      ₹{totals.subtotal.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-emerald-600">
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                      Appl. Tax (GST)
+                    </span>
+                    <span className="text-sm font-bold font-mono tracking-tight">
+                      +₹{totals.totalTax.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-border/50">
+                  <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">
+                    Final Payable
+                  </p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-foreground tracking-tighter font-mono">
+                      ₹{totals.grandTotal.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                      INR
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </form>
     </Form>

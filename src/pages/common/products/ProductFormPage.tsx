@@ -509,10 +509,15 @@ const ProductFormPage = () => {
                     size="sm"
                     className="h-8 text-[10px] font-bold uppercase tracking-wider gap-2 px-3 border-border hover:bg-primary/5 text-foreground disabled:opacity-50"
                     onClick={() => setIsPhotoModalOpen(true)}
-                    disabled={isSaving}
+                    disabled={isNew || isSaving}
                   >
                     <UploadCloud className="h-3.5 w-3.5" /> Add Photos
                   </Button>
+                  {isNew && (
+                    <span className="text-[9px] text-muted-foreground italic text-right">
+                      Save product first to upload photos
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -639,17 +644,19 @@ const ProductFormPage = () => {
       <BrandDrawer open={isBrandDrawerOpen} onOpenChange={setIsBrandDrawerOpen} />
 
       {/* Modals & Drawers */}
-      <AddProductPhotoModal
-        product={{
-          id: id || "",
-          name: form.getValues("product_name") || fetchedProduct?.product_name || "",
-        }}
-        open={isPhotoModalOpen}
-        onClose={() => setIsPhotoModalOpen(false)}
-        onSuccess={() => {
-          setIsPhotoModalOpen(false);
-        }}
-      />
+      {!isNew && id && (
+        <AddProductPhotoModal
+          product={{
+            id: id,
+            name: form.getValues("product_name") || fetchedProduct?.product_name || "",
+          }}
+          open={isPhotoModalOpen}
+          onClose={() => setIsPhotoModalOpen(false)}
+          onSuccess={() => {
+            setIsPhotoModalOpen(false);
+          }}
+        />
+      )}
 
       <PackageModal isOpen={isPackageModalOpen} onClose={() => setIsPackageModalOpen(false)} />
 

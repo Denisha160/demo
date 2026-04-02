@@ -130,17 +130,19 @@ const ProductsPage = () => {
     setSearchParams,
   ]);
 
-  const { data: categories = [], isLoading: isLoadingCategories } =
+  const { data: categoriesData, isLoading: isLoadingCategories } =
     useCategoriesCombobox({
       type: "sub",
       search: debouncedCategorySearch,
       combobox: true,
     });
+  const categories = (categoriesData as any[]) || [];
 
-  const { data: brands = [], isLoading: isLoadingBrands } = useBrandCombobox({
+  const { data: brandsData, isLoading: isLoadingBrands } = useBrandCombobox({
     search: debouncedBrandSearch,
     combobox: true,
   });
+  const brands = (brandsData as any[]) || [];
 
   const { data: listResponse, isLoading } = useProducts({
     search: debouncedSearch.trim() || undefined,

@@ -276,7 +276,7 @@ const ProductFormPage = () => {
       {/* Sticky Header Section */}
       <div className="sticky top-0 z-50 border-b border-border transition-all duration-200 mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             <Button
               type="button"
               variant="ghost"
@@ -286,7 +286,6 @@ const ProductFormPage = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex flex-col">
-              <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none mb-1">Product Repository</h2>
               <div className="flex items-center gap-2">
                 <Box className="w-5 h-5 text-primary" />
                 <h1 className="text-xl font-black text-foreground uppercase tracking-tighter">

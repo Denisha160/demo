@@ -5,7 +5,6 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DollarSign, FileText } from "lucide-react";
 import { useLeads } from "@/hooks/useLeads";
-import { useLeadContacts } from "@/hooks/useLeadContacts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -23,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { QuotationProductsTable } from "./QuotationProductsTable";
 import { numberToWords } from "@/utils/numberToWords";
 
-const optionalText = z.string().optional().or(z.literal(""));
+const optionalText = z.string().optional().nullable().or(z.literal(""));
 
 const requiredNumber = z.preprocess(
   (value) => {
@@ -229,7 +228,6 @@ const QuotationForm = ({
   }, [quotationData?.id, leadIdFromUrl]);
 
   const selectedLeadId = form.watch("lead_id");
-  const { data: contactData } = useLeadContacts(selectedLeadId);
 
   const leadOptions = useMemo(() => {
     return ((leads || []) as any[]).map((l) => ({
@@ -317,7 +315,11 @@ const QuotationForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
+      <form
+        id="quotation-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4 pt-2"
+      >
         <Card className="bg-muted/5 border-border/40 overflow-hidden shadow-none mb-2">
           <CardContent className="p-2 space-y-2">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

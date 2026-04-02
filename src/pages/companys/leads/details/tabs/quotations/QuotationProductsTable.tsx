@@ -23,12 +23,10 @@ export const QuotationProductsTable = () => {
     formState: { errors },
   } = useFormContext<QuotationFormData>();
   const [fgSearch, setFgSearch] = useState("");
-  const [kitSearch, setKitSearch] = useState("");
   const [scanValue, setScanValue] = useState("");
   const [selectedKitId, setSelectedKitId] = useState<string | null>(null);
   const [isKitViewOpen, setIsKitViewOpen] = useState(false);
   const debouncedFgSearch = useDebounce(fgSearch, 300);
-  const debouncedKitSearch = useDebounce(kitSearch, 300);
 
   const { data: allItems = [], isLoading: isLoadingItems } = useAllProducts({
     search: debouncedFgSearch.trim() || undefined,
@@ -246,7 +244,11 @@ export const QuotationProductsTable = () => {
                               handleSelectItemInline(index, val)
                             }
                             placeholder="Search products or kits..."
-                            className="h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full"
+                            className={cn(
+                              "h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full",
+                              errors.items?.[index]?.item_name &&
+                              "border-destructive focus:ring-destructive/20",
+                            )}
                             searchValue={fgSearch}
                             onSearchChange={setFgSearch}
                           />
@@ -277,7 +279,11 @@ export const QuotationProductsTable = () => {
                         )}
                         autoFocus={true}
                         placeholder="Description"
-                        className="h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
+                        className={cn(
+                          "h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full",
+                          errors.items?.[index]?.item_description &&
+                          "border-destructive focus:ring-destructive",
+                        )}
                       />
                     </td>
                     <td className="px-2 py-1.5">
@@ -292,7 +298,11 @@ export const QuotationProductsTable = () => {
                               Number(e.target.value),
                             ),
                         })}
-                        className="h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full"
+                        className={cn(
+                          "h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full",
+                          errors.items?.[index]?.quantity &&
+                          "border-destructive focus:ring-destructive",
+                        )}
                       />
                     </td>
                     <td className="px-2 py-1.5">
@@ -307,7 +317,11 @@ export const QuotationProductsTable = () => {
                             valueAsNumber: true,
                             onChange: () => handleItemAmountUpdate(index),
                           })}
-                          className="h-8 text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium w-full"
+                          className={cn(
+                            "h-8 text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium w-full",
+                            errors.items?.[index]?.unit_price &&
+                            "border-destructive focus:ring-destructive",
+                          )}
                         />
                       </div>
                     </td>
@@ -392,7 +406,9 @@ export const QuotationProductsTable = () => {
         <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-destructive/5 border border-destructive/20 text-destructive animate-in fade-in slide-in-from-top-1 duration-300">
           <AlertCircle className="h-3.5 w-3.5" />
           <span className="text-[10px] font-bold uppercase tracking-wider">
-            {errors.items.root?.message || errors.items.message}
+            {errors.items.root?.message ||
+              (errors.items as any).message ||
+              "at least one item is required"}
           </span>
         </div>
       )}

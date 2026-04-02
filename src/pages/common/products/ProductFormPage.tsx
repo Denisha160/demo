@@ -273,7 +273,7 @@ const ProductFormPage = () => {
 
   return (
     <div className="w-full mx-auto space-y-2 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-2 mb-4">
         <div className="flex items-center gap-2">
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-sm border border-border shrink-0" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
@@ -302,7 +302,7 @@ const ProductFormPage = () => {
           {/* Top Section: Basic Info & Images */}
           <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
             {/* Basic Info Section (7 Cols) */}
-            <div className="xl:col-span-7 space-y-4 border border-border/50 rounded-sm p-4">
+            <div className="xl:col-span-7 space-y-2">
               <div className="flex items-center gap-2 mb-4">
                 <Package className="h-4 w-4 text-primary" />
                 <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Basic Information</h3>
@@ -324,7 +324,7 @@ const ProductFormPage = () => {
                             </Button>
                           )}
                         </div>
-                        <FormControl><Input ref={productNameRef} {...field} placeholder="Enter product name" autoFocus={true} className="text-sm h-10" /></FormControl>
+                        <FormControl><Input ref={productNameRef} {...field} placeholder="Enter product name" autoFocus={true} className="text-sm" /></FormControl>
                         <FormMessage className="text-[10px]" />
                         {isRoot && showSecretInput && (
                           <FormField
@@ -333,7 +333,7 @@ const ProductFormPage = () => {
                             render={({ field: sField }) => (
                               <div className="mt-2 animate-in slide-in-from-top-1 duration-200">
                                 <Label className="text-[10px] font-bold text-primary uppercase tracking-wide flex items-center gap-1"><Lock className="h-2.5 w-2.5" /> Secret Name</Label>
-                                <Input {...sField} value={sField.value || ""} placeholder="Backend/Secret name" className="text-sm h-10 mt-1 border-primary/30" />
+                                <Input {...sField} value={sField.value || ""} placeholder="Backend/Secret name" className="text-sm mt-1 border-primary/30" />
                               </div>
                             )}
                           />
@@ -353,7 +353,7 @@ const ProductFormPage = () => {
                           value={field.value || ""}
                           onValueChange={field.onChange}
                           placeholder="Select category..."
-                          className="h-10"
+
                           searchValue={categorySearch}
                           onSearchChange={setCategorySearch}
                         />
@@ -374,7 +374,7 @@ const ProductFormPage = () => {
                     render={({ field }) => (
                       <FormItem className="space-y-1.5">
                         <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Code</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} placeholder="DEMO" className="text-sm h-10" /></FormControl>
+                        <FormControl><Input {...field} value={field.value || ""} placeholder="DEMO" className="text-sm" /></FormControl>
                         <FormMessage className="text-[10px]" />
                       </FormItem>
                     )}
@@ -387,7 +387,7 @@ const ProductFormPage = () => {
                       render={({ field }) => (
                         <FormItem className="space-y-1.5">
                           <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Brand Item</FormLabel>
-                          <RadioGroup onValueChange={(val) => field.onChange(val === "yes")} value={field.value ? "yes" : "no"} className="flex items-center gap-3 h-10">
+                          <RadioGroup onValueChange={(val) => field.onChange(val === "yes")} value={field.value ? "yes" : "no"} className="flex items-center gap-3">
                             <div className="flex items-center space-x-1.5"><RadioGroupItem value="yes" id="brand-yes" /><Label htmlFor="brand-yes" className="text-sm cursor-pointer font-medium m-0">Yes</Label></div>
                             <div className="flex items-center space-x-1.5"><RadioGroupItem value="no" id="brand-no" /><Label htmlFor="brand-no" className="text-sm cursor-pointer font-medium m-0">No</Label></div>
                           </RadioGroup>
@@ -400,7 +400,7 @@ const ProductFormPage = () => {
                       render={({ field }) => (
                         <FormItem className="space-y-1.5">
                           <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">HSN Code</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} placeholder="e.g. 3401.19" className="text-sm h-10" /></FormControl>
+                          <FormControl><Input {...field} value={field.value || ""} placeholder="e.g. 3401.19" className="text-sm" /></FormControl>
                           <FormMessage className="text-[10px]" />
                         </FormItem>
                       )}
@@ -417,7 +417,7 @@ const ProductFormPage = () => {
                       <FormItem className="space-y-1.5">
                         <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Type</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl><SelectTrigger className="text-sm h-10"><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                          <FormControl><SelectTrigger className="text-sm"><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
                           <SelectContent>
                             <SelectItem value="FINISHED_GOOD" className="text-xs">Finished Good</SelectItem>
                             <SelectItem value="SEMI_FINISHED" className="text-xs">Semi Finished</SelectItem>
@@ -441,7 +441,7 @@ const ProductFormPage = () => {
                             value={field.value || ""}
                             onValueChange={field.onChange}
                             placeholder="Select fragrance..."
-                            className="h-10"
+
                             searchValue={fragranceSearch}
                             onSearchChange={setFragranceSearch}
                           />
@@ -463,7 +463,7 @@ const ProductFormPage = () => {
                             value={field.value || ""}
                             onValueChange={field.onChange}
                             placeholder="Select brand..."
-                            className="h-10"
+
                             searchValue={brandSearch}
                             onSearchChange={setBrandSearch}
                             disabled={!form.watch("is_brand")}
@@ -489,7 +489,7 @@ const ProductFormPage = () => {
                       <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Cost Price</FormLabel>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
-                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm h-10 pl-7" placeholder="0.00" />
+                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm pl-7" placeholder="0.00" />
                       </div>
                       <FormMessage className="text-[10px]" />
                     </FormItem>
@@ -503,7 +503,7 @@ const ProductFormPage = () => {
                       <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Selling Price</FormLabel>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
-                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm h-10 pl-7" placeholder="0.00" />
+                        <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm pl-7" placeholder="0.00" />
                       </div>
                       <FormMessage className="text-[10px]" />
                     </FormItem>
@@ -541,7 +541,7 @@ const ProductFormPage = () => {
               <div className="border-2 border-dashed border-border/60 rounded-md p-4 bg-muted/5 min-h-[220px] flex flex-col items-center justify-center relative group">
                 {imagePreviews.length === 0 ? (
                   <div className="flex flex-col items-center text-center gap-2 text-muted-foreground">
-                    <ImageIcon className="h-10 w-10 opacity-20" />
+                    <ImageIcon className=" w-10 opacity-20" />
                     <p className="text-[11px] font-medium">No images uploaded yet</p>
                     <p className="text-[9px] uppercase tracking-tighter opacity-60">JPG, PNG, WEBP · AUTO-COMPRESSED</p>
                   </div>
@@ -588,7 +588,7 @@ const ProductFormPage = () => {
           {/* Full Width Tabs Section */}
           <div className="mt-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-8 gap-1">
+              <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-4 gap-1">
                 <TabsTrigger value="measurements" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Units & Measurements</TabsTrigger>
                 {form.watch("product_type") !== "RAW_MATERIAL" && (
                   <TabsTrigger value="packaging" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Packaging</TabsTrigger>
@@ -604,42 +604,27 @@ const ProductFormPage = () => {
 
               <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <TabsContent value="measurements" className="m-0 focus-visible:outline-none">
-                  <div className="flex items-center gap-2 mb-6 border-b border-border/40 pb-3">
-                    <span className="text-lg">⚖️</span>
-                    <h3 className="text-xs font-bold text-foreground uppercase tracking-[0.2em]">Units & Measurements</h3>
-                  </div>
+
                   <UnitsMeasurementsTab form={form} />
                 </TabsContent>
 
                 <TabsContent value="packaging" className="m-0 focus-visible:outline-none">
-                  <div className="flex items-center gap-2 mb-6 border-b border-border/40 pb-3">
-                    <span className="text-lg">📦</span>
-                    <h3 className="text-xs font-bold text-foreground uppercase tracking-[0.2em]">Packaging</h3>
-                  </div>
+
                   <PackagingTab form={form} comboboxes={comboboxes} packageModal={{ setOpen: setIsPackageModalOpen }} />
                 </TabsContent>
 
                 <TabsContent value="specifications" className="m-0 focus-visible:outline-none">
-                  <div className="flex items-center gap-2 mb-6 border-b border-border/40 pb-3">
-                    <span className="text-lg">⚙️</span>
-                    <h3 className="text-xs font-bold text-foreground uppercase tracking-[0.2em]">Specifications</h3>
-                  </div>
+
                   <SpecificationsTab metadata={{ metaColors, setMetaColors, metaFeatures, setMetaFeatures, metaParams, setMetaParams, metaAttrs: metaAttributes, setMetaAttrs: setMetaAttributes }} />
                 </TabsContent>
 
                 <TabsContent value="kits" className="m-0 focus-visible:outline-none">
-                  <div className="flex items-center gap-2 mb-6 border-b border-border/40 pb-3">
-                    <span className="text-lg">🧩</span>
-                    <h3 className="text-xs font-bold text-foreground uppercase tracking-[0.2em]">Kits</h3>
-                  </div>
+
                   <KitsTab productId={id} productType={form.watch("product_type")} isNew={isNew} />
                 </TabsContent>
 
                 <TabsContent value="recipes" className="m-0 focus-visible:outline-none">
-                  <div className="flex items-center gap-2 mb-6 border-b border-border/40 pb-3">
-                    <span className="text-lg">🧪</span>
-                    <h3 className="text-xs font-bold text-foreground uppercase tracking-[0.2em]">Recipes</h3>
-                  </div>
+
                   <RecipesTab productId={id} productType={form.watch("product_type")} isNew={isNew} sellingPrice={Number(form.watch("selling_price") || 0)} />
                 </TabsContent>
               </div>

@@ -317,8 +317,6 @@ const ProductsPage = () => {
             />
           </div>
 
-
-
           <div className="w-[180px]">
             <Combobox
               options={brands.map((b: Brand) => ({

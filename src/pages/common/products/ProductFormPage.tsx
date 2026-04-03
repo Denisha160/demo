@@ -140,7 +140,11 @@ const ProductFormPage = () => {
     refetch,
   } = useProduct(isNew ? undefined : id);
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
-  const { mutate: updateProduct, mutateAsync: updateProductAsync, isPending: isUpdating } = useUpdateProduct();
+  const {
+    mutate: updateProduct,
+    mutateAsync: updateProductAsync,
+    isPending: isUpdating,
+  } = useUpdateProduct();
   const { mutate: deletePhoto } = useDeleteProductPhoto();
 
   const isRoot = currentUser?.is_root_user || false;
@@ -293,17 +297,17 @@ const ProductFormPage = () => {
       setMetaParams(
         meta.parameters
           ? Object.entries(meta.parameters).map(([k, v]) => ({
-            key: k,
-            value: String(v),
-          }))
+              key: k,
+              value: String(v),
+            }))
           : [{ key: "", value: "" }],
       );
       setMetaAttributes(
         meta.attributes
           ? Object.entries(meta.attributes).map(([k, v]) => ({
-            key: k,
-            value: String(v),
-          }))
+              key: k,
+              value: String(v),
+            }))
           : [{ key: "", value: "" }],
       );
 
@@ -479,9 +483,7 @@ const ProductFormPage = () => {
                   variant="outline"
                   size="sm"
                   className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() =>
-                    isNew ? navigate(-1) : setIsEditing(false)
-                  }
+                  onClick={() => (isNew ? navigate(-1) : setIsEditing(false))}
                   disabled={isSaving}
                 >
                   Cancel
@@ -955,11 +957,12 @@ const ProductFormPage = () => {
                               )
                             ].url
                           }
-                          alt={`Product image ${Math.min(
-                            tabProps.images.slideIdx,
-                            tabProps.images.previews.length - 1,
-                          ) + 1
-                            }`}
+                          alt={`Product image ${
+                            Math.min(
+                              tabProps.images.slideIdx,
+                              tabProps.images.previews.length - 1,
+                            ) + 1
+                          }`}
                           className="w-full object-cover"
                           style={{ minHeight: 160, maxHeight: 200 }}
                           onClick={() =>
@@ -1039,14 +1042,15 @@ const ProductFormPage = () => {
                               key={i}
                               type="button"
                               onClick={() => tabProps.images.setSlideIdx(i)}
-                              className={`rounded-full transition-all ${i ===
+                              className={`rounded-full transition-all ${
+                                i ===
                                 Math.min(
                                   tabProps.images.slideIdx,
                                   tabProps.images.previews.length - 1,
                                 )
-                                ? "bg-primary w-3 h-1.5"
-                                : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
-                                }`}
+                                  ? "bg-primary w-3 h-1.5"
+                                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
+                              }`}
                             />
                           ))}
                         </div>
@@ -1111,10 +1115,7 @@ const ProductFormPage = () => {
                     value="measurements"
                     className="m-0 focus-visible:outline-none"
                   >
-                    <UnitsMeasurementsTab
-                      form={form}
-                      disabled={!isEditing}
-                    />
+                    <UnitsMeasurementsTab form={form} disabled={!isEditing} />
                   </TabsContent>
 
                   <TabsContent

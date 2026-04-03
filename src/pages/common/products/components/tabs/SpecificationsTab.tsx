@@ -232,7 +232,8 @@ export const SpecificationsTab = ({
                   onClick={() => removeObjectItem(setMetaParams, idx)}
                   className="text-muted-foreground hover:text-destructive shrink-0"
                   disabled={
-                    disabled || (metaParams.length === 1 && !param.key && !param.value)
+                    disabled ||
+                    (metaParams.length === 1 && !param.key && !param.value)
                   }
                 >
                   <Trash2 className="h-4 w-4" />
@@ -291,7 +292,10 @@ export const SpecificationsTab = ({
                   size="icon"
                   onClick={() => removeObjectItem(setMetaAttrs, idx)}
                   className="text-muted-foreground hover:text-destructive shrink-0"
-                  disabled={disabled || (metaAttrs.length === 1 && !attr.key && !attr.value)}
+                  disabled={
+                    disabled ||
+                    (metaAttrs.length === 1 && !attr.key && !attr.value)
+                  }
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

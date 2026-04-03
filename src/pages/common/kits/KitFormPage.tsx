@@ -284,6 +284,7 @@ const KitFormPage = () => {
       kit_price: data.kit_price,
       packaging_id: data.packaging_id || null,
       kit_image: selectedFile || null,
+      image_url: (!selectedFile && !kitImage) ? '' : undefined,
       items: data.items.map((i) => ({
         finished_product_id: i.finished_product_id,
         quantity_per_kit: i.quantity_per_kit,

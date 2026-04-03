@@ -607,7 +607,7 @@ export const createKit = (data) => {
   return axios({ method: "POST", url, data });
 };
 
-export const updateKit = ({ id, ...data }) => {
+export const updateKit = (id, data) => {
   const url = `kit/${id}`;
   return axios({ method: "PATCH", url, data });
 };

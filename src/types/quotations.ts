@@ -59,9 +59,5 @@ export type QuotationUpdatePayload = Partial<QuotationCreatePayload> & {
 
 export interface QuotationListResponse {
   items: Quotation[];
-  pagination: {
-    total: number;
-    offset: number;
-    limit: number;
-  };
+  total: number;
 }

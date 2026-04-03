@@ -162,10 +162,9 @@ export const useUpdateKit = () => {
         }
       });
 
-      const response = (await updateKit({
-        id,
-        ...formData,
-      } as any)) as ApiResponse<unknown>;
+      const response = (await updateKit(id, formData)) as ApiResponse<
+        unknown
+      >;
       return response;
     },
     onSuccess: (response) => {

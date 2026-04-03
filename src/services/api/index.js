@@ -632,6 +632,21 @@ export const listKitsByProduct = (productId) => {
   return axios({ method: "GET", url });
 };
 
+export const uploadKitPhoto = (id, formData) => {
+  const url = `kit/${id}/image`;
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const deleteKitPhoto = (id) => {
+  const url = `kit/${id}/image`;
+  return axios({ method: "DELETE", url });
+};
+
 // end region
 
 // region Batches

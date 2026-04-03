@@ -17,6 +17,8 @@ import {
   Box,
   Save,
   X,
+  Image as ImageIcon,
+  UploadCloud,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
-import { useKitDetails, useCreateKit, useUpdateKit } from "@/hooks/useKits";
+import { useKitDetails, useCreateKit, useUpdateKit, useUploadKitPhoto, useDeleteKitPhoto } from "@/hooks/useKits";
 import { useProductsCombobox } from "@/hooks/useProducts";
 import { usePackagesCombobox } from "@/hooks/usePackages";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -96,6 +98,7 @@ const kitSchema = z.object({
   is_active: z.boolean().default(true),
   kit_price: z.number().nullable().optional(),
   packaging_id: z.string().uuid().optional().nullable(),
+  kit_image: z.any().optional().nullable(),
   items: z
     .array(
       z.object({
@@ -124,6 +127,10 @@ const KitFormPage = () => {
   const { mutate: createKit, isPending: isCreating } = useCreateKit();
   const { mutate: updateKit, isPending: isUpdating } = useUpdateKit();
 
+  const [kitImage, setKitImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Selectors State
   const [fgSearch, setFgSearch] = useState("");
   const debouncedFgSearch = useDebounce(fgSearch, 300);
@@ -148,6 +155,7 @@ const KitFormPage = () => {
       sku: "",
       is_active: true,
       kit_price: 0,
+      kit_image: null,
       items: [],
     },
   });
@@ -180,6 +188,8 @@ const KitFormPage = () => {
           image_url: item.image_url,
         })),
       });
+      setKitImage(kitDetails.kit_image_url || kitDetails.kit_image || null);
+      setSelectedFile(null);
     }
   }, [id, kitDetails, reset]);
 
@@ -240,6 +250,21 @@ const KitFormPage = () => {
     updateKitPrice(updatedItems);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setKitImage(previewUrl);
+  };
+
+  const handleRemoveImage = () => {
+    setKitImage(null);
+    setSelectedFile(null);
+    setValue("kit_image", null, { shouldDirty: true });
+  };
+
   const totalValue = items.reduce((sum, item) => {
     return sum + (item.price || 0) * (item.quantity_per_kit || 0);
   }, 0);
@@ -252,6 +277,7 @@ const KitFormPage = () => {
       is_active: data.is_active,
       kit_price: data.kit_price,
       packaging_id: data.packaging_id || null,
+      kit_image: selectedFile || null,
       items: data.items.map((i) => ({
         finished_product_id: i.finished_product_id,
         quantity_per_kit: i.quantity_per_kit,
@@ -437,6 +463,65 @@ const KitFormPage = () => {
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* Kit Image Upload (Product Style) */}
+          <div className="bg-card border border-border rounded-lg p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-primary" />
+                <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest">
+                  Kit Image
+                </h3>
+              </div>
+            </div>
+
+            <div className="border border-dashed border-border rounded-lg p-4 bg-muted/10 flex flex-col items-center justify-center min-h-[160px] relative group">
+              {kitImage ? (
+                <div className="relative w-full aspect-video rounded-md overflow-hidden bg-muted/20 border border-border">
+                  <img
+                    src={kitImage}
+                    alt="Kit Preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                    className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground py-4">
+                  <ImageIcon className="h-8 w-8 opacity-20" />
+                  <p className="text-[11px] font-medium">No image uploaded</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-[10px] uppercase font-bold tracking-tight rounded-sm mt-1"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isCreating || isUpdating}
+                  >
+                    <UploadCloud className="h-3 w-3 mr-1.5" /> Select Image
+                  </Button>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </div>
+            <p className="text-[9px] text-muted-foreground text-center uppercase tracking-tighter opacity-70">
+              JPG, PNG, WebP · High Resolution Recommended
+            </p>
           </div>
         </div>
 

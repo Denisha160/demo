@@ -20,11 +20,13 @@ export function useLeadStatuses(
 ) {
   return useQuery({
     queryKey: queryKeys.leadStatus.list(filters),
-    queryFn: () => listStatus(filters),
+    queryFn: async () => {
+      const response = await listStatus(filters);
+      return response.data as LeadStatusListResponse;
+    },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    select: (data: any): LeadStatusListResponse | undefined => data?.data,
     ...options,
   });
 }

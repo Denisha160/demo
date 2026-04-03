@@ -1,5 +1,17 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Scale } from "lucide-react";
@@ -32,8 +44,8 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                     v === "kg" || v === "g"
                       ? "weight"
                       : v === "ltr" || v === "ml"
-                      ? "volume"
-                      : "count";
+                        ? "volume"
+                        : "count";
                   form.setValue("unit_category", category);
                 }}
                 value={field.value || "pcs"}
@@ -44,11 +56,21 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="kg" className="text-xs">Kilogram (kg)</SelectItem>
-                  <SelectItem value="g" className="text-xs">Gram (g)</SelectItem>
-                  <SelectItem value="ltr" className="text-xs">Liter (ltr)</SelectItem>
-                  <SelectItem value="ml" className="text-xs">Milliliter (ml)</SelectItem>
-                  <SelectItem value="pcs" className="text-xs">Pieces (pcs)</SelectItem>
+                  <SelectItem value="kg" className="text-xs">
+                    Kilogram (kg)
+                  </SelectItem>
+                  <SelectItem value="g" className="text-xs">
+                    Gram (g)
+                  </SelectItem>
+                  <SelectItem value="ltr" className="text-xs">
+                    Liter (ltr)
+                  </SelectItem>
+                  <SelectItem value="ml" className="text-xs">
+                    Milliliter (ml)
+                  </SelectItem>
+                  <SelectItem value="pcs" className="text-xs">
+                    Pieces (pcs)
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage className="text-[10px]" />
@@ -71,9 +93,15 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="weight" className="text-xs">Weight</SelectItem>
-                  <SelectItem value="volume" className="text-xs">Volume</SelectItem>
-                  <SelectItem value="count" className="text-xs">Count (Pieces)</SelectItem>
+                  <SelectItem value="weight" className="text-xs">
+                    Weight
+                  </SelectItem>
+                  <SelectItem value="volume" className="text-xs">
+                    Volume
+                  </SelectItem>
+                  <SelectItem value="count" className="text-xs">
+                    Count (Pieces)
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage className="text-[10px]" />
@@ -88,7 +116,10 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
             render={({ field }) => (
               <FormItem className="lg:col-span-1 space-y-2">
                 <FormLabel className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                  Weight {watchBaseUnit !== "kg" && watchBaseUnit !== "g" ? `(${watchBaseUnit || ""})` : ""}
+                  Weight{" "}
+                  {watchBaseUnit !== "kg" && watchBaseUnit !== "g"
+                    ? `(${watchBaseUnit || ""})`
+                    : ""}
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -97,7 +128,11 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                     placeholder="0.00"
                     className="text-sm"
                     {...field}
-                    onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === "" ? null : Number(e.target.value),
+                      )
+                    }
                     value={field.value ?? ""}
                   />
                 </FormControl>
@@ -125,7 +160,13 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                         placeholder="L"
                         className="text-sm"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
+                          )
+                        }
                         value={field.value ?? ""}
                       />
                     </FormControl>
@@ -145,7 +186,13 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                         placeholder="W"
                         className="text-sm"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
+                          )
+                        }
                         value={field.value ?? ""}
                       />
                     </FormControl>
@@ -165,7 +212,13 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                         placeholder="H"
                         className="text-sm"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value),
+                          )
+                        }
                         value={field.value ?? ""}
                       />
                     </FormControl>
@@ -177,18 +230,31 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                 name="dimension_unit"
                 render={({ field }) => (
                   <FormItem>
-                    <Select onValueChange={field.onChange} value={field.value || "cm"}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || "cm"}
+                    >
                       <FormControl>
                         <SelectTrigger className="h-9 text-sm w-[90px]">
                           <SelectValue placeholder="Unit" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="mm" className="text-xs">mm</SelectItem>
-                        <SelectItem value="cm" className="text-xs">cm</SelectItem>
-                        <SelectItem value="m" className="text-xs">m</SelectItem>
-                        <SelectItem value="in" className="text-xs">in</SelectItem>
-                        <SelectItem value="ft" className="text-xs">ft</SelectItem>
+                        <SelectItem value="mm" className="text-xs">
+                          mm
+                        </SelectItem>
+                        <SelectItem value="cm" className="text-xs">
+                          cm
+                        </SelectItem>
+                        <SelectItem value="m" className="text-xs">
+                          m
+                        </SelectItem>
+                        <SelectItem value="in" className="text-xs">
+                          in
+                        </SelectItem>
+                        <SelectItem value="ft" className="text-xs">
+                          ft
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -200,7 +266,9 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
               name="size_value"
               render={({ field }) => (
                 <FormItem className="space-y-2 mt-2">
-                  <FormLabel className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Size Value</FormLabel>
+                  <FormLabel className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    Size Value
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -208,7 +276,11 @@ export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
                       placeholder="e.g. 500"
                       className="text-sm"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value === "" ? null : Number(e.target.value))}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === "" ? null : Number(e.target.value),
+                        )
+                      }
                       value={field.value ?? ""}
                     />
                   </FormControl>

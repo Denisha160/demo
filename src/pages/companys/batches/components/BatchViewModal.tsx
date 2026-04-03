@@ -20,12 +20,15 @@ type StatusVariant =
   | "warning"
   | "info";
 
-const statusVariantMap: Record<string, StatusVariant> = {
+const statusVariantMap: Record<
+  string,
+  "success" | "secondary" | "destructive" | "outline" | "default"
+> = {
   active: "success",
   expired: "destructive",
   depleted: "secondary",
-  blocked: "warning",
-  quarantine: "info",
+  blocked: "outline",
+  quarantine: "default",
 };
 
 const getExpiryInfo = (expiryDate: string | null) => {
@@ -133,7 +136,7 @@ const BatchViewModal = ({
             </div>
             <div className="ml-auto">
               <Badge
-                variant={statusVariantMap[batch.status] ?? "info"}
+                variant={statusVariantMap[batch.status] ?? "default"}
                 className="text-[10px] uppercase font-bold"
               >
                 {batch.status}

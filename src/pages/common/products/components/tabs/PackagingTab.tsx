@@ -1,4 +1,10 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -18,13 +24,18 @@ interface PackagingTabProps {
   packageModal: { setOpen: (v: boolean) => void };
 }
 
-export const PackagingTab = ({ form, comboboxes, packageModal }: PackagingTabProps) => {
+export const PackagingTab = ({
+  form,
+  comboboxes,
+  packageModal,
+}: PackagingTabProps) => {
   const watchProductType = form.watch("product_type");
 
   if (watchProductType === "RAW_MATERIAL") {
     return (
       <div className="p-8 text-center text-muted-foreground bg-muted/10 rounded-lg border border-dashed">
-        Packaging settings are only available for Finished Goods and Semi Finished items.
+        Packaging settings are only available for Finished Goods and Semi
+        Finished items.
       </div>
     );
   }

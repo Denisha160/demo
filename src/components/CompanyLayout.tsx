@@ -244,9 +244,10 @@ const NavGroup = ({
                 onClick={onCloseSidebar}
                 className={`
                   flex items-center gap-3 px-2 py-1.5 text-[13px] rounded-sm transition-all duration-200
-                  ${childActive
-                    ? "bg-primary/15 text-primary font-bold"
-                    : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
+                  ${
+                    childActive
+                      ? "bg-primary/15 text-primary font-bold"
+                      : "text-muted-foreground/80 hover:text-foreground hover:bg-accent"
                   }
                 `}
                 style={childActive ? { color: `hsl(${theme.primary})` } : {}}
@@ -300,11 +301,11 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
   };
   const initials = user?.name
     ? user.name
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : "ME";
 
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
@@ -524,10 +525,11 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
                   onClick={() => setSidebarOpen(false)}
                   className={`
                   flex items-center gap-3 px-2 py-2 text-sm rounded-md transition-all duration-200 group
-                  ${active
+                  ${
+                    active
                       ? "bg-primary/10 text-primary font-bold"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                    }
+                  }
                 `}
                   style={
                     active ? { color: `hsl(${currentTheme.primary})` } : {}

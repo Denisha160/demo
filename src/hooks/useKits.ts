@@ -156,14 +156,16 @@ export const useUpdateKit = () => {
           formData.append(key, JSON.stringify(value));
         } else {
           // If value is boolean, convert to string
-          const val = typeof value === "boolean" ? String(value) : (value as any);
+          const val =
+            typeof value === "boolean" ? String(value) : (value as any);
           formData.append(key, val);
         }
       });
 
-      const response = (await updateKit({ id, ...formData } as any)) as ApiResponse<
-        unknown
-      >;
+      const response = (await updateKit({
+        id,
+        ...formData,
+      } as any)) as ApiResponse<unknown>;
       return response;
     },
     onSuccess: (response) => {
@@ -210,13 +212,16 @@ export const useUploadKitPhoto = () => {
     mutationFn: async ({ kitId, file }) => {
       const formData = new FormData();
       formData.append("image", file);
-      const response = (await uploadKitPhoto(kitId, formData)) as ApiResponse<
-        unknown
-      >;
+      const response = (await uploadKitPhoto(
+        kitId,
+        formData,
+      )) as ApiResponse<unknown>;
       return response;
     },
     onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["kits", "detail", variables.kitId] });
+      queryClient.invalidateQueries({
+        queryKey: ["kits", "detail", variables.kitId],
+      });
       queryClient.invalidateQueries({ queryKey: ["kits"] });
       toast.success(response.message || "Kit photo uploaded successfully");
     },

@@ -72,14 +72,28 @@ import { RecipesTab } from "./components/tabs/RecipesTab";
 
 // --- Zod Validation Schema ---
 const productSchema = z.object({
-  product_name: z.string().min(2, "Product name is required (min 2 characters)"),
+  product_name: z
+    .string()
+    .min(2, "Product name is required (min 2 characters)"),
   secret_name: z.string().optional().nullable(),
   code: z.string().optional().nullable(),
-  category_id: z.string().uuid("Please select a valid category").optional().nullable(),
+  category_id: z
+    .string()
+    .uuid("Please select a valid category")
+    .optional()
+    .nullable(),
   product_type: z.enum(["RAW_MATERIAL", "SEMI_FINISHED", "FINISHED_GOOD"]),
   is_brand: z.boolean().default(false),
-  brand_id: z.string().uuid("Please select a valid brand").optional().nullable(),
-  fragrance_id: z.string().uuid("Please select a valid fragrance").optional().nullable(),
+  brand_id: z
+    .string()
+    .uuid("Please select a valid brand")
+    .optional()
+    .nullable(),
+  fragrance_id: z
+    .string()
+    .uuid("Please select a valid fragrance")
+    .optional()
+    .nullable(),
   is_active: z.boolean().default(true),
   unit_category: z.enum(["weight", "volume", "count"]).default("count"),
   base_unit: z.enum(["kg", "g", "ltr", "ml", "pcs"]).default("pcs"),
@@ -89,13 +103,21 @@ const productSchema = z.object({
   height: z.number().nullable().optional(),
   size_value: z.number().nullable().optional(),
   dimension_unit: z.enum(["mm", "cm", "m", "in", "ft"]).nullable().optional(),
-  cost_price: z.coerce.number({ invalid_type_error: "Must be a number" }).min(0, "Cost price is required"),
-  selling_price: z.coerce.number({ invalid_type_error: "Must be a number" }).min(0, "Selling price is required"),
+  cost_price: z.coerce
+    .number({ invalid_type_error: "Must be a number" })
+    .min(0, "Cost price is required"),
+  selling_price: z.coerce
+    .number({ invalid_type_error: "Must be a number" })
+    .min(0, "Selling price is required"),
   hsn_code: z.string().optional().nullable(),
   shape: z.string().optional().nullable(),
   capacity: z.string().optional().nullable(),
   material: z.string().optional().nullable(),
-  packaging_id: z.string().uuid("Please select a valid package").optional().nullable(),
+  packaging_id: z
+    .string()
+    .uuid("Please select a valid package")
+    .optional()
+    .nullable(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -111,7 +133,11 @@ const ProductFormPage = () => {
   const isNew = id === "new" || !id;
 
   // --- Hooks & Data Fetching ---
-  const { data: fetchedProduct, isLoading, refetch } = useProduct(isNew ? undefined : id);
+  const {
+    data: fetchedProduct,
+    isLoading,
+    refetch,
+  } = useProduct(isNew ? undefined : id);
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
   const { mutate: deletePhoto } = useDeleteProductPhoto();
@@ -125,7 +151,9 @@ const ProductFormPage = () => {
   const productNameRef = useRef<HTMLInputElement>(null);
 
   // UI states
-  const [imagePreviews, setImagePreviews] = useState<{ id?: string; url: string }[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<
+    { id?: string; url: string }[]
+  >([]);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
   const [isFragranceDrawerOpen, setIsFragranceDrawerOpen] = useState(false);
@@ -162,8 +190,12 @@ const ProductFormPage = () => {
   // Metadata States
   const [metaColors, setMetaColors] = useState<string[]>([""]);
   const [metaFeatures, setMetaFeatures] = useState<string[]>([""]);
-  const [metaParams, setMetaParams] = useState<{ key: string; value: string }[]>([{ key: "", value: "" }]);
-  const [metaAttributes, setMetaAttributes] = useState<{ key: string; value: string }[]>([{ key: "", value: "" }]);
+  const [metaParams, setMetaParams] = useState<
+    { key: string; value: string }[]
+  >([{ key: "", value: "" }]);
+  const [metaAttributes, setMetaAttributes] = useState<
+    { key: string; value: string }[]
+  >([{ key: "", value: "" }]);
 
   // React Hook Form
   const form = useForm<ProductFormValues>({
@@ -183,21 +215,42 @@ const ProductFormPage = () => {
   });
 
   // Fetch combobox options
-  const { data: fetchedCategories } = useCategoriesCombobox({ type: "sub", search: debouncedCategorySearch });
-  const { data: fetchedPackages } = usePackagesCombobox({ search: debouncedPackageSearch.trim() || undefined });
-  const { data: fetchedBrands } = useBrandCombobox({ search: debouncedBrandSearch, status: "active" });
-  const { data: fetchedFragrances } = useFragranceCombobox({ search: debouncedFragranceSearch, status: "active" });
+  const { data: fetchedCategories } = useCategoriesCombobox({
+    type: "sub",
+    search: debouncedCategorySearch,
+  });
+  const { data: fetchedPackages } = usePackagesCombobox({
+    search: debouncedPackageSearch.trim() || undefined,
+  });
+  const { data: fetchedBrands } = useBrandCombobox({
+    search: debouncedBrandSearch,
+    status: "active",
+  });
+  const { data: fetchedFragrances } = useFragranceCombobox({
+    search: debouncedFragranceSearch,
+    status: "active",
+  });
 
-  const categoryOptions = ((fetchedCategories as Category[]) || []).map((cat) => ({
-    label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
-    value: cat.id,
-  }));
+  const categoryOptions = ((fetchedCategories as Category[]) || []).map(
+    (cat) => ({
+      label: cat.parent_name ? `${cat.name} (${cat.parent_name})` : cat.name,
+      value: cat.id,
+    }),
+  );
   const packageOptions = ((fetchedPackages as any[]) || []).map((pkg) => ({
-    label: pkg.package_code ? `${pkg.package_name} (${pkg.package_code})` : pkg.package_name,
+    label: pkg.package_code
+      ? `${pkg.package_name} (${pkg.package_code})`
+      : pkg.package_name,
     value: pkg.id,
   }));
-  const brandOptions = ((fetchedBrands as any[]) || []).map((b) => ({ label: b.name, value: b.id }));
-  const fragranceOptions = ((fetchedFragrances as any[]) || []).map((f) => ({ label: f.name, value: f.id }));
+  const brandOptions = ((fetchedBrands as any[]) || []).map((b) => ({
+    label: b.name,
+    value: b.id,
+  }));
+  const fragranceOptions = ((fetchedFragrances as any[]) || []).map((f) => ({
+    label: f.name,
+    value: f.id,
+  }));
 
   // --- Sync fetched data ---
   useEffect(() => {
@@ -208,38 +261,71 @@ const ProductFormPage = () => {
         brand_id: fetchedProduct.brand_id || null,
         fragrance_id: fetchedProduct.fragrance_id || null,
         packaging_id: fetchedProduct.packaging_id || null,
-        secret_name: fetchedProduct.secret_name || (fetchedProduct.metadata?.secret_name as string) || null,
+        secret_name:
+          fetchedProduct.secret_name ||
+          (fetchedProduct.metadata?.secret_name as string) ||
+          null,
       });
 
       const meta = fetchedProduct.metadata || {};
-      setMetaColors(Array.isArray(meta.colors) && meta.colors.length > 0 ? meta.colors.map(String) : [""]);
-      setMetaFeatures(Array.isArray(meta.features) && meta.features.length > 0 ? meta.features.map(String) : [""]);
-      setMetaParams(meta.parameters ? Object.entries(meta.parameters).map(([k, v]) => ({ key: k, value: String(v) })) : [{ key: "", value: "" }]);
-      setMetaAttributes(meta.attributes ? Object.entries(meta.attributes).map(([k, v]) => ({ key: k, value: String(v) })) : [{ key: "", value: "" }]);
+      setMetaColors(
+        Array.isArray(meta.colors) && meta.colors.length > 0
+          ? meta.colors.map(String)
+          : [""],
+      );
+      setMetaFeatures(
+        Array.isArray(meta.features) && meta.features.length > 0
+          ? meta.features.map(String)
+          : [""],
+      );
+      setMetaParams(
+        meta.parameters
+          ? Object.entries(meta.parameters).map(([k, v]) => ({
+              key: k,
+              value: String(v),
+            }))
+          : [{ key: "", value: "" }],
+      );
+      setMetaAttributes(
+        meta.attributes
+          ? Object.entries(meta.attributes).map(([k, v]) => ({
+              key: k,
+              value: String(v),
+            }))
+          : [{ key: "", value: "" }],
+      );
 
       if (fetchedProduct.images && Array.isArray(fetchedProduct.images)) {
-        setImagePreviews(fetchedProduct.images.map((img: any) => ({
-          id: img.id,
-          url: img.image?.url || img.image_url?.url || img.url || ""
-        })).filter(x => x.url));
+        setImagePreviews(
+          fetchedProduct.images
+            .map((img: any) => ({
+              id: img.id,
+              url: img.image?.url || img.image_url?.url || img.url || "",
+            }))
+            .filter((x) => x.url),
+        );
       }
-      if (fetchedProduct.secret_name || fetchedProduct.metadata?.secret_name) setShowSecretInput(true);
+      if (fetchedProduct.secret_name || fetchedProduct.metadata?.secret_name)
+        setShowSecretInput(true);
     }
   }, [fetchedProduct, isNew, form]);
 
   const onSubmit = (values: ProductFormValues) => {
     const buildObject = (arr: { key: string; value: string }[]) =>
-      arr.reduce((acc, curr) => {
-        const k = curr.key.trim();
-        const v = curr.value.trim();
-        if (k && v) acc[k] = v;
-        return acc;
-      }, {} as Record<string, string>);
+      arr.reduce(
+        (acc, curr) => {
+          const k = curr.key.trim();
+          const v = curr.value.trim();
+          if (k && v) acc[k] = v;
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
 
     const parameters = buildObject(metaParams);
     const attributes = buildObject(metaAttributes);
-    const colors = metaColors.map(c => c.trim()).filter(Boolean);
-    const features = metaFeatures.map(f => f.trim()).filter(Boolean);
+    const colors = metaColors.map((c) => c.trim()).filter(Boolean);
+    const features = metaFeatures.map((f) => f.trim()).filter(Boolean);
 
     const payload = {
       ...values,
@@ -259,8 +345,10 @@ const ProductFormPage = () => {
         });
       } else if (error?.code === "duplicate_key_value") {
         const msg = error.message || "A duplicate record exists.";
-        if (msg.toLowerCase().includes("product name")) form.setError("product_name", { message: msg });
-        else if (msg.toLowerCase().includes("product_code")) form.setError("code", { message: msg });
+        if (msg.toLowerCase().includes("product name"))
+          form.setError("product_name", { message: msg });
+        else if (msg.toLowerCase().includes("product_code"))
+          form.setError("code", { message: msg });
         else toast.error(msg);
       } else {
         toast.error(error?.message || "An unexpected error occurred.");
@@ -273,21 +361,46 @@ const ProductFormPage = () => {
         onError,
       });
     } else {
-      updateProduct({ ...payload, id: id! }, {
-        onSuccess: () => toast.success("Product updated successfully"),
-        onError,
-      });
+      updateProduct(
+        { ...payload, id: id! },
+        {
+          onSuccess: () => toast.success("Product updated successfully"),
+          onError,
+        },
+      );
     }
   };
 
   const comboboxes = {
-    category: { options: categoryOptions, search: categorySearch, setSearch: setCategorySearch },
-    fragrance: { options: fragranceOptions, search: fragranceSearch, setSearch: setFragranceSearch },
-    brand: { options: brandOptions, search: brandSearch, setSearch: setBrandSearch },
-    package: { options: packageOptions, search: packageSearch, setSearch: setPackageSearch },
+    category: {
+      options: categoryOptions,
+      search: categorySearch,
+      setSearch: setCategorySearch,
+    },
+    fragrance: {
+      options: fragranceOptions,
+      search: fragranceSearch,
+      setSearch: setFragranceSearch,
+    },
+    brand: {
+      options: brandOptions,
+      search: brandSearch,
+      setSearch: setBrandSearch,
+    },
+    package: {
+      options: packageOptions,
+      search: packageSearch,
+      setSearch: setPackageSearch,
+    },
   };
 
-  if (isLoading) return <div className="flex flex-col items-center justify-center h-64 space-y-2"><Loader2 className="animate-spin h-8 w-8 text-primary" /><p className="text-muted-foreground">Loading product details...</p></div>;
+  if (isLoading)
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-2">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+        <p className="text-muted-foreground">Loading product details...</p>
+      </div>
+    );
 
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in overflow-hidden">
@@ -331,8 +444,16 @@ const ProductFormPage = () => {
               size="sm"
               disabled={isSaving}
             >
-              {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Package className="h-4 w-4 mr-2" />}
-              {isSaving ? "Saving..." : isNew ? "Create Product" : "Update Changes"}
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Package className="h-4 w-4 mr-2" />
+              )}
+              {isSaving
+                ? "Saving..."
+                : isNew
+                  ? "Create Product"
+                  : "Update Changes"}
             </Button>
           </div>
         </div>
@@ -348,7 +469,9 @@ const ProductFormPage = () => {
               <div className="xl:col-span-7 space-y-2">
                 <div className="flex items-center gap-2 mb-4">
                   <Package className="h-4 w-4 text-primary" />
-                  <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Basic Information</h3>
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">
+                    Basic Information
+                  </h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -360,14 +483,33 @@ const ProductFormPage = () => {
                       render={({ field }) => (
                         <FormItem className="space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Name</FormLabel>
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                              Product Name
+                            </FormLabel>
                             {isRoot && (
-                              <Button type="button" variant="ghost" size="sm" className={`h-5 px-1.5 text-[9px] gap-1 hover:bg-primary/10 ${showSecretInput ? "text-primary" : "text-muted-foreground"}`} onClick={() => setShowSecretInput(!showSecretInput)}>
-                                <Lock className="h-2.5 w-2.5" />{showSecretInput ? "Hide Secret" : "Add Secret"}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className={`h-5 px-1.5 text-[9px] gap-1 hover:bg-primary/10 ${showSecretInput ? "text-primary" : "text-muted-foreground"}`}
+                                onClick={() =>
+                                  setShowSecretInput(!showSecretInput)
+                                }
+                              >
+                                <Lock className="h-2.5 w-2.5" />
+                                {showSecretInput ? "Hide Secret" : "Add Secret"}
                               </Button>
                             )}
                           </div>
-                          <FormControl><Input ref={productNameRef} {...field} placeholder="Enter product name" autoFocus={true} className="text-sm" /></FormControl>
+                          <FormControl>
+                            <Input
+                              ref={productNameRef}
+                              {...field}
+                              placeholder="Enter product name"
+                              autoFocus={true}
+                              className="text-sm"
+                            />
+                          </FormControl>
                           <FormMessage className="text-[10px]" />
                           {isRoot && showSecretInput && (
                             <FormField
@@ -375,8 +517,15 @@ const ProductFormPage = () => {
                               name="secret_name"
                               render={({ field: sField }) => (
                                 <div className="mt-2 animate-in slide-in-from-top-1 duration-200">
-                                  <Label className="text-[10px] font-bold text-primary uppercase tracking-wide flex items-center gap-1"><Lock className="h-2.5 w-2.5" /> Secret Name</Label>
-                                  <Input {...sField} value={sField.value || ""} placeholder="Backend/Secret name" className="text-sm mt-1 border-primary/30" />
+                                  <Label className="text-[10px] font-bold text-primary uppercase tracking-wide flex items-center gap-1">
+                                    <Lock className="h-2.5 w-2.5" /> Secret Name
+                                  </Label>
+                                  <Input
+                                    {...sField}
+                                    value={sField.value || ""}
+                                    placeholder="Backend/Secret name"
+                                    className="text-sm mt-1 border-primary/30"
+                                  />
                                 </div>
                               )}
                             />
@@ -390,17 +539,24 @@ const ProductFormPage = () => {
                       name="category_id"
                       render={({ field }) => (
                         <FormItem className="space-y-1.5">
-                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Category</FormLabel>
+                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                            Category
+                          </FormLabel>
                           <Combobox
                             options={comboboxes.category.options}
                             value={field.value || ""}
                             onValueChange={field.onChange}
                             placeholder="Select category..."
-
                             searchValue={categorySearch}
                             onSearchChange={setCategorySearch}
                           />
-                          <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsCategoryDrawerOpen(true)}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
+                            onClick={() => setIsCategoryDrawerOpen(true)}
+                          >
                             <Plus className="h-3 w-3" /> Add New Category
                           </Button>
                           <FormMessage className="text-[10px]" />
@@ -416,8 +572,17 @@ const ProductFormPage = () => {
                       name="code"
                       render={({ field }) => (
                         <FormItem className="space-y-1.5">
-                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Code</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} placeholder="DEMO" className="text-sm" /></FormControl>
+                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                            Product Code
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="DEMO"
+                              className="text-sm"
+                            />
+                          </FormControl>
                           <FormMessage className="text-[10px]" />
                         </FormItem>
                       )}
@@ -429,10 +594,34 @@ const ProductFormPage = () => {
                         name="is_brand"
                         render={({ field }) => (
                           <FormItem className="space-y-1.5">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Brand Item</FormLabel>
-                            <RadioGroup onValueChange={(val) => field.onChange(val === "yes")} value={field.value ? "yes" : "no"} className="flex items-center gap-3">
-                              <div className="flex items-center space-x-1.5"><RadioGroupItem value="yes" id="brand-yes" /><Label htmlFor="brand-yes" className="text-sm cursor-pointer font-medium m-0">Yes</Label></div>
-                              <div className="flex items-center space-x-1.5"><RadioGroupItem value="no" id="brand-no" /><Label htmlFor="brand-no" className="text-sm cursor-pointer font-medium m-0">No</Label></div>
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                              Brand Item
+                            </FormLabel>
+                            <RadioGroup
+                              onValueChange={(val) =>
+                                field.onChange(val === "yes")
+                              }
+                              value={field.value ? "yes" : "no"}
+                              className="flex items-center gap-3"
+                            >
+                              <div className="flex items-center space-x-1.5">
+                                <RadioGroupItem value="yes" id="brand-yes" />
+                                <Label
+                                  htmlFor="brand-yes"
+                                  className="text-sm cursor-pointer font-medium m-0"
+                                >
+                                  Yes
+                                </Label>
+                              </div>
+                              <div className="flex items-center space-x-1.5">
+                                <RadioGroupItem value="no" id="brand-no" />
+                                <Label
+                                  htmlFor="brand-no"
+                                  className="text-sm cursor-pointer font-medium m-0"
+                                >
+                                  No
+                                </Label>
+                              </div>
                             </RadioGroup>
                           </FormItem>
                         )}
@@ -442,8 +631,17 @@ const ProductFormPage = () => {
                         name="hsn_code"
                         render={({ field }) => (
                           <FormItem className="space-y-1.5">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">HSN Code</FormLabel>
-                            <FormControl><Input {...field} value={field.value || ""} placeholder="e.g. 3401.19" className="text-sm" /></FormControl>
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                              HSN Code
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="e.g. 3401.19"
+                                className="text-sm"
+                              />
+                            </FormControl>
                             <FormMessage className="text-[10px]" />
                           </FormItem>
                         )}
@@ -458,13 +656,37 @@ const ProductFormPage = () => {
                       name="product_type"
                       render={({ field }) => (
                         <FormItem className="space-y-1.5">
-                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Product Type</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger className="text-sm"><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                          <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                            Product Type
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="text-sm">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
                             <SelectContent>
-                              <SelectItem value="FINISHED_GOOD" className="text-xs">Finished Good</SelectItem>
-                              <SelectItem value="SEMI_FINISHED" className="text-xs">Semi Finished</SelectItem>
-                              <SelectItem value="RAW_MATERIAL" className="text-xs">Raw Material</SelectItem>
+                              <SelectItem
+                                value="FINISHED_GOOD"
+                                className="text-xs"
+                              >
+                                Finished Good
+                              </SelectItem>
+                              <SelectItem
+                                value="SEMI_FINISHED"
+                                className="text-xs"
+                              >
+                                Semi Finished
+                              </SelectItem>
+                              <SelectItem
+                                value="RAW_MATERIAL"
+                                className="text-xs"
+                              >
+                                Raw Material
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage className="text-[10px]" />
@@ -478,17 +700,24 @@ const ProductFormPage = () => {
                         name="fragrance_id"
                         render={({ field }) => (
                           <FormItem className="space-y-1.5">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Fragrance</FormLabel>
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                              Fragrance
+                            </FormLabel>
                             <Combobox
                               options={comboboxes.fragrance.options}
                               value={field.value || ""}
                               onValueChange={field.onChange}
                               placeholder="Select fragrance..."
-
                               searchValue={fragranceSearch}
                               onSearchChange={setFragranceSearch}
                             />
-                            <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsFragranceDrawerOpen(true)}>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
+                              onClick={() => setIsFragranceDrawerOpen(true)}
+                            >
                               <Plus className="h-3 w-3" /> Add New Fragrance
                             </Button>
                             <FormMessage className="text-[10px]" />
@@ -500,18 +729,25 @@ const ProductFormPage = () => {
                         name="brand_id"
                         render={({ field }) => (
                           <FormItem className="space-y-1.5">
-                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Brand</FormLabel>
+                            <FormLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                              Brand
+                            </FormLabel>
                             <Combobox
                               options={comboboxes.brand.options}
                               value={field.value || ""}
                               onValueChange={field.onChange}
                               placeholder="Select brand..."
-
                               searchValue={brandSearch}
                               onSearchChange={setBrandSearch}
                               disabled={!form.watch("is_brand")}
                             />
-                            <Button type="button" variant="ghost" size="sm" className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1" onClick={() => setIsBrandDrawerOpen(true)}>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
+                              onClick={() => setIsBrandDrawerOpen(true)}
+                            >
                               <Plus className="h-3 w-3" /> Add New Brand
                             </Button>
                             <FormMessage className="text-[10px]" />
@@ -529,10 +765,28 @@ const ProductFormPage = () => {
                     name="cost_price"
                     render={({ field }) => (
                       <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Cost Price</FormLabel>
+                        <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">
+                          Cost Price
+                        </FormLabel>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
-                          <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm pl-7" placeholder="0.00" />
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">
+                            ₹
+                          </span>
+                          <Input
+                            type="number"
+                            step="any"
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ""
+                                  ? 0
+                                  : Number(e.target.value),
+                              )
+                            }
+                            className="text-sm pl-7"
+                            placeholder="0.00"
+                          />
                         </div>
                         <FormMessage className="text-[10px]" />
                       </FormItem>
@@ -543,10 +797,28 @@ const ProductFormPage = () => {
                     name="selling_price"
                     render={({ field }) => (
                       <FormItem className="space-y-1.5">
-                        <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">Selling Price</FormLabel>
+                        <FormLabel className="text-[10px] font-bold text-primary uppercase tracking-wide">
+                          Selling Price
+                        </FormLabel>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">₹</span>
-                          <Input type="number" step="any" {...field} value={field.value ?? ""} onChange={e => field.onChange(e.target.value === "" ? 0 : Number(e.target.value))} className="text-sm pl-7" placeholder="0.00" />
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">
+                            ₹
+                          </span>
+                          <Input
+                            type="number"
+                            step="any"
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value === ""
+                                  ? 0
+                                  : Number(e.target.value),
+                              )
+                            }
+                            className="text-sm pl-7"
+                            placeholder="0.00"
+                          />
                         </div>
                         <FormMessage className="text-[10px]" />
                       </FormItem>
@@ -616,11 +888,12 @@ const ProductFormPage = () => {
                               )
                             ].url
                           }
-                          alt={`Product image ${Math.min(
-                            tabProps.images.slideIdx,
-                            tabProps.images.previews.length - 1,
-                          ) + 1
-                            }`}
+                          alt={`Product image ${
+                            Math.min(
+                              tabProps.images.slideIdx,
+                              tabProps.images.previews.length - 1,
+                            ) + 1
+                          }`}
                           className="w-full object-cover"
                           style={{ minHeight: 160, maxHeight: 200 }}
                           onClick={() =>
@@ -700,14 +973,15 @@ const ProductFormPage = () => {
                               key={i}
                               type="button"
                               onClick={() => tabProps.images.setSlideIdx(i)}
-                              className={`rounded-full transition-all ${i ===
+                              className={`rounded-full transition-all ${
+                                i ===
                                 Math.min(
                                   tabProps.images.slideIdx,
                                   tabProps.images.previews.length - 1,
                                 )
-                                ? "bg-primary w-3 h-1.5"
-                                : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
-                                }`}
+                                  ? "bg-primary w-3 h-1.5"
+                                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
+                              }`}
                             />
                           ))}
                         </div>
@@ -723,45 +997,108 @@ const ProductFormPage = () => {
 
             {/* Full Width Tabs Section */}
             <div className="mt-8">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
                 <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-4 gap-1">
-                  <TabsTrigger value="measurements" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Units & Measurements</TabsTrigger>
+                  <TabsTrigger
+                    value="measurements"
+                    className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold"
+                  >
+                    Units & Measurements
+                  </TabsTrigger>
                   {form.watch("product_type") !== "RAW_MATERIAL" && (
-                    <TabsTrigger value="packaging" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Packaging</TabsTrigger>
+                    <TabsTrigger
+                      value="packaging"
+                      className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold"
+                    >
+                      Packaging
+                    </TabsTrigger>
                   )}
-                  <TabsTrigger value="specifications" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Specifications</TabsTrigger>
+                  <TabsTrigger
+                    value="specifications"
+                    className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold"
+                  >
+                    Specifications
+                  </TabsTrigger>
                   {form.watch("product_type") !== "RAW_MATERIAL" && (
                     <>
-                      <TabsTrigger value="kits" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Kits</TabsTrigger>
-                      <TabsTrigger value="recipes" className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold">Recipes</TabsTrigger>
+                      <TabsTrigger
+                        value="kits"
+                        className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold"
+                      >
+                        Kits
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="recipes"
+                        className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold"
+                      >
+                        Recipes
+                      </TabsTrigger>
                     </>
                   )}
                 </TabsList>
 
                 <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-2 duration-500">
-                  <TabsContent value="measurements" className="m-0 focus-visible:outline-none">
-
+                  <TabsContent
+                    value="measurements"
+                    className="m-0 focus-visible:outline-none"
+                  >
                     <UnitsMeasurementsTab form={form} />
                   </TabsContent>
 
-                  <TabsContent value="packaging" className="m-0 focus-visible:outline-none">
-
-                    <PackagingTab form={form} comboboxes={comboboxes} packageModal={{ setOpen: setIsPackageModalOpen }} />
+                  <TabsContent
+                    value="packaging"
+                    className="m-0 focus-visible:outline-none"
+                  >
+                    <PackagingTab
+                      form={form}
+                      comboboxes={comboboxes}
+                      packageModal={{ setOpen: setIsPackageModalOpen }}
+                    />
                   </TabsContent>
 
-                  <TabsContent value="specifications" className="m-0 focus-visible:outline-none">
-
-                    <SpecificationsTab metadata={{ metaColors, setMetaColors, metaFeatures, setMetaFeatures, metaParams, setMetaParams, metaAttrs: metaAttributes, setMetaAttrs: setMetaAttributes }} />
+                  <TabsContent
+                    value="specifications"
+                    className="m-0 focus-visible:outline-none"
+                  >
+                    <SpecificationsTab
+                      metadata={{
+                        metaColors,
+                        setMetaColors,
+                        metaFeatures,
+                        setMetaFeatures,
+                        metaParams,
+                        setMetaParams,
+                        metaAttrs: metaAttributes,
+                        setMetaAttrs: setMetaAttributes,
+                      }}
+                    />
                   </TabsContent>
 
-                  <TabsContent value="kits" className="m-0 focus-visible:outline-none">
-
-                    <KitsTab productId={id} productType={form.watch("product_type")} isNew={isNew} />
+                  <TabsContent
+                    value="kits"
+                    className="m-0 focus-visible:outline-none"
+                  >
+                    <KitsTab
+                      productId={id}
+                      productType={form.watch("product_type")}
+                      isNew={isNew}
+                    />
                   </TabsContent>
 
-                  <TabsContent value="recipes" className="m-0 focus-visible:outline-none">
-
-                    <RecipesTab productId={id} productType={form.watch("product_type")} isNew={isNew} sellingPrice={Number(form.watch("selling_price") || 0)} />
+                  <TabsContent
+                    value="recipes"
+                    className="m-0 focus-visible:outline-none"
+                  >
+                    <RecipesTab
+                      productId={id}
+                      productType={form.watch("product_type")}
+                      isNew={isNew}
+                      sellingPrice={Number(form.watch("selling_price") || 0)}
+                    />
                   </TabsContent>
                 </div>
               </Tabs>
@@ -770,16 +1107,28 @@ const ProductFormPage = () => {
         </Form>
       </div>
 
-      <CategoryDrawer open={isCategoryDrawerOpen} onOpenChange={setIsCategoryDrawerOpen} />
-      <FragranceDrawer open={isFragranceDrawerOpen} onOpenChange={setIsFragranceDrawerOpen} />
-      <BrandDrawer open={isBrandDrawerOpen} onOpenChange={setIsBrandDrawerOpen} />
+      <CategoryDrawer
+        open={isCategoryDrawerOpen}
+        onOpenChange={setIsCategoryDrawerOpen}
+      />
+      <FragranceDrawer
+        open={isFragranceDrawerOpen}
+        onOpenChange={setIsFragranceDrawerOpen}
+      />
+      <BrandDrawer
+        open={isBrandDrawerOpen}
+        onOpenChange={setIsBrandDrawerOpen}
+      />
 
       {/* Modals & Drawers */}
       {!isNew && id && (
         <AddProductPhotoModal
           product={{
             id: id,
-            name: form.getValues("product_name") || fetchedProduct?.product_name || "",
+            name:
+              form.getValues("product_name") ||
+              fetchedProduct?.product_name ||
+              "",
           }}
           open={isPhotoModalOpen}
           onClose={() => setIsPhotoModalOpen(false)}
@@ -790,7 +1139,10 @@ const ProductFormPage = () => {
         />
       )}
 
-      <PackageModal isOpen={isPackageModalOpen} onClose={() => setIsPackageModalOpen(false)} />
+      <PackageModal
+        isOpen={isPackageModalOpen}
+        onClose={() => setIsPackageModalOpen(false)}
+      />
 
       {/* Lightbox placeholder (if needed, but slideIdx handles it mostly) */}
       {lightboxIndex !== null && imagePreviews.length > 0 && (
@@ -936,7 +1288,6 @@ const ProductFormPage = () => {
           )}
         </div>
       )}
-
     </div>
   );
 };

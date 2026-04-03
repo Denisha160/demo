@@ -111,7 +111,7 @@ const ProductFormPage = () => {
   const isNew = id === "new" || !id;
 
   // --- Hooks & Data Fetching ---
-  const { data: fetchedProduct, isLoading } = useProduct(isNew ? undefined : id);
+  const { data: fetchedProduct, isLoading, refetch } = useProduct(isNew ? undefined : id);
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
   const { mutate: deletePhoto } = useDeleteProductPhoto();
@@ -632,7 +632,8 @@ const ProductFormPage = () => {
                             )
                           }
                         />
-                        <span className="absolute top-2 left-2 bg-black/50 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full pointer-events-none">
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+                        <span className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full pointer-events-none border border-white/10 z-10">
                           {Math.min(
                             tabProps.images.slideIdx,
                             tabProps.images.previews.length - 1,
@@ -784,6 +785,7 @@ const ProductFormPage = () => {
           onClose={() => setIsPhotoModalOpen(false)}
           onSuccess={() => {
             setIsPhotoModalOpen(false);
+            refetch?.();
           }}
         />
       )}

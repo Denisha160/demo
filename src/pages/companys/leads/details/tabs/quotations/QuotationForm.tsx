@@ -54,6 +54,7 @@ const quotationItemSchema = z.object({
   fragrance_name: optionalText,
   category_id: optionalText.nullable(),
   category_name: optionalText,
+  image_url: optionalText,
 });
 
 export const quotationSchema = z.object({
@@ -163,6 +164,7 @@ const QuotationForm = ({
             fragrance_name: "",
             category_id: null,
             category_name: "",
+            image_url: "",
           },
         ],
         amount_in_words: "",
@@ -308,6 +310,9 @@ const QuotationForm = ({
         ...data,
         quotation_date:
           formatDateForAPI(data.quotation_date) || data.quotation_date,
+        items: data.items.map((item) => ({
+          ...item,
+        })),
       },
       form.setError,
     );

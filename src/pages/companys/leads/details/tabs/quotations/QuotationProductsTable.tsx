@@ -7,7 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Plus, Trash2, Scan, AlertCircle, Info } from "lucide-react";
+import {
+  Package,
+  Plus,
+  Trash2,
+  Scan,
+  AlertCircle,
+  Info,
+  Image as ImageIcon,
+  X,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 import { QuotationFormData } from "./QuotationForm";
@@ -26,6 +35,7 @@ export const QuotationProductsTable = () => {
   const [scanValue, setScanValue] = useState("");
   const [selectedKitId, setSelectedKitId] = useState<string | null>(null);
   const [isKitViewOpen, setIsKitViewOpen] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const debouncedFgSearch = useDebounce(fgSearch, 300);
 
   const { data: allItems = [], isLoading: isLoadingItems } = useAllProducts({
@@ -59,6 +69,7 @@ export const QuotationProductsTable = () => {
         category_name: "",
         gst_percentage: 18,
         gst_amount: 0,
+        image_url: "",
       });
     },
     [appendItem],
@@ -148,6 +159,7 @@ export const QuotationProductsTable = () => {
         category_name: p.category_name || "",
         gst_percentage: 18,
         gst_amount: (p.selling_price || 0) * 0.18,
+        image_url: p.image_url || "",
       });
     } else {
       const k = item.original;
@@ -167,6 +179,7 @@ export const QuotationProductsTable = () => {
         category_name: "",
         gst_percentage: 18,
         gst_amount: (k.kit_price || 0) * 0.18,
+        image_url: k.kit_image_url || k.kit_image || "",
       });
     }
   };
@@ -200,6 +213,7 @@ export const QuotationProductsTable = () => {
             <table className="w-full text-left border-collapse">
               <thead className="bg-muted/5 border-b border-border/20 text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
                 <tr>
+                  <th className="w-[50px] px-2 py-2">Img</th>
                   <th className="min-w-[100px] px-2 py-2">Code</th>
                   <th className="min-w-[200px] px-2 py-2">Item</th>
                   <th className="min-w-[200px] px-2 py-2">Description</th>
@@ -216,6 +230,26 @@ export const QuotationProductsTable = () => {
                     key={field.id}
                     className="hover:bg-muted/5 transition-colors group"
                   >
+                    <td className="px-2 py-1.5">
+                      <div className="h-16 w-16 rounded-sm bg-muted/20 border border-border/10 overflow-hidden flex items-center justify-center group/img relative">
+                        {watch(`items.${index}.image_url`) ? (
+                          <>
+                            <img
+                              src={watch(`items.${index}.image_url`)}
+                              alt="Item"
+                              className="w-full h-full object-cover cursor-zoom-in"
+                              onClick={() =>
+                                setLightboxUrl(
+                                  watch(`items.${index}.image_url`),
+                                )
+                              }
+                            />
+                          </>
+                        ) : (
+                          <ImageIcon className="h-4 w-4 text-muted-foreground/30" />
+                        )}
+                      </div>
+                    </td>
                     <td className="px-2 py-1.5  text-xs font-bold text-muted-foreground/40">
                       <Input
                         {...register(`items.${index}.item_code` as const)}
@@ -418,6 +452,33 @@ export const QuotationProductsTable = () => {
         onClose={() => setIsKitViewOpen(false)}
         kitId={selectedKitId || undefined}
       />
+
+      {/* Lightbox Preview - High Fidelity Style */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 pointer-events-auto"
+          style={{ zIndex: 1000001 }}
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            type="button"
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <div
+            className="max-w-[90vw] max-h-[90vh] bg-white rounded-sm overflow-hidden shadow-2xl relative animate-in zoom-in duration-500 delay-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={lightboxUrl}
+              alt="Item Preview"
+              className="max-w-full max-h-[85vh] object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

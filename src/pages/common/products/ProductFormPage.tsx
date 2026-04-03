@@ -912,7 +912,7 @@ const ProductFormPage = () => {
                       size="sm"
                       className="h-7 text-xs rounded-sm"
                       onClick={tabProps.images.openModal}
-                      disabled={isNew || isSaving}
+                      disabled={isNew || isSaving || !isEditing}
                     >
                       <UploadCloud className="h-3 w-3 mr-1" />
                       Add Photos
@@ -936,7 +936,7 @@ const ProductFormPage = () => {
                         size="sm"
                         className="h-7 text-xs rounded-sm mt-1"
                         onClick={tabProps.images.openModal}
-                        disabled={isNew || isSaving}
+                        disabled={isNew || isSaving || !isEditing}
                       >
                         <UploadCloud className="h-3 w-3 mr-1" /> Upload first
                         image
@@ -981,24 +981,26 @@ const ProductFormPage = () => {
                           ) + 1}{" "}
                           / {tabProps.images.previews.length}
                         </span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const idx = Math.min(
-                              tabProps.images.slideIdx,
-                              tabProps.images.previews.length - 1,
-                            );
-                            tabProps.images.deletePhoto(
-                              tabProps.images.previews[idx].id,
-                              idx,
-                            );
-                            if (idx > 0) tabProps.images.setSlideIdx(idx - 1);
-                          }}
-                          className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        {isEditing && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const idx = Math.min(
+                                tabProps.images.slideIdx,
+                                tabProps.images.previews.length - 1,
+                              );
+                              tabProps.images.deletePhoto(
+                                tabProps.images.previews[idx].id,
+                                idx,
+                              );
+                              if (idx > 0) tabProps.images.setSlideIdx(idx - 1);
+                            }}
+                            className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
                           <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-60 transition-opacity" />
                         </div>

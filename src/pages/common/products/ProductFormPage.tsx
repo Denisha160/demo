@@ -523,7 +523,7 @@ const ProductFormPage = () => {
                 </div>
 
                 {/* Pricing Grid underneath basic grid */}
-                <div className="pt-4 border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                <div className="border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="cost_price"

@@ -1,6 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import QuotationForm, { QuotationFormData } from "./QuotationForm";
+import QuotationForm, {
+  Quotation as FormQuotation,
+  QuotationFormData,
+} from "./QuotationForm";
 import { UseFormSetError } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
@@ -11,22 +14,25 @@ import {
 } from "@/hooks/useQuotations";
 import {
   QuotationCreatePayload,
-  QuotationItem,
+  Quotation,
   QuotationUpdatePayload,
 } from "@/types/quotations";
 import { formatDate } from "@/utils/date";
 
-type QuotationApiItem = QuotationItem & {
+type QuotationApiItem = Quotation["items"][number] & {
+  amount?: number;
   gst?: number;
   tax_amount?: number;
+  images?: string[];
+  image_url?: string | null;
 };
 
-type QuotationApiData = {
+type QuotationApiData = Quotation & {
   quotation_date: string;
   tax_total?: number;
   total_tax_amount?: number;
   items?: QuotationApiItem[];
-} & Record<string, unknown>;
+};
 
 const QuotationPage = () => {
   const { companyId, id: leadId, quotationId } = useParams();
@@ -41,21 +47,23 @@ const QuotationPage = () => {
 
   const isSubmitting = isCreating || isUpdating;
 
-  const initialData = useMemo(() => {
+  const initialData = useMemo<FormQuotation | undefined>(() => {
     if (!quotationData) return undefined;
 
-    const rawData = quotationData as QuotationApiData;
+    const rawData = quotationData as unknown as QuotationApiData;
+    const rawItems = (quotationData.items as QuotationApiItem[] | undefined) || [];
 
-    // Map items from total_amount to amount if needed
-    const mappedItems = rawData.items?.map((item) => ({
-      ...item,
-      amount: item.amount || 0,
-      gst_percentage: item.gst_percentage || item.gst || 18,
-      gst_amount: item.gst_amount || item.tax_amount || 0,
-      type: item.kit_id ? "kit" : "product",
-      image_url: item.image_url || "",
-      images: item.images || [],
-    }));
+    const mappedItems: QuotationFormData["items"] = rawItems.map(
+      (item: QuotationApiItem) => ({
+        ...item,
+        amount: item.amount || 0,
+        gst_percentage: item.gst_percentage || item.gst || 18,
+        gst_amount: item.gst_amount || item.tax_amount || 0,
+        type: item.kit_id ? "kit" : ("product" as const),
+        image_url: item.image_url || "",
+        images: item.images || [],
+      }),
+    );
 
     return {
       ...rawData,

@@ -157,21 +157,29 @@ export const QuotationProductsTable = () => {
     }
   };
 
-  const applySelectedItem = (
+  const buildItemImages = (
+    item: SelectableItem,
+    selectedImages: string[],
+  ) => {
+    const normalizedSelectedImages = selectedImages
+      .map(normalizeImageUrl)
+      .filter(Boolean);
+    const defaultImage = normalizeImageUrl(item.type === "kit" ? item.image_url : "");
+
+    return [
+      ...(defaultImage ? [defaultImage] : []),
+      ...normalizedSelectedImages,
+    ].filter((image, imageIndex, imageList) => imageList.indexOf(image) === imageIndex);
+  };
+
+  const populateRowDetails = (
     index: number,
     item: SelectableItem,
     selectedImages: string[],
   ) => {
     const currentItems = getValues("items") || [];
     const currentRow = currentItems[index];
-    const normalizedSelectedImages = selectedImages
-      .map(normalizeImageUrl)
-      .filter(Boolean);
-    const defaultImage = normalizeImageUrl(item.type === "kit" ? item.image_url : "");
-    const normalizedImages = [
-      ...(defaultImage ? [defaultImage] : []),
-      ...normalizedSelectedImages,
-    ].filter((image, imageIndex, imageList) => imageList.indexOf(image) === imageIndex);
+    const normalizedImages = buildItemImages(item, selectedImages);
     const quantity = currentRow?.quantity || 1;
 
     if (item.type === "product") {
@@ -232,6 +240,29 @@ export const QuotationProductsTable = () => {
     });
   };
 
+  const openImagePicker = (index: number, item: SelectableItem) => {
+    const currentItems = getValues("items") || [];
+    const selectableImages = (item.images || []).filter(Boolean);
+
+    if (selectableImages.length === 0) {
+      return;
+    }
+
+    const defaultImage = normalizeImageUrl(item.type === "kit" ? item.image_url : "");
+    const currentSelectedImages = (
+      (currentItems[index]?.images as string[] | undefined) || []
+    )
+      .map(normalizeImageUrl)
+      .filter((image) => Boolean(image) && image !== defaultImage);
+
+    setImagePickerState({
+      index,
+      item,
+      images: selectableImages,
+      selectedImages: currentSelectedImages,
+    });
+  };
+
   const handleSelectItemInline = (index: number, itemId: string) => {
     if (!itemId) {
       return;
@@ -257,26 +288,19 @@ export const QuotationProductsTable = () => {
       return;
     }
 
-    const selectableImages = (item.images || []).filter(Boolean);
+    populateRowDetails(index, item, []);
+    openImagePicker(index, item);
+  };
 
-    if (selectableImages.length === 0) {
-      applySelectedItem(index, item, []);
-      return;
-    }
+  const handleEditImages = (index: number) => {
+    const row = getValues(`items.${index}`);
+    const itemId = row.type === "kit" ? row.kit_id : row.product_id;
+    if (!itemId) return;
 
-    const defaultImage = normalizeImageUrl(item.type === "kit" ? item.image_url : "");
-    const currentSelectedImages = (
-      (currentItems[index]?.images as string[] | undefined) || []
-    )
-      .map(normalizeImageUrl)
-      .filter((image) => Boolean(image) && image !== defaultImage);
+    const item = allItems.find((entry) => entry.id === itemId);
+    if (!item) return;
 
-    setImagePickerState({
-      index,
-      item,
-      images: selectableImages,
-      selectedImages: currentSelectedImages,
-    });
+    openImagePicker(index, item);
   };
 
   const nextImage = (e?: React.MouseEvent) => {
@@ -341,56 +365,55 @@ export const QuotationProductsTable = () => {
                   >
                     <td className="px-2 py-1.5">
                       {(() => {
-                        const selectedImages = (
+                        const finalImages = (
                           watch(`items.${index}.images`) || []
                         ).map(normalizeImageUrl);
-                        const finalImages = selectedImages;
 
                         return (
-                      <div
-                        className="h-16 w-16 rounded-sm bg-muted/20 border border-border/10 overflow-hidden flex items-center justify-center group/img relative cursor-zoom-in"
-                        onClick={() => {
-                          if (finalImages.length > 0) {
-                            setGalleryImages(finalImages);
-                            setGalleryIndex(0);
-                          }
-                        }}
-                      >
-                        {finalImages.length > 0 ? (
-                          <>
-                            <div className="grid h-full w-full grid-cols-2 gap-px bg-border/10">
-                              {finalImages.slice(0, 4).map((image, imageIdx) => (
-                                <div
-                                  key={`${image}-${imageIdx}`}
-                                  className="relative overflow-hidden bg-muted/10"
-                                >
-                                  <img
-                                    src={image}
-                                    alt={`Item ${imageIdx + 1}`}
-                                    className="h-full w-full object-cover"
-                                  />
-                                  {imageIdx === 3 && finalImages.length > 4 && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/55">
-                                      <span className="text-[10px] font-black tracking-widest text-white">
-                                        +{finalImages.length - 4}
-                                      </span>
+                          <div
+                            className="h-16 w-16 rounded-sm bg-muted/20 border border-border/10 overflow-hidden flex items-center justify-center group/img relative cursor-zoom-in"
+                            onClick={() => {
+                              if (finalImages.length > 0) {
+                                setGalleryImages(finalImages);
+                                setGalleryIndex(0);
+                              }
+                            }}
+                          >
+                            {finalImages.length > 0 ? (
+                              <>
+                                <div className="grid h-full w-full grid-cols-2 gap-px bg-border/10">
+                                  {finalImages.slice(0, 4).map((image, imageIdx) => (
+                                    <div
+                                      key={`${image}-${imageIdx}`}
+                                      className="relative overflow-hidden bg-muted/10"
+                                    >
+                                      <img
+                                        src={image}
+                                        alt={`Item ${imageIdx + 1}`}
+                                        className="h-full w-full object-cover"
+                                      />
+                                      {imageIdx === 3 && finalImages.length > 4 && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/55">
+                                          <span className="text-[10px] font-black tracking-widest text-white">
+                                            +{finalImages.length - 4}
+                                          </span>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
+                                  ))}
                                 </div>
-                              ))}
-                            </div>
-                            {finalImages.length > 1 && (
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
-                                <span className="text-white text-[10px] font-black tracking-widest">
-                                  {finalImages.length} IMAGES
-                                </span>
-                              </div>
+                                {finalImages.length > 1 && (
+                                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                    <span className="text-white text-[10px] font-black tracking-widest">
+                                      {finalImages.length} IMAGES
+                                    </span>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <ImageIcon className="h-4 w-4 text-muted-foreground/30" />
                             )}
-                          </>
-                        ) : (
-                          <ImageIcon className="h-4 w-4 text-muted-foreground/30" />
-                        )}
-                      </div>
+                          </div>
                         );
                       })()}
                     </td>
@@ -522,16 +545,32 @@ export const QuotationProductsTable = () => {
                     </td>
 
                     <td className="px-2 py-1.5">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={itemFields.length <= 1}
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-                        onClick={() => removeItem(index)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={
+                            !watch(`items.${index}.product_id`) &&
+                            !watch(`items.${index}.kit_id`)
+                          }
+                          className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                          onClick={() => handleEditImages(index)}
+                          title="Manage Images"
+                        >
+                          <ImageIcon className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={itemFields.length <= 1}
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                          onClick={() => removeItem(index)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -601,7 +640,7 @@ export const QuotationProductsTable = () => {
               Select Product Image
             </DialogTitle>
             <DialogDescription>
-              Choose the image to show for this item in the quotation.
+              Select or unselect images for this item. Closing without saving keeps the current row details.
             </DialogDescription>
           </DialogHeader>
 
@@ -615,9 +654,8 @@ export const QuotationProductsTable = () => {
                   <Button
                     type="button"
                     size="sm"
-                    disabled={imagePickerState.selectedImages.length === 0}
                     onClick={() => {
-                      applySelectedItem(
+                      populateRowDetails(
                         imagePickerState.index,
                         imagePickerState.item,
                         imagePickerState.selectedImages,

@@ -20,9 +20,15 @@ interface KitsTabProps {
   productId?: string;
   productType?: string;
   isNew: boolean;
+  disabled?: boolean;
 }
 
-export const KitsTab = ({ productId, productType, isNew }: KitsTabProps) => {
+export const KitsTab = ({
+  productId,
+  productType,
+  isNew,
+  disabled,
+}: KitsTabProps) => {
   const [kitSearch, setKitSearch] = useState("");
   const debouncedKitSearch = useDebounce(kitSearch, 300);
   const [selectedKitId, setSelectedKitId] = useState<string>("");
@@ -101,7 +107,7 @@ export const KitsTab = ({ productId, productType, isNew }: KitsTabProps) => {
             onClick={() =>
               disassociate({ kit_id: item.id!, product_id: productId! })
             }
-            disabled={isDisassociating}
+            disabled={disabled || isDisassociating}
             className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -159,6 +165,7 @@ export const KitsTab = ({ productId, productType, isNew }: KitsTabProps) => {
                 searchValue={kitSearch}
                 onSearchChange={setKitSearch}
                 className="h-9 text-xs"
+                disabled={disabled}
               />
             </div>
             <div className="flex-1 w-full lg:w-[120px] space-y-1.5">
@@ -174,6 +181,7 @@ export const KitsTab = ({ productId, productType, isNew }: KitsTabProps) => {
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="1.00"
                   className="h-9 text-xs font-mono pr-7"
+                  disabled={disabled}
                 />
                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-muted-foreground uppercase">
                   Unit
@@ -183,7 +191,7 @@ export const KitsTab = ({ productId, productType, isNew }: KitsTabProps) => {
             <Button
               type="button"
               onClick={handleAdd}
-              disabled={!selectedKitId || isAssociating}
+              disabled={disabled || !selectedKitId || isAssociating}
               className="h-9 px-5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20 group transition-all"
             >
               {isAssociating ? (

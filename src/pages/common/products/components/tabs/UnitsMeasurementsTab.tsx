@@ -19,9 +19,13 @@ import { UseFormReturn } from "react-hook-form";
 
 interface UnitsMeasurementsTabProps {
   form: UseFormReturn<any>;
+  disabled?: boolean;
 }
 
-export const UnitsMeasurementsTab = ({ form }: UnitsMeasurementsTabProps) => {
+export const UnitsMeasurementsTab = ({
+  form,
+  disabled,
+}: UnitsMeasurementsTabProps) => {
   const watchUnitCategory = form.watch("unit_category");
   const watchBaseUnit = form.watch("base_unit");
   const watchProductType = form.watch("product_type");

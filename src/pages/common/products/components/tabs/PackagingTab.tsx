@@ -22,12 +22,14 @@ interface PackagingTabProps {
     };
   };
   packageModal: { setOpen: (v: boolean) => void };
+  disabled?: boolean;
 }
 
 export const PackagingTab = ({
   form,
   comboboxes,
   packageModal,
+  disabled,
 }: PackagingTabProps) => {
   const watchProductType = form.watch("product_type");
 
@@ -63,17 +65,20 @@ export const PackagingTab = ({
                   clearable
                   searchValue={comboboxes.package.search}
                   onSearchChange={comboboxes.package.setSearch}
+                  disabled={disabled}
                 />
               </FormControl>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
-                onClick={() => packageModal.setOpen(true)}
-              >
-                <Plus className="h-3 w-3" /> Add New Package
-              </Button>
+              {!disabled && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5 gap-1"
+                  onClick={() => packageModal.setOpen(true)}
+                >
+                  <Plus className="h-3 w-3" /> Add New Package
+                </Button>
+              )}
               <FormMessage className="text-[10px]" />
             </FormItem>
           )}
@@ -93,6 +98,7 @@ export const PackagingTab = ({
                   className="text-sm h-10"
                   {...field}
                   value={field.value ?? ""}
+                  disabled={disabled}
                 />
               </FormControl>
               <FormMessage className="text-[10px]" />
@@ -114,6 +120,7 @@ export const PackagingTab = ({
                   className="text-sm h-10"
                   {...field}
                   value={field.value ?? ""}
+                  disabled={disabled}
                 />
               </FormControl>
               <FormMessage className="text-[10px]" />
@@ -135,6 +142,7 @@ export const PackagingTab = ({
                   className="text-sm h-10"
                   {...field}
                   value={field.value ?? ""}
+                  disabled={disabled}
                 />
               </FormControl>
               <FormMessage className="text-[10px]" />

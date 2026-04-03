@@ -31,9 +31,13 @@ interface SpecificationsTabProps {
       val: KeyValuePair[] | ((prev: KeyValuePair[]) => KeyValuePair[]),
     ) => void;
   };
+  disabled?: boolean;
 }
 
-export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
+export const SpecificationsTab = ({
+  metadata,
+  disabled,
+}: SpecificationsTabProps) => {
   const {
     metaColors,
     setMetaColors,
@@ -91,6 +95,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
               size="sm"
               onClick={() => setMetaColors((prev: string[]) => [...prev, ""])}
               className="h-6 px-2 text-[10px] uppercase tracking-wider"
+              disabled={disabled}
             >
               <Plus className="w-3 h-3 mr-1" /> Add Color
             </Button>
@@ -108,6 +113,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   }
                   placeholder="e.g. White, Red, Blue"
                   className="text-sm flex-1 min-w-0"
+                  disabled={disabled}
                 />
                 <Button
                   type="button"
@@ -115,7 +121,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   size="icon"
                   onClick={() => removeArrayItem(setMetaColors, idx)}
                   className="text-muted-foreground hover:text-destructive shrink-0"
-                  disabled={metaColors.length === 1 && !color}
+                  disabled={disabled || (metaColors.length === 1 && !color)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -136,6 +142,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
               size="sm"
               onClick={() => setMetaFeatures((prev: string[]) => [...prev, ""])}
               className="h-6 px-2 text-[10px] uppercase tracking-wider"
+              disabled={disabled}
             >
               <Plus className="w-3 h-3 mr-1" /> Add Feature
             </Button>
@@ -153,6 +160,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   }
                   placeholder="e.g. Eco-friendly, Water-resistant"
                   className="text-sm flex-1 min-w-0"
+                  disabled={disabled}
                 />
                 <Button
                   type="button"
@@ -160,7 +168,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   size="icon"
                   onClick={() => removeArrayItem(setMetaFeatures, idx)}
                   className="text-muted-foreground hover:text-destructive shrink-0"
-                  disabled={metaFeatures.length === 1 && !feature}
+                  disabled={disabled || (metaFeatures.length === 1 && !feature)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -186,6 +194,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                 ])
               }
               className="h-6 px-2 text-[10px] uppercase tracking-wider"
+              disabled={disabled}
             >
               <Plus className="w-3 h-3 mr-1" /> Add Parameter
             </Button>
@@ -200,6 +209,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   }
                   placeholder="Key (e.g. Wattage)"
                   className="text-sm flex-1 min-w-0"
+                  disabled={disabled}
                 />
                 <Input
                   value={param.value}
@@ -213,6 +223,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   }
                   placeholder="Value (e.g. 100W)"
                   className="text-sm flex-1 min-w-0"
+                  disabled={disabled}
                 />
                 <Button
                   type="button"
@@ -221,7 +232,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   onClick={() => removeObjectItem(setMetaParams, idx)}
                   className="text-muted-foreground hover:text-destructive shrink-0"
                   disabled={
-                    metaParams.length === 1 && !param.key && !param.value
+                    disabled || (metaParams.length === 1 && !param.key && !param.value)
                   }
                 >
                   <Trash2 className="h-4 w-4" />
@@ -248,6 +259,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                 ])
               }
               className="h-6 px-2 text-[10px] uppercase tracking-wider"
+              disabled={disabled}
             >
               <Plus className="w-3 h-3 mr-1" /> Add Attribute
             </Button>
@@ -262,6 +274,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   }
                   placeholder="Key (e.g. Material)"
                   className="text-sm flex-1 min-w-0"
+                  disabled={disabled}
                 />
                 <Input
                   value={attr.value}
@@ -270,6 +283,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   }
                   placeholder="Value (e.g. Cotton)"
                   className="text-sm flex-1 min-w-0"
+                  disabled={disabled}
                 />
                 <Button
                   type="button"
@@ -277,7 +291,7 @@ export const SpecificationsTab = ({ metadata }: SpecificationsTabProps) => {
                   size="icon"
                   onClick={() => removeObjectItem(setMetaAttrs, idx)}
                   className="text-muted-foreground hover:text-destructive shrink-0"
-                  disabled={metaAttrs.length === 1 && !attr.key && !attr.value}
+                  disabled={disabled || (metaAttrs.length === 1 && !attr.key && !attr.value)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

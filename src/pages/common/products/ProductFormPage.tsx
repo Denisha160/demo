@@ -41,6 +41,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Combobox } from "@/components/ui/combobox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 
 import { CategoryDrawer } from "@/components/Drawers/CategoryDrawer";
 import { FragranceDrawer } from "@/components/Drawers/FragranceDrawer";
@@ -139,13 +140,12 @@ const ProductFormPage = () => {
     refetch,
   } = useProduct(isNew ? undefined : id);
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
-  const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
+  const { mutate: updateProduct, mutateAsync: updateProductAsync, isPending: isUpdating } = useUpdateProduct();
   const { mutate: deletePhoto } = useDeleteProductPhoto();
 
   const isRoot = currentUser?.is_root_user || false;
   const isSaving = isCreating || isUpdating;
-
-  // --- State Initialization ---
+  const [isEditing, setIsEditing] = useState(isNew);
   const [activeTab, setActiveTab] = useState("measurements");
   const [showSecretInput, setShowSecretInput] = useState(false);
   const productNameRef = useRef<HTMLInputElement>(null);
@@ -196,6 +196,18 @@ const ProductFormPage = () => {
   const [metaAttributes, setMetaAttributes] = useState<
     { key: string; value: string }[]
   >([{ key: "", value: "" }]);
+
+  const handleStatusChange = async (active: boolean) => {
+    if (!id) return;
+    try {
+      await updateProductAsync({
+        id,
+        is_active: active,
+      });
+    } catch (error) {
+      form.setValue("is_active", !active);
+    }
+  };
 
   // React Hook Form
   const form = useForm<ProductFormValues>({
@@ -281,17 +293,17 @@ const ProductFormPage = () => {
       setMetaParams(
         meta.parameters
           ? Object.entries(meta.parameters).map(([k, v]) => ({
-              key: k,
-              value: String(v),
-            }))
+            key: k,
+            value: String(v),
+          }))
           : [{ key: "", value: "" }],
       );
       setMetaAttributes(
         meta.attributes
           ? Object.entries(meta.attributes).map(([k, v]) => ({
-              key: k,
-              value: String(v),
-            }))
+            key: k,
+            value: String(v),
+          }))
           : [{ key: "", value: "" }],
       );
 
@@ -427,34 +439,73 @@ const ProductFormPage = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => navigate(-1)}
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              form="product-form"
-              className="h-8 text-xs rounded-sm"
-              size="sm"
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Package className="h-4 w-4 mr-2" />
-              )}
-              {isSaving
-                ? "Saving..."
-                : isNew
-                  ? "Create Product"
-                  : "Update Changes"}
-            </Button>
+            {!isNew && (
+              <div className="flex items-center gap-3 bg-muted/20 px-3 py-1.5 rounded-full border border-border/50">
+                <Label
+                  htmlFor="product-status"
+                  className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mr-1"
+                >
+                  {form.watch("is_active") ? "Active" : "Inactive"}
+                </Label>
+                <Switch
+                  id="product-status"
+                  checked={form.watch("is_active")}
+                  onCheckedChange={(checked) => {
+                    form.setValue("is_active", checked, {
+                      shouldDirty: true,
+                    });
+                    if (!isEditing) {
+                      handleStatusChange(checked);
+                    }
+                  }}
+                  className="data-[state=checked]:bg-emerald-500"
+                />
+              </div>
+            )}
+
+            {!isNew && !isEditing ? (
+              <Button
+                type="button"
+                className="h-8 text-xs rounded-sm"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+              >
+                Edit Product
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() =>
+                    isNew ? navigate(-1) : setIsEditing(false)
+                  }
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  form="product-form"
+                  className="h-8 text-xs rounded-sm"
+                  size="sm"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Package className="h-4 w-4 mr-2" />
+                  )}
+                  {isSaving
+                    ? "Saving..."
+                    : isNew
+                      ? "Create Product"
+                      : "Update Changes"}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -508,6 +559,7 @@ const ProductFormPage = () => {
                               placeholder="Enter product name"
                               autoFocus={true}
                               className="text-sm"
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage className="text-[10px]" />
@@ -525,6 +577,7 @@ const ProductFormPage = () => {
                                     value={sField.value || ""}
                                     placeholder="Backend/Secret name"
                                     className="text-sm mt-1 border-primary/30"
+                                    disabled={!isEditing}
                                   />
                                 </div>
                               )}
@@ -549,16 +602,19 @@ const ProductFormPage = () => {
                             placeholder="Select category..."
                             searchValue={categorySearch}
                             onSearchChange={setCategorySearch}
+                            disabled={!isEditing}
                           />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
-                            onClick={() => setIsCategoryDrawerOpen(true)}
-                          >
-                            <Plus className="h-3 w-3" /> Add New Category
-                          </Button>
+                          {isEditing && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
+                              onClick={() => setIsCategoryDrawerOpen(true)}
+                            >
+                              <Plus className="h-3 w-3" /> Add New Category
+                            </Button>
+                          )}
                           <FormMessage className="text-[10px]" />
                         </FormItem>
                       )}
@@ -581,6 +637,7 @@ const ProductFormPage = () => {
                               value={field.value || ""}
                               placeholder="DEMO"
                               className="text-sm"
+                              disabled={!isEditing}
                             />
                           </FormControl>
                           <FormMessage className="text-[10px]" />
@@ -603,6 +660,7 @@ const ProductFormPage = () => {
                               }
                               value={field.value ? "yes" : "no"}
                               className="flex items-center gap-3"
+                              disabled={!isEditing}
                             >
                               <div className="flex items-center space-x-1.5">
                                 <RadioGroupItem value="yes" id="brand-yes" />
@@ -640,6 +698,7 @@ const ProductFormPage = () => {
                                 value={field.value || ""}
                                 placeholder="e.g. 3401.19"
                                 className="text-sm"
+                                disabled={!isEditing}
                               />
                             </FormControl>
                             <FormMessage className="text-[10px]" />
@@ -662,6 +721,7 @@ const ProductFormPage = () => {
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
+                            disabled={!isEditing}
                           >
                             <FormControl>
                               <SelectTrigger className="text-sm">
@@ -710,16 +770,19 @@ const ProductFormPage = () => {
                               placeholder="Select fragrance..."
                               searchValue={fragranceSearch}
                               onSearchChange={setFragranceSearch}
+                              disabled={!isEditing}
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
-                              onClick={() => setIsFragranceDrawerOpen(true)}
-                            >
-                              <Plus className="h-3 w-3" /> Add New Fragrance
-                            </Button>
+                            {isEditing && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
+                                onClick={() => setIsFragranceDrawerOpen(true)}
+                              >
+                                <Plus className="h-3 w-3" /> Add New Fragrance
+                              </Button>
+                            )}
                             <FormMessage className="text-[10px]" />
                           </FormItem>
                         )}
@@ -739,17 +802,19 @@ const ProductFormPage = () => {
                               placeholder="Select brand..."
                               searchValue={brandSearch}
                               onSearchChange={setBrandSearch}
-                              disabled={!form.watch("is_brand")}
+                              disabled={!isEditing || !form.watch("is_brand")}
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
-                              onClick={() => setIsBrandDrawerOpen(true)}
-                            >
-                              <Plus className="h-3 w-3" /> Add New Brand
-                            </Button>
+                            {isEditing && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-1 text-[10px] text-primary hover:text-primary hover:bg-primary/5 mt-0.5 gap-1"
+                                onClick={() => setIsBrandDrawerOpen(true)}
+                              >
+                                <Plus className="h-3 w-3" /> Add New Brand
+                              </Button>
+                            )}
                             <FormMessage className="text-[10px]" />
                           </FormItem>
                         )}
@@ -786,6 +851,7 @@ const ProductFormPage = () => {
                             }
                             className="text-sm pl-7"
                             placeholder="0.00"
+                            disabled={!isEditing}
                           />
                         </div>
                         <FormMessage className="text-[10px]" />
@@ -818,6 +884,7 @@ const ProductFormPage = () => {
                             }
                             className="text-sm pl-7"
                             placeholder="0.00"
+                            disabled={!isEditing}
                           />
                         </div>
                         <FormMessage className="text-[10px]" />
@@ -888,12 +955,11 @@ const ProductFormPage = () => {
                               )
                             ].url
                           }
-                          alt={`Product image ${
-                            Math.min(
-                              tabProps.images.slideIdx,
-                              tabProps.images.previews.length - 1,
-                            ) + 1
-                          }`}
+                          alt={`Product image ${Math.min(
+                            tabProps.images.slideIdx,
+                            tabProps.images.previews.length - 1,
+                          ) + 1
+                            }`}
                           className="w-full object-cover"
                           style={{ minHeight: 160, maxHeight: 200 }}
                           onClick={() =>
@@ -973,15 +1039,14 @@ const ProductFormPage = () => {
                               key={i}
                               type="button"
                               onClick={() => tabProps.images.setSlideIdx(i)}
-                              className={`rounded-full transition-all ${
-                                i ===
+                              className={`rounded-full transition-all ${i ===
                                 Math.min(
                                   tabProps.images.slideIdx,
                                   tabProps.images.previews.length - 1,
                                 )
-                                  ? "bg-primary w-3 h-1.5"
-                                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
-                              }`}
+                                ? "bg-primary w-3 h-1.5"
+                                : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
+                                }`}
                             />
                           ))}
                         </div>
@@ -1046,7 +1111,10 @@ const ProductFormPage = () => {
                     value="measurements"
                     className="m-0 focus-visible:outline-none"
                   >
-                    <UnitsMeasurementsTab form={form} />
+                    <UnitsMeasurementsTab
+                      form={form}
+                      disabled={!isEditing}
+                    />
                   </TabsContent>
 
                   <TabsContent
@@ -1057,6 +1125,7 @@ const ProductFormPage = () => {
                       form={form}
                       comboboxes={comboboxes}
                       packageModal={{ setOpen: setIsPackageModalOpen }}
+                      disabled={!isEditing}
                     />
                   </TabsContent>
 
@@ -1075,6 +1144,7 @@ const ProductFormPage = () => {
                         metaAttrs: metaAttributes,
                         setMetaAttrs: setMetaAttributes,
                       }}
+                      disabled={!isEditing}
                     />
                   </TabsContent>
 
@@ -1086,6 +1156,7 @@ const ProductFormPage = () => {
                       productId={id}
                       productType={form.watch("product_type")}
                       isNew={isNew}
+                      disabled={!isEditing}
                     />
                   </TabsContent>
 
@@ -1098,6 +1169,7 @@ const ProductFormPage = () => {
                       productType={form.watch("product_type")}
                       isNew={isNew}
                       sellingPrice={Number(form.watch("selling_price") || 0)}
+                      disabled={!isEditing}
                     />
                   </TabsContent>
                 </div>

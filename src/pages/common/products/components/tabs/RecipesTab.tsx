@@ -10,6 +10,7 @@ interface RecipesTabProps {
   productType?: string;
   isNew: boolean;
   sellingPrice: number;
+  disabled?: boolean;
 }
 
 export const RecipesTab = ({
@@ -17,6 +18,7 @@ export const RecipesTab = ({
   productType,
   isNew,
   sellingPrice,
+  disabled,
 }: RecipesTabProps) => {
   const [isBomModalOpen, setIsBomModalOpen] = useState(false);
   const { data: bom, isLoading } = useBOMDetails(isNew ? undefined : productId);
@@ -69,8 +71,8 @@ export const RecipesTab = ({
         </div>
       ) : !bom || !bom.raw_materials || bom.raw_materials.length === 0 ? (
         <div
-          className="flex flex-col items-center justify-center p-12 text-center bg-muted/5 rounded-sm border border-dashed border-border group hover:bg-muted/10 transition-all cursor-pointer"
-          onClick={() => setIsBomModalOpen(true)}
+          className={`flex flex-col items-center justify-center p-12 text-center bg-muted/5 rounded-sm border border-dashed border-border transition-all ${!disabled ? "group hover:bg-muted/10 cursor-pointer" : "cursor-default"}`}
+          onClick={() => !disabled && setIsBomModalOpen(true)}
         >
           <div className="h-12 w-12 bg-primary/5 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
             <Plus className="h-6 w-6 text-primary/40" />
@@ -136,6 +138,7 @@ export const RecipesTab = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setIsBomModalOpen(true)}
+                disabled={disabled}
                 className="h-7 text-[10px] font-bold uppercase tracking-wider border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
               >
                 {bom ? "Manage Recipe" : "Create Recipe"}

@@ -159,15 +159,6 @@ const ProductsPage = () => {
   const items = listResponse?.items || [];
   const totalItems = listResponse?.pagination?.total || 0;
 
-  const { mutate: updateProduct } = useUpdateProduct();
-
-  const handleStatusToggle = (product: Product) => {
-    updateProduct({
-      id: product.id,
-      is_active: !product.is_active,
-    });
-  };
-
   const columns: Column<Product>[] = [
     {
       key: "product_name",
@@ -182,8 +173,18 @@ const ProductsPage = () => {
             <p className="font-medium text-sm group-hover:text-primary transition-colors">
               {item.product_name}
             </p>
-            <span className="text-sm">{item.brand_name}</span>
-            <span className="text-sm">{item.fragrance_name}</span>
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+              {item.brand_name && (
+                <span className="bg-muted px-1.5 py-0.5 rounded-sm">
+                  {item.brand_name}
+                </span>
+              )}
+              {item.fragrance_name && (
+                <span className="bg-primary/5 text-primary px-1.5 py-0.5 rounded-sm">
+                  {item.fragrance_name}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ),
@@ -205,6 +206,11 @@ const ProductsPage = () => {
       render: (item) => (
         <span className="text-sm">{item.category_name || "—"}</span>
       ),
+    },
+    {
+      key: "code",
+      header: "Code",
+      render: (item) => <span className="text-sm">{item.code || "—"}</span>,
     },
     {
       key: "base_unit",
@@ -247,24 +253,6 @@ const ProductsPage = () => {
             <span className="text-foreground font-medium">
               {item.selling_price || 0}
             </span>
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "is_active",
-      header: "Status",
-      render: (item) => (
-        <div
-          className="flex items-center gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Switch
-            checked={item.is_active}
-            onCheckedChange={() => handleStatusToggle(item)}
-          />
-          <span className="text-[10px] font-medium text-muted-foreground">
-            {item.is_active ? "Active" : "Inactive"}
           </span>
         </div>
       ),
@@ -329,22 +317,7 @@ const ProductsPage = () => {
             />
           </div>
 
-          <Select
-            value={statusFilter}
-            onValueChange={(val) => {
-              setStatusFilter(val);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[100px] h-8 text-xs rounded-sm">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
+
 
           <div className="w-[180px]">
             <Combobox

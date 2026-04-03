@@ -297,17 +297,17 @@ const ProductFormPage = () => {
       setMetaParams(
         meta.parameters
           ? Object.entries(meta.parameters).map(([k, v]) => ({
-              key: k,
-              value: String(v),
-            }))
+            key: k,
+            value: String(v),
+          }))
           : [{ key: "", value: "" }],
       );
       setMetaAttributes(
         meta.attributes
           ? Object.entries(meta.attributes).map(([k, v]) => ({
-              key: k,
-              value: String(v),
-            }))
+            key: k,
+            value: String(v),
+          }))
           : [{ key: "", value: "" }],
       );
 
@@ -421,7 +421,7 @@ const ProductFormPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in overflow-hidden">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-10 border-b border-border transition-all duration-200 mb-4">
+      <div className="sticky top-0 z-10 border-b border-border transition-all duration-200 mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
           <div className="flex items-center">
             <Button
@@ -520,7 +520,7 @@ const ProductFormPage = () => {
             <div className="grid grid-cols-1 xl:grid-cols-10 gap-6">
               {/* Basic Info Section (7 Cols) */}
               <div className="xl:col-span-7 space-y-2">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-2">
                   <Package className="h-4 w-4 text-primary" />
                   <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">
                     Basic Information
@@ -957,12 +957,11 @@ const ProductFormPage = () => {
                               )
                             ].url
                           }
-                          alt={`Product image ${
-                            Math.min(
-                              tabProps.images.slideIdx,
-                              tabProps.images.previews.length - 1,
-                            ) + 1
-                          }`}
+                          alt={`Product image ${Math.min(
+                            tabProps.images.slideIdx,
+                            tabProps.images.previews.length - 1,
+                          ) + 1
+                            }`}
                           className="w-full object-cover"
                           style={{ minHeight: 160, maxHeight: 200 }}
                           onClick={() =>
@@ -1042,15 +1041,14 @@ const ProductFormPage = () => {
                               key={i}
                               type="button"
                               onClick={() => tabProps.images.setSlideIdx(i)}
-                              className={`rounded-full transition-all ${
-                                i ===
+                              className={`rounded-full transition-all ${i ===
                                 Math.min(
                                   tabProps.images.slideIdx,
                                   tabProps.images.previews.length - 1,
                                 )
-                                  ? "bg-primary w-3 h-1.5"
-                                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
-                              }`}
+                                ? "bg-primary w-3 h-1.5"
+                                : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
+                                }`}
                             />
                           ))}
                         </div>
@@ -1071,7 +1069,7 @@ const ProductFormPage = () => {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-4 gap-1">
+                <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-2 gap-1">
                   <TabsTrigger
                     value="measurements"
                     className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold"

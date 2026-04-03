@@ -36,6 +36,7 @@ const QuotationPage = () => {
       gst_percentage: item.gst_percentage || item.gst || 18,
       gst_amount: item.gst_amount || item.tax_amount || 0,
       type: item.kit_id ? "kit" : "product",
+      image_url: item.image_url || "",
     }));
 
     return {

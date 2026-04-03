@@ -179,7 +179,7 @@ export const QuotationProductsTable = () => {
         category_name: "",
         gst_percentage: 18,
         gst_amount: (k.kit_price || 0) * 0.18,
-        image_url: k.kit_image_url || k.kit_image || "",
+        image_url: k.image_url || k.kit_image_url || k.kit_image || "",
       });
     }
   };
@@ -281,7 +281,7 @@ export const QuotationProductsTable = () => {
                             className={cn(
                               "h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full",
                               errors.items?.[index]?.item_name &&
-                                "border-destructive focus:ring-destructive/20",
+                              "border-destructive focus:ring-destructive/20",
                             )}
                             searchValue={fgSearch}
                             onSearchChange={setFgSearch}
@@ -316,7 +316,7 @@ export const QuotationProductsTable = () => {
                         className={cn(
                           "h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full",
                           errors.items?.[index]?.item_description &&
-                            "border-destructive focus:ring-destructive",
+                          "border-destructive focus:ring-destructive",
                         )}
                       />
                     </td>
@@ -335,7 +335,7 @@ export const QuotationProductsTable = () => {
                         className={cn(
                           "h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full",
                           errors.items?.[index]?.quantity &&
-                            "border-destructive focus:ring-destructive",
+                          "border-destructive focus:ring-destructive",
                         )}
                       />
                     </td>
@@ -354,7 +354,7 @@ export const QuotationProductsTable = () => {
                           className={cn(
                             "h-8 text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium w-full",
                             errors.items?.[index]?.unit_price &&
-                              "border-destructive focus:ring-destructive",
+                            "border-destructive focus:ring-destructive",
                           )}
                         />
                       </div>

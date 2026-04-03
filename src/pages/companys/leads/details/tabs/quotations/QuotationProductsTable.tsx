@@ -45,6 +45,7 @@ type SelectableItem = {
   id: string;
   name: string;
   type: "product" | "kit";
+  image_url?: string;
   images?: string[];
   original: Record<string, unknown>;
 };
@@ -104,6 +105,7 @@ export const QuotationProductsTable = () => {
         gst_percentage: 18,
         gst_amount: 0,
         image_url: "",
+        images: [],
       });
     },
     [appendItem],
@@ -162,10 +164,14 @@ export const QuotationProductsTable = () => {
   ) => {
     const currentItems = getValues("items") || [];
     const currentRow = currentItems[index];
-    const normalizedImages = selectedImages
+    const normalizedSelectedImages = selectedImages
       .map(normalizeImageUrl)
       .filter(Boolean);
-    const primaryImage = normalizedImages[0] || "";
+    const defaultImage = normalizeImageUrl(item.type === "kit" ? item.image_url : "");
+    const normalizedImages = [
+      ...(defaultImage ? [defaultImage] : []),
+      ...normalizedSelectedImages,
+    ].filter((image, imageIndex, imageList) => imageList.indexOf(image) === imageIndex);
     const quantity = currentRow?.quantity || 1;
 
     if (item.type === "product") {
@@ -193,7 +199,7 @@ export const QuotationProductsTable = () => {
         category_name: p.category_name || "",
         gst_percentage: 18,
         gst_amount: (quantity * (p.selling_price || 0) * 18) / 100,
-        image_url: primaryImage,
+        image_url: "",
         images: normalizedImages,
       });
       return;
@@ -221,7 +227,7 @@ export const QuotationProductsTable = () => {
       category_name: "",
       gst_percentage: 18,
       gst_amount: (quantity * (k.kit_price || 0) * 18) / 100,
-      image_url: primaryImage,
+      image_url: "",
       images: normalizedImages,
     });
   };
@@ -258,11 +264,12 @@ export const QuotationProductsTable = () => {
       return;
     }
 
+    const defaultImage = normalizeImageUrl(item.type === "kit" ? item.image_url : "");
     const currentSelectedImages = (
       (currentItems[index]?.images as string[] | undefined) || []
     )
       .map(normalizeImageUrl)
-      .filter(Boolean);
+      .filter((image) => Boolean(image) && image !== defaultImage);
 
     setImagePickerState({
       index,
@@ -337,12 +344,7 @@ export const QuotationProductsTable = () => {
                         const selectedImages = (
                           watch(`items.${index}.images`) || []
                         ).map(normalizeImageUrl);
-                        const itemImg = watch(`items.${index}.image_url`);
-                        const finalImages = selectedImages.length
-                          ? selectedImages
-                          : itemImg
-                            ? [normalizeImageUrl(itemImg)]
-                            : [];
+                        const finalImages = selectedImages;
 
                         return (
                       <div

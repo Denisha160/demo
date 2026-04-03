@@ -60,8 +60,12 @@ const QuotationPage = () => {
         gst_percentage: item.gst_percentage || item.gst || 18,
         gst_amount: item.gst_amount || item.tax_amount || 0,
         type: item.kit_id ? "kit" : ("product" as const),
-        image_url: item.image_url || "",
-        images: item.images || [],
+        image_url: "",
+        images: item.images?.length
+          ? item.images
+          : item.image_url
+            ? [item.image_url]
+            : [],
       }),
     );
 
@@ -103,6 +107,10 @@ const QuotationPage = () => {
       const payload = {
         ...(cleanPayload({
           ...data,
+          items: data.items.map(({ image_url, ...item }) => ({
+            ...item,
+            images: item.images || [],
+          })),
         }) as Record<string, unknown>),
         lead_id: leadId!,
       };

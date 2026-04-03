@@ -300,6 +300,7 @@ const ProductFormPage = () => {
               type="button"
               variant="outline"
               size="sm"
+              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
               onClick={() => navigate(-1)}
               disabled={isSaving}
             >
@@ -308,6 +309,7 @@ const ProductFormPage = () => {
             <Button
               type="submit"
               form="product-form"
+              className="h-8 text-xs rounded-sm"
               size="sm"
               disabled={isSaving}
             >

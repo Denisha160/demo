@@ -178,20 +178,12 @@ const ProductsPage = () => {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => navigate(`${routePrefix}/products/${item.id}`)}
         >
-          <div className="p-2 bg-muted rounded-sm group-hover:bg-primary/10 transition-colors">
-            {item.product_type === "FINISHED_GOOD" ? (
-              <Package className="h-4 w-4 group-hover:text-primary transition-colors" />
-            ) : (
-              <Layers className="h-4 w-4 group-hover:text-primary transition-colors" />
-            )}
-          </div>
           <div>
             <p className="font-medium text-sm group-hover:text-primary transition-colors">
               {item.product_name}
             </p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              {item.code || "NO CODE"}
-            </p>
+            <span className="text-sm">{item.brand_name}</span>
+            <span className="text-sm">{item.fragrance_name}</span>
           </div>
         </div>
       ),
@@ -212,20 +204,6 @@ const ProductsPage = () => {
       header: "Category",
       render: (item) => (
         <span className="text-sm">{item.category_name || "—"}</span>
-      ),
-    },
-    {
-      key: "brand_name",
-      header: "Brand",
-      render: (item) => (
-        <span className="text-sm">{item.brand_name || "—"}</span>
-      ),
-    },
-    {
-      key: "fragrance_name",
-      header: "Fragrance",
-      render: (item) => (
-        <span className="text-sm">{item.fragrance_name || "—"}</span>
       ),
     },
     {

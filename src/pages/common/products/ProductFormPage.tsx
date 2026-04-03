@@ -440,7 +440,7 @@ const ProductFormPage = () => {
 
           <div className="flex items-center gap-3">
             {!isNew && (
-              <div className="flex items-center gap-3 bg-muted/20 px-3 py-1.5 rounded-full border border-border/50">
+              <div className="flex items-center gap-3 bg-muted/20 px-3 py-1.5 rounded-sm border border-border/50">
                 <Label
                   htmlFor="product-status"
                   className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mr-1"

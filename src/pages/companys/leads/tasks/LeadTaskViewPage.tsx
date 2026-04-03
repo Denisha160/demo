@@ -9,7 +9,7 @@ const LeadTaskViewPage = () => {
     leadId === "lead_id" || leadId === "all" ? undefined : leadId;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in p-4">
+    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in">
       <div className="flex-1 overflow-hidden">
         <TasksTable leadId={effectiveLeadId} />
       </div>

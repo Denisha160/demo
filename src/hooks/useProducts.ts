@@ -47,14 +47,42 @@ export function useProductsCombobox(params?: Record<string, unknown>) {
 }
 
 export function useAllProducts(params?: Record<string, unknown>) {
+  type AllProductsProduct = {
+    id: string;
+    product_name: string;
+    image_url?: string | null;
+    images?: string[];
+    [key: string]: unknown;
+  };
+
+  type AllProductsKit = {
+    id: string;
+    name: string;
+    image_url?: string | null;
+    kit_image_url?: string | null;
+    kit_image?: string | null;
+    kit_products?: Array<{
+      images?: string[];
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+  };
+
   return useQuery<
-    { id: string; name: string; type: "product" | "kit"; image_url?: string; images?: string[]; original: any }[]
+    {
+      id: string;
+      name: string;
+      type: "product" | "kit";
+      image_url?: string;
+      images?: string[];
+      original: AllProductsProduct | AllProductsKit;
+    }[]
   >({
     queryKey: queryKeys.products.allItems(params),
     queryFn: async () => {
       const response = (await listAllProducts(params)) as ApiResponse<{
-        products: any[];
-        kits: any[];
+        products: AllProductsProduct[];
+        kits: AllProductsKit[];
       }>;
 
       const products = (response.data?.products ?? []).map((p) => ({
@@ -62,7 +90,7 @@ export function useAllProducts(params?: Record<string, unknown>) {
         name: p.product_name,
         type: "product" as const,
         image_url: p.image_url,
-        images: p.image_url ? [p.image_url] : [],
+        images: (p.images || []).filter(Boolean),
         original: p,
       }));
 
@@ -71,10 +99,9 @@ export function useAllProducts(params?: Record<string, unknown>) {
         name: k.name,
         type: "kit" as const,
         image_url: k.image_url || k.kit_image_url || k.kit_image,
-        images: [
-          ...(k.image_url || k.kit_image_url || k.kit_image ? [k.image_url || k.kit_image_url || k.kit_image] : []),
-          ...(k.kit_products || []).flatMap((p: any) => p.images || []),
-        ].filter(Boolean),
+        images: (k.kit_products || [])
+          .flatMap((p) => p.images || [])
+          .filter(Boolean),
         original: k,
       }));
 

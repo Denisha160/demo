@@ -166,6 +166,7 @@ const QuotationForm = ({
             category_id: null,
             category_name: "",
             image_url: "",
+            images: [],
           },
         ],
         amount_in_words: "",

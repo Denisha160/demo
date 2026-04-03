@@ -1,12 +1,18 @@
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { useAllProducts } from "@/hooks/useProducts";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Package,
   Plus,
@@ -15,6 +21,7 @@ import {
   AlertCircle,
   Info,
   Image as ImageIcon,
+  Check,
   X,
   ChevronLeft,
   ChevronRight,
@@ -23,6 +30,24 @@ import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 import { QuotationFormData } from "./QuotationForm";
 import KitViewModal from "@/pages/common/kits/KitViewModal";
+
+const STORAGE_BASE_URL = "https://basaltbucket.s3.us-east-1.amazonaws.com/";
+
+const normalizeImageUrl = (image?: string | null) => {
+  if (!image) return "";
+  if (/^https?:\/\//i.test(image) || image.startsWith("data:")) {
+    return image;
+  }
+  return `${STORAGE_BASE_URL}${image.replace(/^\/+/, "")}`;
+};
+
+type SelectableItem = {
+  id: string;
+  name: string;
+  type: "product" | "kit";
+  images?: string[];
+  original: Record<string, unknown>;
+};
 
 export const QuotationProductsTable = () => {
   const {
@@ -39,6 +64,12 @@ export const QuotationProductsTable = () => {
   const [isKitViewOpen, setIsKitViewOpen] = useState(false);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [imagePickerState, setImagePickerState] = useState<{
+    index: number;
+    item: SelectableItem;
+    images: string[];
+    selectedImages: string[];
+  } | null>(null);
   const debouncedFgSearch = useDebounce(fgSearch, 300);
 
   const { data: allItems = [], isLoading: isLoadingItems } = useAllProducts({
@@ -124,7 +155,82 @@ export const QuotationProductsTable = () => {
     }
   };
 
+  const applySelectedItem = (
+    index: number,
+    item: SelectableItem,
+    selectedImages: string[],
+  ) => {
+    const currentItems = getValues("items") || [];
+    const currentRow = currentItems[index];
+    const normalizedImages = selectedImages
+      .map(normalizeImageUrl)
+      .filter(Boolean);
+    const primaryImage = normalizedImages[0] || "";
+    const quantity = currentRow?.quantity || 1;
+
+    if (item.type === "product") {
+      const p = item.original as {
+        id: string;
+        product_name: string;
+        code?: string | null;
+        selling_price?: number | null;
+        fragrance_name?: string | null;
+        category_id?: string | null;
+        category_name?: string | null;
+      };
+      updateItem(index, {
+        ...currentRow,
+        type: "product",
+        product_id: p.id,
+        kit_id: "",
+        item_name: p.product_name,
+        item_code: p.code || "",
+        item_description: `${p.product_name} x ${quantity}`,
+        unit_price: p.selling_price || 0,
+        amount: quantity * (p.selling_price || 0),
+        fragrance_name: p.fragrance_name || "",
+        category_id: p.category_id || null,
+        category_name: p.category_name || "",
+        gst_percentage: 18,
+        gst_amount: (quantity * (p.selling_price || 0) * 18) / 100,
+        image_url: primaryImage,
+        images: normalizedImages,
+      });
+      return;
+    }
+
+    const k = item.original as {
+      id: string;
+      name: string;
+      sku?: string | null;
+      description?: string | null;
+      kit_price?: number | null;
+    };
+    updateItem(index, {
+      ...currentRow,
+      type: "kit",
+      kit_id: k.id,
+      product_id: "",
+      item_name: k.name,
+      item_code: k.sku || "",
+      item_description: k.description || `${k.name} x ${quantity}`,
+      unit_price: k.kit_price || 0,
+      amount: quantity * (k.kit_price || 0),
+      fragrance_name: "",
+      category_id: null,
+      category_name: "",
+      gst_percentage: 18,
+      gst_amount: (quantity * (k.kit_price || 0) * 18) / 100,
+      image_url: primaryImage,
+      images: normalizedImages,
+    });
+  };
+
   const handleSelectItemInline = (index: number, itemId: string) => {
+    if (!itemId) {
+      return;
+    }
+
     const item = allItems.find((i) => i.id === itemId);
     if (!item) return;
 
@@ -145,48 +251,25 @@ export const QuotationProductsTable = () => {
       return;
     }
 
-    if (item.type === "product") {
-      const p = item.original;
-      updateItem(index, {
-        ...currentItems[index],
-        type: "product",
-        product_id: p.id,
-        kit_id: "",
-        item_name: p.product_name,
-        item_code: p.code || "",
-        item_description: `${p.product_name} x ${currentItems[index].quantity || 1}`,
-        unit_price: p.selling_price || 0,
-        amount: (currentItems[index].quantity || 1) * (p.selling_price || 0),
-        fragrance_name: p.fragrance_name || "",
-        category_id: p.category_id || null,
-        category_name: p.category_name || "",
-        gst_percentage: 18,
-        gst_amount: (p.selling_price || 0) * 0.18,
-        image_url: p.image_url || "",
-        images: item.images || [],
-      });
-    } else {
-      const k = item.original;
-      updateItem(index, {
-        ...currentItems[index],
-        type: "kit",
-        kit_id: k.id,
-        product_id: "",
-        item_name: k.name,
-        item_code: k.sku || "",
-        item_description:
-          k.description || `${k.name} x ${currentItems[index].quantity || 1}`,
-        unit_price: k.kit_price || 0,
-        amount: (currentItems[index].quantity || 1) * (k.kit_price || 0),
-        fragrance_name: "",
-        category_id: null,
-        category_name: "",
-        gst_percentage: 18,
-        gst_amount: (k.kit_price || 0) * 0.18,
-        image_url: k.image_url || k.kit_image_url || k.kit_image || "",
-        images: item.images || [],
-      });
+    const selectableImages = (item.images || []).filter(Boolean);
+
+    if (selectableImages.length === 0) {
+      applySelectedItem(index, item, []);
+      return;
     }
+
+    const currentSelectedImages = (
+      (currentItems[index]?.images as string[] | undefined) || []
+    )
+      .map(normalizeImageUrl)
+      .filter(Boolean);
+
+    setImagePickerState({
+      index,
+      item,
+      images: selectableImages,
+      selectedImages: currentSelectedImages,
+    });
   };
 
   const nextImage = (e?: React.MouseEvent) => {
@@ -250,40 +333,54 @@ export const QuotationProductsTable = () => {
                     className="hover:bg-muted/5 transition-colors group"
                   >
                     <td className="px-2 py-1.5">
+                      {(() => {
+                        const selectedImages = (
+                          watch(`items.${index}.images`) || []
+                        ).map(normalizeImageUrl);
+                        const itemImg = watch(`items.${index}.image_url`);
+                        const finalImages = selectedImages.length
+                          ? selectedImages
+                          : itemImg
+                            ? [normalizeImageUrl(itemImg)]
+                            : [];
+
+                        return (
                       <div
                         className="h-16 w-16 rounded-sm bg-muted/20 border border-border/10 overflow-hidden flex items-center justify-center group/img relative cursor-zoom-in"
                         onClick={() => {
-                          const images = watch(`items.${index}.images`) || [];
-                          const itemImg = watch(`items.${index}.image_url`);
-                          const finalImages = images.length
-                            ? images
-                            : itemImg
-                              ? [itemImg]
-                              : [];
                           if (finalImages.length > 0) {
                             setGalleryImages(finalImages);
                             setGalleryIndex(0);
                           }
                         }}
                       >
-                        {(watch(`items.${index}.images`)?.length || 0) > 0 ||
-                        watch(`items.${index}.image_url`) ? (
+                        {finalImages.length > 0 ? (
                           <>
-                            <img
-                              src={
-                                watch(`items.${index}.images`)?.[0] ||
-                                watch(`items.${index}.image_url`)
-                              }
-                              alt="Item"
-                              className="w-full h-full object-cover"
-                            />
-                            {(watch(`items.${index}.images`)?.length || 0) >
-                              1 && (
+                            <div className="grid h-full w-full grid-cols-2 gap-px bg-border/10">
+                              {finalImages.slice(0, 4).map((image, imageIdx) => (
+                                <div
+                                  key={`${image}-${imageIdx}`}
+                                  className="relative overflow-hidden bg-muted/10"
+                                >
+                                  <img
+                                    src={image}
+                                    alt={`Item ${imageIdx + 1}`}
+                                    className="h-full w-full object-cover"
+                                  />
+                                  {imageIdx === 3 && finalImages.length > 4 && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/55">
+                                      <span className="text-[10px] font-black tracking-widest text-white">
+                                        +{finalImages.length - 4}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            {finalImages.length > 1 && (
                               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
                                 <span className="text-white text-[10px] font-black tracking-widest">
-                                  +
-                                  {(watch(`items.${index}.images`)?.length ||
-                                    0) - 1}
+                                  {finalImages.length} IMAGES
                                 </span>
                               </div>
                             )}
@@ -292,6 +389,8 @@ export const QuotationProductsTable = () => {
                           <ImageIcon className="h-4 w-4 text-muted-foreground/30" />
                         )}
                       </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-2 py-1.5  text-xs font-bold text-muted-foreground/40">
                       <Input
@@ -484,11 +583,119 @@ export const QuotationProductsTable = () => {
           <AlertCircle className="h-3.5 w-3.5" />
           <span className="text-[10px] font-bold uppercase tracking-wider">
             {errors.items.root?.message ||
-              (errors.items as any).message ||
+              (errors.items as { message?: string } | undefined)?.message ||
               "at least one item is required"}
           </span>
         </div>
       )}
+
+      <Dialog
+        open={!!imagePickerState}
+        onOpenChange={(open) => !open && setImagePickerState(null)}
+      >
+        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+          <DialogHeader className="border-b border-border/50 px-6 py-4">
+            <DialogTitle className="text-base font-bold">
+              Select Product Image
+            </DialogTitle>
+            <DialogDescription>
+              Choose the image to show for this item in the quotation.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[70vh] overflow-y-auto p-6">
+            {imagePickerState && (
+              <>
+                <div className="mb-4 flex items-center justify-between gap-3 rounded-sm border border-border/50 bg-muted/10 px-4 py-3">
+                  <span className="text-xs font-bold text-muted-foreground">
+                    {imagePickerState.selectedImages.length} image(s) selected
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={imagePickerState.selectedImages.length === 0}
+                    onClick={() => {
+                      applySelectedItem(
+                        imagePickerState.index,
+                        imagePickerState.item,
+                        imagePickerState.selectedImages,
+                      );
+                      setImagePickerState(null);
+                    }}
+                  >
+                    Use Selected Images
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {imagePickerState.images.map((image, imageIndex) => (
+                  <button
+                    key={`${image}-${imageIndex}`}
+                    type="button"
+                    className={cn(
+                      "group overflow-hidden rounded-sm border bg-background text-left transition-all hover:border-primary/50 hover:shadow-md",
+                      imagePickerState.selectedImages.includes(
+                        normalizeImageUrl(image),
+                      )
+                        ? "border-primary ring-1 ring-primary/30"
+                        : "border-border/60",
+                    )}
+                    onClick={() => {
+                      const normalizedImage = normalizeImageUrl(image);
+                      setImagePickerState((prev) => {
+                        if (!prev) return prev;
+
+                        const exists = prev.selectedImages.includes(
+                          normalizedImage,
+                        );
+
+                        return {
+                          ...prev,
+                          selectedImages: exists
+                            ? prev.selectedImages.filter(
+                                (selected) => selected !== normalizedImage,
+                              )
+                            : [...prev.selectedImages, normalizedImage],
+                        };
+                      });
+                    }}
+                  >
+                    <div className="aspect-square overflow-hidden bg-muted/10">
+                      <img
+                        src={normalizeImageUrl(image)}
+                        alt={`${imagePickerState.item.name} ${imageIndex + 1}`}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
+                      <div className="absolute right-2 top-2 rounded-full bg-background/90 p-1 shadow-sm">
+                        <Check
+                          className={cn(
+                            "h-4 w-4",
+                            imagePickerState.selectedImages.includes(
+                              normalizeImageUrl(image),
+                            )
+                              ? "text-primary"
+                              : "text-muted-foreground/40",
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="border-t border-border/40 px-3 py-2">
+                      <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                        {imagePickerState.selectedImages.includes(
+                          normalizeImageUrl(image),
+                        )
+                          ? "Selected"
+                          : "Tap To Select"}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <KitViewModal
         open={isKitViewOpen}
@@ -542,7 +749,7 @@ export const QuotationProductsTable = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={galleryImages[galleryIndex]}
+              src={normalizeImageUrl(galleryImages[galleryIndex])}
               alt={`Gallery Image ${galleryIndex + 1}`}
               className="max-w-full max-h-[80vh] object-contain"
             />

@@ -14,6 +14,10 @@ import {
   Plus,
   Trash2,
   Lock,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  X,
 } from "lucide-react";
 
 import {
@@ -130,6 +134,20 @@ const ProductFormPage = () => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [slideIdx, setSlideIdx] = useState(0);
   const { mutateAsync: uploadPhoto } = useUploadProductPhoto();
+
+  const tabProps = {
+    images: {
+      previews: imagePreviews,
+      openModal: () => setIsPhotoModalOpen(true),
+      slideIdx,
+      setSlideIdx,
+      setLightboxIndex,
+      deletePhoto: (imageId: string | undefined, idx: number) => {
+        if (imageId) deletePhoto({ productId: id!, imageId });
+        setImagePreviews((prev) => prev.filter((_, i) => i !== idx));
+      },
+    },
+  };
 
   // Combobox search states
   const [categorySearch, setCategorySearch] = useState("");
@@ -269,7 +287,7 @@ const ProductFormPage = () => {
     package: { options: packageOptions, search: packageSearch, setSearch: setPackageSearch },
   };
 
-  if (isLoading) return <div className="flex flex-col items-center justify-center h-64 space-y-4"><Loader2 className="animate-spin h-8 w-8 text-primary" /><p className="text-muted-foreground">Loading product details...</p></div>;
+  if (isLoading) return <div className="flex flex-col items-center justify-center h-64 space-y-2"><Loader2 className="animate-spin h-8 w-8 text-primary" /><p className="text-muted-foreground">Loading product details...</p></div>;
 
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in overflow-hidden">
@@ -335,7 +353,7 @@ const ProductFormPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Column 1: Name & Category */}
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <FormField
                       control={form.control}
                       name="product_name"
@@ -392,7 +410,7 @@ const ProductFormPage = () => {
                   </div>
 
                   {/* Column 2: Code & BrandItem/HSN */}
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <FormField
                       control={form.control}
                       name="code"
@@ -434,7 +452,7 @@ const ProductFormPage = () => {
                   </div>
 
                   {/* Column 3: Type & Fragrance/Brand */}
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <FormField
                       control={form.control}
                       name="product_type"
@@ -538,22 +556,25 @@ const ProductFormPage = () => {
               </div>
 
               {/* Sidebar Photo Area (3 Cols) */}
-              <div className="xl:col-span-3 space-y-4">
+              <div className="xl:col-span-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="h-4 w-4 text-primary" />
-                    <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">Product Images</h3>
+                    <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">
+                      Product Images
+                    </h3>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-8 text-[10px] font-bold uppercase tracking-wider gap-2 px-3 border-border hover:bg-primary/5 text-foreground disabled:opacity-50"
-                      onClick={() => setIsPhotoModalOpen(true)}
+                      className="h-7 text-xs rounded-sm"
+                      onClick={tabProps.images.openModal}
                       disabled={isNew || isSaving}
                     >
-                      <UploadCloud className="h-3.5 w-3.5" /> Add Photos
+                      <UploadCloud className="h-3 w-3 mr-1" />
+                      Add Photos
                     </Button>
                     {isNew && (
                       <span className="text-[9px] text-muted-foreground italic text-right">
@@ -563,49 +584,138 @@ const ProductFormPage = () => {
                   </div>
                 </div>
 
-                <div className="border-2 border-dashed border-border/60 rounded-md p-4 bg-muted/5 min-h-[220px] flex flex-col items-center justify-center relative group">
-                  {imagePreviews.length === 0 ? (
-                    <div className="flex flex-col items-center text-center gap-2 text-muted-foreground">
-                      <ImageIcon className=" w-10 opacity-20" />
-                      <p className="text-[11px] font-medium">No images uploaded yet</p>
-                      <p className="text-[9px] uppercase tracking-tighter opacity-60">JPG, PNG, WEBP · AUTO-COMPRESSED</p>
+                <div className="border border-dashed border-border rounded-lg p-4 bg-muted/10 min-h-[180px] flex flex-col items-start">
+                  {tabProps.images.previews.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center w-full h-full flex-1 gap-2 text-muted-foreground py-8">
+                      <ImageIcon className="h-8 w-8 opacity-30" />
+                      <p className="text-xs">No images uploaded yet</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs rounded-sm mt-1"
+                        onClick={tabProps.images.openModal}
+                        disabled={isNew || isSaving}
+                      >
+                        <UploadCloud className="h-3 w-3 mr-1" /> Upload first
+                        image
+                      </Button>
                     </div>
                   ) : (
-                    <div className="w-full h-full flex flex-col gap-4">
-                      <div className="relative aspect-video w-full rounded-sm overflow-hidden bg-card border border-border shadow-sm">
+                    <div className="flex flex-col w-full gap-2 flex-1">
+                      <div
+                        className="relative w-full rounded-md overflow-hidden bg-muted/20 border border-border group cursor-zoom-in"
+                        style={{ minHeight: 160 }}
+                      >
                         <img
-                          src={imagePreviews[Math.min(slideIdx, imagePreviews.length - 1)].url}
-                          alt="Product Photo"
-                          className="w-full h-full object-cover cursor-zoom-in"
-                          onClick={() => setLightboxIndex(Math.min(slideIdx, imagePreviews.length - 1))}
+                          src={
+                            tabProps.images.previews[
+                              Math.min(
+                                tabProps.images.slideIdx,
+                                tabProps.images.previews.length - 1,
+                              )
+                            ].url
+                          }
+                          alt={`Product image ${Math.min(
+                            tabProps.images.slideIdx,
+                            tabProps.images.previews.length - 1,
+                          ) + 1
+                            }`}
+                          className="w-full object-cover"
+                          style={{ minHeight: 160, maxHeight: 200 }}
+                          onClick={() =>
+                            tabProps.images.setLightboxIndex(
+                              Math.min(
+                                tabProps.images.slideIdx,
+                                tabProps.images.previews.length - 1,
+                              ),
+                            )
+                          }
                         />
-                        <div className="absolute top-2 left-2 bg-black/70 text-white text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
-                          {Math.min(slideIdx, imagePreviews.length - 1) + 1} / {imagePreviews.length}
-                        </div>
+                        <span className="absolute top-2 left-2 bg-black/50 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full pointer-events-none">
+                          {Math.min(
+                            tabProps.images.slideIdx,
+                            tabProps.images.previews.length - 1,
+                          ) + 1}{" "}
+                          / {tabProps.images.previews.length}
+                        </span>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const idx = Math.min(slideIdx, imagePreviews.length - 1);
-                            if (imagePreviews[idx].id) deletePhoto({ productId: id!, imageId: imagePreviews[idx].id! });
-                            setImagePreviews(prev => prev.filter((_, i) => i !== idx));
-                            if (idx > 0) setSlideIdx(idx - 1);
+                            const idx = Math.min(
+                              tabProps.images.slideIdx,
+                              tabProps.images.previews.length - 1,
+                            );
+                            tabProps.images.deletePhoto(
+                              tabProps.images.previews[idx].id,
+                              idx,
+                            );
+                            if (idx > 0) tabProps.images.setSlideIdx(idx - 1);
                           }}
-                          className="absolute top-2 right-2 bg-black/70 hover:bg-destructive text-white rounded-full p-1.5 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3 h-3" />
                         </button>
-
-                        {/* Carousel Dots */}
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                          {imagePreviews.map((_, i) => (
-                            <div key={i} className={`h-1.5 w-1.5 rounded-full transition-all ${i === slideIdx ? "bg-primary w-3" : "bg-white/50"}`} />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
+                          <ZoomIn className="h-5 w-5 text-white opacity-0 group-hover:opacity-60 transition-opacity" />
+                        </div>
+                        {tabProps.images.previews.length > 1 && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                tabProps.images.setSlideIdx(
+                                  (i: number) =>
+                                    (i - 1 + tabProps.images.previews.length) %
+                                    tabProps.images.previews.length,
+                                );
+                              }}
+                              className="absolute left-1.5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                tabProps.images.setSlideIdx(
+                                  (i: number) =>
+                                    (i + 1) % tabProps.images.previews.length,
+                                );
+                              }}
+                              className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      {tabProps.images.previews.length > 1 && (
+                        <div className="flex items-center justify-center gap-1.5">
+                          {tabProps.images.previews.map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => tabProps.images.setSlideIdx(i)}
+                              className={`rounded-full transition-all ${i ===
+                                Math.min(
+                                  tabProps.images.slideIdx,
+                                  tabProps.images.previews.length - 1,
+                                )
+                                ? "bg-primary w-3 h-1.5"
+                                : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
+                                }`}
+                            />
                           ))}
                         </div>
-                      </div>
-                      <p className="text-[9px] text-center font-bold text-muted-foreground uppercase tracking-[0.15em]">JPG, PNG, WEBP · AUTO-COMPRESSED</p>
+                      )}
                     </div>
                   )}
+                  <p className="text-[10px] text-muted-foreground mt-4 w-full pt-3 border-t border-border/50 text-center uppercase tracking-tighter">
+                    JPG, PNG, WebP · Auto-compressed
+                  </p>
                 </div>
               </div>
             </div>
@@ -681,6 +791,150 @@ const ProductFormPage = () => {
       <PackageModal isOpen={isPackageModalOpen} onClose={() => setIsPackageModalOpen(false)} />
 
       {/* Lightbox placeholder (if needed, but slideIdx handles it mostly) */}
+      {lightboxIndex !== null && imagePreviews.length > 0 && (
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.95)",
+            backdropFilter: "blur(8px)",
+            zIndex: 999999,
+            margin: 0,
+            padding: 0,
+          }}
+          onClick={() => setLightboxIndex(null)}
+        >
+          {/* Left Navigation Button */}
+          {imagePreviews.length > 1 && (
+            <button
+              type="button"
+              className="absolute left-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all hover:scale-110"
+              style={{ zIndex: 1000000 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex((i) =>
+                  i !== null
+                    ? (i - 1 + imagePreviews.length) % imagePreviews.length
+                    : null,
+                );
+              }}
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+          )}
+
+          {/* Close Button - Top Right */}
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(null)}
+            className="absolute top-6 right-6 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all hover:scale-110"
+            style={{ zIndex: 1000000 }}
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {/* Image Container */}
+          <div
+            className="relative flex flex-col items-center justify-center gap-4"
+            style={{
+              maxWidth: "95vw",
+              maxHeight: "95vh",
+              width: "100%",
+              height: "100%",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Image */}
+            <img
+              src={imagePreviews[lightboxIndex].url}
+              alt={`Product image ${lightboxIndex + 1}`}
+              style={{
+                maxWidth: "90vw",
+                maxHeight: "80vh",
+                width: "auto",
+                height: "auto",
+                objectFit: "contain",
+                borderRadius: "0.5rem",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              }}
+            />
+
+            {/* Image Counter and Indicators */}
+            {imagePreviews.length > 1 && (
+              <div className="flex flex-col items-center gap-3 mt-4">
+                {/* Dot Indicators */}
+                <div className="flex items-center gap-2">
+                  {imagePreviews.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setLightboxIndex(i)}
+                      style={{
+                        transition: "all 0.2s",
+                        width: i === lightboxIndex ? "1.5rem" : "0.5rem",
+                        height: "0.5rem",
+                        backgroundColor:
+                          i === lightboxIndex
+                            ? "white"
+                            : "rgba(255, 255, 255, 0.4)",
+                        borderRadius: "9999px",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (i !== lightboxIndex) {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.7)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (i !== lightboxIndex) {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.4)";
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* Counter */}
+                <span
+                  style={{
+                    color: "rgba(255, 255, 255, 0.8)",
+                    fontSize: "0.875rem",
+                    fontWeight: 500,
+                  }}
+                >
+                  {lightboxIndex + 1} / {imagePreviews.length}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Right Navigation Button */}
+          {imagePreviews.length > 1 && (
+            <button
+              type="button"
+              className="absolute right-6 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-3 transition-all hover:scale-110"
+              style={{ zIndex: 1000000 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxIndex((i) =>
+                  i !== null ? (i + 1) % imagePreviews.length : null,
+                );
+              }}
+            >
+              <ChevronRight className="h-8 w-8" />
+            </button>
+          )}
+        </div>
+      )}
+
     </div>
   );
 };

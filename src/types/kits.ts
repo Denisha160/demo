@@ -22,6 +22,7 @@ export interface Kit {
   packaging_id: string | null;
   kit_image: string | null;
   kit_image_url?: string | null;
+  image_url?: string | null;
   total_items: number;
   created_at: string;
   updated_at: string;

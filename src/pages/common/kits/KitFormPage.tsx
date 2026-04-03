@@ -194,7 +194,12 @@ const KitFormPage = () => {
           image_url: item.image_url,
         })),
       });
-      setKitImage(kitDetails.kit_image_url || kitDetails.kit_image || null);
+      setKitImage(
+        kitDetails.image_url ||
+          kitDetails.kit_image_url ||
+          kitDetails.kit_image ||
+          null,
+      );
       setSelectedFile(null);
     }
   }, [id, kitDetails, reset]);
@@ -265,11 +270,6 @@ const KitFormPage = () => {
     setKitImage(previewUrl);
   };
 
-  const handleRemoveImage = () => {
-    setKitImage(null);
-    setSelectedFile(null);
-    setValue("kit_image", null, { shouldDirty: true });
-  };
 
   const totalValue = items.reduce((sum, item) => {
     return sum + (item.price || 0) * (item.quantity_per_kit || 0);
@@ -283,8 +283,7 @@ const KitFormPage = () => {
       is_active: data.is_active,
       kit_price: data.kit_price,
       packaging_id: data.packaging_id || null,
-      kit_image: selectedFile || null,
-      image_url: (!selectedFile && !kitImage) ? '' : undefined,
+      kit_image: selectedFile || undefined,
       items: data.items.map((i) => ({
         finished_product_id: i.finished_product_id,
         quantity_per_kit: i.quantity_per_kit,
@@ -485,22 +484,21 @@ const KitFormPage = () => {
 
             <div className="border border-dashed border-border rounded-lg p-4 bg-muted/10 flex flex-col items-center justify-center min-h-[160px] relative group">
               {kitImage ? (
-                <div className="relative w-full aspect-video rounded-md overflow-hidden bg-muted/20 border border-border">
+                <div 
+                  className="relative w-full aspect-video rounded-md overflow-hidden bg-muted/20 border border-border cursor-pointer group"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <img
                     src={kitImage}
                     alt="Kit Preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:opacity-70 transition-opacity"
                   />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveImage();
-                    }}
-                    className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                       <ImageIcon className="w-3.5 h-3.5" />
+                       Change Image
+                    </span>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground py-4">

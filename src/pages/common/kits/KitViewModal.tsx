@@ -61,6 +61,17 @@ const KitViewModal = ({ open, onClose, kitId, onEdit }: KitViewModalProps) => {
         </div>
       ) : kit ? (
         <div className="space-y-5 mt-2">
+          {/* Kit Header Image Overview */}
+          {(kit.image_url || kit.kit_image_url || kit.kit_image) && (
+            <div className="w-full aspect-video rounded-sm overflow-hidden border border-border shadow-sm">
+              <img
+                src={kit.image_url || kit.kit_image_url || kit.kit_image!}
+                alt={kit.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
           {/* Overview Stats */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-muted/30 rounded-sm p-3 border border-border/60 space-y-1">

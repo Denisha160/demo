@@ -373,7 +373,7 @@ const QuotationForm = ({
             {/* Customer Details Display - Compact */}
             {selectedLeadId && (
               <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-                <div className="flex flex-wrap gap-6 bg-muted/20 rounded-sm border border-border/10 p-3">
+                <div className="flex flex-wrap gap-6 bg-muted/20 rounded-sm border border-border/10">
                   {(() => {
                     const displayEmail =
                       leadDetails?.email || (quotationData as any)?.lead_email || "—";

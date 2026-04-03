@@ -281,17 +281,17 @@ const ProductFormPage = () => {
       setMetaParams(
         meta.parameters
           ? Object.entries(meta.parameters).map(([k, v]) => ({
-              key: k,
-              value: String(v),
-            }))
+            key: k,
+            value: String(v),
+          }))
           : [{ key: "", value: "" }],
       );
       setMetaAttributes(
         meta.attributes
           ? Object.entries(meta.attributes).map(([k, v]) => ({
-              key: k,
-              value: String(v),
-            }))
+            key: k,
+            value: String(v),
+          }))
           : [{ key: "", value: "" }],
       );
 
@@ -364,7 +364,7 @@ const ProductFormPage = () => {
       updateProduct(
         { ...payload, id: id! },
         {
-          onSuccess: () => toast.success("Product updated successfully"),
+          onSuccess: () => console.log("Product updated successfully"),
           onError,
         },
       );
@@ -405,7 +405,7 @@ const ProductFormPage = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] mx-auto w-full animate-fade-in overflow-hidden">
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-50 border-b border-border transition-all duration-200 mb-4">
+      <div className="sticky top-0 z-10 border-b border-border transition-all duration-200 mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
           <div className="flex items-center">
             <Button
@@ -888,12 +888,11 @@ const ProductFormPage = () => {
                               )
                             ].url
                           }
-                          alt={`Product image ${
-                            Math.min(
-                              tabProps.images.slideIdx,
-                              tabProps.images.previews.length - 1,
-                            ) + 1
-                          }`}
+                          alt={`Product image ${Math.min(
+                            tabProps.images.slideIdx,
+                            tabProps.images.previews.length - 1,
+                          ) + 1
+                            }`}
                           className="w-full object-cover"
                           style={{ minHeight: 160, maxHeight: 200 }}
                           onClick={() =>
@@ -973,15 +972,14 @@ const ProductFormPage = () => {
                               key={i}
                               type="button"
                               onClick={() => tabProps.images.setSlideIdx(i)}
-                              className={`rounded-full transition-all ${
-                                i ===
+                              className={`rounded-full transition-all ${i ===
                                 Math.min(
                                   tabProps.images.slideIdx,
                                   tabProps.images.previews.length - 1,
                                 )
-                                  ? "bg-primary w-3 h-1.5"
-                                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
-                              }`}
+                                ? "bg-primary w-3 h-1.5"
+                                : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
+                                }`}
                             />
                           ))}
                         </div>

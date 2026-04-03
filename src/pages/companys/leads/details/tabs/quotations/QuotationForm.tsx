@@ -55,6 +55,7 @@ const quotationItemSchema = z.object({
   category_id: optionalText.nullable(),
   category_name: optionalText,
   image_url: optionalText,
+  images: z.array(z.string()).optional().default([]),
 });
 
 export const quotationSchema = z.object({

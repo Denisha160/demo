@@ -16,6 +16,8 @@ import {
   Info,
   Image as ImageIcon,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
@@ -35,7 +37,8 @@ export const QuotationProductsTable = () => {
   const [scanValue, setScanValue] = useState("");
   const [selectedKitId, setSelectedKitId] = useState<string | null>(null);
   const [isKitViewOpen, setIsKitViewOpen] = useState(false);
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   const debouncedFgSearch = useDebounce(fgSearch, 300);
 
   const { data: allItems = [], isLoading: isLoadingItems } = useAllProducts({
@@ -160,6 +163,7 @@ export const QuotationProductsTable = () => {
         gst_percentage: 18,
         gst_amount: (p.selling_price || 0) * 0.18,
         image_url: p.image_url || "",
+        images: item.images || [],
       });
     } else {
       const k = item.original;
@@ -180,10 +184,25 @@ export const QuotationProductsTable = () => {
         gst_percentage: 18,
         gst_amount: (k.kit_price || 0) * 0.18,
         image_url: k.image_url || k.kit_image_url || k.kit_image || "",
+        images: item.images || [],
       });
     }
   };
 
+  const nextImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (galleryImages.length === 0) return;
+    setGalleryIndex((prev) => (prev + 1) % galleryImages.length);
+  };
+ 
+  const prevImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (galleryImages.length === 0) return;
+    setGalleryIndex(
+      (prev) => (prev - 1 + galleryImages.length) % galleryImages.length,
+    );
+  };
+ 
   const handleScanProduct = () => {
     if (!scanValue.trim()) return;
     toast.info(`Searching for product code: ${scanValue}`);
@@ -231,19 +250,43 @@ export const QuotationProductsTable = () => {
                     className="hover:bg-muted/5 transition-colors group"
                   >
                     <td className="px-2 py-1.5">
-                      <div className="h-16 w-16 rounded-sm bg-muted/20 border border-border/10 overflow-hidden flex items-center justify-center group/img relative">
-                        {watch(`items.${index}.image_url`) ? (
+                      <div
+                        className="h-16 w-16 rounded-sm bg-muted/20 border border-border/10 overflow-hidden flex items-center justify-center group/img relative cursor-zoom-in"
+                        onClick={() => {
+                          const images = watch(`items.${index}.images`) || [];
+                          const itemImg = watch(`items.${index}.image_url`);
+                          const finalImages = images.length
+                            ? images
+                            : itemImg
+                              ? [itemImg]
+                              : [];
+                          if (finalImages.length > 0) {
+                            setGalleryImages(finalImages);
+                            setGalleryIndex(0);
+                          }
+                        }}
+                      >
+                        {(watch(`items.${index}.images`)?.length || 0) > 0 ||
+                        watch(`items.${index}.image_url`) ? (
                           <>
                             <img
-                              src={watch(`items.${index}.image_url`)}
-                              alt="Item"
-                              className="w-full h-full object-cover cursor-zoom-in"
-                              onClick={() =>
-                                setLightboxUrl(
-                                  watch(`items.${index}.image_url`),
-                                )
+                              src={
+                                watch(`items.${index}.images`)?.[0] ||
+                                watch(`items.${index}.image_url`)
                               }
+                              alt="Item"
+                              className="w-full h-full object-cover"
                             />
+                            {(watch(`items.${index}.images`)?.length || 0) >
+                              1 && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                <span className="text-white text-[10px] font-black tracking-widest">
+                                  +
+                                  {(watch(`items.${index}.images`)?.length ||
+                                    0) - 1}
+                                </span>
+                              </div>
+                            )}
                           </>
                         ) : (
                           <ImageIcon className="h-4 w-4 text-muted-foreground/30" />
@@ -453,28 +496,55 @@ export const QuotationProductsTable = () => {
         kitId={selectedKitId || undefined}
       />
 
-      {/* Lightbox Preview - High Fidelity Style */}
-      {lightboxUrl && (
+      {/* Lightbox Preview - Multi-Image Gallery */}
+      {galleryImages.length > 0 && (
         <div
           className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 pointer-events-auto"
           style={{ zIndex: 1000001 }}
-          onClick={() => setLightboxUrl(null)}
+          onClick={() => setGalleryImages([])}
         >
+          {/* Close Button */}
           <button
             type="button"
-            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
-            onClick={() => setLightboxUrl(null)}
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-[1000002]"
+            onClick={() => setGalleryImages([])}
           >
             <X className="h-6 w-6" />
           </button>
+ 
+          {/* Navigation Controls */}
+          {galleryImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/15 text-white rounded-full transition-all group scale-90 hover:scale-100 z-[1000002]"
+                onClick={prevImage}
+              >
+                <ChevronLeft className="h-10 w-10 opacity-60 group-hover:opacity-100" />
+              </button>
+              <button
+                type="button"
+                className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/15 text-white rounded-full transition-all group scale-90 hover:scale-100 z-[1000002]"
+                onClick={nextImage}
+              >
+                <ChevronRight className="h-10 w-10 opacity-60 group-hover:opacity-100" />
+              </button>
+ 
+              {/* Image Counter Badge */}
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white/10 text-white rounded-full text-xs font-black tracking-widest uppercase backdrop-blur-sm border border-white/10">
+                {galleryIndex + 1} / {galleryImages.length}
+              </div>
+            </>
+          )}
+ 
           <div
-            className="max-w-[90vw] max-h-[90vh] bg-white rounded-sm overflow-hidden shadow-2xl relative animate-in zoom-in duration-500 delay-150"
+            className="max-w-[70vw] max-h-[85vh] bg-white rounded-sm overflow-hidden shadow-2xl relative animate-in zoom-in duration-500 delay-150"
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={lightboxUrl}
-              alt="Item Preview"
-              className="max-w-full max-h-[85vh] object-contain"
+              src={galleryImages[galleryIndex]}
+              alt={`Gallery Image ${galleryIndex + 1}`}
+              className="max-w-full max-h-[80vh] object-contain"
             />
           </div>
         </div>

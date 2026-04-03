@@ -48,7 +48,7 @@ export function useProductsCombobox(params?: Record<string, unknown>) {
 
 export function useAllProducts(params?: Record<string, unknown>) {
   return useQuery<
-    { id: string; name: string; type: "product" | "kit"; image_url?: string; original: any }[]
+    { id: string; name: string; type: "product" | "kit"; image_url?: string; images?: string[]; original: any }[]
   >({
     queryKey: queryKeys.products.allItems(params),
     queryFn: async () => {
@@ -62,6 +62,7 @@ export function useAllProducts(params?: Record<string, unknown>) {
         name: p.product_name,
         type: "product" as const,
         image_url: p.image_url,
+        images: p.image_url ? [p.image_url] : [],
         original: p,
       }));
 
@@ -70,6 +71,10 @@ export function useAllProducts(params?: Record<string, unknown>) {
         name: k.name,
         type: "kit" as const,
         image_url: k.image_url || k.kit_image_url || k.kit_image,
+        images: [
+          ...(k.image_url || k.kit_image_url || k.kit_image ? [k.image_url || k.kit_image_url || k.kit_image] : []),
+          ...(k.kit_products || []).flatMap((p: any) => p.images || []),
+        ].filter(Boolean),
         original: k,
       }));
 

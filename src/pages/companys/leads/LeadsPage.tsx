@@ -30,6 +30,7 @@ import {
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/useDebounce";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import {
   DropdownMenu,
@@ -142,19 +143,19 @@ const mapLeadToDeal = (
   tags: lead?.tags,
   interested_categories: Array.isArray(lead?.interested_category_id)
     ? lead.interested_category_id
-        .map((cat: any) => {
-          if (typeof cat === "string") return { id: cat, name: cat };
-          const id = String(cat?.id || "");
-          const categoryMatch = (categories as any[]).find(
-            (c) => String(c.id) === id,
-          );
-          return categoryMatch
-            ? { id, name: categoryMatch.name }
-            : cat?.name
-              ? { id, name: cat.name }
-              : null;
-        })
-        .filter((c: any): c is { id: string; name: string } => !!c)
+      .map((cat: any) => {
+        if (typeof cat === "string") return { id: cat, name: cat };
+        const id = String(cat?.id || "");
+        const categoryMatch = (categories as any[]).find(
+          (c) => String(c.id) === id,
+        );
+        return categoryMatch
+          ? { id, name: categoryMatch.name }
+          : cat?.name
+            ? { id, name: cat.name }
+            : null;
+      })
+      .filter((c: any): c is { id: string; name: string } => !!c)
     : [],
   phone: lead?.phone || lead?.mobile || "-",
   raw_date: lead?.created_at || lead?.date,
@@ -176,6 +177,9 @@ const LeadsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { companyId } = useParams();
+
+  const [userSearch, setUserSearch] = useState("");
+  const debouncedUserSearch = useDebounce(userSearch, 300);
 
   const searchTerm = searchParams.get("search") || "";
   const setSearchTerm = useCallback(
@@ -288,7 +292,7 @@ const LeadsPage = () => {
   );
 
   const { data: usersResponse } = useUsers(
-    { limit: 100 },
+    { limit: 10, search: debouncedUserSearch || undefined },
     { enabled: !!currentUser?.is_root_user },
   );
   const usersList = (usersResponse as any)?.items || [];
@@ -424,9 +428,9 @@ const LeadsPage = () => {
     setColumnOrder((prev) =>
       prev.length
         ? [
-            ...prev.filter((id) => sortedIds.includes(id)),
-            ...sortedIds.filter((id) => !prev.includes(id)),
-          ]
+          ...prev.filter((id) => sortedIds.includes(id)),
+          ...sortedIds.filter((id) => !prev.includes(id)),
+        ]
         : sortedIds,
     );
     if (!searchParams.has("stages")) {
@@ -501,9 +505,9 @@ const LeadsPage = () => {
         };
       })
       .filter(Boolean) as (PipelineColumn & {
-      total: number;
-      total_expected_revenue: number;
-    })[];
+        total: number;
+        total_expected_revenue: number;
+      })[];
   }, [columnOrder, isDealVisible, leadStatuses, paginationData, categories]);
 
   const [loadingMoreStatus, setLoadingMoreStatus] = useState<string | null>(
@@ -792,22 +796,21 @@ const LeadsPage = () => {
 
                 {currentUser?.is_root_user && (
                   <div className="w-[180px]">
-                    <Select
+                    <Combobox
+                      options={[
+                        { value: "all", label: "All Users" },
+                        ...usersList.map((u: { id: string; name: string }) => ({
+                          value: u.id,
+                          label: u.name,
+                        })),
+                      ]}
                       value={assignedTo || "all"}
                       onValueChange={setAssignedTo}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Assigned To" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Users</SelectItem>
-                        {usersList.map((u: { id: string; name: string }) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      searchValue={userSearch}
+                      onSearchChange={setUserSearch}
+                      placeholder="Assigned To"
+                      className="h-9"
+                    />
                   </div>
                 )}
 

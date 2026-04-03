@@ -146,17 +146,9 @@ const KitsPage = () => {
       className: "w-[280px]",
       render: (item) => (
         <div className="flex items-center gap-3">
-          {item.kit_image_url || item.kit_image ? (
-            <img
-              src={item.kit_image_url || item.kit_image!}
-              alt={item.name}
-              className="h-8 w-8 object-cover rounded-sm border border-border shrink-0"
-            />
-          ) : (
-            <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
-              <Package className="h-4 w-4" />
-            </div>
-          )}
+          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
+            <Package className="h-4 w-4" />
+          </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">
               {item.name}
@@ -390,21 +382,6 @@ const KitsPage = () => {
                   {/* Kit Image / Decorative BG */}
                   <div className="absolute top-0 right-0 p-3 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
                     <Package className="h-16 w-16" />
-                  </div>
-
-                  {/* Thumbnail */}
-                  <div className="h-32 w-full bg-muted/20 border-b border-border overflow-hidden">
-                    {kit.kit_image_url || kit.kit_image ? (
-                      <img
-                        src={kit.kit_image_url || kit.kit_image!}
-                        alt={kit.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center opacity-20">
-                        <Package className="h-12 w-12" />
-                      </div>
-                    )}
                   </div>
 
                   <div className="p-5 flex-1 space-y-4">

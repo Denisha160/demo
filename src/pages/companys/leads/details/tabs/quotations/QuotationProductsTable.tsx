@@ -2,17 +2,11 @@ import { useFormContext, useFieldArray } from "react-hook-form";
 import { useAllProducts } from "@/hooks/useProducts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useState, useCallback } from "react";
+import Modal from "@/components/Modal";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Package,
   Plus,
@@ -21,7 +15,6 @@ import {
   AlertCircle,
   Info,
   Image as ImageIcon,
-  Check,
   X,
   ChevronLeft,
   ChevronRight,
@@ -308,7 +301,7 @@ export const QuotationProductsTable = () => {
     if (galleryImages.length === 0) return;
     setGalleryIndex((prev) => (prev + 1) % galleryImages.length);
   };
- 
+
   const prevImage = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (galleryImages.length === 0) return;
@@ -316,7 +309,7 @@ export const QuotationProductsTable = () => {
       (prev) => (prev - 1 + galleryImages.length) % galleryImages.length,
     );
   };
- 
+
   const handleScanProduct = () => {
     if (!scanValue.trim()) return;
     toast.info(`Searching for product code: ${scanValue}`);
@@ -630,112 +623,91 @@ export const QuotationProductsTable = () => {
         </div>
       )}
 
-      <Dialog
+      <Modal
         open={!!imagePickerState}
-        onOpenChange={(open) => !open && setImagePickerState(null)}
+        onClose={() => setImagePickerState(null)}
+        title="Select Product Image"
+        description="Select or unselect images for this item. Closing without saving keeps the current row details."
+        maxWidth="max-w-4xl"
+        headerBg="bg-primary/5"
       >
-        <DialogContent className="max-w-4xl p-0 overflow-hidden">
-          <DialogHeader className="border-b border-border/50 px-6 py-4">
-            <DialogTitle className="text-base font-bold">
-              Select Product Image
-            </DialogTitle>
-            <DialogDescription>
-              Select or unselect images for this item. Closing without saving keeps the current row details.
-            </DialogDescription>
-          </DialogHeader>
+        {imagePickerState && (
+          <>
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-sm border border-border/50 bg-muted/10 px-4 py-3">
+              <span className="text-xs font-bold text-muted-foreground">
+                {imagePickerState.selectedImages.length} image(s) selected
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  populateRowDetails(
+                    imagePickerState.index,
+                    imagePickerState.item,
+                    imagePickerState.selectedImages,
+                  );
+                  setImagePickerState(null);
+                }}
+              >
+                Use Selected Images
+              </Button>
+            </div>
 
-          <div className="max-h-[70vh] overflow-y-auto p-6">
-            {imagePickerState && (
-              <>
-                <div className="mb-4 flex items-center justify-between gap-3 rounded-sm border border-border/50 bg-muted/10 px-4 py-3">
-                  <span className="text-xs font-bold text-muted-foreground">
-                    {imagePickerState.selectedImages.length} image(s) selected
-                  </span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => {
-                      populateRowDetails(
-                        imagePickerState.index,
-                        imagePickerState.item,
-                        imagePickerState.selectedImages,
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {imagePickerState.images.map((image, imageIndex) => (
+                <button
+                  key={`${image}-${imageIndex}`}
+                  type="button"
+                  className={cn(
+                    "group overflow-hidden rounded-sm border bg-background text-left transition-all hover:border-primary/50 hover:shadow-md",
+                    imagePickerState.selectedImages.includes(
+                      normalizeImageUrl(image),
+                    )
+                      ? "border-primary ring-1 ring-primary/30"
+                      : "border-border/60",
+                  )}
+                  onClick={() => {
+                    const normalizedImage = normalizeImageUrl(image);
+                    setImagePickerState((prev) => {
+                      if (!prev) return prev;
+
+                      const exists = prev.selectedImages.includes(
+                        normalizedImage,
                       );
-                      setImagePickerState(null);
-                    }}
-                  >
-                    Use Selected Images
-                  </Button>
-                </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {imagePickerState.images.map((image, imageIndex) => (
-                  <button
-                    key={`${image}-${imageIndex}`}
-                    type="button"
-                    className={cn(
-                      "group overflow-hidden rounded-sm border bg-background text-left transition-all hover:border-primary/50 hover:shadow-md",
-                      imagePickerState.selectedImages.includes(
+                      return {
+                        ...prev,
+                        selectedImages: exists
+                          ? prev.selectedImages.filter(
+                            (selected) => selected !== normalizedImage,
+                          )
+                          : [...prev.selectedImages, normalizedImage],
+                      };
+                    });
+                  }}
+                >
+                  <div className="aspect-square overflow-hidden bg-muted/10">
+                    <img
+                      src={normalizeImageUrl(image)}
+                      alt={`${imagePickerState.item.name} ${imageIndex + 1}`}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                  </div>
+                  <div className="border-t border-border/40 px-3 py-2">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                      {imagePickerState.selectedImages.includes(
                         normalizeImageUrl(image),
                       )
-                        ? "border-primary ring-1 ring-primary/30"
-                        : "border-border/60",
-                    )}
-                    onClick={() => {
-                      const normalizedImage = normalizeImageUrl(image);
-                      setImagePickerState((prev) => {
-                        if (!prev) return prev;
-
-                        const exists = prev.selectedImages.includes(
-                          normalizedImage,
-                        );
-
-                        return {
-                          ...prev,
-                          selectedImages: exists
-                            ? prev.selectedImages.filter(
-                                (selected) => selected !== normalizedImage,
-                              )
-                            : [...prev.selectedImages, normalizedImage],
-                        };
-                      });
-                    }}
-                  >
-                    <div className="aspect-square overflow-hidden bg-muted/10">
-                      <img
-                        src={normalizeImageUrl(image)}
-                        alt={`${imagePickerState.item.name} ${imageIndex + 1}`}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      />
-                      <div className="absolute right-2 top-2 rounded-full bg-background/90 p-1 shadow-sm">
-                        <Check
-                          className={cn(
-                            "h-4 w-4",
-                            imagePickerState.selectedImages.includes(
-                              normalizeImageUrl(image),
-                            )
-                              ? "text-primary"
-                              : "text-muted-foreground/40",
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="border-t border-border/40 px-3 py-2">
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                        {imagePickerState.selectedImages.includes(
-                          normalizeImageUrl(image),
-                        )
-                          ? "Selected"
-                          : "Tap To Select"}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+                        ? "Selected"
+                        : "Tap To Select"}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </Modal>
 
       <KitViewModal
         open={isKitViewOpen}
@@ -758,7 +730,7 @@ export const QuotationProductsTable = () => {
           >
             <X className="h-6 w-6" />
           </button>
- 
+
           {/* Navigation Controls */}
           {galleryImages.length > 1 && (
             <>
@@ -776,14 +748,14 @@ export const QuotationProductsTable = () => {
               >
                 <ChevronRight className="h-10 w-10 opacity-60 group-hover:opacity-100" />
               </button>
- 
+
               {/* Image Counter Badge */}
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white/10 text-white rounded-full text-xs font-black tracking-widest uppercase backdrop-blur-sm border border-white/10">
                 {galleryIndex + 1} / {galleryImages.length}
               </div>
             </>
           )}
- 
+
           <div
             className="max-w-[70vw] max-h-[85vh] bg-white rounded-sm overflow-hidden shadow-2xl relative animate-in zoom-in duration-500 delay-150"
             onClick={(e) => e.stopPropagation()}

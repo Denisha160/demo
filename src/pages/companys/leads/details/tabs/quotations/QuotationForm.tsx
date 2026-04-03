@@ -336,7 +336,7 @@ const QuotationForm = ({
                         <Input
                           value={watchAll.lead_name || "Loading..."}
                           readOnly
-                          className="h-10 border-border/60 rounded-sm bg-muted/20 cursor-not-allowed font-medium"
+                          className="h-9 border-border/60 rounded-sm bg-muted/20 cursor-not-allowed font-medium"
                           placeholder="Lead Name"
                         />
                         <input type="hidden" {...field} />

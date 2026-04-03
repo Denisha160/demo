@@ -19,9 +19,19 @@ export const useKitsByProduct = (productId?: string) => {
     queryFn: async () => {
       if (!productId) return [];
       const response = (await listKitsByProduct(productId)) as ApiResponse<
-        KitMembership[]
+        KitMembership[] | { items: KitMembership[] }
       >;
-      return response.data || [];
+      const data = response.data;
+      if (Array.isArray(data)) return data;
+      if (
+        data &&
+        typeof data === "object" &&
+        "items" in data &&
+        Array.isArray((data as any).items)
+      ) {
+        return (data as any).items;
+      }
+      return [];
     },
     enabled: !!productId,
   });

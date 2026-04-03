@@ -270,7 +270,6 @@ const KitFormPage = () => {
     setKitImage(previewUrl);
   };
 
-
   const totalValue = items.reduce((sum, item) => {
     return sum + (item.price || 0) * (item.quantity_per_kit || 0);
   }, 0);
@@ -484,7 +483,7 @@ const KitFormPage = () => {
 
             <div className="border border-dashed border-border rounded-lg p-4 bg-muted/10 flex flex-col items-center justify-center min-h-[160px] relative group">
               {kitImage ? (
-                <div 
+                <div
                   className="relative w-full aspect-video rounded-md overflow-hidden bg-muted/20 border border-border cursor-pointer group"
                   onClick={() => fileInputRef.current?.click()}
                 >
@@ -495,8 +494,8 @@ const KitFormPage = () => {
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                       <ImageIcon className="w-3.5 h-3.5" />
-                       Change Image
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Change Image
                     </span>
                   </div>
                 </div>

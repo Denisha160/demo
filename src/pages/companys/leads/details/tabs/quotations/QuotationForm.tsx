@@ -376,9 +376,13 @@ const QuotationForm = ({
                 <div className="flex flex-wrap gap-6 bg-muted/20 rounded-sm border border-border/10">
                   {(() => {
                     const displayEmail =
-                      leadDetails?.email || (quotationData as any)?.lead_email || "—";
+                      leadDetails?.email ||
+                      (quotationData as any)?.lead_email ||
+                      "—";
                     const displayPhone =
-                      leadDetails?.phone || (quotationData as any)?.lead_phone || "—";
+                      leadDetails?.phone ||
+                      (quotationData as any)?.lead_phone ||
+                      "—";
                     const displayGst =
                       leadDetails?.gst_number ||
                       (quotationData as any)?.gst_number ||

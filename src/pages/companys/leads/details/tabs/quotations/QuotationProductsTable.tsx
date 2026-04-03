@@ -150,19 +150,20 @@ export const QuotationProductsTable = () => {
     }
   };
 
-  const buildItemImages = (
-    item: SelectableItem,
-    selectedImages: string[],
-  ) => {
+  const buildItemImages = (item: SelectableItem, selectedImages: string[]) => {
     const normalizedSelectedImages = selectedImages
       .map(normalizeImageUrl)
       .filter(Boolean);
-    const defaultImage = normalizeImageUrl(item.type === "kit" ? item.image_url : "");
+    const defaultImage = normalizeImageUrl(
+      item.type === "kit" ? item.image_url : "",
+    );
 
     return [
       ...(defaultImage ? [defaultImage] : []),
       ...normalizedSelectedImages,
-    ].filter((image, imageIndex, imageList) => imageList.indexOf(image) === imageIndex);
+    ].filter(
+      (image, imageIndex, imageList) => imageList.indexOf(image) === imageIndex,
+    );
   };
 
   const populateRowDetails = (
@@ -241,7 +242,9 @@ export const QuotationProductsTable = () => {
       return;
     }
 
-    const defaultImage = normalizeImageUrl(item.type === "kit" ? item.image_url : "");
+    const defaultImage = normalizeImageUrl(
+      item.type === "kit" ? item.image_url : "",
+    );
     const currentSelectedImages = (
       (currentItems[index]?.images as string[] | undefined) || []
     )
@@ -375,25 +378,28 @@ export const QuotationProductsTable = () => {
                             {finalImages.length > 0 ? (
                               <>
                                 <div className="grid h-full w-full grid-cols-2 gap-px bg-border/10">
-                                  {finalImages.slice(0, 4).map((image, imageIdx) => (
-                                    <div
-                                      key={`${image}-${imageIdx}`}
-                                      className="relative overflow-hidden bg-muted/10"
-                                    >
-                                      <img
-                                        src={image}
-                                        alt={`Item ${imageIdx + 1}`}
-                                        className="h-full w-full object-cover"
-                                      />
-                                      {imageIdx === 3 && finalImages.length > 4 && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/55">
-                                          <span className="text-[10px] font-black tracking-widest text-white">
-                                            +{finalImages.length - 4}
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
+                                  {finalImages
+                                    .slice(0, 4)
+                                    .map((image, imageIdx) => (
+                                      <div
+                                        key={`${image}-${imageIdx}`}
+                                        className="relative overflow-hidden bg-muted/10"
+                                      >
+                                        <img
+                                          src={image}
+                                          alt={`Item ${imageIdx + 1}`}
+                                          className="h-full w-full object-cover"
+                                        />
+                                        {imageIdx === 3 &&
+                                          finalImages.length > 4 && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/55">
+                                              <span className="text-[10px] font-black tracking-widest text-white">
+                                                +{finalImages.length - 4}
+                                              </span>
+                                            </div>
+                                          )}
+                                      </div>
+                                    ))}
                                 </div>
                                 {finalImages.length > 1 && (
                                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
@@ -441,7 +447,7 @@ export const QuotationProductsTable = () => {
                             className={cn(
                               "h-8 border-border/40 bg-background/50 text-xs font-medium focus:ring-1 focus:ring-primary/20 transition-all hover:border-primary/40 w-full",
                               errors.items?.[index]?.item_name &&
-                              "border-destructive focus:ring-destructive/20",
+                                "border-destructive focus:ring-destructive/20",
                             )}
                             searchValue={fgSearch}
                             onSearchChange={setFgSearch}
@@ -476,7 +482,7 @@ export const QuotationProductsTable = () => {
                         className={cn(
                           "h-8 text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full",
                           errors.items?.[index]?.item_description &&
-                          "border-destructive focus:ring-destructive",
+                            "border-destructive focus:ring-destructive",
                         )}
                       />
                     </td>
@@ -495,7 +501,7 @@ export const QuotationProductsTable = () => {
                         className={cn(
                           "h-8 text-center text-xs border-border/40 rounded-sm bg-background/50 focus:bg-background w-full",
                           errors.items?.[index]?.quantity &&
-                          "border-destructive focus:ring-destructive",
+                            "border-destructive focus:ring-destructive",
                         )}
                       />
                     </td>
@@ -514,7 +520,7 @@ export const QuotationProductsTable = () => {
                           className={cn(
                             "h-8 text-xs pl-5 border-border/40 rounded-sm bg-background/50 focus:bg-background font-mono font-medium w-full",
                             errors.items?.[index]?.unit_price &&
-                            "border-destructive focus:ring-destructive",
+                              "border-destructive focus:ring-destructive",
                           )}
                         />
                       </div>
@@ -671,16 +677,15 @@ export const QuotationProductsTable = () => {
                     setImagePickerState((prev) => {
                       if (!prev) return prev;
 
-                      const exists = prev.selectedImages.includes(
-                        normalizedImage,
-                      );
+                      const exists =
+                        prev.selectedImages.includes(normalizedImage);
 
                       return {
                         ...prev,
                         selectedImages: exists
                           ? prev.selectedImages.filter(
-                            (selected) => selected !== normalizedImage,
-                          )
+                              (selected) => selected !== normalizedImage,
+                            )
                           : [...prev.selectedImages, normalizedImage],
                       };
                     });

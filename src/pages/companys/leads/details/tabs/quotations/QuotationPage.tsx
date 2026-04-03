@@ -51,7 +51,8 @@ const QuotationPage = () => {
     if (!quotationData) return undefined;
 
     const rawData = quotationData as unknown as QuotationApiData;
-    const rawItems = (quotationData.items as QuotationApiItem[] | undefined) || [];
+    const rawItems =
+      (quotationData.items as QuotationApiItem[] | undefined) || [];
 
     const mappedItems: QuotationFormData["items"] = rawItems.map(
       (item: QuotationApiItem) => ({

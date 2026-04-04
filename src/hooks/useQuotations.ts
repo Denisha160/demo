@@ -6,6 +6,7 @@ import {
   createQuotation,
   updateQuotation,
   deleteQuotation,
+  downloadQuotation,
 } from "@/services/api";
 import {
   Quotation,
@@ -92,6 +93,34 @@ export function useDeleteQuotation() {
       toast.error(
         error?.response?.data?.message || "Failed to delete quotation",
       );
+    },
+  });
+}
+
+export function useDownloadQuotation() {
+  return useMutation({
+    mutationFn: ({
+      quotationId,
+      quotationNumber,
+    }: {
+      quotationId: string;
+      quotationNumber?: string;
+    }) => downloadQuotation(quotationId),
+    onSuccess: (data: any, { quotationNumber }) => {
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `Quotation_${quotationNumber || new Date().getTime()}.pdf`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Quotation PDF downloaded successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to download PDF");
     },
   });
 }

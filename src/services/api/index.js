@@ -871,4 +871,9 @@ export const deleteQuotation = (id) => {
   return axios({ method: "DELETE", url });
 };
 
+export const downloadQuotation = (id) => {
+  const url = `quotation/${id}/download`;
+  return axios({ method: "GET", url, responseType: "blob" });
+};
+
 // end region

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { useQuotation } from "@/hooks/useQuotations";
+import { useQuotation, useDownloadQuotation } from "@/hooks/useQuotations";
+import { toast } from "react-toastify";
 import { formatDate } from "@/utils/date";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,19 @@ const QuotationViewPage = () => {
   const { data: quotation, isLoading } = useQuotation(quotationId);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const { mutate: download, isPending: isDownloading } = useDownloadQuotation();
+
+  const handleDownload = () => {
+    if (!quotation?.id) {
+      toast.error("Quotation details not found");
+      return;
+    }
+
+    download({
+      quotationId: quotation.id,
+      quotationNumber: String(quotation.quotation_number),
+    });
+  };
 
   const nextImage = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -257,8 +271,14 @@ const QuotationViewPage = () => {
             variant="outline"
             size="sm"
             className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background"
+            onClick={handleDownload}
+            disabled={isDownloading}
           >
-            <Download className="h-3.5 w-3.5" />
+            {isDownloading ? (
+               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+               <Download className="h-3.5 w-3.5" />
+            )}
             PDF
           </Button>
         </div>

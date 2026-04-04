@@ -148,5 +148,7 @@ export const queryKeys = {
       [...queryKeys.quotations.all, "list", filters] as const,
     detail: (id: string) =>
       [...queryKeys.quotations.all, "detail", id] as const,
+    download: (id: string) =>
+      [...queryKeys.quotations.all, "download", id] as const,
   },
 } as const;

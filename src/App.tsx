@@ -66,6 +66,7 @@ import SalesPage from "./pages/companys/sales/SalesPage";
 import SalesMemberDetailPage from "./pages/companys/sales/SalesMemberDetailPage";
 import QuotationPage from "./pages/companys/leads/details/tabs/quotations/QuotationPage";
 import QuotationViewPage from "./pages/companys/leads/details/tabs/quotations/QuotationViewPage";
+import QuotationsPage from "./pages/companys/leads/quotations/QuotationsPage";
 import ShiftPage from "./pages/admin/shifts/ShiftPage";
 import ShiftDetailPage from "./pages/admin/shifts/ShiftDetailPage";
 
@@ -378,6 +379,7 @@ const App = () => (
           <Route path="accounts/:id" element={<AccountViewPage />} />
           <Route path="status" element={<StatusPage />} />
           <Route path="source" element={<SourcePage />} />
+          <Route path="quotation" element={<QuotationsPage />} />
           <Route path="visits" element={<VisitsPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="lead/tasks/:leadId" element={<LeadTaskViewPage />} />

@@ -19,6 +19,7 @@ import {
 export interface ComboboxOption {
   value: string;
   label: string;
+  badge?: string;
 }
 
 interface ComboboxProps {
@@ -189,7 +190,14 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                         value === option.value ? "opacity-100" : "opacity-0",
                       )}
                     />
-                    {option.label}
+                    <div className="flex-1 flex items-center justify-between gap-2 overflow-hidden">
+                      <span className="truncate">{option.label}</span>
+                      {option.badge && (
+                        <span className="shrink-0 px-1.5 py-0.5 rounded-[2px] bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest border border-primary/20 leading-none">
+                          {option.badge}
+                        </span>
+                      )}
+                    </div>
                   </CommandItem>
                 ))}
               </CommandGroup>

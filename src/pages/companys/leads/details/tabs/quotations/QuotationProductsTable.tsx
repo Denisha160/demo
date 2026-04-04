@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
@@ -434,6 +435,7 @@ export const QuotationProductsTable = () => {
                             options={allItems.map((item) => ({
                               label: item.name,
                               value: item.id,
+                              badge: item.type === "kit" ? "KIT" : "PRODUCT",
                             }))}
                             value={
                               watch(`items.${index}.type`) === "product"
@@ -691,19 +693,47 @@ export const QuotationProductsTable = () => {
                     });
                   }}
                 >
-                  <div className="aspect-square overflow-hidden bg-muted/10">
+                  <div className="aspect-square overflow-hidden bg-muted/10 relative group-hover:opacity-90 transition-opacity">
                     <img
                       src={normalizeImageUrl(image)}
                       alt={`${imagePickerState.item.name} ${imageIndex + 1}`}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.1]"
                     />
+                    {/* Selection Indicator Overlay */}
+                    {imagePickerState.selectedImages.includes(
+                      normalizeImageUrl(image),
+                    ) && (
+                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center p-2 z-10 transition-all duration-300 backdrop-blur-[1px]">
+                        <div className="bg-background rounded-full p-1 shadow-lg border-2 border-primary animate-in zoom-in duration-300">
+                          <CheckCircle2 className="h-6 w-6 text-primary" />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="border-t border-border/40 px-3 py-2">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <div
+                    className={cn(
+                      "px-3 py-2 transition-colors",
+                      imagePickerState.selectedImages.includes(
+                        normalizeImageUrl(image),
+                      )
+                        ? "bg-primary/5 border-t border-primary/20"
+                        : "border-t border-border/40",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "text-[10px] font-black uppercase tracking-widest leading-none",
+                        imagePickerState.selectedImages.includes(
+                          normalizeImageUrl(image),
+                        )
+                          ? "text-primary"
+                          : "text-muted-foreground/60",
+                      )}
+                    >
                       {imagePickerState.selectedImages.includes(
                         normalizeImageUrl(image),
                       )
-                        ? "Selected"
+                        ? "Selected Item"
                         : "Tap To Select"}
                     </span>
                   </div>

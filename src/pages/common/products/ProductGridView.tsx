@@ -30,8 +30,8 @@ const ProductGridView = ({
 }: ProductGridViewProps) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-1">
-        {Array.from({ length: 12 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-4 p-1">
+        {Array.from({ length: 16 }).map((_, i) => (
           <Card
             key={i}
             className="animate-pulse border-border/50 rounded-sm overflow-hidden h-[240px]"
@@ -60,7 +60,7 @@ const ProductGridView = ({
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 p-1 animate-in fade-in duration-500">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 gap-3 p-1 animate-in fade-in duration-500">
         {items.map((product) => (
           <Card
             key={product.id}
@@ -95,14 +95,14 @@ const ProductGridView = ({
 
             {/* Image Container */}
             <div
-              className="h-44 w-full bg-slate-50 relative overflow-hidden cursor-zoom-in group/img"
+              className="h-44 w-full bg-slate-50/50 relative overflow-hidden cursor-zoom-in group/img border-b border-slate-100/50"
               onClick={() => onView(product.id)}
             >
               {product.images && product.images.length > 0 ? (
                 <img
                   src={getImageUrl(product.images[0])}
                   alt={product.product_name}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover/img:scale-110"
+                  className="h-full w-full object-contain transition-transform duration-700 group-hover/img:scale-110"
                 />
               ) : (
                 <div className="h-full w-full flex items-center justify-center bg-slate-100/50">

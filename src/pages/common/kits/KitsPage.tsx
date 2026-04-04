@@ -70,8 +70,8 @@ const KitsPage = () => {
   );
   const [viewMode, setViewMode] = useState<"cards" | "table">(
     (searchParams.get("view") as "cards" | "table") ||
-      (localStorage.getItem("kits_view_mode") as "cards" | "table") ||
-      "cards",
+    (localStorage.getItem("kits_view_mode") as "cards" | "table") ||
+    "cards",
   );
 
   // Modal state
@@ -377,8 +377,8 @@ const KitsPage = () => {
       ) : (
         <>
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
-              {[...Array(12)].map((_, i) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 3xl:grid-cols-7 gap-3">
+              {[...Array(16)].map((_, i) => (
                 <div
                   key={i}
                   className="h-[240px] rounded-sm border border-border bg-card animate-pulse shadow-sm"
@@ -387,7 +387,7 @@ const KitsPage = () => {
             </div>
           ) : items.length > 0 ? (
             <TooltipProvider>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 3xl:grid-cols-7gap-3">
                 {items.map((kit) => (
                   <Card
                     key={kit.id}

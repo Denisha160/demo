@@ -1,7 +1,6 @@
 import { Product } from "@/types/products";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Package, MoreVertical, Eye, Edit2, Archive } from "lucide-react";
+import { Package, MoreVertical, Eye } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import {
   DropdownMenu,
@@ -61,28 +60,28 @@ const ProductGridView = ({ items, isLoading, onView }: ProductGridViewProps) => 
       {items.map((product) => (
         <Card
           key={product.id}
-          className="group hover:shadow-md transition-all duration-300 border-border/60 hover:border-primary/30 rounded-sm overflow-hidden bg-card/40 backdrop-blur-sm flex flex-col relative"
+          className="group hover:shadow-xl transition-all duration-500 border-border/50 hover:border-primary/20 rounded-sm overflow-hidden bg-card flex flex-col relative"
         >
           {/* Status Overlay */}
-          <div className="absolute top-2 left-2 z-10">
+          <div className="absolute top-3 left-3 z-10 transition-transform group-hover:scale-105">
             <StatusBadge
               status={product.product_type}
               variant="info"
-              className="text-[9px] h-4 px-1.5 font-black tracking-widest uppercase bg-background/80 backdrop-blur-sm border-white/10 shadow-sm"
+              className="text-[9px] h-4.5 px-2 font-black tracking-widest uppercase bg-white/90 backdrop-blur-md border border-white/20 shadow-md text-slate-800"
             />
           </div>
 
           {/* Action Menu */}
-          <div className="absolute top-2 right-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-3 right-1.5 z-10 opacity-0 group-hover:opacity-100 transition-all transform group-hover:-translate-x-1">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 bg-background/80 backdrop-blur-sm hover:bg-background">
+                <Button variant="ghost" size="icon" className="h-7 w-7 bg-white/90 backdrop-blur-md hover:bg-white shadow-sm">
                   <MoreVertical className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="text-xs">
-                <DropdownMenuItem onClick={() => onView(product.id)}>
-                  <Eye className="h-3 w-3 mr-2" /> View Details
+              <DropdownMenuContent align="end" className="text-xs font-semibold">
+                <DropdownMenuItem onClick={() => onView(product.id)} className="cursor-pointer">
+                  <Eye className="h-3.5 w-3.5 mr-2 text-primary" /> View Details
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -90,82 +89,68 @@ const ProductGridView = ({ items, isLoading, onView }: ProductGridViewProps) => 
 
           {/* Image Container */}
           <div
-            className="h-32 w-full bg-muted/20 relative overflow-hidden cursor-zoom-in group/img"
+            className="h-44 w-full bg-slate-50 relative overflow-hidden cursor-zoom-in group/img"
             onClick={() => onView(product.id)}
           >
             {product.images && product.images.length > 0 ? (
               <img
                 src={getImageUrl(product.images[0])}
                 alt={product.product_name}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-110"
+                className="h-full w-full object-cover transition-transform duration-700 group-hover/img:scale-110"
               />
             ) : (
-              <div className="h-full w-full flex items-center justify-center bg-slate-50/50">
-                <Package className="h-8 w-8 text-muted-foreground/10" />
+              <div className="h-full w-full flex items-center justify-center bg-slate-100/50">
+                <Package className="h-10 w-10 text-muted-foreground/20" />
               </div>
             )}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
           </div>
 
-          <CardContent className="p-3 flex-1 flex flex-col gap-3">
-            <div className="space-y-1.5 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <h3
-                  className="text-sm font-bold tracking-tight text-foreground line-clamp-2 cursor-pointer hover:text-primary transition-colors h-10"
-                  onClick={() => onView(product.id)}
-                >
-                  {product.product_name}
-                </h3>
-              </div>
+          <CardContent className="p-2 flex-1 flex flex-col gap-1 bg-white">
+            <div className="space-y-2 flex-1">
+              <h3
+                className="text-sm font-bold tracking-tight text-slate-800 line-clamp-2 cursor-pointer hover:text-primary transition-colors h-[40px]"
+                onClick={() => onView(product.id)}
+              >
+                {product.product_name}
+              </h3>
 
               <div className="flex flex-wrap gap-1 items-center">
                 {product.category_name && (
-                  <span className="text-[10px] font-medium text-slate-500 bg-slate-100/80 px-1.5 py-0.5 rounded-[2px] border border-slate-200/50">
+                  <span className="text-[10px] font-bold text-primary bg-primary/5 px-1 rounded-sm border border-primary/10">
                     {product.category_name}
                   </span>
                 )}
                 {product.brand_name && (
-                  <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded-[2px] uppercase">
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1 rounded-sm uppercase tracking-tighter">
                     {product.brand_name}
-                  </span>
-                )}
-                {product.fragrance_name && (
-                  <span className="text-[10px] font-black text-fuchsia-600 bg-fuchsia-50 border border-fuchsia-100 px-1.5 py-0.5 rounded-[2px] uppercase">
-                    {product.fragrance_name}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-400 pt-1">
-                <span>#{product.code || 'NO CODE'}</span>
-                <span className="text-[9px] text-muted-foreground/60 uppercase">
-                  {product.base_unit} ({product.unit_category})
+              <div className="flex items-center justify-between text-[11px] font-mono font-bold text-slate-400">
+                <span>#{product.code || 'NO-CODE'}</span>
+                <span className="text-[10px] text-muted-foreground/40 font-bold uppercase">
+                  {product.base_unit}
                 </span>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-border/40 grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/50">Stock Info</p>
+            <div className="pt-1 border-t border-slate-100 grid grid-cols-2 gap-4 mt-auto">
+              <div className="space-y-0.5">
+                <p className="text-[8px] font-black uppercase tracking-[0.15em] text-slate-400">Stock</p>
                 <div className="flex items-baseline gap-1">
                   <p className={`text-sm font-black ${Number(product.stock) <= 0 ? 'text-destructive' : 'text-slate-800'}`}>
-                    {product.stock}
+                    {product.stock || 0}
                   </p>
-                  <span className="text-[10px] font-bold text-muted-foreground/60 uppercase">{product.base_unit}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase">Qty</span>
                 </div>
               </div>
 
-              <div className="space-y-1 text-right border-l border-border/40 pl-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/50">Price Guide</p>
-                <div className="flex flex-col">
-                  <div className="flex justify-between items-center gap-1">
-                    <span className="text-[9px] font-bold text-muted-foreground/60">CP:</span>
-                    <span className="text-[11px] font-bold font-mono text-slate-600">₹{product.cost_price?.toLocaleString() || 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-1">
-                    <span className="text-[9px] font-black text-primary/60">SP:</span>
-                    <span className="text-xs font-black font-mono text-primary">₹{product.selling_price?.toLocaleString() || 0}</span>
-                  </div>
+              <div className="text-right flex flex-col items-end gap-0.5">
+                <p className="text-[8px] font-black uppercase tracking-[0.15em] text-slate-400">Price</p>
+                <div className="flex items-baseline gap-1 justify-end">
+                  <span className="text-xs font-black font-mono text-primary">₹{product.selling_price || 0}</span>
                 </div>
               </div>
             </div>

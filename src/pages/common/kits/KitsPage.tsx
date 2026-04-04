@@ -70,8 +70,8 @@ const KitsPage = () => {
   );
   const [viewMode, setViewMode] = useState<"cards" | "table">(
     (searchParams.get("view") as "cards" | "table") ||
-    (localStorage.getItem("kits_view_mode") as "cards" | "table") ||
-    "cards",
+      (localStorage.getItem("kits_view_mode") as "cards" | "table") ||
+      "cards",
   );
 
   // Modal state

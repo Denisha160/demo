@@ -392,7 +392,7 @@ const KitsPage = () => {
                   onClick={() => setViewKitId(kit.id)}
                 >
                   {/* Kit Image Area */}
-                  <div className="h-40 w-full bg-muted/20 relative overflow-hidden flex items-center justify-center group/img border-b border-border/40">
+                  <div className="h-52 w-full bg-slate-50/50 relative overflow-hidden flex items-center justify-center group/img border-b border-border/40">
                     {/* Status Badge Overlay */}
                     <div className="absolute top-2 left-2 z-10">
                       <StatusBadge
@@ -406,102 +406,70 @@ const KitsPage = () => {
                       <img
                         src={kit.image_url}
                         alt={kit.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-110"
+                        className="h-full w-full object-contain transition-transform duration-700 group-hover/img:scale-105"
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <Package className="h-8 w-8 text-muted-foreground/10" />
-                        <span className="text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] pl-1">
-                          No Image
-                        </span>
+                        <Package className="h-10 w-10 text-muted-foreground/10" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
                   </div>
 
-                  <div className="p-3.5 flex-1 flex flex-col justify-between gap-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-mono font-bold text-muted-foreground/60 tracking-tight">
-                          {kit.sku || "NO-SKU"}
-                        </span>
-                        <p className="text-[9px] text-muted-foreground/50 font-medium">
+                  <div className="p-2 flex-1 flex flex-col justify-between gap-1.5 bg-white">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[9px] font-mono font-bold text-slate-400">
+                        <span>{kit.sku || "NO-SKU"}</span>
+                        <span className="text-muted-foreground/30 font-bold uppercase tracking-tighter">
                           {format(new Date(kit.created_at), "dd MMM yy")}
-                        </p>
+                        </span>
                       </div>
 
-                      <h3 className="font-bold text-sm text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                      <h3 className="font-bold text-sm text-slate-800 leading-tight group-hover:text-primary transition-colors line-clamp-2">
                         {kit.name}
                       </h3>
                     </div>
 
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <div className="bg-muted/30 rounded-sm p-1.5 border border-border/40">
-                        <p className="text-[8px] text-muted-foreground/60 uppercase font-black tracking-tighter">
-                          Components
-                        </p>
-                        <p className="text-xs font-bold text-foreground">
-                          {kit.total_items} Items
-                        </p>
+                    {/* Stats & Actions Footer */}
+                    <div className="space-y-1.5 border-t border-slate-50 mt-auto">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-0.5">
+                          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-400">Items</p>
+                          <p className="text-xs font-black text-slate-800">{kit.total_items} Qty</p>
+                        </div>
+                        <div className="text-right space-y-0.5 border-l border-slate-100 pl-2">
+                          <p className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-400">Kit Price</p>
+                          <p className="text-sm font-black font-mono text-primary">₹{Number(kit.kit_price || 0).toLocaleString()}</p>
+                        </div>
                       </div>
-                      <div className="bg-primary/5 rounded-sm p-1.5 border border-primary/10">
-                        <p className="text-[8px] text-primary/60 uppercase font-black tracking-tighter">
-                          Kit Price
-                        </p>
-                        <p className="text-xs font-bold text-primary">
-                          ₹
-                          {Number(kit.kit_price || 0).toLocaleString(
-                            undefined,
-                            {
-                              minimumFractionDigits: 1,
-                              maximumFractionDigits: 1,
-                            },
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Actions footer */}
-                  <div className="px-3.5 py-2 bg-muted/10 border-t border-border flex items-center justify-between">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-[11px] font-semibold text-primary hover:bg-primary/10 gap-1.5"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setViewKitId(kit.id);
-                      }}
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      View Kit
-                    </Button>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                        title="Edit Kit"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`edit/${kit.id}`);
-                        }}
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        title="Delete Kit"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setKitToDelete(kit);
-                        }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="border-t border-slate-50/50 flex items-center justify-between">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-[10px] font-bold text-primary hover:bg-primary/5 gap-1.5 px-2"
+                        >
+                          <Eye className="h-3.5 w-3.5" /> View Kit
+                        </Button>
+                        <div className="flex items-center gap-0.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                            onClick={(e) => { e.stopPropagation(); navigate(`edit/${kit.id}`); }}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive/40 hover:text-destructive hover:bg-destructive/5"
+                            onClick={(e) => { e.stopPropagation(); setKitToDelete(kit); }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

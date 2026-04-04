@@ -275,9 +275,9 @@ const QuotationViewPage = () => {
             disabled={isDownloading}
           >
             {isDownloading ? (
-               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-               <Download className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5" />
             )}
             PDF
           </Button>

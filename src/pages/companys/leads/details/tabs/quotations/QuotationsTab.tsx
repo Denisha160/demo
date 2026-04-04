@@ -87,9 +87,10 @@ const QuotationsTab = () => {
           <span
             onClick={() => handleView(item)}
             className="font-semibold text-sm text-primary hover:underline cursor-pointer decoration-primary/30 underline-offset-2"
-          > {item.quotation_number || "—"}
+          >
+            {" "}
+            {item.quotation_number || "—"}
           </span>
-
         </div>
       ),
     },

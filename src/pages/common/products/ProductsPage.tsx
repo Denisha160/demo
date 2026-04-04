@@ -426,47 +426,58 @@ const ProductsPage = () => {
             onView={(id) => navigate(`${routePrefix}/products/${id}`)}
           />
           <div className="flex items-center justify-between py-4 border-t border-border/40">
-             <div className="text-xs text-muted-foreground font-medium">
-                Showing {Math.min((page - 1) * limit + 1, totalItems)} to {Math.min(page * limit, totalItems)} of {totalItems} items
-             </div>
-             <div className="flex items-center gap-2">
-                <Button
-                   variant="outline"
-                   size="sm"
-                   className="h-8 px-2 text-[11px] font-black tracking-widest uppercase rounded-sm  disabled:opacity-50"
-                   onClick={() => setPage(p => Math.max(1, p - 1))}
-                   disabled={page === 1 || isLoading}
-                >
-                   Previous
-                </Button>
-                <div className="flex items-center gap-1">
-                   {Array.from({ length: Math.ceil(totalItems / limit) }).map((_, i) => {
-                      const p = i + 1;
-                      if (p > 5 && p < Math.ceil(totalItems / limit)) return null;
-                      if (p === 6) return <span key={p} className="text-muted-foreground mx-1 text-xs">...</span>;
+            <div className="text-xs text-muted-foreground font-medium">
+              Showing {Math.min((page - 1) * limit + 1, totalItems)} to{" "}
+              {Math.min(page * limit, totalItems)} of {totalItems} items
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-[11px] font-black tracking-widest uppercase rounded-sm  disabled:opacity-50"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1 || isLoading}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.ceil(totalItems / limit) }).map(
+                  (_, i) => {
+                    const p = i + 1;
+                    if (p > 5 && p < Math.ceil(totalItems / limit)) return null;
+                    if (p === 6)
                       return (
-                         <Button
-                            key={p}
-                            variant={page === p ? "default" : "outline"}
-                            size="sm"
-                            className="h-8 w-8 text-xs rounded-sm p-0 flex items-center justify-center transition-all"
-                            onClick={() => setPage(p)}
-                         >
-                            {p}
-                         </Button>
+                        <span
+                          key={p}
+                          className="text-muted-foreground mx-1 text-xs"
+                        >
+                          ...
+                        </span>
                       );
-                   })}
-                </div>
-                <Button
-                   variant="outline"
-                   size="sm"
-                   className="h-8 px-2 text-[11px] font-black tracking-widest uppercase rounded-sm disabled:opacity-50"
-                   onClick={() => setPage(p => p + 1)}
-                   disabled={page >= Math.ceil(totalItems / limit) || isLoading}
-                >
-                   Next
-                </Button>
-             </div>
+                    return (
+                      <Button
+                        key={p}
+                        variant={page === p ? "default" : "outline"}
+                        size="sm"
+                        className="h-8 w-8 text-xs rounded-sm p-0 flex items-center justify-center transition-all"
+                        onClick={() => setPage(p)}
+                      >
+                        {p}
+                      </Button>
+                    );
+                  },
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-[11px] font-black tracking-widest uppercase rounded-sm disabled:opacity-50"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= Math.ceil(totalItems / limit) || isLoading}
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </div>
       )}

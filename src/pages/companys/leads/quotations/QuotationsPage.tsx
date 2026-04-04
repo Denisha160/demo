@@ -32,11 +32,16 @@ const QuotationsPage = () => {
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = parseInt(searchParams.get("limit") || "15", 10);
 
-  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || "",
+  );
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(null);
-  const { mutate: deleteQuotation, isPending: isDeleting } = useDeleteQuotation();
+  const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(
+    null,
+  );
+  const { mutate: deleteQuotation, isPending: isDeleting } =
+    useDeleteQuotation();
 
   const updateParam = (key: string, value: string | number) => {
     setSearchParams(
@@ -136,20 +141,25 @@ const QuotationsPage = () => {
     {
       key: "status",
       header: "Status",
-      render: (item) => (
-        <StatusBadge status={item.status} />
-      ),
+      render: (item) => <StatusBadge status={item.status} />,
     },
     {
       key: "id",
       header: "Actions",
       render: (item) => (
-        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center justify-end gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Button
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-            onClick={() => navigate(`/${companyId}/leads/${item.lead_id}/quotations/${item.id}/edit`)}
+            onClick={() =>
+              navigate(
+                `/${companyId}/leads/${item.lead_id}/quotations/${item.id}/edit`,
+              )
+            }
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -215,12 +225,19 @@ const QuotationsPage = () => {
             pageSize={pageSize}
             onServerPageChange={setPage}
             onServerPageSizeChange={setPageSize}
-            onRowClick={(item) => navigate(`/${companyId}/leads/${item.lead_id}/quotations/${item.id}/view`)}
+            onRowClick={(item) =>
+              navigate(
+                `/${companyId}/leads/${item.lead_id}/quotations/${item.id}/view`,
+              )
+            }
           />
         </div>
       </div>
 
-      <AlertDialog open={!!quotationToDelete} onOpenChange={(open) => !open && setQuotationToDelete(null)}>
+      <AlertDialog
+        open={!!quotationToDelete}
+        onOpenChange={(open) => !open && setQuotationToDelete(null)}
+      >
         <AlertDialogContent className="rounded-sm border-border shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
@@ -228,11 +245,18 @@ const QuotationsPage = () => {
               Confirm Deletion
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm pt-2">
-              Are you sure you want to delete quotation <strong>#{quotationToDelete?.quotation_number}</strong>? This will permanently remove the record and all associated items.
+              Are you sure you want to delete quotation{" "}
+              <strong>#{quotationToDelete?.quotation_number}</strong>? This will
+              permanently remove the record and all associated items.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
-            <AlertDialogCancel disabled={isDeleting} className="rounded-sm border-border">Cancel</AlertDialogCancel>
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="rounded-sm border-border"
+            >
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-sm"
               disabled={isDeleting}
@@ -240,7 +264,7 @@ const QuotationsPage = () => {
                 e.preventDefault();
                 if (quotationToDelete) {
                   deleteQuotation(quotationToDelete.id, {
-                    onSuccess: () => setQuotationToDelete(null)
+                    onSuccess: () => setQuotationToDelete(null),
                   });
                 }
               }}

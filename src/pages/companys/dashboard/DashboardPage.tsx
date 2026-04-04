@@ -288,12 +288,12 @@ const Dashboard = () => {
                     dealsByStage.length > 0
                       ? dealsByStage
                       : [
-                        {
-                          name: "No Data",
-                          value: 1,
-                          color: "hsl(var(--muted))",
-                        },
-                      ]
+                          {
+                            name: "No Data",
+                            value: 1,
+                            color: "hsl(var(--muted))",
+                          },
+                        ]
                   }
                   cx="50%"
                   cy="50%"

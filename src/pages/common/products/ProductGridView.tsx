@@ -23,12 +23,19 @@ const getImageUrl = (image: any) => {
   return "";
 };
 
-const ProductGridView = ({ items, isLoading, onView }: ProductGridViewProps) => {
+const ProductGridView = ({
+  items,
+  isLoading,
+  onView,
+}: ProductGridViewProps) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-1">
         {Array.from({ length: 12 }).map((_, i) => (
-          <Card key={i} className="animate-pulse border-border/50 rounded-sm overflow-hidden h-[240px]">
+          <Card
+            key={i}
+            className="animate-pulse border-border/50 rounded-sm overflow-hidden h-[240px]"
+          >
             <div className="h-32 bg-muted/30" />
             <div className="p-3 space-y-2">
               <div className="h-4 bg-muted/40 rounded w-3/4" />
@@ -44,7 +51,9 @@ const ProductGridView = ({ items, isLoading, onView }: ProductGridViewProps) => 
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border-2 border-dashed border-border/40 rounded-lg">
         <Package className="h-10 w-10 mb-2 opacity-20" />
-        <p className="text-sm font-medium">No products found matching your filters</p>
+        <p className="text-sm font-medium">
+          No products found matching your filters
+        </p>
       </div>
     );
   }
@@ -62,7 +71,7 @@ const ProductGridView = ({ items, isLoading, onView }: ProductGridViewProps) => 
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="w-6 h-6 rounded-sm bg-white/90 backdrop-blur-md border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-800 shadow-sm cursor-help">
-                    {product.product_type?.charAt(0) || 'P'}
+                    {product.product_type?.charAt(0) || "P"}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="right">
@@ -120,7 +129,9 @@ const ProductGridView = ({ items, isLoading, onView }: ProductGridViewProps) => 
                 </Tooltip>
 
                 <div className="flex items-center justify-between text-[9px] font-mono font-bold text-slate-400">
-                  <span className="truncate max-w-[60px]">#{product.code || 'NO-CODE'}</span>
+                  <span className="truncate max-w-[60px]">
+                    #{product.code || "NO-CODE"}
+                  </span>
                   {product.brand_name && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -129,7 +140,9 @@ const ProductGridView = ({ items, isLoading, onView }: ProductGridViewProps) => 
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-[10px] font-black uppercase tracking-widest">{product.brand_name}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest">
+                          {product.brand_name}
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   )}
@@ -141,20 +154,28 @@ const ProductGridView = ({ items, isLoading, onView }: ProductGridViewProps) => 
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-baseline gap-1 cursor-help">
-                        <p className={`text-[11px] font-black ${Number(product.stock) <= 0 ? 'text-destructive' : 'text-slate-800'}`}>
+                        <p
+                          className={`text-[11px] font-black ${Number(product.stock) <= 0 ? "text-destructive" : "text-slate-800"}`}
+                        >
                           {product.stock || 0}
                         </p>
-                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{product.base_unit?.substring(0, 3)}</span>
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+                          {product.base_unit?.substring(0, 3)}
+                        </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="top">
-                      <p className="text-[10px] font-black uppercase tracking-widest">Stock: {product.stock} {product.base_unit}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest">
+                        Stock: {product.stock} {product.base_unit}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
 
                 <div className="text-right">
-                  <p className="text-[11px] font-black font-mono text-primary truncate">₹{product.selling_price || 0}</p>
+                  <p className="text-[11px] font-black font-mono text-primary truncate">
+                    ₹{product.selling_price || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>

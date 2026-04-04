@@ -80,29 +80,17 @@ const QuotationsTab = () => {
 
   const columns: Column<any>[] = [
     {
-      key: "lead_name",
-      header: "Customer",
+      key: "quotation_number",
+      header: "Quotation Number",
       render: (item) => (
         <div className="flex flex-col">
           <span
             onClick={() => handleView(item)}
             className="font-semibold text-sm text-primary hover:underline cursor-pointer decoration-primary/30 underline-offset-2"
-          >
-            {item.lead_name || "—"}
+          > {item.quotation_number || "—"}
           </span>
-          {item.quotation_number && (
-            <span className="text-[10px] font-mono text-muted-foreground uppercase">
-              {item.quotation_number}
-            </span>
-          )}
+
         </div>
-      ),
-    },
-    {
-      key: "company_name",
-      header: "Company",
-      render: (item) => (
-        <span className="text-sm font-medium">{item.company_name || "—"}</span>
       ),
     },
     {

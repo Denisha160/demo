@@ -146,8 +146,20 @@ const KitsPage = () => {
       className: "w-[280px]",
       render: (item) => (
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
-            <Package className="h-4 w-4" />
+          <div className="h-10 w-10 bg-muted/40 rounded-sm flex flex-col items-center justify-center shrink-0 border border-border/50 overflow-hidden group/img relative">
+            {item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover/img:scale-110"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-1 text-center">
+                <span className="text-[8px] font-black leading-none text-muted-foreground/40 uppercase tracking-tighter">
+                  No Image
+                </span>
+              </div>
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">
@@ -379,9 +391,23 @@ const KitsPage = () => {
                   className="group relative flex flex-col bg-card border border-border rounded-sm shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
                   onClick={() => setViewKitId(kit.id)}
                 >
-                  {/* Kit Image / Decorative BG */}
-                  <div className="absolute top-0 right-0 p-3 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
-                    <Package className="h-16 w-16" />
+                  {/* Kit Image Area */}
+                  <div className="h-32 w-full bg-muted/20 relative overflow-hidden flex items-center justify-center group/img border-b border-border/40">
+                    {kit.image_url ? (
+                      <img
+                        src={kit.image_url}
+                        alt={kit.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-110"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center space-y-1">
+                        <Package className="h-8 w-8 text-muted-foreground/10" />
+                        <span className="text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] pl-1">
+                          No Image
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
                   </div>
 
                   <div className="p-5 flex-1 space-y-4">

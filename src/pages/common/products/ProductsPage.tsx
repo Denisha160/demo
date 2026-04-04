@@ -64,7 +64,9 @@ const ProductsPage = () => {
     (searchParams.get("sortDirection") as "asc" | "desc") || "desc",
   );
   const [viewMode, setViewMode] = useState<"table" | "grid">(
-    (searchParams.get("view") as "table" | "grid") || "table",
+    (searchParams.get("view") as "table" | "grid") ||
+      (localStorage.getItem("products_view_mode") as "table" | "grid") ||
+      "table",
   );
 
   const isAdmin = location.pathname.startsWith("/admin");
@@ -95,6 +97,11 @@ const ProductsPage = () => {
 
   const [brandSearch, setBrandSearch] = useState("");
   const debouncedBrandSearch = useDebounce(brandSearch, 300);
+
+  // Sync viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem("products_view_mode", viewMode);
+  }, [viewMode]);
 
   // Sync state to URL
   useEffect(() => {

@@ -69,7 +69,9 @@ const KitsPage = () => {
     (searchParams.get("sortDirection") as "asc" | "desc") || "desc",
   );
   const [viewMode, setViewMode] = useState<"cards" | "table">(
-    (searchParams.get("view") as "cards" | "table") || "cards",
+    (searchParams.get("view") as "cards" | "table") ||
+      (localStorage.getItem("kits_view_mode") as "cards" | "table") ||
+      "cards",
   );
 
   // Modal state
@@ -87,6 +89,11 @@ const KitsPage = () => {
     setSortDirection("desc");
     setPage(1);
   };
+
+  // Sync viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem("kits_view_mode", viewMode);
+  }, [viewMode]);
 
   // Sync state to URL
   useEffect(() => {

@@ -392,7 +392,16 @@ const KitsPage = () => {
                   onClick={() => setViewKitId(kit.id)}
                 >
                   {/* Kit Image Area */}
-                  <div className="h-32 w-full bg-muted/20 relative overflow-hidden flex items-center justify-center group/img border-b border-border/40">
+                  <div className="h-40 w-full bg-muted/20 relative overflow-hidden flex items-center justify-center group/img border-b border-border/40">
+                    {/* Status Badge Overlay */}
+                    <div className="absolute top-2 left-2 z-10">
+                      <StatusBadge
+                        status={kit.is_active ? "Active" : "Inactive"}
+                        variant={kit.is_active ? "success" : "destructive"}
+                        className="text-[9px] h-4 px-1.5 font-black tracking-widest uppercase bg-white/80 backdrop-blur-sm border border-white/20 shadow-sm"
+                      />
+                    </div>
+
                     {kit.image_url ? (
                       <img
                         src={kit.image_url}
@@ -400,63 +409,53 @@ const KitsPage = () => {
                         className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-110"
                       />
                     ) : (
-                      <div className="flex flex-col items-center justify-center space-y-1">
+                      <div className="flex flex-col items-center justify-center">
                         <Package className="h-8 w-8 text-muted-foreground/10" />
                         <span className="text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] pl-1">
                           No Image
                         </span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
 
-                  <div className="p-5 flex-1 space-y-4">
-                    {/* Status + SKU */}
-                    <div className="flex items-start justify-between">
-                      <Badge
-                        variant={kit.is_active ? "success" : "secondary"}
-                        className="rounded-full px-2 py-0 text-[10px] uppercase tracking-wider font-bold"
-                      >
-                        {kit.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                      <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                        {kit.sku || "NO-SKU"}
-                      </span>
-                    </div>
+                  <div className="p-3.5 flex-1 flex flex-col justify-between gap-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-mono font-bold text-muted-foreground/60 tracking-tight">
+                          {kit.sku || "NO-SKU"}
+                        </span>
+                        <p className="text-[9px] text-muted-foreground/50 font-medium">
+                          {format(new Date(kit.created_at), "dd MMM yy")}
+                        </p>
+                      </div>
 
-                    {/* Title */}
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-base text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1">
+                      <h3 className="font-bold text-sm text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
                         {kit.name}
                       </h3>
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <Info className="h-3 w-3" />
-                        Created{" "}
-                        {format(new Date(kit.created_at), "dd MMM yyyy")}
-                      </p>
                     </div>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      <div className="bg-muted/30 rounded-lg p-2 border border-border/50">
-                        <p className="text-[9px] text-muted-foreground uppercase font-semibold">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div className="bg-muted/30 rounded-sm p-1.5 border border-border/40">
+                        <p className="text-[8px] text-muted-foreground/60 uppercase font-black tracking-tighter">
                           Components
                         </p>
-                        <p className="text-sm font-bold text-foreground">
+                        <p className="text-xs font-bold text-foreground">
                           {kit.total_items} Items
                         </p>
                       </div>
-                      <div className="bg-primary/5 rounded-lg p-2 border border-primary/10">
-                        <p className="text-[9px] text-primary/70 uppercase font-semibold">
+                      <div className="bg-primary/5 rounded-sm p-1.5 border border-primary/10">
+                        <p className="text-[8px] text-primary/60 uppercase font-black tracking-tighter">
                           Kit Price
                         </p>
-                        <p className="text-sm font-bold text-primary">
+                        <p className="text-xs font-bold text-primary">
                           ₹
                           {Number(kit.kit_price || 0).toLocaleString(
                             undefined,
                             {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
+                              minimumFractionDigits: 1,
+                              maximumFractionDigits: 1,
                             },
                           )}
                         </p>
@@ -465,7 +464,7 @@ const KitsPage = () => {
                   </div>
 
                   {/* Actions footer */}
-                  <div className="px-5 py-3 bg-muted/20 border-t border-border flex items-center justify-between">
+                  <div className="px-3.5 py-2 bg-muted/10 border-t border-border flex items-center justify-between">
                     <Button
                       variant="ghost"
                       size="sm"

@@ -430,14 +430,12 @@ const ProductFormPage = () => {
       <div className="sticky top-0 z-10 border-b border-border transition-all duration-200 mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
           <div className="flex items-center">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
+            <button
+              className="p-1.5 hover:bg-muted rounded-sm text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => navigate(-1)}
             >
               <ArrowLeft className="h-5 w-5" />
-            </Button>
+            </button>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <Box className="w-5 h-5 text-primary" />

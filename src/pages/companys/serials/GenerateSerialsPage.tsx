@@ -69,7 +69,7 @@ const VariableBadge = ({ tag, label }: { tag: string; label: string }) => (
 );
 
 interface SerialPreview {
-  id?: string;
+  id: string;
   serial_number: string;
   batch_number: string;
 }
@@ -215,6 +215,7 @@ const GenerateSerialsPage = () => {
         }
 
         return {
+          id: uuidv4(),
           serial_number: str,
           batch_number: selectedBatch?.batch_number || "—",
         };

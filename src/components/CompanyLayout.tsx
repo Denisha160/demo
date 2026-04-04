@@ -591,7 +591,7 @@ const CompanyLayout = ({ title }: CompanyLayoutProps) => {
 
           <div className="flex items-center gap-1 sm:gap-3">
             <Link
-              to={`/${currentCompany.id}/lead/tasks/lead_id`}
+              to={`/${currentCompany.id}/tasks`}
               className="h-9 w-9 flex items-center justify-center rounded-sm hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
               title="Tasks"
             >

@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { useQuotation } from "@/hooks/useQuotations";
 import { formatDate } from "@/utils/date";
 import { Button } from "@/components/ui/button";
@@ -17,16 +19,103 @@ import {
   PhoneCall,
   FileText,
   BadgeInfo,
+  Image as ImageIcon,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import { getStatusColor } from "./QuotationsTab";
+
+const STORAGE_BASE_URL = "https://basaltbucket.s3.us-east-1.amazonaws.com/";
+
+const normalizeImageUrl = (image?: string | null) => {
+  if (!image) return "";
+  if (/^https?:\/\//i.test(image) || image.startsWith("data:")) {
+    return image;
+  }
+  return `${STORAGE_BASE_URL}${image.replace(/^\/+/, "")}`;
+};
 
 const QuotationViewPage = () => {
   const { quotationId } = useParams();
   const navigate = useNavigate();
   const { data: quotation, isLoading } = useQuotation(quotationId);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+
+  const nextImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (galleryImages.length === 0) return;
+    setGalleryIndex((prev) => (prev + 1) % galleryImages.length);
+  };
+
+  const prevImage = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (galleryImages.length === 0) return;
+    setGalleryIndex(
+      (prev) => (prev - 1 + galleryImages.length) % galleryImages.length,
+    );
+  };
 
   const columns: Column<any>[] = [
+    {
+      key: "images",
+      header: "Img",
+      className: "px-2 py-2 w-[88px]",
+      render: (item) => {
+        const finalImages = ((item.images as string[] | undefined) || [])
+          .map(normalizeImageUrl)
+          .filter(Boolean);
+
+        return (
+          <div
+            className="h-16 w-16 rounded-sm bg-muted/20 border border-border/10 overflow-hidden flex items-center justify-center relative cursor-zoom-in"
+            onClick={() => {
+              if (finalImages.length > 0) {
+                setGalleryImages(finalImages);
+                setGalleryIndex(0);
+              }
+            }}
+          >
+            {finalImages.length > 0 ? (
+              <>
+                <div className="grid h-full w-full grid-cols-2 gap-px bg-border/10">
+                  {finalImages.slice(0, 4).map((image, imageIdx) => (
+                    <div
+                      key={`${image}-${imageIdx}`}
+                      className="relative overflow-hidden bg-muted/10"
+                    >
+                      <img
+                        src={image}
+                        alt={`Item ${imageIdx + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                      {imageIdx === 3 && finalImages.length > 4 && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/55">
+                          <span className="text-[10px] font-black tracking-widest text-white">
+                            +{finalImages.length - 4}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {finalImages.length > 1 && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <span className="text-white text-[10px] font-black tracking-widest">
+                      {finalImages.length} IMAGES
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <ImageIcon className="h-4 w-4 text-muted-foreground/30" />
+            )}
+          </div>
+        );
+      },
+    },
     {
       key: "item_name",
       header: "Item Details",
@@ -339,6 +428,56 @@ const QuotationViewPage = () => {
           </div>
         </div>
       </div>
+      {galleryImages.length > 0 &&
+        createPortal(
+          <div
+            className="fixed inset-0 top-0 left-0 z-[1000001] m-0 h-screen w-screen bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300 pointer-events-auto"
+            onClick={() => setGalleryImages([])}
+          >
+            <button
+              type="button"
+              className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-[1000002]"
+              onClick={() => setGalleryImages([])}
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            {galleryImages.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/15 text-white rounded-full transition-all group scale-90 hover:scale-100 z-[1000002]"
+                  onClick={prevImage}
+                >
+                  <ChevronLeft className="h-10 w-10 opacity-60 group-hover:opacity-100" />
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-white/5 hover:bg-white/15 text-white rounded-full transition-all group scale-90 hover:scale-100 z-[1000002]"
+                  onClick={nextImage}
+                >
+                  <ChevronRight className="h-10 w-10 opacity-60 group-hover:opacity-100" />
+                </button>
+
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white/10 text-white rounded-full text-xs font-black tracking-widest uppercase backdrop-blur-sm border border-white/10">
+                  {galleryIndex + 1} / {galleryImages.length}
+                </div>
+              </>
+            )}
+
+            <div
+              className="max-w-[70vw] max-h-[85vh] bg-white rounded-sm overflow-hidden shadow-2xl relative animate-in zoom-in duration-500 delay-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={normalizeImageUrl(galleryImages[galleryIndex])}
+                alt={`Gallery Image ${galleryIndex + 1}`}
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

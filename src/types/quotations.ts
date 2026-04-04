@@ -17,6 +17,8 @@ export interface QuotationItem {
   fragrance_name?: string | null;
   category_id?: string | null;
   category_name?: string | null;
+  image_url?: string | null;
+  images?: string[];
   quantity: number;
   unit_price: number;
   gst_percentage?: number;
@@ -59,9 +61,5 @@ export type QuotationUpdatePayload = Partial<QuotationCreatePayload> & {
 
 export interface QuotationListResponse {
   items: Quotation[];
-  pagination: {
-    total: number;
-    offset: number;
-    limit: number;
-  };
+  total: number;
 }

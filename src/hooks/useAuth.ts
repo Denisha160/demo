@@ -16,6 +16,14 @@ import type {
   VerifyLoginPayload,
 } from "@/types/Auth";
 
+export type {
+  ApiError,
+  LoginCredentials,
+  User,
+  LoginResponse,
+  VerifyLoginPayload,
+};
+
 export const ADMIN_PERMISSIONS = [
   "user.read",
   "role.read",
@@ -66,6 +74,14 @@ export function useIsAuthenticated() {
   return {
     isAuthenticated: !!token,
     user: useCurrentUser(),
+  };
+}
+
+export function useUser() {
+  const user = useCurrentUser();
+  return {
+    data: user,
+    isLoading: false,
   };
 }
 

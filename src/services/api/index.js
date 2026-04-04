@@ -607,7 +607,7 @@ export const createKit = (data) => {
   return axios({ method: "POST", url, data });
 };
 
-export const updateKit = ({ id, ...data }) => {
+export const updateKit = (id, data) => {
   const url = `kit/${id}`;
   return axios({ method: "PATCH", url, data });
 };
@@ -630,6 +630,21 @@ export const disassociateProductFromKit = (data) => {
 export const listKitsByProduct = (productId) => {
   const url = `kit/product/${productId}`;
   return axios({ method: "GET", url });
+};
+
+export const uploadKitPhoto = (id, formData) => {
+  const url = `kit/${id}/image`;
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const deleteKitPhoto = (id) => {
+  const url = `kit/${id}/image`;
+  return axios({ method: "DELETE", url });
 };
 
 // end region

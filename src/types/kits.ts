@@ -20,6 +20,9 @@ export interface Kit {
   is_active: boolean;
   kit_price: number | null;
   packaging_id: string | null;
+  kit_image: string | null;
+  kit_image_url?: string | null;
+  image_url?: string | null;
   total_items: number;
   created_at: string;
   updated_at: string;
@@ -40,6 +43,7 @@ export interface KitCreatePayload {
   is_active: boolean;
   kit_price?: number | null;
   packaging_id?: string | null;
+  kit_image?: string | File | null;
   items: {
     finished_product_id: string;
     quantity_per_kit: number;

@@ -19,11 +19,13 @@ export type { Category, CategoryPayload, UpdateCategoryPayload };
 export function useCategories(filters?: Record<string, unknown>) {
   return useQuery({
     queryKey: queryKeys.categories.list(filters),
-    queryFn: () => listProductCategories(filters),
+    queryFn: async () => {
+      const response = await listProductCategories(filters);
+      return response.data as CategoryListResponse;
+    },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    select: (data): CategoryListResponse | undefined => data?.data,
   });
 }
 
@@ -33,11 +35,16 @@ export function useCategoriesCombobox(
 ) {
   return useQuery({
     queryKey: queryKeys.categories.list({ ...filters, combobox: true }),
-    queryFn: () => listProductCategories({ ...filters, combobox: true }),
+    queryFn: async () => {
+      const response = await listProductCategories({
+        ...filters,
+        combobox: true,
+      });
+      return (response.data?.categories || []) as Category[];
+    },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    select: (data: any): Category[] => data?.data?.categories ?? [],
     ...options,
   });
 }

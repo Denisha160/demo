@@ -43,7 +43,7 @@ export const useUser = (id: string, enabled: boolean = true) => {
     queryKey: queryKeys.users.detail(id),
     queryFn: async () => {
       const response = await getUserDetails(id);
-      return response;
+      return response.data;
     },
     enabled: enabled && !!id,
   });

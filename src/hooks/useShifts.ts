@@ -26,7 +26,11 @@ export const useShifts = (
     queryKey: [SHIFTS_QUERY_KEY, params],
     queryFn: async () => {
       const response = await api.listShifts(params);
-      return response.data as ShiftListResponse;
+      const data = response.data as ShiftListResponse;
+      return {
+        ...data,
+        shifts: data.shifts || data.items || [],
+      } as ShiftListResponse;
     },
     ...options,
   });

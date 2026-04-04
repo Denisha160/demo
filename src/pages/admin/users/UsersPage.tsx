@@ -30,7 +30,7 @@ const ShiftSelect = ({ user }: { user: User }) => {
   const canUpdate = hasPermission("user.update");
 
   const { data: shiftsData } = useShifts({ combobox: true });
-  const shifts = shiftsData?.shifts || [];
+  const shifts = shiftsData?.items || shiftsData?.shifts || [];
 
   return (
     <div onClick={(e) => e.stopPropagation()}>

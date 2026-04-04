@@ -1,6 +1,9 @@
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import QuotationForm, { QuotationFormData } from "./QuotationForm";
+import QuotationForm, {
+  Quotation as FormQuotation,
+  QuotationFormData,
+} from "./QuotationForm";
 import { UseFormSetError } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
@@ -9,7 +12,27 @@ import {
   useUpdateQuotation,
   useQuotation,
 } from "@/hooks/useQuotations";
+import {
+  QuotationCreatePayload,
+  Quotation,
+  QuotationUpdatePayload,
+} from "@/types/quotations";
 import { formatDate } from "@/utils/date";
+
+type QuotationApiItem = Quotation["items"][number] & {
+  amount?: number;
+  gst?: number;
+  tax_amount?: number;
+  images?: string[];
+  image_url?: string | null;
+};
+
+type QuotationApiData = Quotation & {
+  quotation_date: string;
+  tax_total?: number;
+  total_tax_amount?: number;
+  items?: QuotationApiItem[];
+};
 
 const QuotationPage = () => {
   const { companyId, id: leadId, quotationId } = useParams();
@@ -24,19 +47,28 @@ const QuotationPage = () => {
 
   const isSubmitting = isCreating || isUpdating;
 
-  const initialData = useMemo(() => {
+  const initialData = useMemo<FormQuotation | undefined>(() => {
     if (!quotationData) return undefined;
 
-    const rawData = quotationData as any;
+    const rawData = quotationData as unknown as QuotationApiData;
+    const rawItems =
+      (quotationData.items as QuotationApiItem[] | undefined) || [];
 
-    // Map items from total_amount to amount if needed
-    const mappedItems = rawData.items?.map((item: any) => ({
-      ...item,
-      amount: item.amount || 0,
-      gst_percentage: item.gst_percentage || item.gst || 18,
-      gst_amount: item.gst_amount || item.tax_amount || 0,
-      type: item.kit_id ? "kit" : "product",
-    }));
+    const mappedItems: QuotationFormData["items"] = rawItems.map(
+      (item: QuotationApiItem) => ({
+        ...item,
+        amount: item.amount || 0,
+        gst_percentage: item.gst_percentage || item.gst || 18,
+        gst_amount: item.gst_amount || item.tax_amount || 0,
+        type: item.kit_id ? "kit" : ("product" as const),
+        image_url: "",
+        images: item.images?.length
+          ? item.images
+          : item.image_url
+            ? [item.image_url]
+            : [],
+      }),
+    );
 
     return {
       ...rawData,
@@ -47,14 +79,20 @@ const QuotationPage = () => {
   }, [quotationData]);
 
   const handleSave = useCallback(
-    (data: QuotationFormData, setError: UseFormSetError<QuotationFormData>) => {
-      const cleanPayload = (obj: any): any => {
+    (
+      data: QuotationFormData,
+      _setError: UseFormSetError<QuotationFormData>,
+    ) => {
+      const cleanPayload = (obj: unknown): unknown => {
         if (Array.isArray(obj)) {
           return obj.map(cleanPayload);
         }
         if (obj !== null && typeof obj === "object") {
-          return Object.keys(obj).reduce((acc, key) => {
-            let value = obj[key];
+          return Object.keys(obj as Record<string, unknown>).reduce<
+            Record<string, unknown>
+          >((acc, key) => {
+            const objectValue = obj as Record<string, unknown>;
+            let value = objectValue[key];
             if (value === "" || value === undefined) {
               value = null;
             } else if (typeof value === "object") {
@@ -62,24 +100,33 @@ const QuotationPage = () => {
             }
             acc[key] = value;
             return acc;
-          }, {} as any);
+          }, {});
         }
         return obj;
       };
 
       const payload = {
-        ...cleanPayload(data),
+        ...(cleanPayload({
+          ...data,
+          items: data.items.map(({ image_url, ...item }) => ({
+            ...item,
+            images: item.images || [],
+          })),
+        }) as Record<string, unknown>),
         lead_id: leadId!,
       };
 
       if (quotationId) {
-        updateQuotation({ id: quotationId, ...payload } as any, {
-          onSuccess: () => {
-            navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
+        updateQuotation(
+          { id: quotationId, ...payload } as QuotationUpdatePayload,
+          {
+            onSuccess: () => {
+              navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
+            },
           },
-        });
+        );
       } else {
-        createQuotation(payload as any, {
+        createQuotation(payload as QuotationCreatePayload, {
           onSuccess: () => {
             navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
           },

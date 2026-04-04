@@ -1,13 +1,12 @@
-import { ComponentProps, useMemo, useState, useRef, useEffect } from "react";
+import { ComponentProps, useMemo, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useForm, useWatch, UseFormSetError } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DollarSign, FileText } from "lucide-react";
-import { useLeads } from "@/hooks/useLeads";
-import { useDebounce } from "@/hooks/useDebounce";
-import { Combobox } from "@/components/ui/combobox";
+import { useLead } from "@/hooks/useLeads";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -54,10 +53,13 @@ const quotationItemSchema = z.object({
   fragrance_name: optionalText,
   category_id: optionalText.nullable(),
   category_name: optionalText,
+  image_url: optionalText,
+  images: z.array(z.string()).optional().default([]),
 });
 
 export const quotationSchema = z.object({
   lead_id: z.string().min(1, "Lead is required"),
+  lead_name: optionalText,
   quotation_date: z.string().min(1, "Quotation date is required"),
   status: z
     .enum([
@@ -76,7 +78,6 @@ export const quotationSchema = z.object({
   pan_number: optionalText,
   notes: optionalText,
   items: z.array(quotationItemSchema).min(1, "At least one item is required"),
-  // These might be needed for the UI calculation but shouldn't break the stripUnknown if handled in onSubmit
   sub_total: requiredNumber.optional(),
   tax_total: requiredNumber.optional(),
   grand_total: requiredNumber.optional(),
@@ -132,7 +133,6 @@ const QuotationForm = ({
   isSubmitting,
 }: QuotationFormProps) => {
   const { id: leadIdFromUrl } = useParams();
-  const leadComboboxRef = useRef<HTMLButtonElement>(null);
   const datePickerRef = useRef<any>(null);
 
   const defaultValues = useMemo(() => {
@@ -140,6 +140,7 @@ const QuotationForm = ({
       quotationData || {
         quotation_date: formatDate(new Date()),
         lead_id: leadIdFromUrl || "",
+        lead_name: (quotationData as any)?.lead_name || "",
         status: "DRAFT" as const,
         notes: "",
         gst_number: "",
@@ -163,6 +164,8 @@ const QuotationForm = ({
             fragrance_name: "",
             category_id: null,
             category_name: "",
+            image_url: "",
+            images: [],
           },
         ],
         amount_in_words: "",
@@ -175,34 +178,28 @@ const QuotationForm = ({
     defaultValues: defaultValues,
   });
 
+  const selectedLeadId = form.watch("lead_id");
+  const { data: leadDetails } = useLead(leadIdFromUrl || selectedLeadId);
+
   useEffect(() => {
     if (leadIdFromUrl && !form.getValues("lead_id")) {
       form.setValue("lead_id", leadIdFromUrl);
     }
   }, [leadIdFromUrl, form]);
 
-  const [leadSearch, setLeadSearch] = useState("");
-  const debouncedLeadSearch = useDebounce(leadSearch, 500);
-
-  const { data: leads = [] as any[] } = useLeads({
-    search: debouncedLeadSearch,
-    limit: 10,
-  });
-
   useEffect(() => {
-    const leadsList = (leads || []) as any[];
-    if (leadIdFromUrl && leadsList.length > 0) {
-      const lead = leadsList.find((l) => l.id === leadIdFromUrl);
-      if (lead) {
-        form.setValue("gst_number", lead.gst_number || "", {
-          shouldDirty: true,
-        });
-        form.setValue("pan_number", lead.pan_number || "", {
-          shouldDirty: true,
-        });
-      }
+    if (leadDetails) {
+      form.setValue("lead_name", leadDetails.name || leadDetails.title || "", {
+        shouldDirty: true,
+      });
+      form.setValue("gst_number", leadDetails.gst_number || "", {
+        shouldDirty: true,
+      });
+      form.setValue("pan_number", leadDetails.pan_number || "", {
+        shouldDirty: true,
+      });
     }
-  }, [leadIdFromUrl, leads, form]);
+  }, [leadDetails, form]);
 
   useEffect(() => {
     if (!quotationData?.id) {
@@ -219,52 +216,11 @@ const QuotationForm = ({
               datePickerRef.current.focus();
             }
           }
-        } else if (leadComboboxRef.current) {
-          leadComboboxRef.current.focus();
         }
       }, 150);
       return () => clearTimeout(timer);
     }
   }, [quotationData?.id, leadIdFromUrl]);
-
-  const selectedLeadId = form.watch("lead_id");
-
-  const leadOptions = useMemo(() => {
-    return ((leads || []) as any[]).map((l) => ({
-      value: l.id,
-      label: l.name || l.title || "Unknown Lead",
-    }));
-  }, [leads]);
-
-  const handleLeadChange = (leadId: string) => {
-    form.setValue("lead_id", leadId, { shouldValidate: true });
-    const lead = (leads as any[]).find((l) => l.id === leadId);
-    if (lead) {
-      // Set lead related fields
-      form.setValue("gst_number", lead.gst_number || "", { shouldDirty: true });
-      form.setValue("pan_number", lead.pan_number || "", { shouldDirty: true });
-
-      // Move focus to Quotation Date after selection and open it
-      setTimeout(() => {
-        if (datePickerRef.current) {
-          // If RSuite DatePicker has an open method, use it to make entry faster
-          if (typeof datePickerRef.current.open === "function") {
-            datePickerRef.current.open();
-          } else {
-            // Fallback to focusing the input element
-            const dateInput =
-              datePickerRef.current.root?.querySelector("input") ||
-              datePickerRef.current.querySelector?.("input");
-            if (dateInput) {
-              dateInput.focus();
-            } else if (datePickerRef.current.focus) {
-              datePickerRef.current.focus();
-            }
-          }
-        }
-      }, 100);
-    }
-  };
 
   const watchAll = useWatch({ control: form.control });
 
@@ -293,7 +249,6 @@ const QuotationForm = ({
     };
   }, [watchAll.items]);
 
-  // Auto-update amount_in_words and total_tax_amount when grandTotal changes
   useEffect(() => {
     const words = numberToWords(totals.grandTotal);
     form.setValue("amount_in_words", words, { shouldDirty: true });
@@ -323,10 +278,8 @@ const QuotationForm = ({
             e.key === "Enter" &&
             (e.target as HTMLElement).tagName !== "TEXTAREA"
           ) {
-            // Allow buttons to respond naturally to Enter
             if ((e.target as HTMLElement).tagName === "BUTTON") return;
 
-            // Special handling for DatePicker - jump to first product item
             const isDateInput = (e.target as HTMLElement).closest(
               ".rs-picker-date",
             );
@@ -341,19 +294,16 @@ const QuotationForm = ({
               return;
             }
 
-            // If focused on a Combobox trigger, open it on Enter
             if ((e.target as HTMLElement).getAttribute("role") === "combobox") {
               (e.target as HTMLElement).click();
               return;
             }
 
-            // Prevent accidental form submission
             e.preventDefault();
 
-            // Find all interactive elements to simulate Tab behavior
-            const form = e.currentTarget;
+            const formElement = e.currentTarget;
             const focusableElements = Array.from(
-              form.querySelectorAll(
+              formElement.querySelectorAll(
                 'input:not([disabled]), button:not([disabled]):not([tabindex="-1"]), select:not([disabled]), textarea:not([disabled]), [role="combobox"]:not([disabled])',
               ),
             );
@@ -382,18 +332,15 @@ const QuotationForm = ({
                       </QuotationFormLabel>
                     </div>
                     <FormControl>
-                      <Combobox
-                        ref={leadComboboxRef}
-                        options={leadOptions}
-                        value={field.value}
-                        onValueChange={handleLeadChange}
-                        placeholder="Select a customer..."
-                        searchPlaceholder="Search leads..."
-                        className="h-10 border-border/60 rounded-sm"
-                        searchValue={leadSearch}
-                        onSearchChange={setLeadSearch}
-                        disabled={!!leadIdFromUrl}
-                      />
+                      <div className="relative">
+                        <Input
+                          value={watchAll.lead_name || "Loading..."}
+                          readOnly
+                          className="h-9 border-border/60 rounded-sm bg-muted/20 cursor-not-allowed font-medium"
+                          placeholder="Lead Name"
+                        />
+                        <input type="hidden" {...field} />
+                      </div>
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -428,16 +375,16 @@ const QuotationForm = ({
               <div className="animate-in fade-in slide-in-from-top-1 duration-300">
                 <div className="flex flex-wrap gap-6 bg-muted/20 rounded-sm border border-border/10">
                   {(() => {
-                    const lead = (leads as any[]).find(
-                      (l) => l.id === selectedLeadId,
-                    );
-
                     const displayEmail =
-                      lead?.email || (quotationData as any)?.lead_email || "—";
+                      leadDetails?.email ||
+                      (quotationData as any)?.lead_email ||
+                      "—";
                     const displayPhone =
-                      lead?.phone || (quotationData as any)?.lead_phone || "—";
+                      leadDetails?.phone ||
+                      (quotationData as any)?.lead_phone ||
+                      "—";
                     const displayGst =
-                      lead?.gst_number ||
+                      leadDetails?.gst_number ||
                       (quotationData as any)?.gst_number ||
                       "—";
 
@@ -476,12 +423,9 @@ const QuotationForm = ({
           </CardContent>
         </Card>
 
-        {/* BILL ITEMS SECTION - FULL WIDTH */}
         <QuotationProductsTable />
 
-        {/* Footer Section: Notes & Pricing */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-2">
-          {/* Left Side: Notes & Amount in Words */}
           <div className="lg:col-span-2 space-y-2">
             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
               <FileText className="h-3.5 w-3.5 text-primary" />
@@ -528,7 +472,6 @@ const QuotationForm = ({
             </div>
           </div>
 
-          {/* Right Side: Pricing Summary */}
           <div className="lg:col-span-1 space-y-2">
             <div className="flex items-center gap-2 pb-1.5 border-b border-border/20">
               <DollarSign className="h-3.5 w-3.5 text-primary" />

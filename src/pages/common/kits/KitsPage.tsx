@@ -379,7 +379,7 @@ const KitsPage = () => {
                   className="group relative flex flex-col bg-card border border-border rounded-sm shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
                   onClick={() => setViewKitId(kit.id)}
                 >
-                  {/* Decorative BG */}
+                  {/* Kit Image / Decorative BG */}
                   <div className="absolute top-0 right-0 p-3 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
                     <Package className="h-16 w-16" />
                   </div>

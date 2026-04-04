@@ -149,7 +149,10 @@ const ProductFormPage = () => {
 
   const isRoot = currentUser?.is_root_user || false;
   const isSaving = isCreating || isUpdating;
-  const [isEditing, setIsEditing] = useState(isNew);
+
+  const [isEditing, setIsEditing] = useState(
+    isNew || location.pathname.includes("/edit"),
+  );
   const [activeTab, setActiveTab] = useState("measurements");
   const [showSecretInput, setShowSecretInput] = useState(false);
   const productNameRef = useRef<HTMLInputElement>(null);
@@ -297,17 +300,17 @@ const ProductFormPage = () => {
       setMetaParams(
         meta.parameters
           ? Object.entries(meta.parameters).map(([k, v]) => ({
-              key: k,
-              value: String(v),
-            }))
+            key: k,
+            value: String(v),
+          }))
           : [{ key: "", value: "" }],
       );
       setMetaAttributes(
         meta.attributes
           ? Object.entries(meta.attributes).map(([k, v]) => ({
-              key: k,
-              value: String(v),
-            }))
+            key: k,
+            value: String(v),
+          }))
           : [{ key: "", value: "" }],
       );
 
@@ -380,7 +383,10 @@ const ProductFormPage = () => {
       updateProduct(
         { ...payload, id: id! },
         {
-          onSuccess: () => console.log("Product updated successfully"),
+          onSuccess: () => {
+            setIsEditing(false);
+            refetch();
+          },
           onError,
         },
       );
@@ -957,12 +963,11 @@ const ProductFormPage = () => {
                               )
                             ].url
                           }
-                          alt={`Product image ${
-                            Math.min(
-                              tabProps.images.slideIdx,
-                              tabProps.images.previews.length - 1,
-                            ) + 1
-                          }`}
+                          alt={`Product image ${Math.min(
+                            tabProps.images.slideIdx,
+                            tabProps.images.previews.length - 1,
+                          ) + 1
+                            }`}
                           className="w-full object-cover"
                           style={{ minHeight: 160, maxHeight: 200 }}
                           onClick={() =>
@@ -1044,15 +1049,14 @@ const ProductFormPage = () => {
                               key={i}
                               type="button"
                               onClick={() => tabProps.images.setSlideIdx(i)}
-                              className={`rounded-full transition-all ${
-                                i ===
+                              className={`rounded-full transition-all ${i ===
                                 Math.min(
                                   tabProps.images.slideIdx,
                                   tabProps.images.previews.length - 1,
                                 )
-                                  ? "bg-primary w-3 h-1.5"
-                                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
-                              }`}
+                                ? "bg-primary w-3 h-1.5"
+                                : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
+                                }`}
                             />
                           ))}
                         </div>

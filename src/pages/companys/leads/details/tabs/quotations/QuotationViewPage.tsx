@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { useQuotation, useDownloadQuotation } from "@/hooks/useQuotations";
+import { useQuotation, useDownloadQuotation, usePrintQuotation } from "@/hooks/useQuotations";
 import { toast } from "react-toastify";
 import { formatDate } from "@/utils/date";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,7 @@ const QuotationViewPage = () => {
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const { mutate: download, isPending: isDownloading } = useDownloadQuotation();
+  const { mutate: print } = usePrintQuotation();
 
   const handleDownload = () => {
     if (!quotation?.id) {
@@ -56,6 +57,15 @@ const QuotationViewPage = () => {
       quotationId: quotation.id,
       quotationNumber: String(quotation.quotation_number),
     });
+  };
+
+  const handlePrint = () => {
+    if (!quotation?.id) {
+      toast.error("Quotation details not found");
+      return;
+    }
+
+    print(quotation.id);
   };
 
   const nextImage = (e?: React.MouseEvent) => {
@@ -263,6 +273,7 @@ const QuotationViewPage = () => {
             variant="outline"
             size="sm"
             className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background"
+            onClick={handlePrint}
           >
             <Printer className="h-3.5 w-3.5" />
             Print

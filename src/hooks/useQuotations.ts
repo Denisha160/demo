@@ -106,8 +106,8 @@ export function useDownloadQuotation() {
       quotationId: string;
       quotationNumber?: string;
     }) => downloadQuotation(quotationId),
-    onSuccess: (data: any, { quotationNumber }) => {
-      const url = window.URL.createObjectURL(new Blob([data]));
+    onSuccess: (data: unknown, { quotationNumber }) => {
+      const url = window.URL.createObjectURL(new Blob([data as BlobPart]));
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute(
@@ -119,8 +119,22 @@ export function useDownloadQuotation() {
       link.remove();
       toast.success("Quotation PDF downloaded successfully");
     },
-    onError: (error: any) => {
+    onError: (error: Error | any) => {
       toast.error(error?.message || "Failed to download PDF");
+    },
+  });
+}
+
+export function usePrintQuotation() {
+  return useMutation({
+    mutationFn: (id: string) => downloadQuotation(id, { preview: "true" }),
+    onSuccess: (data: unknown) => {
+      const blob = new Blob([data as BlobPart], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    },
+    onError: (error: Error | any) => {
+      toast.error(error?.message || "Failed to open print preview");
     },
   });
 }

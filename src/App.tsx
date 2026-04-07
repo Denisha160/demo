@@ -380,6 +380,7 @@ const App = () => (
           <Route path="status" element={<StatusPage />} />
           <Route path="source" element={<SourcePage />} />
           <Route path="quotation" element={<QuotationsPage />} />
+          <Route path="quotations/new" element={<QuotationPage />} />
           <Route path="visits" element={<VisitsPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="lead/tasks/:leadId" element={<LeadTaskViewPage />} />

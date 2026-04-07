@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
-import { Search, FileText, Eye, Edit, Trash2 } from "lucide-react";
+import { Search, FileText, Eye, Edit, Trash2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
 import { useQuotations, useDeleteQuotation } from "@/hooks/useQuotations";
@@ -211,6 +211,14 @@ const QuotationsPage = () => {
             </Button>
           )}
         </div>
+        <Button
+          size="sm"
+          className="h-9 gap-2 px-4 shadow-sm"
+          onClick={() => navigate(`/${companyId}/quotations/new`)}
+        >
+          <Plus className="h-4 w-4" />
+          Create Quotation
+        </Button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden">

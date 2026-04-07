@@ -359,6 +359,7 @@ const QuotationForm = ({
                           // Clear search when selected
                           setLeadSearch("");
                         }}
+                        disabled={!!leadIdFromUrl}
                         placeholder="Select Customer / Lead"
                         searchPlaceholder="Search leads..."
                         searchValue={leadSearch}

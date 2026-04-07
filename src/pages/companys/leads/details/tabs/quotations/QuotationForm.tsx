@@ -1,12 +1,15 @@
-import { ComponentProps, useMemo, useRef, useEffect } from "react";
+import { ComponentProps, useMemo, useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useForm, useWatch, UseFormSetError } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DollarSign, FileText } from "lucide-react";
-import { useLead } from "@/hooks/useLeads";
+import { useLead, useLeads } from "@/hooks/useLeads";
+import { useDebounce } from "@/hooks/useDebounce";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Form,
   FormControl,
@@ -18,7 +21,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatDateForAPI } from "@/utils/date";
 import { cn } from "@/lib/utils";
-import { Textarea } from "@/components/ui/textarea";
 import { QuotationProductsTable } from "./QuotationProductsTable";
 import { numberToWords } from "@/utils/numberToWords";
 
@@ -135,6 +137,22 @@ const QuotationForm = ({
 }: QuotationFormProps) => {
   const { id: leadIdFromUrl } = useParams();
   const datePickerRef = useRef<any>(null);
+
+  const [leadSearch, setLeadSearch] = useState("");
+  const debouncedLeadSearch = useDebounce(leadSearch, 300);
+  const { data: leadsData = [], isLoading: isLoadingLeads } = useLeads<any[]>({
+    search: debouncedLeadSearch || undefined,
+  });
+
+  const leadOptions = useMemo(
+    () =>
+      (leadsData as any[]).map((l: any) => ({
+        value: l.id,
+        label: l.name || l.title || l.company_name || l.email || "Untitled Lead",
+        badge: l.company_name,
+      })),
+    [leadsData],
+  );
 
   const defaultValues = useMemo(() => {
     return (
@@ -333,15 +351,21 @@ const QuotationForm = ({
                       </QuotationFormLabel>
                     </div>
                     <FormControl>
-                      <div className="relative">
-                        <Input
-                          value={watchAll.lead_name || "Loading..."}
-                          readOnly
-                          className="h-9 border-border/60 rounded-sm bg-muted/20 cursor-not-allowed font-medium"
-                          placeholder="Lead Name"
-                        />
-                        <input type="hidden" {...field} />
-                      </div>
+                      <Combobox
+                        options={leadOptions}
+                        value={field.value}
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          // Clear search when selected
+                          setLeadSearch("");
+                        }}
+                        placeholder="Select Customer / Lead"
+                        searchPlaceholder="Search leads..."
+                        searchValue={leadSearch}
+                        onSearchChange={setLeadSearch}
+                        selectedLabel={watchAll.lead_name || undefined}
+                        className="h-9 border-border/60 rounded-sm"
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>

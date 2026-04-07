@@ -28,15 +28,6 @@ import {
 import DataTable, { Column } from "@/components/DataTable";
 import { getStatusColor } from "./QuotationsTab";
 
-const STORAGE_BASE_URL = "https://basaltbucket.s3.us-east-1.amazonaws.com/";
-
-const normalizeImageUrl = (image?: string | null) => {
-  if (!image) return "";
-  if (/^https?:\/\//i.test(image) || image.startsWith("data:")) {
-    return image;
-  }
-  return `${STORAGE_BASE_URL}${image.replace(/^\/+/, "")}`;
-};
 
 const QuotationViewPage = () => {
   const { quotationId } = useParams();
@@ -78,9 +69,9 @@ const QuotationViewPage = () => {
       header: "Img",
       className: "px-2 py-2 w-[88px]",
       render: (item) => {
-        const finalImages = ((item.images as string[] | undefined) || [])
-          .map(normalizeImageUrl)
-          .filter(Boolean);
+        const finalImages = ((item.images as string[] | undefined) || []).filter(
+          Boolean,
+        );
 
         return (
           <div
@@ -490,7 +481,7 @@ const QuotationViewPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={normalizeImageUrl(galleryImages[galleryIndex])}
+                src={galleryImages[galleryIndex]}
                 alt={`Gallery Image ${galleryIndex + 1}`}
                 className="max-w-full max-h-[80vh] object-contain"
               />

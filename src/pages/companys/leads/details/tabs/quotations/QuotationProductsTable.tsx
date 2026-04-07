@@ -622,29 +622,42 @@ export const QuotationProductsTable = () => {
         description="Select or unselect images for this item. Closing without saving keeps the current row details."
         maxWidth="max-w-4xl"
         headerBg="bg-primary/5"
-      >
-        {imagePickerState && (
-          <>
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-sm border border-border/50 bg-muted/10 px-4 py-3">
+        footer={
+          imagePickerState && (
+            <div className="flex items-center justify-between w-full">
               <span className="text-xs font-bold text-muted-foreground">
                 {imagePickerState.selectedImages.length} image(s) selected
               </span>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  populateRowDetails(
-                    imagePickerState.index,
-                    imagePickerState.item,
-                    imagePickerState.selectedImages,
-                  );
-                  setImagePickerState(null);
-                }}
-              >
-                Use Selected Images
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setImagePickerState(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    populateRowDetails(
+                      imagePickerState.index,
+                      imagePickerState.item,
+                      imagePickerState.selectedImages,
+                    );
+                    setImagePickerState(null);
+                  }}
+                >
+                  Use Selected Images
+                </Button>
+              </div>
             </div>
-
+          )
+        }
+      >
+        {imagePickerState && (
+          <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {imagePickerState.images.map((image, imageIndex) => (
                 <button

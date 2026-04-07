@@ -1,12 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Plus, Search, Trash2, FileText } from "lucide-react";
+import { Edit, Plus, Search, Trash2, FileText, Download, Loader2 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/utils/date";
 import { Badge } from "@/components/ui/badge";
-import { useQuotations, useDeleteQuotation } from "@/hooks/useQuotations";
+import { useQuotations, useDeleteQuotation, useDownloadQuotation } from "@/hooks/useQuotations";
 import { Quotation } from "@/types/quotations";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -55,6 +55,9 @@ const QuotationsTab = () => {
     search: debouncedSearch || undefined,
   });
   const { mutate: deleteQuotation } = useDeleteQuotation();
+  const { mutate: download, isPending: isDownloading } = useDownloadQuotation();
+
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const quotations = useMemo(
     () => quotationsData?.items || [],
@@ -76,6 +79,19 @@ const QuotationsTab = () => {
   const handleDelete = (id: string) => {
     deleteQuotation(id);
     setQuotationToDelete(null);
+  };
+
+  const handleDownload = (quotation: Quotation) => {
+    setDownloadingId(quotation.id);
+    download(
+      {
+        quotationId: quotation.id,
+        quotationNumber: String(quotation.quotation_number),
+      },
+      {
+        onSettled: () => setDownloadingId(null),
+      },
+    );
   };
 
   const columns: Column<any>[] = [
@@ -140,6 +156,19 @@ const QuotationsTab = () => {
             onClick={() => handleEdit(item)}
           >
             <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-sm hover:bg-primary/10 hover:text-primary"
+            onClick={() => handleDownload(item)}
+            disabled={isDownloading && downloadingId === item.id}
+          >
+            {isDownloading && downloadingId === item.id ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
           </Button>
           <Button
             variant="ghost"

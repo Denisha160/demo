@@ -30,6 +30,7 @@ interface ComboboxProps {
   searchPlaceholder?: string;
   emptyText?: string;
   className?: string;
+  contentClassName?: string;
   clearable?: boolean;
   disabled?: boolean;
   searchValue?: string;
@@ -48,6 +49,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       searchPlaceholder = "Search…",
       emptyText = "No results found.",
       className,
+      contentClassName,
       clearable = false,
       disabled = false,
       searchValue,
@@ -142,7 +144,10 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] min-w-[180px] p-0 rounded-sm border border-input/60 shadow-md"
+          className={cn(
+            "w-[var(--radix-popover-trigger-width)] min-w-[180px] p-0 rounded-sm border border-input/60 shadow-md",
+            contentClassName,
+          )}
           align="start"
           sideOffset={4}
         >

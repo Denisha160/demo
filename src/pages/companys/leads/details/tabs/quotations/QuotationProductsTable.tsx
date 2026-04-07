@@ -434,6 +434,7 @@ export const QuotationProductsTable = () => {
                               errors.items?.[index]?.item_name &&
                                 "border-destructive focus:ring-destructive/20",
                             )}
+                            contentClassName="min-w-[450px]"
                             searchValue={fgSearch}
                             onSearchChange={setFgSearch}
                           />

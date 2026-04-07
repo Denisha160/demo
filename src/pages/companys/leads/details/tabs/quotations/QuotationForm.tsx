@@ -18,6 +18,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatDateForAPI } from "@/utils/date";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import { QuotationProductsTable } from "./QuotationProductsTable";
 import { numberToWords } from "@/utils/numberToWords";
 
@@ -442,12 +443,11 @@ const QuotationForm = ({
                   <FormItem className="space-y-1">
                     <QuotationFormLabel>Additional Notes</QuotationFormLabel>
                     <FormControl>
-                      <textarea
+                      <Textarea
                         {...field}
                         rows={3}
                         placeholder="Priority customer - first order"
-                        className="w-full text-xs bg-white border border-border/40 rounded-sm focus:ring-1 transition-all"
-                      />
+                        className="text-sm" />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>

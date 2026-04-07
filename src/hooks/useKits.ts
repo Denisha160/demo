@@ -9,8 +9,7 @@ import {
   associateProductToKit,
   disassociateProductFromKit,
   listKitsByProduct,
-  uploadKitPhoto,
-  deleteKitPhoto,
+  uploadFile,
 } from "@/services/api";
 
 export const useKitsByProduct = (productId?: string) => {
@@ -123,20 +122,23 @@ export const useCreateKit = () => {
   const queryClient = useQueryClient();
   return useMutation<ApiResponse<unknown>, Error, KitCreatePayload>({
     mutationFn: async (payload) => {
-      // Build FormData for multipart-request
-      const formData = new FormData();
-      Object.entries(payload).forEach(([key, value]) => {
-        if (value === undefined || value === null) return;
-        if (key === "items") {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          // If value is boolean, convert to string
-          const val = typeof value === "boolean" ? String(value) : value;
-          formData.append(key, val as any);
-        }
-      });
+      let image_url = payload.image_url;
 
-      const response = (await createKit(formData)) as ApiResponse<unknown>;
+      // Step 1: Upload image if provided
+      if (payload.kit_image instanceof File) {
+        const formData = new FormData();
+        formData.append("file", payload.kit_image);
+        formData.append("folder", "kits");
+        const uploadRes = (await uploadFile(formData)) as any;
+        image_url = uploadRes.file;
+      }
+
+      // Step 2: Create kit with JSON
+      const { kit_image, ...payloadWithoutFile } = payload;
+      const response = (await createKit({
+        ...payloadWithoutFile,
+        image_url,
+      })) as ApiResponse<unknown>;
       return response;
     },
     onSuccess: (response) => {
@@ -157,22 +159,25 @@ export const useCreateKit = () => {
 export const useUpdateKit = () => {
   const queryClient = useQueryClient();
   return useMutation<ApiResponse<unknown>, Error, KitUpdatePayload>({
-    mutationFn: async ({ id, ...payload }) => {
-      // Build FormData for multipart-request
-      const formData = new FormData();
-      Object.entries(payload).forEach(([key, value]) => {
-        if (value === undefined || value === null) return;
-        if (key === "items") {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          // If value is boolean, convert to string
-          const val =
-            typeof value === "boolean" ? String(value) : (value as any);
-          formData.append(key, val);
-        }
-      });
+    mutationFn: async (payload) => {
+      let image_url = payload.image_url;
 
-      const response = (await updateKit(id, formData)) as ApiResponse<unknown>;
+      // Step 1: Upload image if provided
+      if (payload.kit_image instanceof File) {
+        const formData = new FormData();
+        formData.append("file", payload.kit_image);
+        formData.append("folder", "kits");
+        const uploadRes = (await uploadFile(formData)) as any;
+        image_url = uploadRes.file;
+      }
+
+      // Step 2: Update kit with JSON
+      const { id, kit_image, ...payloadWithoutFile } = payload;
+      const response = (await updateKit({
+        id,
+        ...payloadWithoutFile,
+        image_url,
+      })) as ApiResponse<unknown>;
       return response;
     },
     onSuccess: (response) => {
@@ -204,61 +209,6 @@ export const useDeleteKit = () => {
         apiError.response?.data?.message ||
         apiError.message ||
         "Failed to delete kit";
-      toast.error(message);
-    },
-  });
-};
-
-export const useUploadKitPhoto = () => {
-  const queryClient = useQueryClient();
-  return useMutation<
-    ApiResponse<unknown>,
-    ApiError,
-    { kitId: string; file: File }
-  >({
-    mutationFn: async ({ kitId, file }) => {
-      const formData = new FormData();
-      formData.append("image", file);
-      const response = (await uploadKitPhoto(
-        kitId,
-        formData,
-      )) as ApiResponse<unknown>;
-      return response;
-    },
-    onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["kits", "detail", variables.kitId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["kits"] });
-      toast.success(response.message || "Kit photo uploaded successfully");
-    },
-    onError: (error) => {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to upload kit photo";
-      toast.error(message);
-    },
-  });
-};
-
-export const useDeleteKitPhoto = () => {
-  const queryClient = useQueryClient();
-  return useMutation<ApiResponse<unknown>, ApiError, string>({
-    mutationFn: async (kitId) => {
-      const response = (await deleteKitPhoto(kitId)) as ApiResponse<unknown>;
-      return response;
-    },
-    onSuccess: (response, kitId) => {
-      queryClient.invalidateQueries({ queryKey: ["kits", "detail", kitId] });
-      queryClient.invalidateQueries({ queryKey: ["kits"] });
-      toast.success(response.message || "Kit photo removed successfully");
-    },
-    onError: (error) => {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to remove kit photo";
       toast.error(message);
     },
   });

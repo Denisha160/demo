@@ -175,9 +175,9 @@ const CategoryModal = ({
               options={
                 companies.length > 0
                   ? companies.map((comp: Company) => ({
-                      value: comp.id,
-                      label: comp.display_name || comp.legal_name,
-                    }))
+                    value: comp.id,
+                    label: comp.display_name || comp.legal_name,
+                  }))
                   : []
               }
               value={formData.company_id || ""}
@@ -207,9 +207,9 @@ const CategoryModal = ({
               options={
                 mainCategories.length > 0
                   ? mainCategories.map((cat) => ({
-                      value: cat.id,
-                      label: cat.name,
-                    }))
+                    value: cat.id,
+                    label: cat.name,
+                  }))
                   : []
               }
               value={formData.mainCategoryId || ""}

@@ -19,7 +19,6 @@ import {
 import {
   useUpdateUser,
   useUsers,
-  useUploadUserPhoto,
   useRemoveUserPhoto,
 } from "@/hooks/useUsers";
 import { useShifts } from "@/hooks/useShifts";
@@ -123,14 +122,12 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
     // Hooks
     const { mutate: updateUser, isPending: isUpdatingDetails } =
       useUpdateUser();
-    const { mutate: uploadPhoto, isPending: isUploadingPhoto } =
-      useUploadUserPhoto();
     const { mutate: removePhoto, isPending: isRemovingPhoto } =
       useRemoveUserPhoto();
     const { data: usersData } = useUsers({ combobox: true });
     const { data: shiftsData } = useShifts({ combobox: true });
 
-    const isUpdating = isUpdatingDetails || isUploadingPhoto || isRemovingPhoto;
+    const isUpdating = isUpdatingDetails || isRemovingPhoto;
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(
@@ -289,18 +286,15 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
             ? 0
             : Number(payload.basic_salary);
 
-        updateUser(payload, {
-          onSuccess: () => {
-            setPassword("");
-            setConfirmPassword("");
-            if (selectedFile) {
-              const formData = new FormData();
-              formData.append("image", selectedFile);
-              uploadPhoto({ id: userData.id!, formData });
+        updateUser(
+          { ...payload, file: selectedFile },
+          {
+            onSuccess: () => {
+              setPassword("");
+              setConfirmPassword("");
               setSelectedFile(null);
-            }
-          },
-          onError: (error: unknown) => {
+            },
+            onError: (error: unknown) => {
             const err = error as ApiErrorResponse;
             const errorData = (err?.details ||
               err?.response?.data ||

@@ -43,7 +43,8 @@ export interface KitCreatePayload {
   is_active: boolean;
   kit_price?: number | null;
   packaging_id?: string | null;
-  kit_image?: string | File | null;
+  kit_image?: File | null;
+  image_url?: string | null;
   items: {
     finished_product_id: string;
     quantity_per_kit: number;

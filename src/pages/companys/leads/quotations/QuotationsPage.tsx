@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
-import { Search, FileText, Eye, Edit, Trash2, Plus } from "lucide-react";
+import { Search, FileText, Eye, Edit, Trash2, Plus, Download, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
-import { useQuotations, useDeleteQuotation } from "@/hooks/useQuotations";
+import { useQuotations, useDeleteQuotation, useDownloadQuotation } from "@/hooks/useQuotations";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Combobox } from "@/components/ui/combobox";
 import { useLeads } from "@/hooks/useLeads";
@@ -42,6 +42,9 @@ const QuotationsPage = () => {
   );
   const { mutate: deleteQuotation, isPending: isDeleting } =
     useDeleteQuotation();
+  const { mutate: download, isPending: isDownloading } = useDownloadQuotation();
+
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const updateParam = (key: string, value: string | number) => {
     setSearchParams(
@@ -81,6 +84,18 @@ const QuotationsPage = () => {
       { replace: true },
     );
     setSearchTerm("");
+  };
+  const handleDownload = (quotation: Quotation) => {
+    setDownloadingId(quotation.id);
+    download(
+      {
+        quotationId: quotation.id,
+        quotationNumber: String(quotation.quotation_number),
+      },
+      {
+        onSettled: () => setDownloadingId(null),
+      },
+    );
   };
 
   const { data: leadsDataRaw = [] } = useLeads({ limit: 100 });
@@ -151,6 +166,19 @@ const QuotationsPage = () => {
           className="flex items-center justify-end gap-1"
           onClick={(e) => e.stopPropagation()}
         >
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+            onClick={() => handleDownload(item)}
+            disabled={isDownloading && downloadingId === item.id}
+          >
+            {isDownloading && downloadingId === item.id ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="sm"

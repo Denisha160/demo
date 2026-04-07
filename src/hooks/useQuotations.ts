@@ -29,13 +29,14 @@ export function useQuotations(params?: Record<string, unknown>) {
   });
 }
 
-export function useQuotation(id?: string) {
+export function useQuotation(id?: string, params?: Record<string, unknown>) {
   return useQuery({
-    queryKey: queryKeys.quotations.detail(id!),
+    queryKey: queryKeys.quotations.detail(id!, params),
     queryFn: async () => {
       if (!id) return null;
       const response = (await getQuotationDetails(
         id,
+        params,
       )) as ApiResponse<Quotation>;
       return response.data;
     },

@@ -32,7 +32,12 @@ import { getStatusColor } from "./QuotationsTab";
 const QuotationViewPage = () => {
   const { quotationId } = useParams();
   const navigate = useNavigate();
-  const { data: quotation, isLoading } = useQuotation(quotationId);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const { data: quotation, isLoading } = useQuotation(quotationId, {
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize,
+  });
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const { mutate: download, isPending: isDownloading } = useDownloadQuotation();
@@ -368,14 +373,20 @@ const QuotationViewPage = () => {
                   Line Items
                 </span>
                 <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-sm text-[10px] font-bold">
-                  {quotation.items?.length || 0} TOTAL
+                  {quotation.total_items || quotation.items?.length || 0} TOTAL
                 </span>
               </div>
               <DataTable
                 columns={columns}
                 data={quotation.items || []}
-                enablePagination={false}
-                pageSize={100}
+                serverSide={true}
+                serverTotal={quotation.total_items || quotation.items?.length || 0}
+                serverPage={currentPage}
+                pageSize={pageSize}
+                onServerPageChange={setCurrentPage}
+                onServerPageSizeChange={setPageSize}
+                isLoading={isLoading}
+                enablePagination={true}
               />
             </div>
 

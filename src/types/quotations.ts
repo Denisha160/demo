@@ -38,6 +38,7 @@ export interface Quotation {
   amount_in_words?: string | null;
   notes?: string | null;
   items: QuotationItem[];
+  total_items?: number;
   sub_total: number;
   tax_total: number;
   grand_total: number;

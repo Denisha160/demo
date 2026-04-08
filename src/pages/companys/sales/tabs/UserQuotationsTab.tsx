@@ -63,7 +63,10 @@ const UserQuotationsTab = ({ userId }: UserQuotationsTabProps) => {
       header: "Quotation Details",
       render: (item) => (
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-foreground">
+          <span
+            onClick={() => handleView(item)}
+            className="text-sm font-semibold text-primary hover:underline cursor-pointer decoration-primary/30 underline-offset-2"
+          >
             {item.quotation_number}
           </span>
           <span className="text-[11px] text-muted-foreground">
@@ -101,7 +104,10 @@ const UserQuotationsTab = ({ userId }: UserQuotationsTabProps) => {
       key: "status",
       header: "Status",
       render: (item) => (
-        <Badge variant="outline" className={`${getStatusColor(item.status)} text-[10px] px-2 py-0 h-5`}>
+        <Badge
+          variant="outline"
+          className={`${getStatusColor(item.status)} text-[10px] px-2 py-0 h-5`}
+        >
           {item.status}
         </Badge>
       ),
@@ -111,14 +117,6 @@ const UserQuotationsTab = ({ userId }: UserQuotationsTabProps) => {
       header: "Actions",
       render: (item) => (
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 rounded-sm hover:bg-primary/10 hover:text-primary"
-            onClick={() => handleView(item)}
-          >
-            <Eye className="h-3.5 w-3.5" />
-          </Button>
           <Button
             variant="ghost"
             size="icon"

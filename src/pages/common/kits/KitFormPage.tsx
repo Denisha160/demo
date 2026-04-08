@@ -26,11 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
-import {
-  useKitDetails,
-  useCreateKit,
-  useUpdateKit,
-} from "@/hooks/useKits";
+import { useKitDetails, useCreateKit, useUpdateKit } from "@/hooks/useKits";
 import { useProductsCombobox } from "@/hooks/useProducts";
 import { usePackagesCombobox } from "@/hooks/usePackages";
 import { useDebounce } from "@/hooks/useDebounce";

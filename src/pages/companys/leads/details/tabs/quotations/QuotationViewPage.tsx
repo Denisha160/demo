@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { useQuotation, useDownloadQuotation, usePrintQuotation } from "@/hooks/useQuotations";
+import {
+  useQuotation,
+  useDownloadQuotation,
+  usePrintQuotation,
+} from "@/hooks/useQuotations";
 import { toast } from "react-toastify";
 import { formatDate } from "@/utils/date";
 import { Button } from "@/components/ui/button";
@@ -24,13 +28,13 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Edit,
 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import { getStatusColor } from "./QuotationsTab";
 
-
 const QuotationViewPage = () => {
-  const { quotationId } = useParams();
+  const { companyId, id: leadId, quotationId } = useParams();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -64,6 +68,10 @@ const QuotationViewPage = () => {
     print(quotation.id);
   };
 
+  const handleEdit = () => {
+    navigate(`/${companyId}/leads/${leadId}/quotations/${quotationId}/edit`);
+  };
+
   const nextImage = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (galleryImages.length === 0) return;
@@ -84,9 +92,9 @@ const QuotationViewPage = () => {
       header: "Img",
       className: "px-2 py-2 w-[88px]",
       render: (item) => {
-        const finalImages = ((item.images as string[] | undefined) || []).filter(
-          Boolean,
-        );
+        const finalImages = (
+          (item.images as string[] | undefined) || []
+        ).filter(Boolean);
 
         return (
           <div
@@ -268,7 +276,16 @@ const QuotationViewPage = () => {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background"
+            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background hover:bg-primary/10 hover:text-primary border-primary/20 transition-all duration-200"
+            onClick={handleEdit}
+          >
+            <Edit className="h-3.5 w-3.5" />
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background hover:bg-slate-100 border-border/60 transition-all duration-200"
             onClick={handlePrint}
           >
             <Printer className="h-3.5 w-3.5" />
@@ -277,7 +294,7 @@ const QuotationViewPage = () => {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background"
+            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background hover:bg-slate-100 border-border/60 transition-all duration-200"
             onClick={handleDownload}
             disabled={isDownloading}
           >
@@ -380,7 +397,9 @@ const QuotationViewPage = () => {
                 columns={columns}
                 data={quotation.items || []}
                 serverSide={true}
-                serverTotal={quotation.total_items || quotation.items?.length || 0}
+                serverTotal={
+                  quotation.total_items || quotation.items?.length || 0
+                }
                 serverPage={currentPage}
                 pageSize={pageSize}
                 onServerPageChange={setCurrentPage}

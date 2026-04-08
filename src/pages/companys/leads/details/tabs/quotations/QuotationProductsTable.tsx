@@ -25,7 +25,6 @@ import { cn } from "@/lib/utils";
 import { QuotationFormData } from "./QuotationForm";
 import KitViewModal from "@/pages/common/kits/KitViewModal";
 
-
 type SelectableItem = {
   id: string;
   name: string;
@@ -145,10 +144,7 @@ export const QuotationProductsTable = () => {
   const buildItemImages = (item: SelectableItem, selectedImages: string[]) => {
     const defaultImage = item.type === "kit" ? item.image_url : "";
 
-    return [
-      ...(defaultImage ? [defaultImage] : []),
-      ...selectedImages,
-    ].filter(
+    return [...(defaultImage ? [defaultImage] : []), ...selectedImages].filter(
       (image, imageIndex, imageList) =>
         image && imageList.indexOf(image) === imageIndex,
     );

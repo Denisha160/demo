@@ -118,9 +118,9 @@ export const useUpdateUser = () => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", "users");
-        const uploadResponse = (await uploadFile(
-          formData,
-        )) as unknown as { file: string };
+        const uploadResponse = (await uploadFile(formData)) as unknown as {
+          file: string;
+        };
         finalPayload.image_url = uploadResponse.file;
       }
 
@@ -140,18 +140,18 @@ export const useUpdateUser = () => {
         err?.details ||
         err ||
         {}) as ApiErrorResponse;
- 
+
       let message =
         errorData?.message ||
         errorData?.error?.message ||
         "Failed to update profile.";
- 
+
       // If it's a validation error, try to show the first detail for better immediate feedback
       if (errorData?.code === "validation_error" && errorData.details?.body) {
         const firstError = Object.values(errorData.details.body)[0];
         if (firstError) message = firstError;
       }
- 
+
       toast.error(message);
     },
   });

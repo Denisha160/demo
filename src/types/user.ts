@@ -113,6 +113,18 @@ export function getLocalDateString(dateStr?: string | Date | null): string {
   if (typeof dateStr === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     return dateStr;
   }
+  // If it's dd/MM/yyyy (from standard DatePicker)
+  if (typeof dateStr === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("/");
+    return `${year}-${month}-${day}`;
+  }
+
+  // If it's dd/MM/yy (short year)
+  if (typeof dateStr === "string" && /^\d{2}\/\d{2}\/\d{2}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split("/");
+    return `20${year}-${month}-${day}`;
+  }
+
   // If it contains a Time component, safely convert to local date
   if (typeof dateStr === "string" && /^\d{4}-\d{2}-\d{2}T/.test(dateStr)) {
     const d = new Date(dateStr);

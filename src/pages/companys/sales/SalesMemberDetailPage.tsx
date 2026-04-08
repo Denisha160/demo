@@ -32,7 +32,13 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-type TabKey = "leads" | "visits" | "followups" | "tasks" | "quotations" | "activity";
+type TabKey =
+  | "leads"
+  | "visits"
+  | "followups"
+  | "tasks"
+  | "quotations"
+  | "activity";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "leads", label: "Leads", icon: Briefcase },
   { key: "visits", label: "Visits", icon: MapPin },
@@ -230,7 +236,7 @@ const SalesMemberDetailPage = () => {
         onValueChange={handleTabChange}
         className="w-full flex flex-col"
       >
-        <TabsList className="flex flex-nowrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-4 gap-1 px-2 overflow-x-auto custom-scrollbar">
+        <TabsList className="flex flex-nowrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-4 gap-1 overflow-x-auto custom-scrollbar">
           {TABS.map((t) => (
             <TabsTrigger
               key={t.key}
@@ -243,7 +249,7 @@ const SalesMemberDetailPage = () => {
           ))}
         </TabsList>
 
-        <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-2 duration-500 px-2">
+        <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-2 duration-500">
           <TabsContent value="leads" className="m-0 focus-visible:outline-none">
             <UserLeadsTab userId={selectedUserId} />
           </TabsContent>

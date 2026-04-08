@@ -55,7 +55,9 @@ const QuotationsPage = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const from = searchParams.get("startDate");
     const to = searchParams.get("endDate");
-    return from ? { from: new Date(from), to: to ? new Date(to) : undefined } : undefined;
+    return from
+      ? { from: new Date(from), to: to ? new Date(to) : undefined }
+      : undefined;
   });
 
   const [searchTerm, setSearchTerm] = useState(
@@ -97,14 +99,18 @@ const QuotationsPage = () => {
   }, [debouncedSearch, searchParams, updateParam]);
 
   useEffect(() => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (dateRange?.from) next.set("startDate", dateRange.from.toISOString());
-      else next.delete("startDate");
-      if (dateRange?.to) next.set("endDate", dateRange.to.toISOString());
-      else next.delete("endDate");
-      return next;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (dateRange?.from)
+          next.set("startDate", dateRange.from.toISOString());
+        else next.delete("startDate");
+        if (dateRange?.to) next.set("endDate", dateRange.to.toISOString());
+        else next.delete("endDate");
+        return next;
+      },
+      { replace: true },
+    );
   }, [dateRange, setSearchParams]);
 
   const setLeadId = (v: string) => updateParam("lead_id", v);
@@ -148,7 +154,8 @@ const QuotationsPage = () => {
   }, [leadsDataRaw]);
 
   const filters = useMemo(() => {
-    const canReadAll = user?.is_root_user || hasPermission("quotation.read_all");
+    const canReadAll =
+      user?.is_root_user || hasPermission("quotation.read_all");
 
     return {
       search: debouncedSearch || undefined,

@@ -26,6 +26,9 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { Switch } from "@/components/ui/switch";
+import ProductGridView from "./ProductGridView";
+import { LayoutGrid, Table2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ProductsPage = () => {
   const navigate = useNavigate();
@@ -60,6 +63,11 @@ const ProductsPage = () => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
     (searchParams.get("sortDirection") as "asc" | "desc") || "desc",
   );
+  const [viewMode, setViewMode] = useState<"table" | "grid">(
+    (searchParams.get("view") as "table" | "grid") ||
+      (localStorage.getItem("products_view_mode") as "table" | "grid") ||
+      "table",
+  );
 
   const isAdmin = location.pathname.startsWith("/admin");
   const routePrefix = isAdmin ? "/admin" : `/${companyId}`;
@@ -90,6 +98,11 @@ const ProductsPage = () => {
   const [brandSearch, setBrandSearch] = useState("");
   const debouncedBrandSearch = useDebounce(brandSearch, 300);
 
+  // Sync viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem("products_view_mode", viewMode);
+  }, [viewMode]);
+
   // Sync state to URL
   useEffect(() => {
     setSearchParams(
@@ -113,6 +126,8 @@ const ProductsPage = () => {
         else next.delete("sortKey");
         if (sortDirection) next.set("sortDirection", sortDirection);
         else next.delete("sortDirection");
+        if (viewMode !== "table") next.set("view", viewMode);
+        else next.delete("view");
         return next;
       },
       { replace: true },
@@ -338,6 +353,27 @@ const ProductsPage = () => {
             />
           </div>
 
+          <Tabs
+            value={viewMode}
+            onValueChange={(val) => setViewMode(val as "table" | "grid")}
+            className="flex-shrink-0"
+          >
+            <TabsList className="h-8 p-0.5 rounded-sm bg-muted/30 border border-border/40">
+              <TabsTrigger
+                value="table"
+                className="h-[26px] px-2.5 rounded-[2px] data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              >
+                <Table2 className="h-3.5 w-3.5" />
+              </TabsTrigger>
+              <TabsTrigger
+                value="grid"
+                className="h-[26px] px-2.5 rounded-[2px] data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           {hasFilters && (
             <Button
               variant="ghost"
@@ -360,27 +396,91 @@ const ProductsPage = () => {
         </Button>
       </div>
 
-      <DataTable
-        data={items}
-        columns={columns}
-        pageSize={limit}
-        isLoading={isLoading}
-        serverSide={true}
-        serverTotal={totalItems}
-        serverPage={page}
-        serverSortKey={sortKey || undefined}
-        serverSortDirection={sortDirection}
-        onServerPageChange={setPage}
-        onServerPageSizeChange={(newSize) => {
-          setLimit(newSize);
-          setPage(1);
-        }}
-        onServerSortChange={(key, direction) => {
-          setSortKey(key);
-          setSortDirection(direction);
-          setPage(1);
-        }}
-      />
+      {viewMode === "table" ? (
+        <DataTable
+          data={items}
+          columns={columns}
+          pageSize={limit}
+          isLoading={isLoading}
+          serverSide={true}
+          serverTotal={totalItems}
+          serverPage={page}
+          serverSortKey={sortKey || undefined}
+          serverSortDirection={sortDirection}
+          onServerPageChange={setPage}
+          onServerPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+          }}
+          onServerSortChange={(key, direction) => {
+            setSortKey(key);
+            setSortDirection(direction);
+            setPage(1);
+          }}
+        />
+      ) : (
+        <div className="space-y-4">
+          <ProductGridView
+            items={items}
+            isLoading={isLoading}
+            onView={(id) => navigate(`${routePrefix}/products/${id}`)}
+          />
+          <div className="flex items-center justify-between py-4 border-t border-border/40">
+            <div className="text-xs text-muted-foreground font-medium">
+              Showing {Math.min((page - 1) * limit + 1, totalItems)} to{" "}
+              {Math.min(page * limit, totalItems)} of {totalItems} items
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-[11px] font-black tracking-widest uppercase rounded-sm  disabled:opacity-50"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1 || isLoading}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.ceil(totalItems / limit) }).map(
+                  (_, i) => {
+                    const p = i + 1;
+                    if (p > 5 && p < Math.ceil(totalItems / limit)) return null;
+                    if (p === 6)
+                      return (
+                        <span
+                          key={p}
+                          className="text-muted-foreground mx-1 text-xs"
+                        >
+                          ...
+                        </span>
+                      );
+                    return (
+                      <Button
+                        key={p}
+                        variant={page === p ? "default" : "outline"}
+                        size="sm"
+                        className="h-8 w-8 text-xs rounded-sm p-0 flex items-center justify-center transition-all"
+                        onClick={() => setPage(p)}
+                      >
+                        {p}
+                      </Button>
+                    );
+                  },
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-[11px] font-black tracking-widest uppercase rounded-sm disabled:opacity-50"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= Math.ceil(totalItems / limit) || isLoading}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

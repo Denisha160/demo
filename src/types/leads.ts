@@ -1,7 +1,10 @@
 export interface Deal {
   id: string;
   title: string;
+  name?: string;
+  lead_number?: string;
   company: string;
+  company_name?: string;
   value: string;
   contact: string;
   date: string; // YYYY-MM-DD
@@ -19,6 +22,7 @@ export interface Deal {
   phone?: string;
   raw_date?: string;
   expected_revenue?: string | number;
+  created_at?: string;
 }
 
 export interface PipelineColumn {

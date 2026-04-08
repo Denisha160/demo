@@ -149,7 +149,10 @@ const ProductFormPage = () => {
 
   const isRoot = currentUser?.is_root_user || false;
   const isSaving = isCreating || isUpdating;
-  const [isEditing, setIsEditing] = useState(isNew);
+
+  const [isEditing, setIsEditing] = useState(
+    isNew || location.pathname.includes("/edit"),
+  );
   const [activeTab, setActiveTab] = useState("measurements");
   const [showSecretInput, setShowSecretInput] = useState(false);
   const productNameRef = useRef<HTMLInputElement>(null);
@@ -297,17 +300,17 @@ const ProductFormPage = () => {
       setMetaParams(
         meta.parameters
           ? Object.entries(meta.parameters).map(([k, v]) => ({
-            key: k,
-            value: String(v),
-          }))
+              key: k,
+              value: String(v),
+            }))
           : [{ key: "", value: "" }],
       );
       setMetaAttributes(
         meta.attributes
           ? Object.entries(meta.attributes).map(([k, v]) => ({
-            key: k,
-            value: String(v),
-          }))
+              key: k,
+              value: String(v),
+            }))
           : [{ key: "", value: "" }],
       );
 
@@ -380,7 +383,10 @@ const ProductFormPage = () => {
       updateProduct(
         { ...payload, id: id! },
         {
-          onSuccess: () => console.log("Product updated successfully"),
+          onSuccess: () => {
+            setIsEditing(false);
+            refetch();
+          },
           onError,
         },
       );
@@ -424,14 +430,12 @@ const ProductFormPage = () => {
       <div className="sticky top-0 z-10 border-b border-border transition-all duration-200 mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
           <div className="flex items-center">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
+            <button
+              className="p-1.5 hover:bg-muted rounded-sm text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => navigate(-1)}
             >
               <ArrowLeft className="h-5 w-5" />
-            </Button>
+            </button>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <Box className="w-5 h-5 text-primary" />
@@ -957,11 +961,12 @@ const ProductFormPage = () => {
                               )
                             ].url
                           }
-                          alt={`Product image ${Math.min(
-                            tabProps.images.slideIdx,
-                            tabProps.images.previews.length - 1,
-                          ) + 1
-                            }`}
+                          alt={`Product image ${
+                            Math.min(
+                              tabProps.images.slideIdx,
+                              tabProps.images.previews.length - 1,
+                            ) + 1
+                          }`}
                           className="w-full object-cover"
                           style={{ minHeight: 160, maxHeight: 200 }}
                           onClick={() =>
@@ -996,7 +1001,7 @@ const ProductFormPage = () => {
                               );
                               if (idx > 0) tabProps.images.setSlideIdx(idx - 1);
                             }}
-                            className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1 z-10"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -1043,14 +1048,15 @@ const ProductFormPage = () => {
                               key={i}
                               type="button"
                               onClick={() => tabProps.images.setSlideIdx(i)}
-                              className={`rounded-full transition-all ${i ===
+                              className={`rounded-full transition-all ${
+                                i ===
                                 Math.min(
                                   tabProps.images.slideIdx,
                                   tabProps.images.previews.length - 1,
                                 )
-                                ? "bg-primary w-3 h-1.5"
-                                : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
-                                }`}
+                                  ? "bg-primary w-3 h-1.5"
+                                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60 w-1.5 h-1.5"
+                              }`}
                             />
                           ))}
                         </div>
@@ -1071,7 +1077,7 @@ const ProductFormPage = () => {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-2 gap-1">
+                <TabsList className="flex flex-nowrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-2 gap-1 overflow-x-auto custom-scrollbar">
                   <TabsTrigger
                     value="measurements"
                     className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold"

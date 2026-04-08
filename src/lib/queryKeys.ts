@@ -146,7 +146,9 @@ export const queryKeys = {
     all: ["quotations"] as const,
     list: (filters?: Record<string, unknown>) =>
       [...queryKeys.quotations.all, "list", filters] as const,
-    detail: (id: string) =>
-      [...queryKeys.quotations.all, "detail", id] as const,
+    detail: (id: string, params?: Record<string, unknown>) =>
+      [...queryKeys.quotations.all, "detail", id, params] as const,
+    download: (id: string) =>
+      [...queryKeys.quotations.all, "download", id] as const,
   },
 } as const;

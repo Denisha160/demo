@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { useQuotation } from "@/hooks/useQuotations";
+import {
+  useQuotation,
+  useDownloadQuotation,
+  usePrintQuotation,
+} from "@/hooks/useQuotations";
+import { toast } from "react-toastify";
 import { formatDate } from "@/utils/date";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,26 +28,49 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Edit,
 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import { getStatusColor } from "./QuotationsTab";
 
-const STORAGE_BASE_URL = "https://basaltbucket.s3.us-east-1.amazonaws.com/";
-
-const normalizeImageUrl = (image?: string | null) => {
-  if (!image) return "";
-  if (/^https?:\/\//i.test(image) || image.startsWith("data:")) {
-    return image;
-  }
-  return `${STORAGE_BASE_URL}${image.replace(/^\/+/, "")}`;
-};
-
 const QuotationViewPage = () => {
-  const { quotationId } = useParams();
+  const { companyId, id: leadId, quotationId } = useParams();
   const navigate = useNavigate();
-  const { data: quotation, isLoading } = useQuotation(quotationId);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const { data: quotation, isLoading } = useQuotation(quotationId, {
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize,
+  });
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const { mutate: download, isPending: isDownloading } = useDownloadQuotation();
+  const { mutate: print } = usePrintQuotation();
+
+  const handleDownload = () => {
+    if (!quotation?.id) {
+      toast.error("Quotation details not found");
+      return;
+    }
+
+    download({
+      quotationId: quotation.id,
+      quotationNumber: String(quotation.quotation_number),
+    });
+  };
+
+  const handlePrint = () => {
+    if (!quotation?.id) {
+      toast.error("Quotation details not found");
+      return;
+    }
+
+    print(quotation.id);
+  };
+
+  const handleEdit = () => {
+    navigate(`/${companyId}/leads/${leadId}/quotations/${quotationId}/edit`);
+  };
 
   const nextImage = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -64,9 +92,9 @@ const QuotationViewPage = () => {
       header: "Img",
       className: "px-2 py-2 w-[88px]",
       render: (item) => {
-        const finalImages = ((item.images as string[] | undefined) || [])
-          .map(normalizeImageUrl)
-          .filter(Boolean);
+        const finalImages = (
+          (item.images as string[] | undefined) || []
+        ).filter(Boolean);
 
         return (
           <div
@@ -248,7 +276,17 @@ const QuotationViewPage = () => {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background"
+            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background hover:bg-primary/10 hover:text-primary border-primary/20 transition-all duration-200"
+            onClick={handleEdit}
+          >
+            <Edit className="h-3.5 w-3.5" />
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background hover:bg-slate-100 border-border/60 transition-all duration-200"
+            onClick={handlePrint}
           >
             <Printer className="h-3.5 w-3.5" />
             Print
@@ -256,9 +294,15 @@ const QuotationViewPage = () => {
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background"
+            className="h-8 gap-2 text-[10px] uppercase font-black tracking-widest bg-background hover:bg-slate-100 border-border/60 transition-all duration-200"
+            onClick={handleDownload}
+            disabled={isDownloading}
           >
-            <Download className="h-3.5 w-3.5" />
+            {isDownloading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="h-3.5 w-3.5" />
+            )}
             PDF
           </Button>
         </div>
@@ -346,14 +390,22 @@ const QuotationViewPage = () => {
                   Line Items
                 </span>
                 <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-sm text-[10px] font-bold">
-                  {quotation.items?.length || 0} TOTAL
+                  {quotation.total_items || quotation.items?.length || 0} TOTAL
                 </span>
               </div>
               <DataTable
                 columns={columns}
                 data={quotation.items || []}
-                enablePagination={false}
-                pageSize={100}
+                serverSide={true}
+                serverTotal={
+                  quotation.total_items || quotation.items?.length || 0
+                }
+                serverPage={currentPage}
+                pageSize={pageSize}
+                onServerPageChange={setCurrentPage}
+                onServerPageSizeChange={setPageSize}
+                isLoading={isLoading}
+                enablePagination={true}
               />
             </div>
 
@@ -470,7 +522,7 @@ const QuotationViewPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={normalizeImageUrl(galleryImages[galleryIndex])}
+                src={galleryImages[galleryIndex]}
                 alt={`Gallery Image ${galleryIndex + 1}`}
                 className="max-w-full max-h-[80vh] object-contain"
               />

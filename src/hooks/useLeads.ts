@@ -71,7 +71,7 @@ export function useLeads<T = any[]>(
   select?: (data: any) => T,
   options?: any,
 ) {
-  return useQuery({
+  return useQuery<any, any, T>({
     queryKey: queryKeys.leads.list(params),
     queryFn: () => listLeads(params),
     staleTime: 5 * 60 * 1000,

@@ -7,11 +7,11 @@ import {
   getSystemHierarchy,
   createUser,
   updateUser,
-  uploadUserPhoto,
   removeUserPhoto,
   listUserSessions,
   deleteUser,
   updateUserPermissions,
+  uploadFile,
 } from "@/services/api";
 import {
   User,
@@ -110,8 +110,21 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: UserUpdatePayload) => {
-      const response = await updateUser(data);
+    mutationFn: async (data: UserUpdatePayload & { file?: File | null }) => {
+      const { file, id, ...updateData } = data;
+      const finalPayload: UserUpdatePayload = { id, ...updateData };
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "users");
+        const uploadResponse = (await uploadFile(formData)) as unknown as {
+          file: string;
+        };
+        finalPayload.image_url = uploadResponse.file;
+      }
+
+      const response = await updateUser(finalPayload);
       return response;
     },
     onSuccess: (_data, variables) => {
@@ -119,7 +132,7 @@ export const useUpdateUser = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.users.detail(variables.id),
       });
-      toast.success("User updated successfully!");
+      toast.success("Profile updated successfully!");
     },
     onError: (error: unknown) => {
       const err = error as ApiErrorResponse;
@@ -131,7 +144,7 @@ export const useUpdateUser = () => {
       let message =
         errorData?.message ||
         errorData?.error?.message ||
-        "Failed to update user.";
+        "Failed to update profile.";
 
       // If it's a validation error, try to show the first detail for better immediate feedback
       if (errorData?.code === "validation_error" && errorData.details?.body) {
@@ -155,7 +168,11 @@ export const useUploadUserPhoto = () => {
       id: string;
       formData: FormData;
     }) => {
-      const response = await uploadUserPhoto(id, formData);
+      formData.append("folder", "users");
+      const uploadResponse = await uploadFile(formData);
+      const s3Key = uploadResponse.file;
+
+      const response = await updateUser({ id, image_url: s3Key });
       return response;
     },
     onSuccess: (_data, variables) => {

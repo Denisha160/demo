@@ -113,7 +113,7 @@ const QuotationPage = () => {
             images: item.images || [],
           })),
         }) as Record<string, unknown>),
-        lead_id: leadId!,
+        lead_id: leadId || data.lead_id,
       };
 
       if (quotationId) {
@@ -121,14 +121,22 @@ const QuotationPage = () => {
           { id: quotationId, ...payload } as QuotationUpdatePayload,
           {
             onSuccess: () => {
-              navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
+              navigate(
+                leadId
+                  ? `/${companyId}/leads/${leadId}?tab=quotations`
+                  : `/${companyId}/quotation`,
+              );
             },
           },
         );
       } else {
         createQuotation(payload as QuotationCreatePayload, {
           onSuccess: () => {
-            navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
+            navigate(
+              leadId
+                ? `/${companyId}/leads/${leadId}?tab=quotations`
+                : `/${companyId}/quotation`,
+            );
           },
         });
       }
@@ -144,7 +152,11 @@ const QuotationPage = () => {
   );
 
   const handleCancel = () => {
-    navigate(`/${companyId}/leads/${leadId}?tab=quotations`);
+    navigate(
+      leadId
+        ? `/${companyId}/leads/${leadId}?tab=quotations`
+        : `/${companyId}/quotation`,
+    );
   };
 
   if (quotationId && isLoadingQuotation) {

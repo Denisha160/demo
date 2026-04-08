@@ -26,13 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
-import {
-  useKitDetails,
-  useCreateKit,
-  useUpdateKit,
-  useUploadKitPhoto,
-  useDeleteKitPhoto,
-} from "@/hooks/useKits";
+import { useKitDetails, useCreateKit, useUpdateKit } from "@/hooks/useKits";
 import { useProductsCombobox } from "@/hooks/useProducts";
 import { usePackagesCombobox } from "@/hooks/usePackages";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -193,6 +187,7 @@ const KitFormPage = () => {
           price: item.price || 0,
           image_url: item.image_url,
         })),
+        image_url: kitDetails.image_url,
       });
       setKitImage(
         kitDetails.image_url ||
@@ -283,6 +278,7 @@ const KitFormPage = () => {
       kit_price: data.kit_price,
       packaging_id: data.packaging_id || null,
       kit_image: selectedFile || undefined,
+      image_url: kitDetails?.image_url || undefined,
       items: data.items.map((i) => ({
         finished_product_id: i.finished_product_id,
         quantity_per_kit: i.quantity_per_kit,

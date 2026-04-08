@@ -6,6 +6,7 @@ import {
   createQuotation,
   updateQuotation,
   deleteQuotation,
+  downloadQuotation,
 } from "@/services/api";
 import {
   Quotation,
@@ -28,13 +29,14 @@ export function useQuotations(params?: Record<string, unknown>) {
   });
 }
 
-export function useQuotation(id?: string) {
+export function useQuotation(id?: string, params?: Record<string, unknown>) {
   return useQuery({
-    queryKey: queryKeys.quotations.detail(id!),
+    queryKey: queryKeys.quotations.detail(id!, params),
     queryFn: async () => {
       if (!id) return null;
       const response = (await getQuotationDetails(
         id,
+        params,
       )) as ApiResponse<Quotation>;
       return response.data;
     },
@@ -92,6 +94,48 @@ export function useDeleteQuotation() {
       toast.error(
         error?.response?.data?.message || "Failed to delete quotation",
       );
+    },
+  });
+}
+
+export function useDownloadQuotation() {
+  return useMutation({
+    mutationFn: ({
+      quotationId,
+      quotationNumber,
+    }: {
+      quotationId: string;
+      quotationNumber?: string;
+    }) => downloadQuotation(quotationId),
+    onSuccess: (data: unknown, { quotationNumber }) => {
+      const url = window.URL.createObjectURL(new Blob([data as BlobPart]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `Quotation_${quotationNumber || new Date().getTime()}.pdf`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Quotation PDF downloaded successfully");
+    },
+    onError: (error: Error | any) => {
+      toast.error(error?.message || "Failed to download PDF");
+    },
+  });
+}
+
+export function usePrintQuotation() {
+  return useMutation({
+    mutationFn: (id: string) => downloadQuotation(id, { preview: "true" }),
+    onSuccess: (data: unknown) => {
+      const blob = new Blob([data as BlobPart], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    },
+    onError: (error: Error | any) => {
+      toast.error(error?.message || "Failed to open print preview");
     },
   });
 }

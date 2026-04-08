@@ -10,15 +10,19 @@ import {
   Briefcase,
   AlertCircle,
   Activity,
+  FileText,
 } from "lucide-react";
 import { useUser, useUserHierarchy } from "@/hooks/useUsers";
 import { useState, useMemo, useEffect } from "react";
 import { Combobox } from "@/components/ui/combobox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User } from "@/types/user";
 import UserVisitsTab from "./tabs/UserVisitsTab";
 import UserFollowUpsTab from "./tabs/UserFollowUpsTab";
 import UserTasksTab from "./tabs/UserTasksTab";
 import UserActivitiesTab from "./tabs/UserActivitiesTab";
+import UserLeadsTab from "./tabs/UserLeadsTab";
+import UserQuotationsTab from "./tabs/UserQuotationsTab";
 
 const getInitials = (name: string) =>
   (name || "?")
@@ -28,11 +32,19 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-type TabKey = "visits" | "followups" | "tasks" | "activity";
+type TabKey =
+  | "leads"
+  | "visits"
+  | "followups"
+  | "tasks"
+  | "quotations"
+  | "activity";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
+  { key: "leads", label: "Leads", icon: Briefcase },
   { key: "visits", label: "Visits", icon: MapPin },
   { key: "followups", label: "Follow-ups", icon: Clock },
   { key: "tasks", label: "Tasks", icon: ClipboardList },
+  { key: "quotations", label: "Quotations", icon: FileText },
   { key: "activity", label: "Log", icon: Activity },
 ];
 
@@ -59,7 +71,11 @@ const flattenHierarchy = (
 const SalesMemberDetailPage = () => {
   const { companyId, userId, tab } = useParams();
   const navigate = useNavigate();
-  const activeTabClass = tab || "visits";
+  const activeTab = tab || "leads";
+
+  const handleTabChange = (value: string) => {
+    navigate(`/${companyId}/sales/${userId}/${value}`);
+  };
 
   const { data: userData, isLoading: userLoading } = useUser(userId || "");
   const { data: hierarchyData, isLoading: hierarchyLoading } = useUserHierarchy(
@@ -215,36 +231,57 @@ const SalesMemberDetailPage = () => {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-sm shadow-sm flex flex-col">
-        <div className="flex border-b border-border bg-muted/10 px-2 pt-2 overflow-x-auto custom-scrollbar">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full flex flex-col"
+      >
+        <TabsList className="flex flex-nowrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-4 gap-1 overflow-x-auto custom-scrollbar">
           {TABS.map((t) => (
-            <Link
+            <TabsTrigger
               key={t.key}
-              to={`/${companyId}/sales/${userId}/${t.key}`}
-              className={`flex items-center whitespace-nowrap gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTabClass === t.key
-                  ? "border-primary text-primary bg-card"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-t-sm"
-              }`}
+              value={t.key}
+              className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold transition-all duration-200"
             >
-              <t.icon className="h-4 w-4" />
+              <t.icon className="h-4 w-4 mr-2" />
               {t.label}
-            </Link>
+            </TabsTrigger>
           ))}
-        </div>
+        </TabsList>
 
-        {/* Tab Content */}
-        {activeTabClass === "visits" && (
-          <UserVisitsTab userId={selectedUserId} />
-        )}
-        {activeTabClass === "followups" && (
-          <UserFollowUpsTab userId={selectedUserId} />
-        )}
-        {activeTabClass === "tasks" && <UserTasksTab userId={selectedUserId} />}
-        {activeTabClass === "activity" && (
-          <UserActivitiesTab userId={selectedUserId} />
-        )}
-      </div>
+        <div className="min-h-[400px] animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <TabsContent value="leads" className="m-0 focus-visible:outline-none">
+            <UserLeadsTab userId={selectedUserId} />
+          </TabsContent>
+          <TabsContent
+            value="visits"
+            className="m-0 focus-visible:outline-none"
+          >
+            <UserVisitsTab userId={selectedUserId} />
+          </TabsContent>
+          <TabsContent
+            value="followups"
+            className="m-0 focus-visible:outline-none"
+          >
+            <UserFollowUpsTab userId={selectedUserId} />
+          </TabsContent>
+          <TabsContent value="tasks" className="m-0 focus-visible:outline-none">
+            <UserTasksTab userId={selectedUserId} />
+          </TabsContent>
+          <TabsContent
+            value="quotations"
+            className="m-0 focus-visible:outline-none"
+          >
+            <UserQuotationsTab userId={selectedUserId} />
+          </TabsContent>
+          <TabsContent
+            value="activity"
+            className="m-0 focus-visible:outline-none"
+          >
+            <UserActivitiesTab userId={selectedUserId} />
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   );
 };

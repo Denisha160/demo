@@ -18,21 +18,12 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { cn } from "@/lib/utils";
 import { QuotationFormData } from "./QuotationForm";
 import KitViewModal from "@/pages/common/kits/KitViewModal";
-
-const STORAGE_BASE_URL = "https://basaltbucket.s3.us-east-1.amazonaws.com/";
-
-const normalizeImageUrl = (image?: string | null) => {
-  if (!image) return "";
-  if (/^https?:\/\//i.test(image) || image.startsWith("data:")) {
-    return image;
-  }
-  return `${STORAGE_BASE_URL}${image.replace(/^\/+/, "")}`;
-};
 
 type SelectableItem = {
   id: string;
@@ -151,18 +142,11 @@ export const QuotationProductsTable = () => {
   };
 
   const buildItemImages = (item: SelectableItem, selectedImages: string[]) => {
-    const normalizedSelectedImages = selectedImages
-      .map(normalizeImageUrl)
-      .filter(Boolean);
-    const defaultImage = normalizeImageUrl(
-      item.type === "kit" ? item.image_url : "",
-    );
+    const defaultImage = item.type === "kit" ? item.image_url : "";
 
-    return [
-      ...(defaultImage ? [defaultImage] : []),
-      ...normalizedSelectedImages,
-    ].filter(
-      (image, imageIndex, imageList) => imageList.indexOf(image) === imageIndex,
+    return [...(defaultImage ? [defaultImage] : []), ...selectedImages].filter(
+      (image, imageIndex, imageList) =>
+        image && imageList.indexOf(image) === imageIndex,
     );
   };
 
@@ -242,14 +226,10 @@ export const QuotationProductsTable = () => {
       return;
     }
 
-    const defaultImage = normalizeImageUrl(
-      item.type === "kit" ? item.image_url : "",
-    );
+    const defaultImage = item.type === "kit" ? item.image_url : "";
     const currentSelectedImages = (
       (currentItems[index]?.images as string[] | undefined) || []
-    )
-      .map(normalizeImageUrl)
-      .filter((image) => Boolean(image) && image !== defaultImage);
+    ).filter((image) => Boolean(image) && image !== defaultImage);
 
     setImagePickerState({
       index,
@@ -363,7 +343,7 @@ export const QuotationProductsTable = () => {
                       {(() => {
                         const finalImages = (
                           watch(`items.${index}.images`) || []
-                        ).map(normalizeImageUrl);
+                        ).filter(Boolean);
 
                         return (
                           <div
@@ -434,6 +414,7 @@ export const QuotationProductsTable = () => {
                             options={allItems.map((item) => ({
                               label: item.name,
                               value: item.id,
+                              badge: item.type === "kit" ? "KIT" : "PRODUCT",
                             }))}
                             value={
                               watch(`items.${index}.type`) === "product"
@@ -449,6 +430,7 @@ export const QuotationProductsTable = () => {
                               errors.items?.[index]?.item_name &&
                                 "border-destructive focus:ring-destructive/20",
                             )}
+                            contentClassName="min-w-[450px]"
                             searchValue={fgSearch}
                             onSearchChange={setFgSearch}
                           />
@@ -636,29 +618,42 @@ export const QuotationProductsTable = () => {
         description="Select or unselect images for this item. Closing without saving keeps the current row details."
         maxWidth="max-w-4xl"
         headerBg="bg-primary/5"
-      >
-        {imagePickerState && (
-          <>
-            <div className="mb-4 flex items-center justify-between gap-3 rounded-sm border border-border/50 bg-muted/10 px-4 py-3">
+        footer={
+          imagePickerState && (
+            <div className="flex items-center justify-between w-full">
               <span className="text-xs font-bold text-muted-foreground">
                 {imagePickerState.selectedImages.length} image(s) selected
               </span>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => {
-                  populateRowDetails(
-                    imagePickerState.index,
-                    imagePickerState.item,
-                    imagePickerState.selectedImages,
-                  );
-                  setImagePickerState(null);
-                }}
-              >
-                Use Selected Images
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setImagePickerState(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    populateRowDetails(
+                      imagePickerState.index,
+                      imagePickerState.item,
+                      imagePickerState.selectedImages,
+                    );
+                    setImagePickerState(null);
+                  }}
+                >
+                  Use Selected Images
+                </Button>
+              </div>
             </div>
-
+          )
+        }
+      >
+        {imagePickerState && (
+          <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {imagePickerState.images.map((image, imageIndex) => (
                 <button
@@ -666,44 +661,60 @@ export const QuotationProductsTable = () => {
                   type="button"
                   className={cn(
                     "group overflow-hidden rounded-sm border bg-background text-left transition-all hover:border-primary/50 hover:shadow-md",
-                    imagePickerState.selectedImages.includes(
-                      normalizeImageUrl(image),
-                    )
+                    imagePickerState.selectedImages.includes(image)
                       ? "border-primary ring-1 ring-primary/30"
                       : "border-border/60",
                   )}
                   onClick={() => {
-                    const normalizedImage = normalizeImageUrl(image);
                     setImagePickerState((prev) => {
                       if (!prev) return prev;
 
-                      const exists =
-                        prev.selectedImages.includes(normalizedImage);
+                      const exists = prev.selectedImages.includes(image);
 
                       return {
                         ...prev,
                         selectedImages: exists
                           ? prev.selectedImages.filter(
-                              (selected) => selected !== normalizedImage,
+                              (selected) => selected !== image,
                             )
-                          : [...prev.selectedImages, normalizedImage],
+                          : [...prev.selectedImages, image],
                       };
                     });
                   }}
                 >
-                  <div className="aspect-square overflow-hidden bg-muted/10">
+                  <div className="aspect-square overflow-hidden bg-muted/10 relative group-hover:opacity-90 transition-opacity">
                     <img
-                      src={normalizeImageUrl(image)}
+                      src={image}
                       alt={`${imagePickerState.item.name} ${imageIndex + 1}`}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.1]"
                     />
+                    {/* Selection Indicator Overlay */}
+                    {imagePickerState.selectedImages.includes(image) && (
+                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center p-2 z-10 transition-all duration-300 backdrop-blur-[1px]">
+                        <div className="bg-background rounded-full p-1 shadow-lg border-2 border-primary animate-in zoom-in duration-300">
+                          <CheckCircle2 className="h-6 w-6 text-primary" />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="border-t border-border/40 px-3 py-2">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                      {imagePickerState.selectedImages.includes(
-                        normalizeImageUrl(image),
-                      )
-                        ? "Selected"
+                  <div
+                    className={cn(
+                      "px-3 py-2 transition-colors",
+                      imagePickerState.selectedImages.includes(image)
+                        ? "bg-primary/5 border-t border-primary/20"
+                        : "border-t border-border/40",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "text-[10px] font-black uppercase tracking-widest leading-none",
+                        imagePickerState.selectedImages.includes(image)
+                          ? "text-primary"
+                          : "text-muted-foreground/60",
+                      )}
+                    >
+                      {imagePickerState.selectedImages.includes(image)
+                        ? "Selected Item"
                         : "Tap To Select"}
                     </span>
                   </div>
@@ -766,7 +777,7 @@ export const QuotationProductsTable = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={normalizeImageUrl(galleryImages[galleryIndex])}
+              src={galleryImages[galleryIndex]}
               alt={`Gallery Image ${galleryIndex + 1}`}
               className="max-w-full max-h-[80vh] object-contain"
             />

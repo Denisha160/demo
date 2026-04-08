@@ -8,6 +8,7 @@ import {
   getProductDetails,
   uploadProductPhoto,
   deleteProductPhoto,
+  uploadFile,
 } from "@/services/api";
 import type {
   Product,
@@ -158,10 +159,25 @@ export function useUploadProductPhoto() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ productId, file }: { productId: string; file: File }) => {
+    mutationFn: async ({
+      productId,
+      file,
+    }: {
+      productId: string;
+      file: File;
+    }) => {
       const formData = new FormData();
-      formData.append("image", file);
-      return uploadProductPhoto(productId, formData);
+      formData.append("file", file);
+      formData.append("folder", "products");
+
+      const uploadResponse = (await uploadFile(formData)) as unknown as {
+        file: string;
+      };
+
+      return uploadProductPhoto(productId, {
+        image_url: uploadResponse.file,
+        originalname: file.name,
+      });
     },
     onSuccess: (_response: ApiResponse<unknown>, variables) => {
       queryClient.invalidateQueries({

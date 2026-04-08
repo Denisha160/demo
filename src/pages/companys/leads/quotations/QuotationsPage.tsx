@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import {
   Search,
@@ -9,9 +9,12 @@ import {
   Plus,
   Download,
   Loader2,
+  CalendarDays,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DataTable, { Column } from "@/components/DataTable";
+import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
+import { DateRange } from "react-day-picker";
 import {
   useQuotations,
   useDeleteQuotation,
@@ -23,6 +26,7 @@ import { useLeads } from "@/hooks/useLeads";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
+import { useHasPermission, useCurrentUser } from "@/hooks/useAuth";
 import { Quotation } from "@/types/quotations";
 import { format } from "date-fns";
 import {
@@ -40,10 +44,18 @@ const QuotationsPage = () => {
   const navigate = useNavigate();
   const { companyId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { hasPermission } = useHasPermission();
+  const user = useCurrentUser();
 
   const leadId = searchParams.get("lead_id") || "";
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = parseInt(searchParams.get("limit") || "15", 10);
+
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const from = searchParams.get("startDate");
+    const to = searchParams.get("endDate");
+    return from ? { from: new Date(from), to: to ? new Date(to) : undefined } : undefined;
+  });
 
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || "",
@@ -59,27 +71,40 @@ const QuotationsPage = () => {
 
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const updateParam = (key: string, value: string | number) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (value) next.set(key, String(value));
-        else next.delete(key);
-        if (key !== "page" && key !== "limit") {
-          next.set("page", "1");
-        }
-        return next;
-      },
-      { replace: true },
-    );
-  };
+  const updateParam = useCallback(
+    (key: string, value: string | number) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (value) next.set(key, String(value));
+          else next.delete(key);
+          if (key !== "page" && key !== "limit") {
+            next.set("page", "1");
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   useEffect(() => {
     if (debouncedSearch !== (searchParams.get("search") || "")) {
       updateParam("search", debouncedSearch);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch]);
+  }, [debouncedSearch, searchParams, updateParam]);
+
+  useEffect(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (dateRange?.from) next.set("startDate", dateRange.from.toISOString());
+      else next.delete("startDate");
+      if (dateRange?.to) next.set("endDate", dateRange.to.toISOString());
+      else next.delete("endDate");
+      return next;
+    }, { replace: true });
+  }, [dateRange, setSearchParams]);
 
   const setLeadId = (v: string) => updateParam("lead_id", v);
   const setPage = (p: number) => updateParam("page", p);
@@ -97,6 +122,7 @@ const QuotationsPage = () => {
       { replace: true },
     );
     setSearchTerm("");
+    setDateRange(undefined);
   };
   const handleDownload = (quotation: Quotation) => {
     setDownloadingId(quotation.id);
@@ -121,13 +147,18 @@ const QuotationsPage = () => {
   }, [leadsDataRaw]);
 
   const filters = useMemo(() => {
+    const canReadAll = user?.is_root_user || hasPermission("quotation.read_all");
+
     return {
       search: debouncedSearch || undefined,
       lead_id: leadId || undefined,
+      user_id: canReadAll ? undefined : user?.id,
+      startDate: dateRange?.from?.toISOString(),
+      endDate: dateRange?.to?.toISOString(),
       offset: (page - 1) * pageSize,
       limit: pageSize,
     };
-  }, [debouncedSearch, leadId, page, pageSize]);
+  }, [debouncedSearch, leadId, page, pageSize, user, hasPermission, dateRange]);
 
   const { data: quotationsData, isLoading } = useQuotations(filters);
   const quotations = quotationsData?.items || [];
@@ -230,7 +261,7 @@ const QuotationsPage = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="w-[200px]">
+          <div className="w-[180px]">
             <Combobox
               options={leadOptions}
               value={leadId}
@@ -240,6 +271,12 @@ const QuotationsPage = () => {
               clearable
             />
           </div>
+          <DatePickerWithRange
+            date={dateRange}
+            setDate={setDateRange}
+            className="w-[260px]"
+            placeholder="Filter by date"
+          />
           {(searchTerm || leadId) && (
             <Button
               variant="ghost"

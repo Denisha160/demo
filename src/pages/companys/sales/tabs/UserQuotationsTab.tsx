@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/utils/date";
 import { useQuotations, useDownloadQuotation } from "@/hooks/useQuotations";
 import { getStatusColor } from "../../leads/details/tabs/quotations/QuotationsTab";
+import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
+import { DateRange } from "react-day-picker";
 
 interface UserQuotationsTabProps {
   userId: string;
@@ -26,9 +28,12 @@ const UserQuotationsTab = ({ userId }: UserQuotationsTabProps) => {
   const [limit, setLimit] = useState(
     parseInt(searchParams.get("limit") || "10", 10),
   );
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const { data: quotationsData, isLoading } = useQuotations({
     user_id: userId,
+    startDate: dateRange?.from?.toISOString(),
+    endDate: dateRange?.to?.toISOString(),
     limit,
     offset: (page - 1) * limit,
     search: debouncedSearch || undefined,
@@ -145,17 +150,25 @@ const UserQuotationsTab = ({ userId }: UserQuotationsTabProps) => {
             </p>
           </div>
         </div>
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search quotations..."
-            className="h-9 w-[240px] pl-9 text-sm"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
+        <div className="flex items-center gap-3">
+          <DatePickerWithRange
+            date={dateRange}
+            setDate={setDateRange}
+            className="w-[260px]"
+            placeholder="Filter by date"
           />
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search quotations..."
+              className="h-9 w-[240px] pl-9 text-sm"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
         </div>
       </div>
       <DataTable

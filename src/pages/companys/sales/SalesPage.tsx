@@ -7,24 +7,6 @@ import { useUsers } from "@/hooks/useUsers";
 import { useDebounce } from "@/hooks/useDebounce";
 import DataTable, { Column, SortDirection } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
-import { cn } from "@/lib/utils";
-
-const getInitials = (name: string) =>
-  (name || "?")
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-const GRADIENTS = [
-  "from-violet-500 to-purple-600",
-  "from-blue-500 to-cyan-600",
-  "from-emerald-500 to-teal-600",
-  "from-orange-500 to-amber-600",
-  "from-rose-500 to-pink-600",
-  "from-indigo-500 to-blue-600",
-];
 
 const SalesPage = () => {
   const { companyId } = useParams();

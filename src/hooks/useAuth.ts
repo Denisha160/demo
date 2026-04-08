@@ -164,7 +164,9 @@ export function useHasPermission() {
 
     const perms: string[] = Array.isArray(permissions)
       ? permissions
-      : (permissions as { items?: string[] }).items || [];
+      : (permissions as { items?: string[]; data?: string[] }).data ||
+        (permissions as { items?: string[]; data?: string[] }).items ||
+        [];
 
     if (Array.isArray(permission)) {
       return permission.some((p) => perms.includes(p));
@@ -177,6 +179,8 @@ export function useHasPermission() {
     isLoading,
     permissions: (Array.isArray(permissions)
       ? permissions
-      : (permissions as { items?: string[] })?.items || []) as string[],
+      : (permissions as { items?: string[]; data?: string[] })?.data ||
+        (permissions as { items?: string[]; data?: string[] })?.items ||
+        []) as string[],
   };
 }

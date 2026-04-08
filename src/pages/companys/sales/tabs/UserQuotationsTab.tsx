@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/utils/date";
 import { useQuotations, useDownloadQuotation } from "@/hooks/useQuotations";
+import { Quotation } from "@/types/quotations";
 import { getStatusColor } from "../../leads/details/tabs/quotations/QuotationsTab";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import { DateRange } from "react-day-picker";
@@ -45,11 +46,11 @@ const UserQuotationsTab = ({ userId }: UserQuotationsTabProps) => {
   const quotations = quotationsData?.items || [];
   const serverTotal = quotationsData?.total || 0;
 
-  const handleView = (item: any) => {
+  const handleView = (item: Quotation) => {
     navigate(`/${companyId}/leads/${item.lead_id}/quotations/${item.id}/view`);
   };
 
-  const handleDownload = (item: any) => {
+  const handleDownload = (item: Quotation) => {
     setDownloadingId(item.id);
     download(
       {
@@ -62,7 +63,7 @@ const UserQuotationsTab = ({ userId }: UserQuotationsTabProps) => {
     );
   };
 
-  const columns: Column<any>[] = [
+  const columns: Column<Quotation>[] = [
     {
       key: "quotation_number",
       header: "Quotation Details",

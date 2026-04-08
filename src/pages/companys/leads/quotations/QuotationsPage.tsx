@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
 import { useHasPermission, useCurrentUser } from "@/hooks/useAuth";
 import { Quotation } from "@/types/quotations";
+import { Deal } from "@/types/leads";
 import { format } from "date-fns";
 import {
   AlertDialog,
@@ -137,10 +138,10 @@ const QuotationsPage = () => {
     );
   };
 
-  const { data: leadsDataRaw = [] } = useLeads({ limit: 100 });
+  const { data: leadsDataRaw = [] } = useLeads<Deal[]>({ limit: 100 });
   const leadOptions = useMemo(() => {
-    const leadsData = (leadsDataRaw as any)?.items || leadsDataRaw || [];
-    return (leadsData as any[]).map((l: any) => ({
+    const leadsData = Array.isArray(leadsDataRaw) ? leadsDataRaw : [];
+    return leadsData.map((l: Deal) => ({
       value: l.id,
       label: l.name || l.title || "Unknown Lead",
     }));
@@ -152,7 +153,7 @@ const QuotationsPage = () => {
     return {
       search: debouncedSearch || undefined,
       lead_id: leadId || undefined,
-      user_id: canReadAll ? undefined : user?.id,
+      user_id: undefined,
       startDate: dateRange?.from?.toISOString(),
       endDate: dateRange?.to?.toISOString(),
       offset: (page - 1) * pageSize,

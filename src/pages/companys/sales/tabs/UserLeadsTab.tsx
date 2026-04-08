@@ -36,6 +36,15 @@ interface UserLeadsTabProps {
   userId: string;
 }
 
+interface LeadsResponse {
+  data: {
+    items: Deal[];
+    pagination: {
+      total: number;
+    };
+  };
+}
+
 const UserLeadsTab = ({ userId }: UserLeadsTabProps) => {
   const navigate = useNavigate();
   const { companyId } = useParams();
@@ -66,7 +75,7 @@ const UserLeadsTab = ({ userId }: UserLeadsTabProps) => {
     );
   }, [debouncedSearch, page, limit, setSearchParams]);
 
-  const { data, isLoading } = useLeads<any>(
+  const { data, isLoading } = useLeads<LeadsResponse>(
     {
       assigned_to: userId,
       start_date: dateRange?.from?.toISOString(),
@@ -75,13 +84,11 @@ const UserLeadsTab = ({ userId }: UserLeadsTabProps) => {
       offset: (page - 1) * limit,
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
     },
-    (res) => res, // Custom select to get full response instead of just array
+    (res) => res as LeadsResponse,
   );
 
-  const leads = Array.isArray((data as any)?.data?.items)
-    ? (data as any).data.items
-    : [];
-  const total = (data as any)?.data?.pagination?.total || 0;
+  const leads = data?.data?.items || [];
+  const total = data?.data?.pagination?.total || 0;
 
   const columns: Column<Deal>[] = [
     {
@@ -90,10 +97,10 @@ const UserLeadsTab = ({ userId }: UserLeadsTabProps) => {
       render: (item: Deal) => (
         <div className="flex flex-col">
           <span className="text-sm font-medium text-foreground uppercase">
-            {(item as any).name || item.title}
+            {item.name || item.title}
           </span>
           <span className="text-[10px] text-muted-foreground font-mono">
-            {(item as any).lead_number}
+            {item.lead_number}
           </span>
         </div>
       ),
@@ -104,7 +111,7 @@ const UserLeadsTab = ({ userId }: UserLeadsTabProps) => {
       render: (item: Deal) => (
         <div className="flex flex-col">
           <span className="text-sm text-foreground/80">
-            {(item as any).company_name || item.company || "-"}
+            {item.company_name || item.company || "-"}
           </span>
         </div>
       ),
@@ -149,7 +156,7 @@ const UserLeadsTab = ({ userId }: UserLeadsTabProps) => {
     {
       key: "created_at",
       header: "Created Date",
-      render: (item: any) => (
+      render: (item: Deal) => (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <CalendarDays className="h-3.5 w-3.5" />
           {formatDateTime(item.created_at)}

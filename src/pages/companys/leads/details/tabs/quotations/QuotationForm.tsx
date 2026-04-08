@@ -148,9 +148,10 @@ const QuotationForm = ({
     () =>
       (leadsData as any[]).map((l: any) => ({
         value: l.id,
-        label:
-          l.name || l.title || l.company_name || l.email || "Untitled Lead",
-        badge: l.company_name,
+        label: `${l.name || l.title || "Untitled Lead"}`,
+        description: `${l.company_name || "Private"} ${l.phone ? `• ${l.phone}` : ""}`,
+        badge: `${l.status_name || "New"}`,
+        badgeColor: l.status_color,
       })),
     [leadsData],
   );
@@ -357,7 +358,6 @@ const QuotationForm = ({
                         value={field.value}
                         onValueChange={(val) => {
                           field.onChange(val);
-                          // Clear search when selected
                           setLeadSearch("");
                         }}
                         disabled={!!leadIdFromUrl}

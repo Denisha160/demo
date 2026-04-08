@@ -20,6 +20,8 @@ export interface ComboboxOption {
   value: string;
   label: string;
   badge?: string;
+  badgeColor?: string;
+  description?: string;
 }
 
 interface ComboboxProps {
@@ -195,10 +197,28 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                         value === option.value ? "opacity-100" : "opacity-0",
                       )}
                     />
-                    <div className="flex-1 flex items-center justify-between gap-2 overflow-hidden">
-                      <span className="truncate">{option.label}</span>
+                    <div className="flex-1 flex items-center justify-between gap-2 overflow-hidden py-0.5">
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="truncate">{option.label}</span>
+                        {option.description && (
+                          <span className="truncate text-[10px] text-muted-foreground leading-tight">
+                            {option.description}
+                          </span>
+                        )}
+                      </div>
                       {option.badge && (
-                        <span className="shrink-0 px-1.5 py-0.5 rounded-[2px] bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest border border-primary/20 leading-none">
+                        <span
+                          className="shrink-0 px-1.5 py-0.5 rounded-[2px] text-[9px] font-black uppercase tracking-widest leading-none border"
+                          style={{
+                            backgroundColor: option.badgeColor
+                              ? `${option.badgeColor}1a`
+                              : undefined,
+                            color: option.badgeColor ?? undefined,
+                            borderColor: option.badgeColor
+                              ? `${option.badgeColor}33`
+                              : undefined,
+                          }}
+                        >
                           {option.badge}
                         </span>
                       )}

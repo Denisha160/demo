@@ -10,6 +10,7 @@ import {
   Briefcase,
   AlertCircle,
   Activity,
+  FileText,
 } from "lucide-react";
 import { useUser, useUserHierarchy } from "@/hooks/useUsers";
 import { useState, useMemo, useEffect } from "react";
@@ -21,6 +22,7 @@ import UserFollowUpsTab from "./tabs/UserFollowUpsTab";
 import UserTasksTab from "./tabs/UserTasksTab";
 import UserActivitiesTab from "./tabs/UserActivitiesTab";
 import UserLeadsTab from "./tabs/UserLeadsTab";
+import UserQuotationsTab from "./tabs/UserQuotationsTab";
 
 const getInitials = (name: string) =>
   (name || "?")
@@ -30,12 +32,13 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-type TabKey = "leads" | "visits" | "followups" | "tasks" | "activity";
+type TabKey = "leads" | "visits" | "followups" | "tasks" | "quotations" | "activity";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "leads", label: "Leads", icon: Briefcase },
   { key: "visits", label: "Visits", icon: MapPin },
   { key: "followups", label: "Follow-ups", icon: Clock },
   { key: "tasks", label: "Tasks", icon: ClipboardList },
+  { key: "quotations", label: "Quotations", icon: FileText },
   { key: "activity", label: "Log", icon: Activity },
 ];
 
@@ -258,6 +261,12 @@ const SalesMemberDetailPage = () => {
           </TabsContent>
           <TabsContent value="tasks" className="m-0 focus-visible:outline-none">
             <UserTasksTab userId={selectedUserId} />
+          </TabsContent>
+          <TabsContent
+            value="quotations"
+            className="m-0 focus-visible:outline-none"
+          >
+            <UserQuotationsTab userId={selectedUserId} />
           </TabsContent>
           <TabsContent
             value="activity"

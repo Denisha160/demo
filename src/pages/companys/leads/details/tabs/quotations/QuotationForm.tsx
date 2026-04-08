@@ -148,7 +148,8 @@ const QuotationForm = ({
     () =>
       (leadsData as any[]).map((l: any) => ({
         value: l.id,
-        label: l.name || l.title || l.company_name || l.email || "Untitled Lead",
+        label:
+          l.name || l.title || l.company_name || l.email || "Untitled Lead",
         badge: l.company_name,
       })),
     [leadsData],
@@ -472,7 +473,8 @@ const QuotationForm = ({
                         {...field}
                         rows={3}
                         placeholder="Priority customer - first order"
-                        className="text-sm" />
+                        className="text-sm"
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>

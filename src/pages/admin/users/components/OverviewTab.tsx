@@ -16,11 +16,7 @@ import {
   useImperativeHandle,
   useEffect,
 } from "react";
-import {
-  useUpdateUser,
-  useUsers,
-  useRemoveUserPhoto,
-} from "@/hooks/useUsers";
+import { useUpdateUser, useUsers, useRemoveUserPhoto } from "@/hooks/useUsers";
 import { useShifts } from "@/hooks/useShifts";
 import { z } from "zod";
 import {
@@ -295,23 +291,24 @@ const OverviewTab = forwardRef<OverviewTabRef, OverviewTabProps>(
               setSelectedFile(null);
             },
             onError: (error: unknown) => {
-            const err = error as ApiErrorResponse;
-            const errorData = (err?.details ||
-              err?.response?.data ||
-              err ||
-              {}) as ApiErrorResponse;
-            if (
-              errorData?.code === "validation_error" &&
-              errorData.details?.body
-            ) {
-              setErrors(errorData.details.body);
-            } else if (errorData?.message) {
-              setApiError(errorData.message);
-            } else {
-              setApiError("An unexpected error occurred while saving.");
-            }
+              const err = error as ApiErrorResponse;
+              const errorData = (err?.details ||
+                err?.response?.data ||
+                err ||
+                {}) as ApiErrorResponse;
+              if (
+                errorData?.code === "validation_error" &&
+                errorData.details?.body
+              ) {
+                setErrors(errorData.details.body);
+              } else if (errorData?.message) {
+                setApiError(errorData.message);
+              } else {
+                setApiError("An unexpected error occurred while saving.");
+              }
+            },
           },
-        });
+        );
       } catch (error) {
         if (error instanceof z.ZodError) {
           const newErrors: Record<string, string> = {};

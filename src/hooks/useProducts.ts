@@ -170,9 +170,9 @@ export function useUploadProductPhoto() {
       formData.append("file", file);
       formData.append("folder", "products");
 
-      const uploadResponse = (await uploadFile(
-        formData,
-      )) as unknown as { file: string };
+      const uploadResponse = (await uploadFile(formData)) as unknown as {
+        file: string;
+      };
 
       return uploadProductPhoto(productId, {
         image_url: uploadResponse.file,

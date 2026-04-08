@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { useQuotation, useDownloadQuotation, usePrintQuotation } from "@/hooks/useQuotations";
+import {
+  useQuotation,
+  useDownloadQuotation,
+  usePrintQuotation,
+} from "@/hooks/useQuotations";
 import { toast } from "react-toastify";
 import { formatDate } from "@/utils/date";
 import { Button } from "@/components/ui/button";
@@ -28,7 +32,6 @@ import {
 } from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
 import { getStatusColor } from "./QuotationsTab";
-
 
 const QuotationViewPage = () => {
   const { companyId, id: leadId, quotationId } = useParams();
@@ -89,9 +92,9 @@ const QuotationViewPage = () => {
       header: "Img",
       className: "px-2 py-2 w-[88px]",
       render: (item) => {
-        const finalImages = ((item.images as string[] | undefined) || []).filter(
-          Boolean,
-        );
+        const finalImages = (
+          (item.images as string[] | undefined) || []
+        ).filter(Boolean);
 
         return (
           <div
@@ -394,7 +397,9 @@ const QuotationViewPage = () => {
                 columns={columns}
                 data={quotation.items || []}
                 serverSide={true}
-                serverTotal={quotation.total_items || quotation.items?.length || 0}
+                serverTotal={
+                  quotation.total_items || quotation.items?.length || 0
+                }
                 serverPage={currentPage}
                 pageSize={pageSize}
                 onServerPageChange={setCurrentPage}

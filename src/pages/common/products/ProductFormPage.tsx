@@ -1001,7 +1001,7 @@ const ProductFormPage = () => {
                               );
                               if (idx > 0) tabProps.images.setSlideIdx(idx - 1);
                             }}
-                            className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                            className="absolute top-2 right-2 bg-black/60 hover:bg-destructive text-white rounded-full p-1 z-10"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>

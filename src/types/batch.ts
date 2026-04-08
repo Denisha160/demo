@@ -1,4 +1,9 @@
-export type BatchStatus = "active" | "expired" | "depleted" | "blocked";
+export type BatchStatus =
+  | "active"
+  | "expired"
+  | "depleted"
+  | "blocked"
+  | "quarantine";
 
 export interface Batch {
   id: string;

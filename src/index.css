@@ -90,7 +90,7 @@
   input,
   textarea,
   select {
-    @apply bg-input text-foreground border-border rounded-md px-3 py-2;
+    @apply bg-input text-foreground border-border rounded-sm px-3 py-2;
     box-shadow: var(--shadow-input);
     transition: all 0.15s ease;
   }
@@ -188,6 +188,20 @@
     @apply bg-muted-foreground/20 rounded-full;
   }
   .scrollbar-premium:hover::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/40;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/40;
   }
 

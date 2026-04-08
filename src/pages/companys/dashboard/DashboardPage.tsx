@@ -5,13 +5,8 @@ import { Users, IndianRupee, TrendingUp, Target, Layers } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useAuth";
 import { useUsers } from "@/hooks/useUsers";
 import { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Combobox } from "@/components/ui/combobox";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart,
@@ -82,6 +77,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
   const [selectedUserId, setSelectedUserId] = useState<string>("all");
+  const [userSearch, setUserSearch] = useState("");
+  const debouncedUserSearch = useDebounce(userSearch, 300);
 
   const analyticsParams =
     currentUser?.is_root_user && selectedUserId !== "all"
@@ -91,7 +88,7 @@ const Dashboard = () => {
   const { data, isLoading: analyticsLoading } = useAnalytics(analyticsParams);
 
   const { data: usersResponse, isLoading: usersLoading } = useUsers(
-    { limit: 100 },
+    { limit: 10, search: debouncedUserSearch || undefined },
     { enabled: !!currentUser?.is_root_user },
   );
 
@@ -124,19 +121,22 @@ const Dashboard = () => {
     <div className="space-y-4 animate-fade-in pb-8">
       {currentUser?.is_root_user && (
         <div className="flex justify-end">
-          <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Select User" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Users</SelectItem>
-              {users.map((u: { id: string; name: string }) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="w-[250px]">
+            <Combobox
+              options={[
+                { value: "all", label: "All Users" },
+                ...users.map((u: { id: string; name: string }) => ({
+                  value: u.id,
+                  label: u.name,
+                })),
+              ]}
+              value={selectedUserId || "all"}
+              onValueChange={setSelectedUserId}
+              searchValue={userSearch}
+              onSearchChange={setUserSearch}
+              placeholder="Select User"
+            />
+          </div>
         </div>
       )}
 
@@ -175,7 +175,7 @@ const Dashboard = () => {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Revenue Chart */}
-        <div className="shadow-sm border border-border bg-card rounded-md p-4">
+        <div className="shadow-sm border border-border bg-card rounded-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-foreground">
               Monthly Revenue (Accepted)
@@ -227,7 +227,7 @@ const Dashboard = () => {
         </div>
 
         {/* Conversion Chart */}
-        <div className="shadow-sm border border-border bg-card rounded-md p-4">
+        <div className="shadow-sm border border-border bg-card rounded-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-foreground">
               Conversion Performance (%)
@@ -276,7 +276,7 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Deals by Stage */}
-        <div className="lg:col-span-1 shadow-sm border border-border bg-card rounded-md p-4">
+        <div className="lg:col-span-1 shadow-sm border border-border bg-card rounded-sm p-4">
           <h3 className="text-sm font-semibold text-foreground mb-4">
             Deals by Stage
           </h3>
@@ -339,7 +339,7 @@ const Dashboard = () => {
 
         <div className="lg:col-span-2 space-y-4">
           {/* Recent Deals */}
-          <div className="shadow-sm border border-border bg-card rounded-md p-0 overflow-hidden">
+          <div className="shadow-sm border border-border bg-card rounded-sm p-0 overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">
                 Recent Deals
@@ -362,7 +362,7 @@ const Dashboard = () => {
       </div>
 
       {/* Activity Feed */}
-      <div className="shadow-sm border border-border bg-card rounded-md">
+      <div className="shadow-sm border border-border bg-card rounded-sm">
         <div className="px-4 py-3 border-b border-border">
           <h2 className="text-sm font-semibold text-foreground">
             Recent Activity

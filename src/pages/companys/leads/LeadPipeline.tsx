@@ -10,6 +10,7 @@ import {
   CheckCircle,
   ShieldCheck,
   HelpCircle,
+  Phone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+const sanitizePhone = (value: string) =>
+  value.replace(/[^+\d]/g, "").replace(/^\+$/, "");
 
 interface LeadPipelineProps {
   displayedColumns: (PipelineColumn & {
@@ -73,7 +77,7 @@ const LeadPipeline = ({
                       ref={columnProvided.innerRef}
                       {...columnProvided.draggableProps}
                       style={columnProvided.draggableProps.style}
-                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${
+                      className={`group/column relative flex h-full min-h-0 w-[350px] flex-shrink-0 flex-col overflow-hidden rounded-sm border border-border/5 bg-secondary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05),0_1px_3px_rgba(0,0,0,0.05)] transition-all duration-300 ${
                         columnSnapshot.isDragging
                           ? "shadow-[0_18px_40px_-18px_rgba(0,0,0,0.35)]"
                           : "hover:shadow-[0_8px_30px_-8px_rgba(0,0,0,0.1)] hover:border-border/30"
@@ -160,7 +164,7 @@ const LeadPipeline = ({
                                         style={
                                           dealDragProvided.draggableProps.style
                                         }
-                                        className={`group relative cursor-pointer rounded-xl bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${
+                                        className={`group relative cursor-pointer rounded-sm bg-card p-4 transition-all duration-300 ease-out active:cursor-grabbing ${
                                           dealDragSnapshot.isDragging
                                             ? "z-50 scale-[1.03] rotate-1 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] ring-2 ring-primary/40"
                                             : "shadow-[0_2px_10px_-3px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_12px_30px_-8px_rgba(0,0,0,0.12)] hover:ring-1 hover:ring-primary/20"
@@ -217,9 +221,31 @@ const LeadPipeline = ({
                                                 </p>
                                                 {deal.phone &&
                                                   deal.phone !== "-" && (
-                                                    <p className="mt-1 truncate text-[10px] text-primary/70 font-medium">
-                                                      {deal.phone}
-                                                    </p>
+                                                    <div className="mt-1 flex items-center gap-1 text-[10px] font-medium">
+                                                      <a
+                                                        href={`tel:${sanitizePhone(
+                                                          deal.phone,
+                                                        )}`}
+                                                        aria-label={`Call ${deal.phone}`}
+                                                        onClick={(event) => {
+                                                          event.stopPropagation();
+                                                        }}
+                                                      >
+                                                        <Phone className="h-3 w-3" />
+                                                      </a>
+                                                      <a
+                                                        href={`tel:${sanitizePhone(
+                                                          deal.phone,
+                                                        )}`}
+                                                        className="truncate text-[10px] font-medium transition"
+                                                        aria-label={`Call ${deal.phone}`}
+                                                        onClick={(event) => {
+                                                          event.stopPropagation();
+                                                        }}
+                                                      >
+                                                        {deal.phone}
+                                                      </a>
+                                                    </div>
                                                   )}
                                               </div>
                                               {deal.expected_revenue && (
@@ -251,7 +277,7 @@ const LeadPipeline = ({
 
                                             <div className="mt-3 flex items-center justify-between border-t border-border/10 pt-3">
                                               <div className="flex flex-col gap-1 items-start">
-                                                <span className="rounded-md bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
+                                                <span className="rounded-sm bg-primary/5 px-2 py-0.5 text-[12px] font-bold text-primary">
                                                   {deal.priority}
                                                 </span>
                                               </div>

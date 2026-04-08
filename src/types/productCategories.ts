@@ -4,6 +4,7 @@ export interface Category {
   id: string;
   name: string;
   parent_id: string | null;
+  company_id?: string | null;
   created_at: string;
   updated_at: string;
   parent_name?: string | null;
@@ -25,11 +26,13 @@ export interface ProductCategory {
   mainCategoryId?: string;
   parent_id?: string | null;
   parent_name?: string | null;
+  company_id?: string | null;
 }
 
 export interface CategoryPayload {
   name: string;
   parent_id?: string | null;
+  company_id?: string | null;
 }
 
 export interface UpdateCategoryPayload extends CategoryPayload {

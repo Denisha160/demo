@@ -7,9 +7,11 @@ import {
   getSystemHierarchy,
   createUser,
   updateUser,
+  removeUserPhoto,
   listUserSessions,
   deleteUser,
   updateUserPermissions,
+  uploadFile,
 } from "@/services/api";
 import {
   User,
@@ -18,15 +20,19 @@ import {
   ApiErrorResponse,
   UserSession,
   UserSessionListResponse,
+  UserListResponse,
 } from "@/types/user";
 import { queryKeys } from "@/lib/queryKeys";
 
-export const useUsers = (params?: Record<string, unknown>, options?: any) => {
+export const useUsers = (
+  params?: Record<string, unknown>,
+  options?: Record<string, any>,
+) => {
   return useQuery({
     queryKey: queryKeys.users.list(params),
     queryFn: async () => {
       const response = await listUsers(params);
-      return response.data;
+      return response.data as UserListResponse;
     },
     ...options,
   });
@@ -37,7 +43,7 @@ export const useUser = (id: string, enabled: boolean = true) => {
     queryKey: queryKeys.users.detail(id),
     queryFn: async () => {
       const response = await getUserDetails(id);
-      return response;
+      return response.data;
     },
     enabled: enabled && !!id,
   });
@@ -104,8 +110,21 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: UserUpdatePayload) => {
-      const response = await updateUser(data);
+    mutationFn: async (data: UserUpdatePayload & { file?: File | null }) => {
+      const { file, id, ...updateData } = data;
+      const finalPayload: UserUpdatePayload = { id, ...updateData };
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "users");
+        const uploadResponse = (await uploadFile(formData)) as unknown as {
+          file: string;
+        };
+        finalPayload.image_url = uploadResponse.file;
+      }
+
+      const response = await updateUser(finalPayload);
       return response;
     },
     onSuccess: (_data, variables) => {
@@ -113,7 +132,7 @@ export const useUpdateUser = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.users.detail(variables.id),
       });
-      toast.success("User updated successfully!");
+      toast.success("Profile updated successfully!");
     },
     onError: (error: unknown) => {
       const err = error as ApiErrorResponse;
@@ -125,7 +144,7 @@ export const useUpdateUser = () => {
       let message =
         errorData?.message ||
         errorData?.error?.message ||
-        "Failed to update user.";
+        "Failed to update profile.";
 
       // If it's a validation error, try to show the first detail for better immediate feedback
       if (errorData?.code === "validation_error" && errorData.details?.body) {
@@ -134,6 +153,58 @@ export const useUpdateUser = () => {
       }
 
       toast.error(message);
+    },
+  });
+};
+
+export const useUploadUserPhoto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      formData,
+    }: {
+      id: string;
+      formData: FormData;
+    }) => {
+      formData.append("folder", "users");
+      const uploadResponse = await uploadFile(formData);
+      const s3Key = uploadResponse.file;
+
+      const response = await updateUser({ id, image_url: s3Key });
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.detail(variables.id),
+      });
+      toast.success("Profile photo updated!");
+    },
+    onError: (error: unknown) => {
+      console.error("Failed to upload photo:", error);
+      toast.error("Failed to upload profile photo.");
+    },
+  });
+};
+
+export const useRemoveUserPhoto = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await removeUserPhoto(id);
+      return response;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.detail(id),
+      });
+      toast.success("Profile photo removed!");
+    },
+    onError: (error: unknown) => {
+      console.error("Failed to remove photo:", error);
+      toast.error("Failed to remove profile photo.");
     },
   });
 };

@@ -43,6 +43,7 @@ function toDisplay(c: Category): ProductCategory {
     mainCategoryId: c.parent_id ?? undefined,
     parent_id: c.parent_id,
     parent_name: c.parent_name,
+    company_id: c.company_id,
   };
 }
 
@@ -186,6 +187,7 @@ const ProductCategoriesPage = () => {
       name: formData.name.trim(),
       parent_id:
         formData.type === "sub" ? (formData.mainCategoryId ?? null) : null,
+      company_id: formData.company_id || null,
     };
 
     if (formData.id) {
@@ -207,7 +209,7 @@ const ProductCategoriesPage = () => {
       sortable: true,
       render: (item) => (
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-muted rounded-md">
+          <div className="p-2 bg-muted rounded-sm">
             <Tags className="h-4 w-4 text-muted-foreground" />
           </div>
           <span className="font-medium text-sm">{item.name}</span>

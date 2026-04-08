@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm, UseFormSetError } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -211,6 +211,7 @@ const LeadModal = ({
     { limit: 100 },
     { enabled: open },
   );
+  const statusRef = useRef<HTMLButtonElement>(null);
   const { data: usersResponse } = useUsers({ limit: 100 }, { enabled: open });
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(
     null,
@@ -289,6 +290,15 @@ const LeadModal = ({
       value: item.id,
       label: item.name,
     })) || [];
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        statusRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -390,6 +400,7 @@ const LeadModal = ({
                   </FormLabel>
                   <FormControl>
                     <Combobox
+                      ref={statusRef}
                       options={statusOptions}
                       value={field.value}
                       onValueChange={field.onChange}

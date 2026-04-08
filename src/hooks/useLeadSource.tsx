@@ -19,11 +19,13 @@ export function useLeadSources(
 ) {
   return useQuery({
     queryKey: queryKeys.leadSource.list(filters),
-    queryFn: () => listSource(filters),
+    queryFn: async () => {
+      const response = await listSource(filters);
+      return response.data as LeadSourceListResponse;
+    },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    select: (data: any): LeadSourceListResponse | undefined => data?.data,
     ...options,
   });
 }

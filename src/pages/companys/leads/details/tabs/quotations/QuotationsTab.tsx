@@ -1,12 +1,26 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Plus, Search, Trash2 } from "lucide-react";
+import {
+  Edit,
+  Plus,
+  Search,
+  Trash2,
+  FileText,
+  Download,
+  Loader2,
+} from "lucide-react";
 import DataTable, { Column } from "@/components/DataTable";
-import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/utils/date";
-import QuotationForm, { Quotation, QuotationFormData } from "./QuotationForm";
+import { Badge } from "@/components/ui/badge";
+import {
+  useQuotations,
+  useDeleteQuotation,
+  useDownloadQuotation,
+} from "@/hooks/useQuotations";
+import { Quotation } from "@/types/quotations";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,183 +32,92 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const initialQuotations: Quotation[] = [
-  {
-    id: "1",
-    quotation_number: "QT-2026-1024",
-    lead_id: "Bell Borer III - kadin.waelchi@example.net",
-    quotation_date: "2026-03-20",
-    valid_until: "2026-03-31",
-    status: "DRAFT",
-    customer_name: "Acme Industries",
-    customer_email: "purchase@acme.com",
-    customer_phone: "9876543210",
-    customer_address: "Bangalore, Karnataka",
-    customer_gst: "29ABCDE1234F1Z5",
-    customer_pan: "ABCDE1234F",
-    subtotal: 12000,
-    discount_type: "PERCENTAGE",
-    discount_value: 10,
-    tax_details: [
-      { key: "CGST", value: 1080 },
-      { key: "SGST", value: 1080 },
-    ],
-    total_tax_amount: 2160,
-    additional_charges: [{ key: "Packing", value: 250 }],
-    total_additional_charges: 250,
-    delivery_terms: "PAID_DELIVERY",
-    delivery_charges: 500,
-    delivery_address: "Peenya Industrial Area, Bangalore",
-    expected_delivery_date: "2026-03-28",
-    notes: "Please confirm before dispatch.",
-    requires_approval: true,
-    approval_status: "PENDING",
-    created_at: new Date().toISOString(),
-    amount_in_words: "Twelve thousand plus taxes",
-    payment_terms: "NET_30",
-    approval_remarks: "",
-    contact_person_id: "",
-    contact_person_name: "",
-    contact_person_email: "",
-    contact_person_phone: "",
-    contact_person_designation: "",
-    payment_terms_custom: "",
-    delivery_terms_custom: "",
-  },
-  {
-    id: "2",
-    quotation_number: "QT-2026-2048",
-    lead_id: "Basalt Retail - ops@basaltretail.com",
-    quotation_date: "2026-03-18",
-    valid_until: "2026-03-25",
-    status: "SENT",
-    customer_name: "Basalt Retail",
-    customer_email: "ops@basaltretail.com",
-    customer_phone: "9988776655",
-    customer_address: "Chennai, Tamil Nadu",
-    customer_gst: "",
-    customer_pan: "",
-    subtotal: 8500,
-    discount_type: "FIXED",
-    discount_value: 500,
-    tax_details: [{ key: "GST", value: 1440 }],
-    total_tax_amount: 1440,
-    additional_charges: [],
-    total_additional_charges: 0,
-    delivery_terms: "FREE_DELIVERY",
-    delivery_charges: 0,
-    delivery_address: "Guindy, Chennai",
-    expected_delivery_date: "2026-03-22",
-    notes: "",
-    requires_approval: false,
-    approval_status: "",
-    created_at: new Date().toISOString(),
-    amount_in_words: "Eight thousand only",
-    payment_terms: "ADVANCE",
-    approval_remarks: "",
-    contact_person_id: "",
-    contact_person_name: "",
-    contact_person_email: "",
-    contact_person_phone: "",
-    contact_person_designation: "",
-    payment_terms_custom: "",
-    delivery_terms_custom: "",
-  },
-];
-
-const formatEnumLabel = (value: string) =>
-  value
-    .split("_")
-    .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
-    .join(" ");
-
-const calculateGrandTotal = (quotation: QuotationFormData) => {
-  const subtotal = quotation.subtotal || 0;
-  const discountValue = quotation.discount_value || 0;
-  const discountAmount =
-    quotation.discount_type === "PERCENTAGE"
-      ? (subtotal * discountValue) / 100
-      : quotation.discount_type === "FIXED"
-        ? discountValue
-        : 0;
-
-  const taxAmount = (quotation.tax_details || []).reduce(
-    (sum, t) => sum + (Number(t.value) || 0),
-    0,
-  );
-  const addCharges =
-    (quotation.additional_charges || []).reduce(
-      (sum, c) => sum + (Number(c.value) || 0),
-      0,
-    ) + (Number(quotation.delivery_charges) || 0);
-
-  return subtotal - discountAmount + taxAmount + addCharges;
+export const getStatusColor = (status: string) => {
+  switch (status?.toUpperCase()) {
+    case "DRAFT":
+      return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+    case "SENT":
+      return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+    case "VIEWED":
+      return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+    case "ACCEPTED":
+      return "bg-green-500/10 text-green-500 border-green-500/20";
+    case "REJECTED":
+      return "bg-red-500/10 text-red-500 border-red-500/20";
+    case "EXPIRED":
+      return "bg-orange-500/10 text-orange-500 border-orange-500/20";
+    case "CANCELLED":
+      return "bg-gray-500/10 text-gray-500 border-gray-500/20";
+    default:
+      return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+  }
 };
 
 const QuotationsTab = () => {
-  const [quotations, setQuotations] = useState<Quotation[]>(initialQuotations);
   const [search, setSearch] = useState("");
-  const { companyId, id } = useParams();
+  const { companyId, id: leadId } = useParams();
   const navigate = useNavigate();
   const [quotationToDelete, setQuotationToDelete] = useState<Quotation | null>(
     null,
   );
 
-  const filteredQuotations = quotations.filter((quotation) => {
-    const query = search.toLowerCase();
-    return (
-      quotation.quotation_number.toLowerCase().includes(query) ||
-      quotation.customer_name.toLowerCase().includes(query) ||
-      quotation.status.toLowerCase().includes(query)
-    );
+  const debouncedSearch = useDebounce(search, 500);
+  const { data: quotationsData, isLoading } = useQuotations({
+    lead_id: leadId,
+    search: debouncedSearch || undefined,
   });
+  const { mutate: deleteQuotation } = useDeleteQuotation();
+  const { mutate: download, isPending: isDownloading } = useDownloadQuotation();
+
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const quotations = useMemo(
+    () => quotationsData?.items || [],
+    [quotationsData],
+  );
 
   const handleCreate = () => {
-    navigate(`/${companyId}/leads/${id}/quotations/new`);
+    navigate(`/${companyId}/leads/${leadId}/quotations/new`);
   };
 
   const handleEdit = (quotation: Quotation) => {
-    navigate(`/${companyId}/leads/${id}/quotations/${quotation.id}/edit`);
+    navigate(`/${companyId}/leads/${leadId}/quotations/${quotation.id}/edit`);
+  };
+
+  const handleView = (quotation: Quotation) => {
+    navigate(`/${companyId}/leads/${leadId}/quotations/${quotation.id}/view`);
   };
 
   const handleDelete = (id: string) => {
-    setQuotations((prev) => prev.filter((quotation) => quotation.id !== id));
+    deleteQuotation(id);
     setQuotationToDelete(null);
   };
 
-  const handleSaveQuotation = (formData: QuotationFormData) => {
-    // This is now handled in the standalone page, but keeping the logic for reference if needed
-    // or just remove it if it's no longer called here.
+  const handleDownload = (quotation: Quotation) => {
+    setDownloadingId(quotation.id);
+    download(
+      {
+        quotationId: quotation.id,
+        quotationNumber: String(quotation.quotation_number),
+      },
+      {
+        onSettled: () => setDownloadingId(null),
+      },
+    );
   };
 
-  const getStatusVariant = (status: Quotation["status"]) => {
-    switch (status) {
-      case "ACCEPTED":
-        return "success";
-      case "SENT":
-      case "VIEWED":
-      case "REVISED":
-        return "info";
-      case "DRAFT":
-      case "EXPIRED":
-        return "warning";
-      case "REJECTED":
-      case "CANCELLED":
-        return "destructive";
-      default:
-        return "default";
-    }
-  };
-
-  const columns: Column<Quotation>[] = [
+  const columns: Column<any>[] = [
     {
       key: "quotation_number",
-      header: "Quotation",
+      header: "Quotation Number",
       render: (item) => (
         <div className="flex flex-col">
-          <span className="font-medium text-sm">{item.quotation_number}</span>
-          <span className="text-[10px] text-muted-foreground">
-            {item.customer_name}
+          <span
+            onClick={() => handleView(item)}
+            className="font-semibold text-sm text-primary hover:underline cursor-pointer decoration-primary/30 underline-offset-2"
+          >
+            {" "}
+            {item.quotation_number || "—"}
           </span>
         </div>
       ),
@@ -207,38 +130,29 @@ const QuotationsTab = () => {
       ),
     },
     {
-      key: "valid_until",
-      header: "Valid Until",
+      key: "grand_total",
+      header: "Total",
       render: (item) => (
-        <span className="text-sm">{formatDate(item.valid_until)}</span>
+        <span className="text-sm font-bold">
+          ₹{(item.grand_total || 0).toLocaleString()}
+        </span>
       ),
     },
     {
       key: "status",
       header: "Status",
       render: (item) => (
-        <StatusBadge
-          status={formatEnumLabel(item.status).toUpperCase()}
-          variant={getStatusVariant(item.status)}
-        />
+        <Badge variant="outline" className={getStatusColor(item.status)}>
+          {item.status}
+        </Badge>
       ),
     },
     {
-      key: "requires_approval",
-      header: "Approval",
+      key: "created_at",
+      header: "Created At",
       render: (item) => (
-        <StatusBadge
-          status={item.requires_approval ? "REQUIRED" : "NOT REQUIRED"}
-          variant={item.requires_approval ? "warning" : "success"}
-        />
-      ),
-    },
-    {
-      key: "subtotal",
-      header: "Grand Total",
-      render: (item) => (
-        <span className="text-sm font-medium">
-          {calculateGrandTotal(item).toFixed(2)}
+        <span className="text-xs text-muted-foreground">
+          {formatDate(item.created_at)}
         </span>
       ),
     },
@@ -258,6 +172,19 @@ const QuotationsTab = () => {
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8 rounded-sm hover:bg-primary/10 hover:text-primary"
+            onClick={() => handleDownload(item)}
+            disabled={isDownloading && downloadingId === item.id}
+          >
+            {isDownloading && downloadingId === item.id ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             className="h-8 w-8 rounded-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => setQuotationToDelete(item)}
           >
@@ -267,8 +194,6 @@ const QuotationsTab = () => {
       ),
     },
   ];
-
-  // Form state check removed since it's a standalone page
 
   return (
     <div className="w-full animate-fade-in rounded-lg border border-border/50 bg-card p-4 shadow-sm">
@@ -289,7 +214,7 @@ const QuotationsTab = () => {
         </div>
       </div>
 
-      <DataTable columns={columns} data={filteredQuotations} pageSize={10} />
+      <DataTable columns={columns} data={quotations} pageSize={10} />
 
       <AlertDialog
         open={!!quotationToDelete}

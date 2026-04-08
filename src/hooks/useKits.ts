@@ -9,6 +9,7 @@ import {
   associateProductToKit,
   disassociateProductFromKit,
   listKitsByProduct,
+  uploadFile,
 } from "@/services/api";
 
 export const useKitsByProduct = (productId?: string) => {
@@ -17,9 +18,19 @@ export const useKitsByProduct = (productId?: string) => {
     queryFn: async () => {
       if (!productId) return [];
       const response = (await listKitsByProduct(productId)) as ApiResponse<
-        KitMembership[]
+        KitMembership[] | { items: KitMembership[] }
       >;
-      return response.data || [];
+      const data = response.data;
+      if (Array.isArray(data)) return data;
+      if (
+        data &&
+        typeof data === "object" &&
+        "items" in data &&
+        Array.isArray((data as any).items)
+      ) {
+        return (data as any).items;
+      }
+      return [];
     },
     enabled: !!productId,
   });
@@ -111,7 +122,23 @@ export const useCreateKit = () => {
   const queryClient = useQueryClient();
   return useMutation<ApiResponse<unknown>, Error, KitCreatePayload>({
     mutationFn: async (payload) => {
-      const response = (await createKit(payload)) as ApiResponse<unknown>;
+      let image_url = payload.image_url;
+
+      // Step 1: Upload image if provided
+      if (payload.kit_image instanceof File) {
+        const formData = new FormData();
+        formData.append("file", payload.kit_image);
+        formData.append("folder", "kits");
+        const uploadRes = (await uploadFile(formData)) as any;
+        image_url = uploadRes.file;
+      }
+
+      // Step 2: Create kit with JSON
+      const { kit_image, ...payloadWithoutFile } = payload;
+      const response = (await createKit({
+        ...payloadWithoutFile,
+        image_url,
+      })) as ApiResponse<unknown>;
       return response;
     },
     onSuccess: (response) => {
@@ -133,7 +160,24 @@ export const useUpdateKit = () => {
   const queryClient = useQueryClient();
   return useMutation<ApiResponse<unknown>, Error, KitUpdatePayload>({
     mutationFn: async (payload) => {
-      const response = (await updateKit(payload)) as ApiResponse<unknown>;
+      let image_url = payload.image_url;
+
+      // Step 1: Upload image if provided
+      if (payload.kit_image instanceof File) {
+        const formData = new FormData();
+        formData.append("file", payload.kit_image);
+        formData.append("folder", "kits");
+        const uploadRes = (await uploadFile(formData)) as any;
+        image_url = uploadRes.file;
+      }
+
+      // Step 2: Update kit with JSON
+      const { id, kit_image, ...payloadWithoutFile } = payload;
+      const response = (await updateKit({
+        id,
+        ...payloadWithoutFile,
+        image_url,
+      })) as ApiResponse<unknown>;
       return response;
     },
     onSuccess: (response) => {

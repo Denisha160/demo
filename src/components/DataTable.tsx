@@ -50,6 +50,7 @@ interface DataTableProps<T> {
   onServerPageChange?: (page: number) => void;
   onServerPageSizeChange?: (size: number) => void;
   onServerSortChange?: (key: string, direction: SortDirection) => void;
+  enablePagination?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,6 +72,7 @@ function DataTable<T extends Record<string, any>>({
   onServerPageChange,
   onServerPageSizeChange,
   onServerSortChange,
+  enablePagination = true,
 }: DataTableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSizeState, setPageSizeState] = useState(pageSize);
@@ -123,8 +125,9 @@ function DataTable<T extends Record<string, any>>({
   const start = serverSide ? 0 : (activePage - 1) * activePageSize;
   const paginatedData = useMemo(() => {
     if (serverSide) return data;
+    if (!enablePagination) return sortedData;
     return sortedData.slice(start, start + activePageSize);
-  }, [sortedData, serverSide, data, start, activePageSize]);
+  }, [sortedData, serverSide, data, start, activePageSize, enablePagination]);
 
   const handleSort = useCallback(
     (key: string) => {
@@ -221,8 +224,7 @@ function DataTable<T extends Record<string, any>>({
   }, [data.length, totalPages, currentPage, serverSide]);
 
   return (
-    <div className="relative flex flex-col rounded-md border border-border/60 bg-card shadow-sm shadow-card">
-      {/* Aesthetic Loader - Only covers the tbody (rows) and leaves Headers visible! */}
+    <div className="relative flex flex-col rounded-sm border border-border/60 bg-card shadow-sm shadow-card">
       {isLoading && paginatedData.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 top-[33px] z-20 flex items-center justify-center rounded-b-md bg-background/50 backdrop-blur-[1px]">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -346,7 +348,7 @@ function DataTable<T extends Record<string, any>>({
         )}
       </div>
 
-      {activeTotal > 0 && (
+      {enablePagination && activeTotal > 0 && (
         <div className="flex flex-col gap-3 border-t border-border/60 bg-muted/10 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2">
             {enableSelection && (

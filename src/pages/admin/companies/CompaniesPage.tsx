@@ -58,7 +58,7 @@ const CompaniesPage = () => {
                 onClick={() => handleSelect(company.id)}
               >
                 <div
-                  className="h-11 w-11 text-white flex items-center justify-center rounded-md shrink-0 shadow-sm"
+                  className="h-11 w-11 text-white flex items-center justify-center rounded-sm shrink-0 shadow-sm"
                   style={{ backgroundColor: `hsl(${theme.primary})` }}
                 >
                   <span className="text-base font-bold">{theme.initials}</span>
@@ -86,7 +86,7 @@ const CompaniesPage = () => {
                 {user?.is_root_user && (
                   <button
                     onClick={(e) => handleEdit(e, company.id)}
-                    className="flex items-center gap-1.5 text-xs text-primary font-medium hover:text-primary/80 transition-colors bg-primary/10 px-2 py-1 rounded-md"
+                    className="flex items-center gap-1.5 text-xs text-primary font-medium hover:text-primary/80 transition-colors bg-primary/10 px-2 py-1 rounded-sm"
                   >
                     <Settings className="h-3 w-3" />
                     <span>Edit Profile</span>

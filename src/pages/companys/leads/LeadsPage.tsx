@@ -30,6 +30,7 @@ import {
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/useDebounce";
 import { DatePickerWithRange } from "@/components/ui/DatePickerWithRange";
 import {
   DropdownMenu,
@@ -177,6 +178,9 @@ const LeadsPage = () => {
   const navigate = useNavigate();
   const { companyId } = useParams();
 
+  const [userSearch, setUserSearch] = useState("");
+  const debouncedUserSearch = useDebounce(userSearch, 300);
+
   const searchTerm = searchParams.get("search") || "";
   const setSearchTerm = useCallback(
     (val: string) => {
@@ -288,7 +292,7 @@ const LeadsPage = () => {
   );
 
   const { data: usersResponse } = useUsers(
-    { limit: 100 },
+    { limit: 10, search: debouncedUserSearch || undefined },
     { enabled: !!currentUser?.is_root_user },
   );
   const usersList = (usersResponse as any)?.items || [];
@@ -762,8 +766,8 @@ const LeadsPage = () => {
   return (
     <div className="mx-auto flex h-[calc(100vh-theme(spacing.16))] w-full animate-fade-in flex-col overflow-hidden">
       <div className="border-b border-border">
-        <div className="overflow-x-auto 2xl:overflow-x-visible scrollbar-premium py-2">
-          <div className="flex items-center justify-between gap-2 min-w-max px-2 2xl:min-w-0 2xl:w-full">
+        <div className="overflow-x-auto 2xl:overflow-x-visible scrollbar-premium pb-2">
+          <div className="flex items-center justify-between gap-2 min-w-max 2xl:min-w-0 2xl:w-full">
             <div className="flex items-center gap-2">
               {/* Search */}
               <div className="relative w-64 2xl:w-72">
@@ -792,22 +796,21 @@ const LeadsPage = () => {
 
                 {currentUser?.is_root_user && (
                   <div className="w-[180px]">
-                    <Select
+                    <Combobox
+                      options={[
+                        { value: "all", label: "All Users" },
+                        ...usersList.map((u: { id: string; name: string }) => ({
+                          value: u.id,
+                          label: u.name,
+                        })),
+                      ]}
                       value={assignedTo || "all"}
                       onValueChange={setAssignedTo}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Assigned To" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Users</SelectItem>
-                        {usersList.map((u: { id: string; name: string }) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      searchValue={userSearch}
+                      onSearchChange={setUserSearch}
+                      placeholder="Assigned To"
+                      className="h-9"
+                    />
                   </div>
                 )}
 

@@ -251,7 +251,7 @@ const StatusPage = () => {
       </div>
 
       {/* Data Table */}
-      <div className="bg-card rounded-md shadow-sm border border-border/50">
+      <div className="bg-card rounded-sm shadow-sm border border-border/50">
         <DataTable
           columns={columns}
           data={statuses}

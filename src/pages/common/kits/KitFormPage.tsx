@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -17,6 +17,8 @@ import {
   Box,
   Save,
   X,
+  Image as ImageIcon,
+  UploadCloud,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -31,52 +33,63 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { KitCreatePayload, KitUpdatePayload } from "@/types/kits";
 import PackageModal from "@/pages/common/packages/components/PackageModal";
 
-const ProductInput = ({
-  label,
-  value,
-  error,
-  isEditing = true,
-  onChange,
-  placeholder,
-  type = "text",
-  className = "",
-  prefix,
-}: {
-  label: string;
-  value: string | number;
-  error?: string;
-  isEditing?: boolean;
-  onChange: (val: string) => void;
-  placeholder?: string;
-  type?: string;
-  className?: string;
-  prefix?: React.ReactNode;
-}) => (
-  <div className={`space-y-1.5 ${className}`}>
-    <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-      {label}
-    </Label>
-    <div className={prefix ? "relative" : ""}>
-      {prefix && (
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-          {prefix}
-        </span>
+const ProductInput = forwardRef<
+  HTMLInputElement,
+  {
+    label: string;
+    value: string | number;
+    error?: string;
+    isEditing?: boolean;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    type?: string;
+    className?: string;
+    prefix?: React.ReactNode;
+  }
+>(
+  (
+    {
+      label,
+      value,
+      error,
+      isEditing = true,
+      onChange,
+      placeholder,
+      type = "text",
+      className = "",
+      prefix,
+    },
+    ref,
+  ) => (
+    <div className={`space-y-1.5 ${className}`}>
+      <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+        {label}
+      </Label>
+      <div className={prefix ? "relative" : ""}>
+        {prefix && (
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {prefix}
+          </span>
+        )}
+        <Input
+          ref={ref}
+          type={type}
+          step={type === "number" ? "any" : undefined}
+          value={value?.toString() || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`h-8 text-sm rounded-sm ${prefix ? "pl-8" : ""} ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
+          disabled={!isEditing}
+        />
+      </div>
+      {error && (
+        <p className="text-[10px] text-destructive mt-0.5 ml-0.5">{error}</p>
       )}
-      <Input
-        type={type}
-        step={type === "number" ? "any" : undefined}
-        value={value?.toString() || ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={`h-8 text-sm rounded-sm ${prefix ? "pl-8" : ""} ${error ? "border-destructive focus-visible:ring-destructive" : ""}`}
-        disabled={!isEditing}
-      />
     </div>
-    {error && (
-      <p className="text-[10px] text-destructive mt-0.5 ml-0.5">{error}</p>
-    )}
-  </div>
+  ),
 );
+
+ProductInput.displayName = "ProductInput";
 
 // Schema matches backend requirements
 const kitSchema = z.object({
@@ -85,6 +98,7 @@ const kitSchema = z.object({
   is_active: z.boolean().default(true),
   kit_price: z.number().nullable().optional(),
   packaging_id: z.string().uuid().optional().nullable(),
+  kit_image: z.any().optional().nullable(),
   items: z
     .array(
       z.object({
@@ -106,11 +120,16 @@ const KitFormPage = () => {
   const navigate = useNavigate();
   const isEditing = !!id;
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const kitNameRef = useRef<HTMLInputElement>(null);
 
   // Data Hooks
   const { data: kitDetails, isLoading: isLoadingDetails } = useKitDetails(id);
   const { mutate: createKit, isPending: isCreating } = useCreateKit();
   const { mutate: updateKit, isPending: isUpdating } = useUpdateKit();
+
+  const [kitImage, setKitImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Selectors State
   const [fgSearch, setFgSearch] = useState("");
@@ -136,12 +155,20 @@ const KitFormPage = () => {
       sku: "",
       is_active: true,
       kit_price: 0,
+      kit_image: null,
       items: [],
     },
   });
 
   const items = watch("items") || [];
   const is_active = watch("is_active");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      kitNameRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Initialize/Reset form
   useEffect(() => {
@@ -160,7 +187,15 @@ const KitFormPage = () => {
           price: item.price || 0,
           image_url: item.image_url,
         })),
+        image_url: kitDetails.image_url,
       });
+      setKitImage(
+        kitDetails.image_url ||
+          kitDetails.kit_image_url ||
+          kitDetails.kit_image ||
+          null,
+      );
+      setSelectedFile(null);
     }
   }, [id, kitDetails, reset]);
 
@@ -221,6 +256,15 @@ const KitFormPage = () => {
     updateKitPrice(updatedItems);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setKitImage(previewUrl);
+  };
+
   const totalValue = items.reduce((sum, item) => {
     return sum + (item.price || 0) * (item.quantity_per_kit || 0);
   }, 0);
@@ -233,6 +277,8 @@ const KitFormPage = () => {
       is_active: data.is_active,
       kit_price: data.kit_price,
       packaging_id: data.packaging_id || null,
+      kit_image: selectedFile || undefined,
+      image_url: kitDetails?.image_url || undefined,
       items: data.items.map((i) => ({
         finished_product_id: i.finished_product_id,
         quantity_per_kit: i.quantity_per_kit,
@@ -276,7 +322,7 @@ const KitFormPage = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold text-foreground leading-none truncate uppercase tracking-widest text-primary flex items-center gap-2">
+            <h2 className="text-sm font-bold leading-none truncate uppercase tracking-widest text-primary flex items-center gap-2">
               <Box className="w-4 h-4" />
               {isEditing ? "Edit Kit" : "Create New Kit"}
             </h2>
@@ -330,6 +376,7 @@ const KitFormPage = () => {
 
             <div className="grid grid-cols-1 gap-4">
               <ProductInput
+                ref={kitNameRef}
                 label="Kit Name"
                 value={watch("name")}
                 error={errors.name?.message}
@@ -418,6 +465,64 @@ const KitFormPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Kit Image Upload (Product Style) */}
+          <div className="bg-card border border-border rounded-lg p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-primary" />
+                <h3 className="text-[10px] font-bold text-foreground uppercase tracking-widest">
+                  Kit Image
+                </h3>
+              </div>
+            </div>
+
+            <div className="border border-dashed border-border rounded-lg p-4 bg-muted/10 flex flex-col items-center justify-center min-h-[160px] relative group">
+              {kitImage ? (
+                <div
+                  className="relative w-full aspect-video rounded-md overflow-hidden bg-muted/20 border border-border cursor-pointer group"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <img
+                    src={kitImage}
+                    alt="Kit Preview"
+                    className="w-full h-full object-cover group-hover:opacity-70 transition-opacity"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Change Image
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground py-4">
+                  <ImageIcon className="h-8 w-8 opacity-20" />
+                  <p className="text-[11px] font-medium">No image uploaded</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-[10px] uppercase font-bold tracking-tight rounded-sm mt-1"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isCreating || isUpdating}
+                  >
+                    <UploadCloud className="h-3 w-3 mr-1.5" /> Select Image
+                  </Button>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </div>
+            <p className="text-[9px] text-muted-foreground text-center uppercase tracking-tighter opacity-70">
+              JPG, PNG, WebP · High Resolution Recommended
+            </p>
+          </div>
         </div>
 
         {/* Right Side: Component Selector */}
@@ -452,7 +557,7 @@ const KitFormPage = () => {
 
             <div className="flex-1 overflow-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted/30 text-[10px] uppercase tracking-wider font-bold text-muted-foreground sticky top-0 bg-background border-b border-border z-10">
+                <thead className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground sticky top-0 bg-background border-b border-border z-10">
                   <tr>
                     <th className="px-5 py-3 text-left">Product Name</th>
                     <th className="px-5 py-3 text-center w-[120px]">
@@ -493,10 +598,10 @@ const KitFormPage = () => {
                               <img
                                 src={item.image_url}
                                 alt={item.product_name}
-                                className="w-10 h-10 object-cover rounded-md border border-border"
+                                className="w-10 h-10 object-cover rounded-sm border border-border"
                               />
                             ) : (
-                              <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center border border-border shrink-0">
+                              <div className="w-10 h-10 bg-muted rounded-sm flex items-center justify-center border border-border shrink-0">
                                 <Package className="w-5 h-5 opacity-20" />
                               </div>
                             )}
@@ -600,7 +705,7 @@ const KitFormPage = () => {
                           shouldDirty: true,
                         })
                       }
-                      className="h-9 pl-7 pr-3 text-right text-lg font-bold font-mono text-emerald-600 border-emerald-500/30 bg-emerald-500/5 focus-visible:ring-emerald-500/20 w-[150px] rounded-md"
+                      className="h-9 pl-7 pr-3 text-right text-lg font-bold font-mono text-emerald-600 border-emerald-500/30 bg-emerald-500/5 focus-visible:ring-emerald-500/20 w-[150px] rounded-sm"
                     />
                   </div>
                 </div>

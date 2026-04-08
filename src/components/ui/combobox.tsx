@@ -19,6 +19,9 @@ import {
 export interface ComboboxOption {
   value: string;
   label: string;
+  badge?: string;
+  badgeColor?: string;
+  description?: string;
 }
 
 interface ComboboxProps {
@@ -29,6 +32,7 @@ interface ComboboxProps {
   searchPlaceholder?: string;
   emptyText?: string;
   className?: string;
+  contentClassName?: string;
   clearable?: boolean;
   disabled?: boolean;
   searchValue?: string;
@@ -47,6 +51,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       searchPlaceholder = "Search…",
       emptyText = "No results found.",
       className,
+      contentClassName,
       clearable = false,
       disabled = false,
       searchValue,
@@ -75,9 +80,6 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
     const handleSelect = (selectedValue: string) => {
       onValueChange(selectedValue === value ? "" : selectedValue);
       setOpen(false);
-      if (onSearchChange) {
-        onSearchChange("");
-      }
     };
 
     const handleClear = (e?: React.MouseEvent) => {
@@ -92,8 +94,15 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
       onSearchChange?.("");
     };
 
+    const handleOpenChange = (newOpen: boolean) => {
+      setOpen(newOpen);
+      if (newOpen && value && selectedLabel && onSearchChange) {
+        onSearchChange(selectedLabel);
+      }
+    };
+
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             ref={ref}
@@ -115,7 +124,7 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
               className,
             )}
           >
-            <span className="truncate">{selectedLabel ?? placeholder}</span>
+            <span className="truncate">{selectedLabel || placeholder}</span>
             <div className="flex items-center gap-1 shrink-0 ml-2">
               {clearable && value && (
                 <span
@@ -137,7 +146,10 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] min-w-[180px] p-0 rounded-sm border border-input/60 shadow-md"
+          className={cn(
+            "w-[var(--radix-popover-trigger-width)] min-w-[180px] p-0 rounded-sm border border-input/60 shadow-md",
+            contentClassName,
+          )}
           align="start"
           sideOffset={4}
         >
@@ -185,7 +197,32 @@ const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
                         value === option.value ? "opacity-100" : "opacity-0",
                       )}
                     />
-                    {option.label}
+                    <div className="flex-1 flex items-center justify-between gap-2 overflow-hidden py-0.5">
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="truncate">{option.label}</span>
+                        {option.description && (
+                          <span className="truncate text-[10px] text-muted-foreground leading-tight">
+                            {option.description}
+                          </span>
+                        )}
+                      </div>
+                      {option.badge && (
+                        <span
+                          className="shrink-0 px-1.5 py-0.5 rounded-[2px] text-[9px] font-black uppercase tracking-widest leading-none border"
+                          style={{
+                            backgroundColor: option.badgeColor
+                              ? `${option.badgeColor}1a`
+                              : undefined,
+                            color: option.badgeColor ?? undefined,
+                            borderColor: option.badgeColor
+                              ? `${option.badgeColor}33`
+                              : undefined,
+                          }}
+                        >
+                          {option.badge}
+                        </span>
+                      )}
+                    </div>
                   </CommandItem>
                 ))}
               </CommandGroup>

@@ -3,10 +3,12 @@ import { queryKeys } from "@/lib/queryKeys";
 import {
   createProduct,
   listProducts,
+  listAllProducts,
   updateProduct,
   getProductDetails,
   uploadProductPhoto,
   deleteProductPhoto,
+  uploadFile,
 } from "@/services/api";
 import type {
   Product,
@@ -40,6 +42,71 @@ export function useProductsCombobox(params?: Record<string, unknown>) {
         combobox: true,
       })) as ApiResponse<ProductComboboxResponse>;
       return response.data?.products ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useAllProducts(params?: Record<string, unknown>) {
+  type AllProductsProduct = {
+    id: string;
+    product_name: string;
+    image_url?: string | null;
+    images?: string[];
+    [key: string]: unknown;
+  };
+
+  type AllProductsKit = {
+    id: string;
+    name: string;
+    image_url?: string | null;
+    kit_image_url?: string | null;
+    kit_image?: string | null;
+    kit_products?: Array<{
+      images?: string[];
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+  };
+
+  return useQuery<
+    {
+      id: string;
+      name: string;
+      type: "product" | "kit";
+      image_url?: string;
+      images?: string[];
+      original: AllProductsProduct | AllProductsKit;
+    }[]
+  >({
+    queryKey: queryKeys.products.allItems(params),
+    queryFn: async () => {
+      const response = (await listAllProducts(params)) as ApiResponse<{
+        products: AllProductsProduct[];
+        kits: AllProductsKit[];
+      }>;
+
+      const products = (response.data?.products ?? []).map((p) => ({
+        id: p.id,
+        name: p.product_name,
+        type: "product" as const,
+        image_url: p.image_url,
+        images: (p.images || []).filter(Boolean),
+        original: p,
+      }));
+
+      const kits = (response.data?.kits ?? []).map((k) => ({
+        id: k.id,
+        name: k.name,
+        type: "kit" as const,
+        image_url: k.image_url || k.kit_image_url || k.kit_image,
+        images: (k.kit_products || [])
+          .flatMap((p) => p.images || [])
+          .filter(Boolean),
+        original: k,
+      }));
+
+      return [...products, ...kits];
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -92,10 +159,25 @@ export function useUploadProductPhoto() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ productId, file }: { productId: string; file: File }) => {
+    mutationFn: async ({
+      productId,
+      file,
+    }: {
+      productId: string;
+      file: File;
+    }) => {
       const formData = new FormData();
-      formData.append("image", file);
-      return uploadProductPhoto(productId, formData);
+      formData.append("file", file);
+      formData.append("folder", "products");
+
+      const uploadResponse = (await uploadFile(formData)) as unknown as {
+        file: string;
+      };
+
+      return uploadProductPhoto(productId, {
+        image_url: uploadResponse.file,
+        originalname: file.name,
+      });
     },
     onSuccess: (_response: ApiResponse<unknown>, variables) => {
       queryClient.invalidateQueries({

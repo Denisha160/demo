@@ -116,8 +116,8 @@ const RemindersTab = ({ leadId }: RemindersTabProps) => {
   }, [debouncedSearch, page, limit, setSearchParams]);
 
   const { data: reminders = [], isLoading } = useLeadReminders(leadId, {
-    startDate: formatDateForAPI(dateRange?.from),
-    endDate: formatDateForAPI(dateRange?.to),
+    ...(dateRange?.from ? { startDate: formatDateForAPI(dateRange.from) } : {}),
+    ...(dateRange?.to ? { endDate: formatDateForAPI(dateRange.to) } : {}),
     limit,
     offset: (page - 1) * limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),

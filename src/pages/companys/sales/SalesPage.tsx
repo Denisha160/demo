@@ -7,15 +7,6 @@ import { useUsers } from "@/hooks/useUsers";
 import { useDebounce } from "@/hooks/useDebounce";
 import DataTable, { Column, SortDirection } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
-import { cn } from "@/lib/utils";
-
-const getInitials = (name: string) =>
-  name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
 const SalesPage = () => {
   const { companyId } = useParams();
@@ -45,14 +36,28 @@ const SalesPage = () => {
       header: "Name",
       sortable: true,
       render: (item) => (
-        <div className="flex items-center gap-2.5">
-          <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-foreground truncate">
+        <div className={`flex items-center gap-3 transition-opacity`}>
+          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20 overflow-hidden">
+            {item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="h-full w-full object-cover"
+              />
+            ) : item.name ? (
+              item.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .substring(0, 2)
+            ) : (
+              "?"
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">
               {item.name}
-            </span>
-            <span className="text-[10px] text-muted-foreground truncate md:hidden">
-              {item.email}
-            </span>
+            </p>
           </div>
         </div>
       ),
@@ -169,7 +174,7 @@ const SalesPage = () => {
   ];
 
   return (
-    <div className="w-full space-y-4 animate-fade-in pb-10">
+    <div className="w-full space-y-2 animate-fade-in pb-10">
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-1">
@@ -203,7 +208,7 @@ const SalesPage = () => {
       </div>
 
       {/* Data Table */}
-      <div className="bg-card rounded-md border border-border/50 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-sm border border-border/50 shadow-sm overflow-hidden">
         <DataTable
           columns={columns}
           data={users}

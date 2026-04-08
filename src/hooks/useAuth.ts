@@ -16,6 +16,14 @@ import type {
   VerifyLoginPayload,
 } from "@/types/Auth";
 
+export type {
+  ApiError,
+  LoginCredentials,
+  User,
+  LoginResponse,
+  VerifyLoginPayload,
+};
+
 export const ADMIN_PERMISSIONS = [
   "user.read",
   "role.read",
@@ -66,6 +74,14 @@ export function useIsAuthenticated() {
   return {
     isAuthenticated: !!token,
     user: useCurrentUser(),
+  };
+}
+
+export function useUser() {
+  const user = useCurrentUser();
+  return {
+    data: user,
+    isLoading: false,
   };
 }
 
@@ -148,7 +164,9 @@ export function useHasPermission() {
 
     const perms: string[] = Array.isArray(permissions)
       ? permissions
-      : (permissions as { items?: string[] }).items || [];
+      : (permissions as { items?: string[]; data?: string[] }).data ||
+        (permissions as { items?: string[]; data?: string[] }).items ||
+        [];
 
     if (Array.isArray(permission)) {
       return permission.some((p) => perms.includes(p));
@@ -161,6 +179,8 @@ export function useHasPermission() {
     isLoading,
     permissions: (Array.isArray(permissions)
       ? permissions
-      : (permissions as { items?: string[] })?.items || []) as string[],
+      : (permissions as { items?: string[]; data?: string[] })?.data ||
+        (permissions as { items?: string[]; data?: string[] })?.items ||
+        []) as string[],
   };
 }

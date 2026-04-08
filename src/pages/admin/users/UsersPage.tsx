@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,10 @@ import UserModal from "./UserModal";
 import SystemHierarchyView from "./components/SystemHierarchyView";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useDeleteUser, useUpdateUser } from "@/hooks/useUsers";
+import { useShifts } from "@/hooks/useShifts";
 import { useHasPermission } from "@/hooks/useAuth";
 import { User, UserUpdatePayload } from "@/types/user";
+import { Shift } from "@/types/shift";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useRoles } from "@/hooks/useRoles";
 
@@ -27,26 +29,30 @@ const ShiftSelect = ({ user }: { user: User }) => {
   const { hasPermission } = useHasPermission();
   const canUpdate = hasPermission("user.update");
 
+  const { data: shiftsData } = useShifts({ combobox: true });
+  const shifts = shiftsData?.items || shiftsData?.shifts || [];
+
   return (
     <div onClick={(e) => e.stopPropagation()}>
       <Select
-        value={user.work_shift || "morning"}
-        onValueChange={(val: "morning" | "evening" | "night" | "rotating") => {
-          if (val !== user.work_shift && canUpdate) {
-            const payload: UserUpdatePayload = { id: user.id, work_shift: val };
+        value={user.shift_id || ""}
+        onValueChange={(val: string) => {
+          if (val !== user.shift_id && canUpdate) {
+            const payload: UserUpdatePayload = { id: user.id, shift_id: val };
             updateUser(payload);
           }
         }}
         disabled={isPending || !canUpdate}
       >
-        <SelectTrigger className="w-[110px] h-8 text-xs">
+        <SelectTrigger className="w-[140px] h-8 text-xs">
           <SelectValue placeholder="Select shift" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="morning">Morning</SelectItem>
-          <SelectItem value="evening">Evening</SelectItem>
-          <SelectItem value="night">Night</SelectItem>
-          <SelectItem value="rotating">Rotating</SelectItem>
+          {shifts.map((shift: Shift) => (
+            <SelectItem key={shift.id} value={shift.id}>
+              {shift.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
@@ -66,7 +72,18 @@ const Users = () => {
     (r: { id: string; name: string }) => ({ value: r.id, label: r.name }),
   );
 
-  const [view, setView] = useState<"table" | "tree">("table");
+  const viewParam = searchParams.get("view");
+  const [view, setView] = useState<"table" | "tree">(
+    viewParam === "tree" ? "tree" : "table",
+  );
+  const prevViewParam = useRef<string | null>(viewParam);
+
+  useEffect(() => {
+    if (viewParam === prevViewParam.current) return;
+    if (viewParam !== "table" && viewParam !== "tree") return;
+    setView(viewParam as "table" | "tree");
+    prevViewParam.current = viewParam;
+  }, [viewParam]);
 
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const debouncedSearch = useDebounce(search, 500);
@@ -133,6 +150,8 @@ const Users = () => {
         if (sortDirection) next.set("sortDirection", sortDirection);
         else next.delete("sortDirection");
 
+        next.set("view", view);
+
         return next;
       },
       { replace: true },
@@ -145,6 +164,7 @@ const Users = () => {
     limit,
     sortKey,
     sortDirection,
+    view,
     setSearchParams,
   ]);
 
@@ -164,8 +184,8 @@ const Users = () => {
   });
 
   const { mutate: deleteUser } = useDeleteUser();
-  const users = (usersResponse as any)?.items || [];
-  const totalItems = (usersResponse as any)?.pagination?.total || 0;
+  const users = usersResponse?.items || [];
+  const totalItems = usersResponse?.pagination?.total || 0;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -203,13 +223,22 @@ const Users = () => {
             }
           }}
         >
-          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
-            {item.name
-              ? item.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-              : "?"}
+          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20 overflow-hidden">
+            {item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="h-full w-full object-cover"
+              />
+            ) : item.name ? (
+              item.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .substring(0, 2)
+            ) : (
+              "?"
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">
@@ -294,7 +323,7 @@ const Users = () => {
       },
     },
     {
-      key: "work_shift",
+      key: "shift_id" as keyof User,
       header: "Shift",
       render: (item) => <ShiftSelect user={item} />,
     },

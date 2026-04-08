@@ -26,6 +26,9 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { Switch } from "@/components/ui/switch";
+import ProductGridView from "./ProductGridView";
+import { LayoutGrid, Table2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ProductsPage = () => {
   const navigate = useNavigate();
@@ -60,6 +63,11 @@ const ProductsPage = () => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(
     (searchParams.get("sortDirection") as "asc" | "desc") || "desc",
   );
+  const [viewMode, setViewMode] = useState<"table" | "grid">(
+    (searchParams.get("view") as "table" | "grid") ||
+      (localStorage.getItem("products_view_mode") as "table" | "grid") ||
+      "table",
+  );
 
   const isAdmin = location.pathname.startsWith("/admin");
   const routePrefix = isAdmin ? "/admin" : `/${companyId}`;
@@ -90,6 +98,11 @@ const ProductsPage = () => {
   const [brandSearch, setBrandSearch] = useState("");
   const debouncedBrandSearch = useDebounce(brandSearch, 300);
 
+  // Sync viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem("products_view_mode", viewMode);
+  }, [viewMode]);
+
   // Sync state to URL
   useEffect(() => {
     setSearchParams(
@@ -113,6 +126,8 @@ const ProductsPage = () => {
         else next.delete("sortKey");
         if (sortDirection) next.set("sortDirection", sortDirection);
         else next.delete("sortDirection");
+        if (viewMode !== "table") next.set("view", viewMode);
+        else next.delete("view");
         return next;
       },
       { replace: true },
@@ -130,17 +145,19 @@ const ProductsPage = () => {
     setSearchParams,
   ]);
 
-  const { data: categories = [], isLoading: isLoadingCategories } =
+  const { data: categoriesData, isLoading: isLoadingCategories } =
     useCategoriesCombobox({
       type: "sub",
       search: debouncedCategorySearch,
       combobox: true,
     });
+  const categories = (categoriesData as any[]) || [];
 
-  const { data: brands = [], isLoading: isLoadingBrands } = useBrandCombobox({
+  const { data: brandsData, isLoading: isLoadingBrands } = useBrandCombobox({
     search: debouncedBrandSearch,
     combobox: true,
   });
+  const brands = (brandsData as any[]) || [];
 
   const { data: listResponse, isLoading } = useProducts({
     search: debouncedSearch.trim() || undefined,
@@ -157,15 +174,6 @@ const ProductsPage = () => {
   const items = listResponse?.items || [];
   const totalItems = listResponse?.pagination?.total || 0;
 
-  const { mutate: updateProduct } = useUpdateProduct();
-
-  const handleStatusToggle = (product: Product) => {
-    updateProduct({
-      id: product.id,
-      is_active: !product.is_active,
-    });
-  };
-
   const columns: Column<Product>[] = [
     {
       key: "product_name",
@@ -176,20 +184,22 @@ const ProductsPage = () => {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => navigate(`${routePrefix}/products/${item.id}`)}
         >
-          <div className="p-2 bg-muted rounded-md group-hover:bg-primary/10 transition-colors">
-            {item.product_type === "FINISHED_GOOD" ? (
-              <Package className="h-4 w-4 group-hover:text-primary transition-colors" />
-            ) : (
-              <Layers className="h-4 w-4 group-hover:text-primary transition-colors" />
-            )}
-          </div>
           <div>
             <p className="font-medium text-sm group-hover:text-primary transition-colors">
               {item.product_name}
             </p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              {item.code || "NO CODE"}
-            </p>
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+              {item.brand_name && (
+                <span className="bg-muted px-1.5 py-0.5 rounded-sm">
+                  {item.brand_name}
+                </span>
+              )}
+              {item.fragrance_name && (
+                <span className="bg-primary/5 text-primary px-1.5 py-0.5 rounded-sm">
+                  {item.fragrance_name}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ),
@@ -213,18 +223,9 @@ const ProductsPage = () => {
       ),
     },
     {
-      key: "brand_name",
-      header: "Brand",
-      render: (item) => (
-        <span className="text-sm">{item.brand_name || "—"}</span>
-      ),
-    },
-    {
-      key: "fragrance_name",
-      header: "Fragrance",
-      render: (item) => (
-        <span className="text-sm">{item.fragrance_name || "—"}</span>
-      ),
+      key: "code",
+      header: "Code",
+      render: (item) => <span className="text-sm">{item.code || "—"}</span>,
     },
     {
       key: "base_unit",
@@ -267,24 +268,6 @@ const ProductsPage = () => {
             <span className="text-foreground font-medium">
               {item.selling_price || 0}
             </span>
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "is_active",
-      header: "Status",
-      render: (item) => (
-        <div
-          className="flex items-center gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Switch
-            checked={item.is_active}
-            onCheckedChange={() => handleStatusToggle(item)}
-          />
-          <span className="text-[10px] font-medium text-muted-foreground">
-            {item.is_active ? "Active" : "Inactive"}
           </span>
         </div>
       ),
@@ -349,23 +332,6 @@ const ProductsPage = () => {
             />
           </div>
 
-          <Select
-            value={statusFilter}
-            onValueChange={(val) => {
-              setStatusFilter(val);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[100px] h-8 text-xs rounded-sm">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-
           <div className="w-[180px]">
             <Combobox
               options={brands.map((b: Brand) => ({
@@ -386,6 +352,27 @@ const ProductsPage = () => {
               disabled={isLoadingBrands}
             />
           </div>
+
+          <Tabs
+            value={viewMode}
+            onValueChange={(val) => setViewMode(val as "table" | "grid")}
+            className="flex-shrink-0"
+          >
+            <TabsList className="h-8 p-0.5 rounded-sm bg-muted/30 border border-border/40">
+              <TabsTrigger
+                value="table"
+                className="h-[26px] px-2.5 rounded-[2px] data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              >
+                <Table2 className="h-3.5 w-3.5" />
+              </TabsTrigger>
+              <TabsTrigger
+                value="grid"
+                className="h-[26px] px-2.5 rounded-[2px] data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           {hasFilters && (
             <Button
@@ -409,27 +396,91 @@ const ProductsPage = () => {
         </Button>
       </div>
 
-      <DataTable
-        data={items}
-        columns={columns}
-        pageSize={limit}
-        isLoading={isLoading}
-        serverSide={true}
-        serverTotal={totalItems}
-        serverPage={page}
-        serverSortKey={sortKey || undefined}
-        serverSortDirection={sortDirection}
-        onServerPageChange={setPage}
-        onServerPageSizeChange={(newSize) => {
-          setLimit(newSize);
-          setPage(1);
-        }}
-        onServerSortChange={(key, direction) => {
-          setSortKey(key);
-          setSortDirection(direction);
-          setPage(1);
-        }}
-      />
+      {viewMode === "table" ? (
+        <DataTable
+          data={items}
+          columns={columns}
+          pageSize={limit}
+          isLoading={isLoading}
+          serverSide={true}
+          serverTotal={totalItems}
+          serverPage={page}
+          serverSortKey={sortKey || undefined}
+          serverSortDirection={sortDirection}
+          onServerPageChange={setPage}
+          onServerPageSizeChange={(newSize) => {
+            setLimit(newSize);
+            setPage(1);
+          }}
+          onServerSortChange={(key, direction) => {
+            setSortKey(key);
+            setSortDirection(direction);
+            setPage(1);
+          }}
+        />
+      ) : (
+        <div className="space-y-4">
+          <ProductGridView
+            items={items}
+            isLoading={isLoading}
+            onView={(id) => navigate(`${routePrefix}/products/${id}`)}
+          />
+          <div className="flex items-center justify-between py-4 border-t border-border/40">
+            <div className="text-xs text-muted-foreground font-medium">
+              Showing {Math.min((page - 1) * limit + 1, totalItems)} to{" "}
+              {Math.min(page * limit, totalItems)} of {totalItems} items
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-[11px] font-black tracking-widest uppercase rounded-sm  disabled:opacity-50"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1 || isLoading}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.ceil(totalItems / limit) }).map(
+                  (_, i) => {
+                    const p = i + 1;
+                    if (p > 5 && p < Math.ceil(totalItems / limit)) return null;
+                    if (p === 6)
+                      return (
+                        <span
+                          key={p}
+                          className="text-muted-foreground mx-1 text-xs"
+                        >
+                          ...
+                        </span>
+                      );
+                    return (
+                      <Button
+                        key={p}
+                        variant={page === p ? "default" : "outline"}
+                        size="sm"
+                        className="h-8 w-8 text-xs rounded-sm p-0 flex items-center justify-center transition-all"
+                        onClick={() => setPage(p)}
+                      >
+                        {p}
+                      </Button>
+                    );
+                  },
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-[11px] font-black tracking-widest uppercase rounded-sm disabled:opacity-50"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= Math.ceil(totalItems / limit) || isLoading}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

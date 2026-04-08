@@ -101,6 +101,11 @@ export const deleteUser = (id) => {
   return axios({ method: "DELETE", url });
 };
 
+export const removeUserPhoto = (id) => {
+  const url = `users/${id}/image`;
+  return axios({ method: "DELETE", url });
+};
+
 export const updateUserPermissions = (id, data) => {
   const url = `users/${id}/permissions`;
   return axios({ method: "PUT", url, data });
@@ -186,6 +191,11 @@ export const listProducts = (params) => {
   return axios({ method: "GET", url, params });
 };
 
+export const listAllProducts = (params) => {
+  const url = `products/all-items`;
+  return axios({ method: "GET", url, params });
+};
+
 export const getProductDetails = (id) => {
   const url = `products/${id}`;
   return axios({ method: "GET", url });
@@ -201,14 +211,9 @@ export const updateProduct = (id, data) => {
   return axios({ method: "PATCH", url, data });
 };
 
-export const uploadProductPhoto = (id, formData) => {
+export const uploadProductPhoto = (id, data) => {
   const url = `products/${id}/images`;
-  return axios({
-    method: "POST",
-    url,
-    data: formData,
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  return axios({ method: "POST", url, data });
 };
 
 export const deleteProductPhoto = (id, imageId) => {
@@ -612,6 +617,21 @@ export const listKitsByProduct = (productId) => {
   return axios({ method: "GET", url });
 };
 
+export const uploadKitPhoto = (id, formData) => {
+  const url = `kit/${id}/image`;
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const deleteKitPhoto = (id) => {
+  const url = `kit/${id}/image`;
+  return axios({ method: "DELETE", url });
+};
+
 // end region
 
 // region Batches
@@ -782,4 +802,81 @@ export const deleteHierarchy = (id) => {
   const url = `hierarchy/${id}`;
   return axios({ method: "DELETE", url });
 };
+// end region
+// region Shifts
+// ===================== Shifts =====================
+
+export const listShifts = (params) => {
+  const url = `shifts`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getShiftDetails = (id, params) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createShift = (data) => {
+  const url = `shifts`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateShift = ({ id, ...data }) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteShift = (id) => {
+  const url = `shifts/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
+export const listQuotation = (params) => {
+  const url = `quotation`;
+  return axios({ method: "GET", url, params });
+};
+
+export const getQuotationDetails = (id, params) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "GET", url, params });
+};
+
+export const createQuotation = (data) => {
+  const url = `quotation`;
+  return axios({ method: "POST", url, data });
+};
+
+export const updateQuotation = ({ id, ...data }) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "PATCH", url, data });
+};
+
+export const deleteQuotation = (id) => {
+  const url = `quotation/${id}`;
+  return axios({ method: "DELETE", url });
+};
+
+export const downloadQuotation = (id, params) => {
+  const url = `quotation/${id}/download`;
+  return axios({ method: "GET", url, params, responseType: "blob" });
+};
+
+// end region
+
+// region Files
+// ===================== Files =====================
+
+export const uploadFile = (formData) => {
+  const url = `files/uploads`;
+  const folder = formData.get("folder");
+  const params = folder ? { folder } : {};
+  return axios({
+    method: "POST",
+    url,
+    data: formData,
+    params,
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
 // end region

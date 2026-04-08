@@ -4,6 +4,13 @@ import DataTable, { Column } from "@/components/DataTable";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Edit,
   Eye,
@@ -15,13 +22,11 @@ import {
   Search,
   Trash2,
   X,
-  Info,
 } from "lucide-react";
 import { useKitList, useDeleteKit } from "@/hooks/useKits";
 import { Kit } from "@/types/kits";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -64,7 +69,9 @@ const KitsPage = () => {
     (searchParams.get("sortDirection") as "asc" | "desc") || "desc",
   );
   const [viewMode, setViewMode] = useState<"cards" | "table">(
-    (searchParams.get("view") as "cards" | "table") || "cards",
+    (searchParams.get("view") as "cards" | "table") ||
+      (localStorage.getItem("kits_view_mode") as "cards" | "table") ||
+      "cards",
   );
 
   // Modal state
@@ -82,6 +89,11 @@ const KitsPage = () => {
     setSortDirection("desc");
     setPage(1);
   };
+
+  // Sync viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem("kits_view_mode", viewMode);
+  }, [viewMode]);
 
   // Sync state to URL
   useEffect(() => {
@@ -146,8 +158,20 @@ const KitsPage = () => {
       className: "w-[280px]",
       render: (item) => (
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-primary/10 text-primary rounded-sm flex items-center justify-center text-xs font-bold shrink-0 border border-primary/20">
-            <Package className="h-4 w-4" />
+          <div className="h-10 w-10 bg-muted/40 rounded-sm flex flex-col items-center justify-center shrink-0 border border-border/50 overflow-hidden group/img relative">
+            {item.image_url ? (
+              <img
+                src={item.image_url}
+                alt={item.name}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover/img:scale-110"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center p-1 text-center">
+                <span className="text-[8px] font-black leading-none text-muted-foreground/40 uppercase tracking-tighter">
+                  No Image
+                </span>
+              </div>
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">
@@ -247,10 +271,8 @@ const KitsPage = () => {
 
   return (
     <div className="w-full mx-auto space-y-2 animate-fade-in pb-10">
-      {/* ── Header bar (PackagesPage style) ── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-2">
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto text-sm">
-          {/* Search */}
           <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -264,7 +286,6 @@ const KitsPage = () => {
             />
           </div>
 
-          {/* Status Filter */}
           <Select
             value={filterStatus}
             onValueChange={(v) => {
@@ -282,7 +303,6 @@ const KitsPage = () => {
             </SelectContent>
           </Select>
 
-          {/* Clear filters */}
           {hasFilters && (
             <div className="animate-in fade-in slide-in-from-left-2 duration-300">
               <Button
@@ -297,7 +317,6 @@ const KitsPage = () => {
             </div>
           )}
 
-          {/* View toggle */}
           <div className="flex items-center bg-muted/30 p-1 rounded-sm border border-border h-8 shrink-0">
             <Button
               variant={viewMode === "cards" ? "default" : "ghost"}
@@ -320,7 +339,6 @@ const KitsPage = () => {
           </div>
         </div>
 
-        {/* Create button */}
         <Button
           size="sm"
           className="h-8 text-xs rounded-sm gap-2 flex-1 sm:flex-none"
@@ -331,8 +349,7 @@ const KitsPage = () => {
         </Button>
       </div>
 
-      {/* ── Table View ── */}
-      {viewMode === "table" && (
+      {viewMode === "table" ? (
         <div className="border border-border/60 rounded-sm shadow-sm">
           <DataTable
             data={items}
@@ -357,193 +374,174 @@ const KitsPage = () => {
             onRowClick={(item) => setViewKitId(item.id)}
           />
         </div>
-      )}
-
-      {/* ── Card View ── */}
-      {viewMode === "cards" &&
-        (isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => (
-              <div
-                key={i}
-                className="h-[200px] rounded-xl border border-border bg-card animate-pulse shadow-sm"
-              />
-            ))}
-          </div>
-        ) : items.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {items.map((kit) => (
+      ) : (
+        <>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 3xl:grid-cols-7 gap-3">
+              {[...Array(16)].map((_, i) => (
                 <div
-                  key={kit.id}
-                  className="group relative flex flex-col bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden cursor-pointer"
-                  onClick={() => setViewKitId(kit.id)}
-                >
-                  {/* Decorative BG */}
-                  <div className="absolute top-0 right-0 p-3 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
-                    <Package className="h-16 w-16" />
-                  </div>
-
-                  <div className="p-5 flex-1 space-y-4">
-                    {/* Status + SKU */}
-                    <div className="flex items-start justify-between">
-                      <Badge
-                        variant={kit.is_active ? "success" : "secondary"}
-                        className="rounded-full px-2 py-0 text-[10px] uppercase tracking-wider font-bold"
-                      >
-                        {kit.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                      <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                        {kit.sku || "NO-SKU"}
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-base text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1">
-                        {kit.name}
-                      </h3>
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                        <Info className="h-3 w-3" />
-                        Created{" "}
-                        {format(new Date(kit.created_at), "dd MMM yyyy")}
-                      </p>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      <div className="bg-muted/30 rounded-lg p-2 border border-border/50">
-                        <p className="text-[9px] text-muted-foreground uppercase font-semibold">
-                          Components
-                        </p>
-                        <p className="text-sm font-bold text-foreground">
-                          {kit.total_items} Items
-                        </p>
-                      </div>
-                      <div className="bg-primary/5 rounded-lg p-2 border border-primary/10">
-                        <p className="text-[9px] text-primary/70 uppercase font-semibold">
-                          Kit Price
-                        </p>
-                        <p className="text-sm font-bold text-primary">
-                          ₹
-                          {Number(kit.kit_price || 0).toLocaleString(
-                            undefined,
-                            {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            },
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions footer */}
-                  <div className="px-5 py-3 bg-muted/20 border-t border-border flex items-center justify-between">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-[11px] font-semibold text-primary hover:bg-primary/10 gap-1.5"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setViewKitId(kit.id);
-                      }}
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      View Kit
-                    </Button>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                        title="Edit Kit"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`edit/${kit.id}`);
-                        }}
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        title="Delete Kit"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setKitToDelete(kit);
-                        }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                  key={i}
+                  className="h-[240px] rounded-sm border border-border bg-card animate-pulse shadow-sm"
+                />
               ))}
             </div>
-
-            {/* Card view pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                  className="h-9"
-                >
-                  Previous
-                </Button>
-                {[...Array(Math.min(totalPages, 7))].map((_, i) => (
-                  <Button
-                    key={i}
-                    variant={page === i + 1 ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setPage(i + 1)}
-                    className="h-9 w-9 p-0"
+          ) : items.length > 0 ? (
+            <TooltipProvider>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-7 gap-3">
+                {items.map((kit) => (
+                  <Card
+                    key={kit.id}
+                    className="group relative flex flex-col bg-white border border-border/60 rounded-sm shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden cursor-pointer"
+                    onClick={() => setViewKitId(kit.id)}
                   >
-                    {i + 1}
-                  </Button>
+                    <div className="h-52 w-full bg-slate-50 relative overflow-hidden flex items-center justify-center group/img border-b border-slate-100">
+                      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className={`w-6 h-6 rounded-sm backdrop-blur-md border border-white/20 flex items-center justify-center text-[10px] font-black shadow-sm ${kit.is_active ? "bg-emerald-500/90 text-white" : "bg-destructive/90 text-white"}`}
+                            >
+                              {kit.is_active ? "A" : "I"}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            <p>{kit.is_active ? "Active" : "Inactive"}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {kit.image_url ? (
+                        <img
+                          src={kit.image_url}
+                          alt={kit.name}
+                          className="h-full w-full object-contain transition-transform duration-700 group-hover/img:scale-105"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center">
+                          <Package className="h-10 w-10 text-muted-foreground/10" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
+                    </div>
+
+                    <CardContent className="p-2 flex-1 flex flex-col justify-between gap-1.5 bg-white">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[9px] font-mono font-bold text-slate-400">
+                          <span className="truncate max-w-[70px]">
+                            {kit.sku || "NO-SKU"}
+                          </span>
+                        </div>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <h3 className="font-black text-[14px] text-slate-800 tracking-tight leading-tight group-hover:text-primary transition-colors truncate">
+                              {kit.name}
+                            </h3>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p>{kit.name}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      <div className="space-y-1 border-t border-slate-50 mt-auto">
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <div className="space-y-0.5">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="space-y-0.5 cursor-help">
+                                  <p className="text-[8px] font-black uppercase text-slate-400">
+                                    Items
+                                  </p>
+                                  <p className="text-[11px] font-black text-slate-800">
+                                    {kit.total_items} Qty
+                                  </p>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Total Items in Kit: {kit.total_items}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <div className="text-right space-y-0.5 border-l border-slate-100 pl-2">
+                            <p className="text-[8px] font-black uppercase text-slate-400">
+                              Price
+                            </p>
+                            <p className="text-[11px] font-black font-mono text-primary truncate">
+                              ₹{Number(kit.kit_price || 0).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={page === totalPages}
-                  onClick={() => setPage(page + 1)}
-                  className="h-9"
-                >
-                  Next
-                </Button>
               </div>
-            )}
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-sm bg-muted/5">
-            <div className="h-16 w-16 bg-primary/5 rounded-full flex items-center justify-center mb-4">
-              <Package className="h-8 w-8 text-primary/40" />
+            </TooltipProvider>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-sm bg-muted/5">
+              <div className="h-16 w-16 bg-primary/5 rounded-full flex items-center justify-center mb-4">
+                <Package className="h-8 w-8 text-primary/40" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">
+                No kits found
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-[300px] text-center mt-1">
+                {hasFilters
+                  ? "No kits match your filters."
+                  : "You haven't created any product kits yet."}
+              </p>
+              {hasFilters ? (
+                <Button
+                  variant="outline"
+                  className="mt-6 gap-2"
+                  onClick={handleClearFilters}
+                >
+                  <X className="h-4 w-4" /> Clear Filters
+                </Button>
+              ) : (
+                <Button className="mt-6 gap-2" onClick={() => navigate("new")}>
+                  <Plus className="h-4 w-4" /> Create First Kit
+                </Button>
+              )}
             </div>
-            <h3 className="text-lg font-bold text-foreground">No kits found</h3>
-            <p className="text-sm text-muted-foreground max-w-[300px] text-center mt-1">
-              {hasFilters
-                ? "No kits match your filters."
-                : "You haven't created any product kits yet."}
-            </p>
-            {hasFilters ? (
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
               <Button
-                variant="outline"
-                className="mt-6 gap-2"
-                onClick={handleClearFilters}
+                variant="ghost"
+                size="sm"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+                className="h-9"
               >
-                <X className="h-4 w-4" /> Clear Filters
+                Previous
               </Button>
-            ) : (
-              <Button className="mt-6 gap-2" onClick={() => navigate("new")}>
-                <Plus className="h-4 w-4" /> Create First Kit
+              {[...Array(Math.min(totalPages, 5))].map((_, i) => (
+                <Button
+                  key={i}
+                  variant={page === i + 1 ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setPage(i + 1)}
+                  className="h-9 w-9 p-0"
+                >
+                  {i + 1}
+                </Button>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+                className="h-9"
+              >
+                Next
               </Button>
-            )}
-          </div>
-        ))}
+            </div>
+          )}
+        </>
+      )}
 
       <KitViewModal
         open={!!viewKitId}
@@ -556,7 +554,7 @@ const KitsPage = () => {
         open={!!kitToDelete}
         onOpenChange={(open) => !open && setKitToDelete(null)}
       >
-        <AlertDialogContent className="rounded-xl border-border shadow-2xl">
+        <AlertDialogContent className="rounded-sm border-border shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-destructive">
               <Trash2 className="h-5 w-5" />
@@ -571,7 +569,7 @@ const KitsPage = () => {
           <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel
               disabled={isDeleting}
-              className="rounded-md border-border"
+              className="rounded-sm border-border"
             >
               Cancel
             </AlertDialogCancel>
@@ -585,7 +583,7 @@ const KitsPage = () => {
                   });
                 }
               }}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-md"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-sm"
             >
               {isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

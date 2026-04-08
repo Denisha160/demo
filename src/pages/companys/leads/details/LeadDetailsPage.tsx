@@ -470,7 +470,7 @@ const LeadDetailsPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-medium rounded-md transition-all duration-200 ${
+                className={`flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-medium rounded-sm transition-all duration-200 ${
                   isActive
                     ? "bg-primary/5 text-primary"
                     : "text-foreground/80 hover:bg-muted/50 hover:text-foreground"

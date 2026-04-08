@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { z } from "zod";
 import { useForm, UseFormSetError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +27,7 @@ const followUpSchema = z.object({
   remarks: z.string().optional().or(z.literal("")),
   assigned_to: z.string().min(1, "Assigned To is required"),
   scheduled_at: z.string().min(1, "Scheduled date is required"),
-  set_reminder: z.boolean().optional().default(false),
+  set_reminder: z.boolean().optional().default(false), // currently not sent
   reminder_time: z.string().optional().or(z.literal("")),
 });
 
@@ -92,14 +92,22 @@ const FollowUpModal = ({
       remarks: "",
       assigned_to: "",
       scheduled_at: "",
-      set_reminder: false,
-      reminder_time: "",
+      // set_reminder: false,
+      // reminder_time: "",
     },
   });
 
   useEffect(() => {
     if (!open) return;
 
+    // Focus the first input after a small delay to allow modal animation
+    const timer = setTimeout(() => {
+      statusTriggerRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [open]);
+
+  useEffect(() => {
     if (isEditing && followUpData) {
       reset({
         status: followUpData.status || "SCHEDULED",
@@ -108,8 +116,8 @@ const FollowUpModal = ({
         remarks: followUpData.remarks || "",
         assigned_to: followUpData.assigned_to || "",
         scheduled_at: getDateOnly(followUpData.scheduled_at),
-        set_reminder: false,
-        reminder_time: getCurrentTime(),
+        // set_reminder: false,
+        // reminder_time: getCurrentTime(),
       });
       return;
     }
@@ -133,6 +141,7 @@ const FollowUpModal = ({
   const status = watch("status");
   const followUpMethod = watch("follow_up_method");
   const scheduledAt = watch("scheduled_at");
+  const statusTriggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <Modal
@@ -173,7 +182,7 @@ const FollowUpModal = ({
                 setValue("status", val, { shouldValidate: true })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger ref={statusTriggerRef}>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -229,8 +238,8 @@ const FollowUpModal = ({
               onValueChange={(value) =>
                 setValue("assigned_to", value, { shouldValidate: true })
               }
+              disabled={true}
               placeholder="Search and select a user..."
-              disabled={isSubmitting}
               className={errors.assigned_to ? "border-destructive" : ""}
             />
             {errors.assigned_to && (
@@ -270,9 +279,9 @@ const FollowUpModal = ({
             )}
           </div>
 
-          {(status === "SCHEDULED" || status === "RESCHEDULED") && (
+          {/* {(status === "SCHEDULED" || status === "RESCHEDULED") && (
             <div className="col-span-2 grid grid-cols-2 gap-4 pt-2">
-              <div className="flex flex-row items-center space-x-2 rounded-md border p-3 bg-muted/5">
+              <div className="flex flex-row items-center space-x-2 rounded-sm border p-3 bg-muted/5">
                 <Checkbox
                   id="set_reminder_followup"
                   checked={watch("set_reminder")}
@@ -307,7 +316,7 @@ const FollowUpModal = ({
                 </div>
               )}
             </div>
-          )}
+          )} */}
         </div>
       </form>
     </Modal>

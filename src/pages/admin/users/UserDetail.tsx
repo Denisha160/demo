@@ -22,10 +22,13 @@ const UserDetailPage = () => {
   // Tab state from search params
   const activeTab = searchParams.get("tab") || "overview";
   const setActiveTab = (tab: string) => {
-    setSearchParams((prev) => {
-      prev.set("tab", tab);
-      return prev;
-    });
+    setSearchParams(
+      (prev) => {
+        prev.set("tab", tab);
+        return prev;
+      },
+      { replace: true },
+    );
   };
   const [isSavingOverview, setIsSavingOverview] = useState(false);
   const overviewRef = useRef<OverviewTabRef>(null);
@@ -41,7 +44,10 @@ const UserDetailPage = () => {
     date_of_joining: "",
     department: "",
     region: "",
-    work_shift: "morning",
+    shift_id: "",
+    shift_name: "",
+    shift_start_time: "",
+    shift_end_time: "",
     is_root_user: false,
     is_active: true,
     gender: "male",
@@ -65,22 +71,6 @@ const UserDetailPage = () => {
     conversionRate: "18.5%",
     avgProductionTime: "42 Hours",
     fulfillmentRate: "98.2%",
-    sessions: [
-      {
-        id: 1,
-        device: "Chrome / MacOS",
-        ip: "192.168.1.1",
-        lastActive: "Just now",
-        current: true,
-      },
-      {
-        id: 2,
-        device: "Safari / iPhone 15",
-        ip: "172.20.10.4",
-        lastActive: "2 hours ago",
-        current: false,
-      },
-    ],
   });
 
   const { data: fetchedUser, isLoading } = useUser(id as string);
@@ -102,7 +92,10 @@ const UserDetailPage = () => {
             : "",
           department: apiUser.department || "",
           region: apiUser.region || "",
-          work_shift: apiUser.work_shift || "morning",
+          shift_id: apiUser.shift_id || "",
+          shift_name: apiUser.shift_name || "",
+          shift_start_time: apiUser.shift_start_time || "",
+          shift_end_time: apiUser.shift_end_time || "",
           is_root_user: apiUser.is_root_user || false,
           is_active: apiUser.is_active ?? true,
           gender: apiUser.gender || "male",
@@ -118,6 +111,7 @@ const UserDetailPage = () => {
           pan_number: apiUser.pan_number || "",
           gst_number: apiUser.gst_number || "",
           address: apiUser.address || "",
+          image_url: apiUser.image_url || "",
           role: apiUser.role || "User",
           parent_id: apiUser.parent_id || "",
         };
@@ -166,12 +160,6 @@ const UserDetailPage = () => {
   const maritalStatusOptions: SelectOption[] = [
     { label: "Single", value: "single" },
     { label: "Married", value: "married" },
-  ];
-  const workShiftOptions: SelectOption[] = [
-    { label: "Morning", value: "morning" },
-    { label: "Evening", value: "evening" },
-    { label: "Night", value: "night" },
-    { label: "Rotating", value: "rotating" },
   ];
 
   if (isLoading) {
@@ -269,7 +257,6 @@ const UserDetailPage = () => {
                         : "",
                       department: fetchedUser.department || "",
                       region: fetchedUser.region || "",
-                      work_shift: fetchedUser.work_shift || "morning",
                       is_root_user: fetchedUser.is_root_user || false,
                       is_active: fetchedUser.is_active ?? true,
                       gender: fetchedUser.gender || "male",
@@ -285,6 +272,7 @@ const UserDetailPage = () => {
                       pan_number: fetchedUser.pan_number || "",
                       gst_number: fetchedUser.gst_number || "",
                       address: fetchedUser.address || "",
+                      image_url: fetchedUser.image_url || "",
                       role: fetchedUser.role || "User",
                       parent_id: fetchedUser.parent_id || "",
                     }));
@@ -321,7 +309,6 @@ const UserDetailPage = () => {
             setUserData={setUserData}
             genderOptions={genderOptions}
             maritalStatusOptions={maritalStatusOptions}
-            workShiftOptions={workShiftOptions}
           />
         </TabsContent>
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { useForm, UseFormSetError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,7 +72,12 @@ interface ReminderModalProps {
 }
 
 const getTodayDate = () => formatDate(new Date());
-const getCurrentTime = () => new Date().toTimeString();
+const getCurrentTime = () => {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
 
 const ReminderModal = ({
   open,
@@ -81,6 +86,7 @@ const ReminderModal = ({
   onSave,
   isSubmitting,
 }: ReminderModalProps) => {
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<ReminderFormData>({
     resolver: zodResolver(reminderSchema),
     defaultValues: {
@@ -90,6 +96,15 @@ const ReminderModal = ({
       description: "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -222,6 +237,11 @@ const ReminderModal = ({
                 </FormLabel>
                 <FormControl>
                   <Input
+                    autoFocus
+                    ref={(e) => {
+                      field.ref(e);
+                      titleInputRef.current = e;
+                    }}
                     placeholder="Enter reminder title"
                     className="h-9 text-xs"
                     disabled={isSubmitting}

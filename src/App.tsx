@@ -21,7 +21,6 @@ import LeadDetailsPage from "./pages/companys/leads/details/LeadDetailsPage";
 import ImportPage from "./pages/companys/leads/importFile/ImportPage";
 import Salesmen from "@/pages/companys/salesmen/SalesmenPage";
 import SalesmanDetail from "@/pages/companys/salesmen/SalesmanDetailPage";
-import Tasks from "@/pages/admin/tasks/TasksPage";
 import Parties from "@/pages/companys/parties/PartiesPage";
 import CalendarPage from "@/pages/calendar/CalendarPage";
 import InboxPage from "@/pages/admin/inbox/InboxPage";
@@ -60,11 +59,16 @@ import SourcePage from "./pages/companys/leads/source/SourcePage";
 import InventoryDetailPage from "@/pages/admin/inventory/InventoryDetailPage";
 import VisitsPage from "./pages/companys/leads/visits/VisitsPage";
 import TasksPage from "./pages/companys/leads/tasks/TasksPage";
+import LeadTaskViewPage from "./pages/companys/leads/tasks/LeadTaskViewPage";
 import RemindersPage from "./pages/companys/leads/reminders/RemindersPage";
 import FollowUpsPage from "./pages/companys/leads/followups/FollowUps";
 import SalesPage from "./pages/companys/sales/SalesPage";
 import SalesMemberDetailPage from "./pages/companys/sales/SalesMemberDetailPage";
 import QuotationPage from "./pages/companys/leads/details/tabs/quotations/QuotationPage";
+import QuotationViewPage from "./pages/companys/leads/details/tabs/quotations/QuotationViewPage";
+import QuotationsPage from "./pages/companys/leads/quotations/QuotationsPage";
+import ShiftPage from "./pages/admin/shifts/ShiftPage";
+import ShiftDetailPage from "./pages/admin/shifts/ShiftDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -248,12 +252,10 @@ const App = () => (
           }
         >
           <Route index element={<AdminIndexRedirect />} />
-          <Route path="tasks" element={<Tasks />} />
           <Route path="inbox" element={<InboxPage />} />
           <Route path="products" element={<Products />} />
           <Route path="products/new" element={<ProductFormPage />} />
           <Route path="products/:id" element={<ProductFormPage />} />
-          <Route path="packages" element={<PackagesPage />} />
           <Route path="recipes" element={<BomPage />} />
           <Route path="kits" element={<KitsPage />} />
           <Route path="kits/new" element={<KitFormPage />} />
@@ -311,6 +313,8 @@ const App = () => (
           <Route path="inventory/:type/:id" element={<InventoryDetailPage />} />
           <Route path="accounts" element={<AccountPage />} />
           <Route path="accounts/:id" element={<AccountViewPage />} />
+          <Route path="shifts" element={<ShiftPage />} />
+          <Route path="shifts/:id" element={<ShiftDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
 
@@ -350,6 +354,10 @@ const App = () => (
             path="leads/:id/quotations/:quotationId/edit"
             element={<QuotationPage />}
           />
+          <Route
+            path="leads/:id/quotations/:quotationId/view"
+            element={<QuotationViewPage />}
+          />
           <Route path="leads/import" element={<ImportPage />} />
           <Route path="salesmen" element={<Salesmen />} />
           <Route path="salesmen/:id" element={<SalesmanDetail />} />
@@ -371,12 +379,16 @@ const App = () => (
           <Route path="accounts/:id" element={<AccountViewPage />} />
           <Route path="status" element={<StatusPage />} />
           <Route path="source" element={<SourcePage />} />
+          <Route path="quotation" element={<QuotationsPage />} />
+          <Route path="quotations/new" element={<QuotationPage />} />
           <Route path="visits" element={<VisitsPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="lead/tasks/:leadId" element={<LeadTaskViewPage />} />
           <Route path="reminders" element={<RemindersPage />} />
           <Route path="followups" element={<FollowUpsPage />} />
           <Route path="sales" element={<SalesPage />} />
           <Route path="sales/:userId" element={<SalesMemberDetailPage />} />
+          <Route path="packages" element={<PackagesPage />} />
           <Route
             path="sales/:userId/:tab"
             element={<SalesMemberDetailPage />}

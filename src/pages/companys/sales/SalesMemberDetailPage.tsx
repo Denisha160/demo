@@ -32,7 +32,13 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-type TabKey = "leads" | "visits" | "followups" | "tasks" | "quotations" | "activity";
+type TabKey =
+  | "leads"
+  | "visits"
+  | "followups"
+  | "tasks"
+  | "quotations"
+  | "activity";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "leads", label: "Leads", icon: Briefcase },
   { key: "visits", label: "Visits", icon: MapPin },

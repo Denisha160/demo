@@ -1077,7 +1077,7 @@ const ProductFormPage = () => {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="flex flex-wrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-2 gap-1">
+                <TabsList className="flex flex-nowrap h-auto w-full justify-start bg-transparent border-b border-border rounded-none pb-0 mb-2 gap-1 overflow-x-auto custom-scrollbar">
                   <TabsTrigger
                     value="measurements"
                     className="data-[state=active]:bg-muted data-[state=active]:border-b-primary rounded-t-md border-b-2 border-transparent px-6 py-3 text-xs uppercase tracking-[0.1em] font-bold"

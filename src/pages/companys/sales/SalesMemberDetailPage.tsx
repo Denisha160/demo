@@ -19,6 +19,7 @@ import UserVisitsTab from "./tabs/UserVisitsTab";
 import UserFollowUpsTab from "./tabs/UserFollowUpsTab";
 import UserTasksTab from "./tabs/UserTasksTab";
 import UserActivitiesTab from "./tabs/UserActivitiesTab";
+import UserLeadsTab from "./tabs/UserLeadsTab";
 
 const getInitials = (name: string) =>
   (name || "?")
@@ -28,8 +29,9 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2);
 
-type TabKey = "visits" | "followups" | "tasks" | "activity";
+type TabKey = "leads" | "visits" | "followups" | "tasks" | "activity";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
+  { key: "leads", label: "Leads", icon: Briefcase },
   { key: "visits", label: "Visits", icon: MapPin },
   { key: "followups", label: "Follow-ups", icon: Clock },
   { key: "tasks", label: "Tasks", icon: ClipboardList },
@@ -59,7 +61,7 @@ const flattenHierarchy = (
 const SalesMemberDetailPage = () => {
   const { companyId, userId, tab } = useParams();
   const navigate = useNavigate();
-  const activeTabClass = tab || "visits";
+  const activeTabClass = tab || "leads";
 
   const { data: userData, isLoading: userLoading } = useUser(userId || "");
   const { data: hierarchyData, isLoading: hierarchyLoading } = useUserHierarchy(
@@ -241,6 +243,7 @@ const SalesMemberDetailPage = () => {
           <UserFollowUpsTab userId={selectedUserId} />
         )}
         {activeTabClass === "tasks" && <UserTasksTab userId={selectedUserId} />}
+        {activeTabClass === "leads" && <UserLeadsTab userId={selectedUserId} />}
         {activeTabClass === "activity" && (
           <UserActivitiesTab userId={selectedUserId} />
         )}

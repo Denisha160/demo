@@ -1,9 +1,24 @@
-import { api } from "./api"
+import { api } from "./api";
 
-export const UserList = async () => {
-    const response = await api.get("/users")
-    return {
-        data: response.data.users,
-        total: response.data.total
-    }
+interface UserParams {
+    limit: number;
+    skip: number;
+    search: string;
 }
+
+export const UserList = async ({
+    limit,
+    skip,
+    search,
+}: UserParams) => {
+    const url = search
+        ? `/users/search?q=${search}&limit=${limit}&skip=${skip}`
+        : `/users?limit=${limit}&skip=${skip}`;
+
+    const { data } = await api.get(url);
+
+    return {
+        data: data.users,
+        total: data.total,
+    };
+};

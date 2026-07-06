@@ -14,10 +14,18 @@ interface User {
 export default function Home() {
 
   const { data: userResponse } = useGetUsers();
+  const [search, setSearch] = useState('');
+
+  const filtterData = userResponse?.data.filter((user) =>
+    user.firstName.toLowerCase().includes(search.toLowerCase()) ?? []
+
+  )
+
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 p-10">
       <h1 className="text-3xl font-bold mb-6">User List</h1>
+      <input type="text" placeholder="enter search name..." value={search} onChange={(e) => setSearch(e.target.value)} />
 
       <table className="border border-black border-collapse w-full max-w-5xl">
         <thead>
@@ -30,7 +38,7 @@ export default function Home() {
         </thead>
 
         <tbody>
-          {userResponse?.data?.map((user) => (
+          {filtterData?.map((user) => (
             <tr key={user.id} className="hover:bg-gray-200">
               <td className="border border-black px-4 py-2">
                 {user.id}

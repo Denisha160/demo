@@ -13,10 +13,11 @@ export interface UserListResponse {
     total: number;
 }
 
-export function useGetUsers() {
+
+export const useGetUsers = () => {
     return useQuery<UserListResponse, Error>({
-        queryKey: ["users"],
+        queryKey: ['users'],
         queryFn: UserList,
-        placeholderData: keepPreviousData,
-    });
+        placeholderData: keepPreviousData
+    })
 }

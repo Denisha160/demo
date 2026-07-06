@@ -1,11 +1,9 @@
-import { api } from "./api";
-import type { UserListResponse } from "../hooks/index"
+import { api } from "./api"
 
-export const UserList = async (): Promise<UserListResponse> => {
-    const response = await api.get("/users");
-
+export const UserList = async () => {
+    const response = await api.get("/users")
     return {
         data: response.data.users,
-        total: response.data.total,
-    };
-};
+        total: response.data.total
+    }
+}
